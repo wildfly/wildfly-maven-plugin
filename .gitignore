@@ -1,0 +1,16 @@
+#Ignore Maven target folder
+target/
+
+#Ignore Eclipse files
+.settings/
+.classpath
+.project
+
+#Ignore Intellij files
+*.iml
+*.iws
+*.ipr
+
+#Ignore Mac files
+.DS_Store
+nb-configuration.xml
