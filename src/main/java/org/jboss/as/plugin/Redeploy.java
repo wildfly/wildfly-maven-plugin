@@ -24,8 +24,8 @@ package org.jboss.as.plugin;
 
 import java.io.IOException;
 
-import org.jboss.as.server.client.api.deployment.DeploymentPlan;
-import org.jboss.as.server.client.api.deployment.DeploymentPlanBuilder;
+import org.jboss.as.controller.client.helpers.standalone.DeploymentPlan;
+import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
 
 /**
  * Redeploys the archived result of the project to the application server.

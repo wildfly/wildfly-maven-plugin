@@ -30,10 +30,11 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.server.client.api.deployment.DeploymentPlan;
-import org.jboss.as.server.client.api.deployment.DeploymentPlanBuilder;
-import org.jboss.as.server.client.api.deployment.ServerDeploymentManager;
-import org.jboss.as.server.client.api.deployment.ServerDeploymentPlanResult;
+import org.jboss.as.controller.client.helpers.standalone.DeploymentPlan;
+import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
+import org.jboss.as.controller.client.helpers.standalone.DuplicateDeploymentNameException;
+import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentManager;
+import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentPlanResult;
 
 /**
  * The default implementation for executing build plans on the server.
