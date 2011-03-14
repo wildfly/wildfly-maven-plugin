@@ -65,7 +65,7 @@ public final class Undeploy extends AbstractDeployment {
         if (name() == null) {
             plan = builder.undeploy(filename()).remove(filename()).build();
         } else {
-            plan = builder.undeploy(filename()).remove(name()).build();
+            plan = builder.undeploy(name()).remove(name()).build();
         }
         return plan;
     }
