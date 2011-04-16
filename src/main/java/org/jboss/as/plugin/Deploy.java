@@ -22,10 +22,10 @@
 
 package org.jboss.as.plugin;
 
-import java.io.IOException;
-
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlan;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
+
+import java.io.IOException;
 
 /**
  * Deploys the archived result of the project to the application server.
@@ -52,9 +52,9 @@ import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
  *    </build>
  * }
  * </p>
- * 
+ *
  * @goal deploy
- * 
+ *
  * @author James R. Perkins Jr. (jrp)
  */
 public final class Deploy extends AbstractDeployment {
@@ -63,9 +63,9 @@ public final class Deploy extends AbstractDeployment {
     public DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException {
         DeploymentPlan plan = null;
         if (name() == null) {
-            plan = builder.add(file()).andDeploy().build();
+            plan = builder.add(file()).build();
         } else {
-            plan = builder.add(name(), file()).andDeploy().build();
+            plan = builder.add(name(), file()).build();
         }
         return plan;
     }

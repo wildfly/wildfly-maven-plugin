@@ -10,6 +10,7 @@ target/
 *.iml
 *.iws
 *.ipr
+.idea/
 
 #Ignore Mac files
 .DS_Store
