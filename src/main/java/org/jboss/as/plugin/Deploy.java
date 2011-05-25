@@ -63,9 +63,9 @@ public final class Deploy extends AbstractDeployment {
     public DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException {
         DeploymentPlan plan = null;
         if (name() == null) {
-            plan = builder.add(file()).build();
+            plan = builder.add(file()).deploy(filename()).build();
         } else {
-            plan = builder.add(name(), file()).build();
+            plan = builder.add(name(), file()).deploy(name()).build();
         }
         return plan;
     }

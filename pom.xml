@@ -20,7 +20,7 @@
   ~ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
   ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
   -->
-  
+
   <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -35,7 +35,7 @@
     <packaging>maven-plugin</packaging>
     <name>JBoss AS7 Deployment Plugin</name>
     <dependencies>
-        
+
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
@@ -43,14 +43,14 @@
         </dependency>
         <dependency>
         	<groupId>org.jboss.as</groupId>
-        	<artifactId>jboss-as-domain-controller</artifactId>
-        	<version>7.0.0.Alpha2-SNAPSHOT</version>
+        	<artifactId>jboss-as-controller</artifactId>
+        	<version>7.0.0.Beta4-SNAPSHOT</version>
         	<scope>compile</scope>
         </dependency>
         <dependency>
         	<groupId>org.jboss.as</groupId>
-        	<artifactId>jboss-as-domain-client</artifactId>
-        	<version>7.0.0.Alpha2-SNAPSHOT</version>
+        	<artifactId>jboss-as-controller-client</artifactId>
+        	<version>7.0.0.Beta4-SNAPSHOT</version>
         	<scope>compile</scope>
         </dependency>
     </dependencies>

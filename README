@@ -1,0 +1,28 @@
+A simple Maven plug-in to deploy, redeploy or undeploy your web application to JBoss AS7.
+
+Example Usage:
+        <!-- Deploy's the application with the default name of the archive file -->
+        <plugins>
+            <plugin>
+                <groupId>org.jboss.as.plugins</groupId>
+                <artifactId>jboss-as-deploy-plugin</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>undeploy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+
+
+Configuration information can also be specified. The following configurations are available:
+- <name /> The name you want to use for the deployment. This defaults to the file name.
+
+- <hostname /> The host name of the server. The default is localhost.
+
+- <port /> The port the server is listening for administration requests on. The default is 9999.
+
