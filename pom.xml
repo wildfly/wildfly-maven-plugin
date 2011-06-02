@@ -30,7 +30,7 @@
         <version>6-beta-2</version>
     </parent>
     <groupId>org.jboss.as.plugins</groupId>
-    <artifactId>jboss-as-deploy-plugin</artifactId>
+    <artifactId>jboss-as-maven-plugin</artifactId>
     <version>7.0.0.Beta3</version>
     <packaging>maven-plugin</packaging>
     <name>JBoss AS7 Deployment Plugin</name>

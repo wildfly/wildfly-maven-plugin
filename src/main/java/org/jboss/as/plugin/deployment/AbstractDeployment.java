@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.as.plugin;
+package org.jboss.as.plugin.deployment;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,10 +38,10 @@ import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentPlanRes
 
 /**
  * The default implementation for executing build plans on the server.
- * 
+ *
  * @execute phase=compile
  * @requiresDependencyResolution runtime
- * 
+ *
  * @author James R. Perkins Jr. (jrp)
  */
 abstract class AbstractDeployment extends AbstractMojo {
@@ -73,7 +73,7 @@ abstract class AbstractDeployment extends AbstractMojo {
 
     /**
      * The deployment name. The default is {@code null}.
-     * 
+     *
      * @return the deployment name, otherwise {@code null}.
      */
     public final String name() {
@@ -82,7 +82,7 @@ abstract class AbstractDeployment extends AbstractMojo {
 
     /**
      * The hostname to deploy the archive to. The default is localhost.
-     * 
+     *
      * @return the hostname of the server.
      */
     public final String hostname() {
@@ -91,7 +91,7 @@ abstract class AbstractDeployment extends AbstractMojo {
 
     /**
      * The port number of the server to deploy to. The default is 9999.
-     * 
+     *
      * @return the port number to deploy to.
      */
     public final int port() {
@@ -100,7 +100,7 @@ abstract class AbstractDeployment extends AbstractMojo {
 
     /**
      * The target directory the archive is located. The default is {@code project.build.directory}.
-     * 
+     *
      * @return the target directory the archvie is located.
      */
     public final File targetDirectory() {
@@ -110,7 +110,7 @@ abstract class AbstractDeployment extends AbstractMojo {
     /**
      * The file name of the archive not including the directory. The default is
      * {@code project.build.finalName + . + project.packaging}
-     * 
+     *
      * @return the file name of the archive.
      */
     public final String filename() {
@@ -119,7 +119,7 @@ abstract class AbstractDeployment extends AbstractMojo {
 
     /**
      * The archive file.
-     * 
+     *
      * @return the archive file.
      */
     public final File file() {
@@ -128,25 +128,25 @@ abstract class AbstractDeployment extends AbstractMojo {
 
     /**
      * Creates the deployment plan.
-     * 
+     *
      * @param builder the builder used to create the deployment plan.
-     * 
+     *
      * @return the deployment plan.
-     * 
+     *
      * @throws IOException if the deployment plan cannot be created.
      */
     public abstract DeploymentPlan createPlan(DeploymentPlanBuilder builder) throws IOException;
 
     /**
      * The goal of the deployment.
-     * 
+     *
      * @return the goal of the deployment.
      */
     public abstract String goal();
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.maven.plugin.Mojo#execute()
      */
     @Override

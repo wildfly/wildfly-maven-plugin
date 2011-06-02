@@ -5,13 +5,13 @@ Example Usage:
         <plugins>
             <plugin>
                 <groupId>org.jboss.as.plugins</groupId>
-                <artifactId>jboss-as-deploy-plugin</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
+                <artifactId>jboss-as-maven-plugin</artifactId>
+                <version>${jboss-as-maven-plugin-version}</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
                         <goals>
-                            <goal>undeploy</goal>
+                            <goal>deploy</goal>
                         </goals>
                     </execution>
                 </executions>

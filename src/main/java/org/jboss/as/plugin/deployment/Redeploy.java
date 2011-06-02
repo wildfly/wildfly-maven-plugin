@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.as.plugin;
+package org.jboss.as.plugin.deployment;
 
 import java.io.IOException;
 
@@ -28,7 +28,7 @@ import org.jboss.as.controller.client.helpers.standalone.DeploymentPlan;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
 
 /**
- * Undeploys the archived result of the project from application server.
+ * Redeploys the archived result of the project to the application server.
  * <p>
  * Example Usage: {@literal
  *    <build>
@@ -42,7 +42,7 @@ import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
  *                    <execution>
  *                        <phase>package</phase>
  *                        <goals>
- *                            <goal>undeploy</goal>
+ *                            <goal>redeploy</goal>
  *                        </goals>
  *                    </execution>
  *                </executions>
@@ -52,27 +52,27 @@ import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
  *    </build>
  * }
  * </p>
- * 
- * @goal undeploy
- * 
+ *
+ * @goal redeploy
+ *
  * @author James R. Perkins Jr. (jrp)
  */
-public final class Undeploy extends AbstractDeployment {
+public final class Redeploy extends AbstractDeployment {
 
     @Override
     public DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException {
         DeploymentPlan plan = null;
         if (name() == null) {
-            plan = builder.undeploy(filename()).remove(filename()).build();
+            plan = builder.replace(file()).redeploy(filename()).build();
         } else {
-            plan = builder.undeploy(name()).remove(name()).build();
+            plan = builder.replace(name(), file()).redeploy(name()).build();
         }
         return plan;
     }
 
     @Override
     public String goal() {
-        return "undeploy";
+        return "redeploy";
     }
 
 }
