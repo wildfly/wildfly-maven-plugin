@@ -36,8 +36,8 @@ import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
  *            ...
  *            <plugin>
  *                <groupId>org.jboss.as.plugins</groupId>
- *                <artifactId>jboss-as-deploy-plugin</artifactId>
- *                <version>1.0.0-SNAPSHOT</version>
+ *              <artifactId>jboss-as-maven-plugin</artifactId>
+ *              <version>${jboss-as-maven-plugin-version}</version>
  *                <executions>
  *                    <execution>
  *                        <phase>package</phase>
@@ -55,7 +55,7 @@ import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
  *
  * @goal undeploy
  *
- * @author James R. Perkins Jr. (jrp)
+ * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 public final class Undeploy extends AbstractDeployment {
 
@@ -63,8 +63,10 @@ public final class Undeploy extends AbstractDeployment {
     public DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException {
         DeploymentPlan plan = null;
         if (name() == null) {
+            getLog().debug(nameNotDefinedMessage());
             plan = builder.undeploy(filename()).remove(filename()).build();
         } else {
+            getLog().debug(nameNotDefinedMessage());
             plan = builder.undeploy(name()).remove(name()).build();
         }
         return plan;

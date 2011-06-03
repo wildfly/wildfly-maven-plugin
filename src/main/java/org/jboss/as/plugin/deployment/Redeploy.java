@@ -36,8 +36,8 @@ import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
  *            ...
  *            <plugin>
  *                <groupId>org.jboss.as.plugins</groupId>
- *                <artifactId>jboss-as-deploy-plugin</artifactId>
- *                <version>1.0.0-SNAPSHOT</version>
+ *              <artifactId>jboss-as-maven-plugin</artifactId>
+ *              <version>${jboss-as-maven-plugin-version}</version>
  *                <executions>
  *                    <execution>
  *                        <phase>package</phase>
@@ -53,9 +53,8 @@ import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
  * }
  * </p>
  *
+ * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  * @goal redeploy
- *
- * @author James R. Perkins Jr. (jrp)
  */
 public final class Redeploy extends AbstractDeployment {
 
@@ -63,8 +62,10 @@ public final class Redeploy extends AbstractDeployment {
     public DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException {
         DeploymentPlan plan = null;
         if (name() == null) {
+            getLog().debug(nameNotDefinedMessage());
             plan = builder.replace(file()).redeploy(filename()).build();
         } else {
+            getLog().debug(nameDefinedMessage());
             plan = builder.replace(name(), file()).redeploy(name()).build();
         }
         return plan;

@@ -36,8 +36,8 @@ import java.io.IOException;
  *            ...
  *            <plugin>
  *                <groupId>org.jboss.as.plugins</groupId>
- *                <artifactId>jboss-as-deploy-plugin</artifactId>
- *                <version>1.0.0-SNAPSHOT</version>
+ *              <artifactId>jboss-as-maven-plugin</artifactId>
+ *              <version>${jboss-as-maven-plugin-version}</version>
  *                <executions>
  *                    <execution>
  *                        <phase>package</phase>
@@ -55,7 +55,7 @@ import java.io.IOException;
  *
  * @goal deploy
  *
- * @author James R. Perkins Jr. (jrp)
+ * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 public final class Deploy extends AbstractDeployment {
 
@@ -63,8 +63,10 @@ public final class Deploy extends AbstractDeployment {
     public DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException {
         DeploymentPlan plan = null;
         if (name() == null) {
+            getLog().debug(nameNotDefinedMessage());
             plan = builder.add(file()).deploy(filename()).build();
         } else {
+            getLog().debug(nameDefinedMessage());
             plan = builder.add(name(), file()).deploy(name()).build();
         }
         return plan;
