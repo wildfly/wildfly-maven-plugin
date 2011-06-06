@@ -31,7 +31,6 @@ import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
 import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentManager;
 import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentPlanResult;
 import org.jboss.dmr.ModelNode;
-import org.jboss.modules.AssertionSetting;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,7 +53,7 @@ import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUC
  * The default implementation for executing build plans on the server.
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
- * @execute phase=compile
+ * @execute phase=package
  * @requiresDependencyResolution runtime
  */
 abstract class AbstractDeployment extends AbstractMojo {
@@ -63,29 +62,49 @@ abstract class AbstractDeployment extends AbstractMojo {
     private static final String NAME_DEFINED_MSG_FMT = "Using '%s' for the deployment name.";
 
     /**
+     * Specifies the name used for the deployment.
+     *
      * @parameter expression="${echo.name}"
      */
     private String name;
 
     /**
+     * Specifies the host name of the server where the deployment plan should be executed.
+     *
      * @parameter expression="${echo.hostname}" default-value="localhost"
      */
     private String hostname;
 
     /**
+     * Specifies the port number the server is listening on.
+     *
      * @parameter expression="${echo.port}" default-value="9999"
      */
     private int port;
 
     /**
+     * The target directory the application to be deployed is located.
+     *
      * @parameter expression="${echo.target}" default-value="${project.build.directory}/"
      */
     private File targetDir;
 
     /**
+     * The file name of the application to be deployed.
+     *
      * @parameter expression="${echo.filename}" default-value="${project.build.finalName}.${project.packaging}"
      */
     private String filename;
+
+    /**
+     * Specifies whether strict mode should be used or not.
+     * </p>
+     * If strict mode is enabled, the deploy goal will cause a build failure if the application being deployed already
+     * exists.
+     *
+     * @parameter expression="${echo.strict}" default-value="false"
+     */
+    private boolean strict;
 
     /**
      * The deployment name. The default is {@code null}.
@@ -112,6 +131,15 @@ abstract class AbstractDeployment extends AbstractMojo {
      */
     public final int port() {
         return port;
+    }
+
+    /**
+     * Returns {@code true} of strict mode is on, otherwise false.
+     *
+     * @return {@code true} of strict mode is on, otherwise false.
+     */
+    public final boolean strictMode() {
+        return strict;
     }
 
     /**
@@ -151,7 +179,7 @@ abstract class AbstractDeployment extends AbstractMojo {
      *
      * @throws IOException if the deployment plan cannot be created.
      */
-    public abstract DeploymentPlan createPlan(DeploymentPlanBuilder builder) throws IOException;
+    public abstract DeploymentPlan createPlan(DeploymentPlanBuilder builder) throws IOException, MojoFailureException;
 
     /**
      * The goal of the deployment.
@@ -192,7 +220,10 @@ abstract class AbstractDeployment extends AbstractMojo {
         try {
             final File file = new File(targetDirectory(), filename());
             final InetAddress host = hostAddress();
-            getLog().info(String.format("Executing goal %s on %s to %s (%s) port %s.", goal(), file, host.getHostName(), host.getHostAddress(), port()));
+            getLog().info(String.format("Executing goal %s for %s on server %s (%s) port %s.", goal(), file, host.getHostName(), host.getHostAddress(), port()));
+            if (strictMode()) {
+                getLog().debug("Strict mode is enabled.");
+            }
             final ServerDeploymentManager manager = ServerDeploymentManager.Factory.create(client());
             final DeploymentPlanBuilder builder = manager.newDeploymentPlan();
             final DeploymentPlan plan = createPlan(builder);

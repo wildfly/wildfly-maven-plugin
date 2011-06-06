@@ -24,8 +24,11 @@ package org.jboss.as.plugin.deployment;
 
 import java.io.IOException;
 
+import org.apache.maven.plugin.MojoFailureException;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlan;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
+
+import static org.jboss.as.plugin.deployment.Util.undeployPlan;
 
 /**
  * Undeploys the archived result of the project from application server.
@@ -60,16 +63,9 @@ import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
 public final class Undeploy extends AbstractDeployment {
 
     @Override
-    public DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException {
-        DeploymentPlan plan = null;
-        if (name() == null) {
-            getLog().debug(nameNotDefinedMessage());
-            plan = builder.undeploy(filename()).remove(filename()).build();
-        } else {
-            getLog().debug(nameNotDefinedMessage());
-            plan = builder.undeploy(name()).remove(name()).build();
-        }
-        return plan;
+    public DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException, MojoFailureException {
+        getLog().debug("Undeploying application.");
+        return undeployPlan(this, builder);
     }
 
     @Override

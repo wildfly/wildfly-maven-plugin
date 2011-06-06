@@ -22,10 +22,14 @@
 
 package org.jboss.as.plugin.deployment;
 
+import org.apache.maven.plugin.MojoFailureException;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlan;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
 
 import java.io.IOException;
+
+import static org.jboss.as.plugin.deployment.Util.deployPlan;
+import static org.jboss.as.plugin.deployment.Util.redeployPlan;
 
 /**
  * Deploys the archived result of the project to the application server.
@@ -60,14 +64,22 @@ import java.io.IOException;
 public final class Deploy extends AbstractDeployment {
 
     @Override
-    public DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException {
-        DeploymentPlan plan = null;
-        if (name() == null) {
-            getLog().debug(nameNotDefinedMessage());
-            plan = builder.add(file()).deploy(filename()).build();
+    public DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException, MojoFailureException {
+        final DeploymentPlan plan;
+        if (strictMode()) {
+            if (deploymentExists()) {
+                throw new MojoFailureException("Cannot deploy an application that already exists when strict mode is enabled.");
+            }
+            getLog().debug("Deploying application.");
+            plan = deployPlan(this, builder);
         } else {
-            getLog().debug(nameDefinedMessage());
-            plan = builder.add(name(), file()).deploy(name()).build();
+            if (deploymentExists()) {
+                getLog().debug("Deployment already exists, redeploying application.");
+                plan = redeployPlan(this, builder);
+            } else {
+                getLog().debug("Deployment does not exist, deploying application.");
+                plan = deployPlan(this, builder);
+            }
         }
         return plan;
     }
