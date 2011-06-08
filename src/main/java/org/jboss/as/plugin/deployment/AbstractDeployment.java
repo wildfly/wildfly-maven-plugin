@@ -97,14 +97,14 @@ abstract class AbstractDeployment extends AbstractMojo {
     private String filename;
 
     /**
-     * Specifies whether strict mode should be used or not.
+     * Specifies whether force mode should be used or not.
      * </p>
-     * If strict mode is enabled, the deploy goal will cause a build failure if the application being deployed already
+     * If force mode is disabled, the deploy goal will cause a build failure if the application being deployed already
      * exists.
      *
-     * @parameter expression="${echo.strict}" default-value="false"
+     * @parameter expression="${echo.force}" default-value="true"
      */
-    private boolean strict;
+    private boolean force;
 
     /**
      * The deployment name. The default is {@code null}.
@@ -134,12 +134,12 @@ abstract class AbstractDeployment extends AbstractMojo {
     }
 
     /**
-     * Returns {@code true} of strict mode is on, otherwise false.
+     * Returns {@code true} if force is enabled, otherwise false.
      *
-     * @return {@code true} of strict mode is on, otherwise false.
+     * @return {@code true} if force is enabled, otherwise false.
      */
-    public final boolean strictMode() {
-        return strict;
+    public final boolean force() {
+        return force;
     }
 
     /**
@@ -221,8 +221,8 @@ abstract class AbstractDeployment extends AbstractMojo {
             final File file = new File(targetDirectory(), filename());
             final InetAddress host = hostAddress();
             getLog().info(String.format("Executing goal %s for %s on server %s (%s) port %s.", goal(), file, host.getHostName(), host.getHostAddress(), port()));
-            if (strictMode()) {
-                getLog().debug("Strict mode is enabled.");
+            if (force()) {
+                getLog().debug("force option is enabled");
             }
             final ServerDeploymentManager manager = ServerDeploymentManager.Factory.create(client());
             final DeploymentPlanBuilder builder = manager.newDeploymentPlan();

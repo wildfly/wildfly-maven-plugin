@@ -66,13 +66,7 @@ public final class Deploy extends AbstractDeployment {
     @Override
     public DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException, MojoFailureException {
         final DeploymentPlan plan;
-        if (strictMode()) {
-            if (deploymentExists()) {
-                throw new MojoFailureException("Cannot deploy an application that already exists when strict mode is enabled.");
-            }
-            getLog().debug("Deploying application.");
-            plan = deployPlan(this, builder);
-        } else {
+        if (force()) {
             if (deploymentExists()) {
                 getLog().debug("Deployment already exists, redeploying application.");
                 plan = redeployPlan(this, builder);
@@ -80,6 +74,12 @@ public final class Deploy extends AbstractDeployment {
                 getLog().debug("Deployment does not exist, deploying application.");
                 plan = deployPlan(this, builder);
             }
+        } else {
+            if (deploymentExists()) {
+                throw new MojoFailureException("Cannot deploy an application that already exists when force is set to false.");
+            }
+            getLog().debug("Deploying application.");
+            plan = deployPlan(this, builder);
         }
         return plan;
     }

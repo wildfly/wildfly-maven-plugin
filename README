@@ -26,12 +26,11 @@ Configuration information can also be specified. The following configurations ar
 
 - <port /> The port the server is listening for administration requests on. The default is 9999.
 
+- <force /> Whether or not for force the actions, e.g. if the deploy goal is executed redeploy if it already exists. The default is true.
+
 Goals:
 jboss-as:deploy
   - Deploys the application.
-
-jboss-as:deploy-or-redeploy
-  - If the deployment already exists, the application is redeployed otherwise the application will be deployed.
 
 jboss-as:redeploy
   - Redeploys the application.
