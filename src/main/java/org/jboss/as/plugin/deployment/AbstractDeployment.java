@@ -26,10 +26,13 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.controller.client.helpers.standalone.DeploymentAction;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlan;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
+import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentActionResult;
 import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentManager;
 import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentPlanResult;
+import org.jboss.as.controller.client.helpers.standalone.ServerUpdateActionResult;
 import org.jboss.dmr.ModelNode;
 
 import java.io.File;
@@ -53,7 +56,6 @@ import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUC
  * The default implementation for executing build plans on the server.
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
- * @execute phase=package
  * @requiresDependencyResolution runtime
  */
 abstract class AbstractDeployment extends AbstractMojo {
@@ -228,8 +230,26 @@ abstract class AbstractDeployment extends AbstractMojo {
             final DeploymentPlanBuilder builder = manager.newDeploymentPlan();
             final DeploymentPlan plan = createPlan(builder);
             if (plan.getDeploymentActions().size() > 0) {
-                final ServerDeploymentPlanResult result = manager.execute(plan).get();
-                getLog().debug(String.format("Deployment Plan Id : %s", result.getDeploymentPlanId()));
+                final ServerDeploymentPlanResult planResult = manager.execute(plan).get();
+                // Check the results
+                for (DeploymentAction action : plan.getDeploymentActions()) {
+                    final ServerDeploymentActionResult actionResult = planResult.getDeploymentActionResult(action.getId());
+                    final ServerUpdateActionResult.Result result = actionResult.getResult();
+                    switch (result) {
+                        case FAILED:
+                            throw new MojoExecutionException("Deployment failed.", actionResult.getDeploymentException());
+                        case NOT_EXECUTED:
+                            throw new MojoExecutionException("Deployment not executed.", actionResult.getDeploymentException());
+                        case ROLLED_BACK:
+                            throw new MojoExecutionException("Deployment failed and was rolled back.", actionResult.getDeploymentException());
+                        case CONFIGURATION_MODIFIED_REQUIRES_RESTART:
+                            getLog().warn("Action was executed, but the server requires a restart.");
+                            break;
+                        default:
+                            break;
+                    }
+                    getLog().debug(String.format("Deployment Plan Id : %s", planResult.getDeploymentPlanId()));
+                }
             } else {
                 getLog().warn(String.format("Goal %s failed on file %s. No deployment actions exist. Plan: %s", goal(), filename(), plan));
             }
