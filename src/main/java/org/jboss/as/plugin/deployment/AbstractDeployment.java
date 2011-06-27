@@ -63,6 +63,10 @@ abstract class AbstractDeployment extends AbstractMojo {
     private static final String NO_NAME_MSG = "No name defined, using default deployment name.";
     private static final String NAME_DEFINED_MSG_FMT = "Using '%s' for the deployment name.";
 
+    private volatile InetAddress address = null;
+
+    private volatile ModelControllerClient client = null;
+
     /**
      * Specifies the name used for the deployment.
      *
@@ -198,7 +202,15 @@ abstract class AbstractDeployment extends AbstractMojo {
      * @throws UnknownHostException if the host name was not found.
      */
     protected final InetAddress hostAddress() throws UnknownHostException {
-        return InetAddress.getByName(hostname());
+        // Lazy load the address
+        if (address == null) {
+            synchronized (this) {
+                if (address == null) {
+                    address = InetAddress.getByName(hostname());
+                }
+            }
+        }
+        return address;
     }
 
     /**
@@ -209,7 +221,15 @@ abstract class AbstractDeployment extends AbstractMojo {
      * @throws UnknownHostException if the host name does not exist.
      */
     protected final ModelControllerClient client() throws UnknownHostException {
-        return ModelControllerClient.Factory.create(hostAddress(), port());
+        // Lazy load the client
+        if (client == null) {
+            synchronized (this) {
+                if (client == null) {
+                    client = ModelControllerClient.Factory.create(hostAddress(), port());
+                }
+            }
+        }
+        return client;
     }
 
     /*
