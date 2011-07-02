@@ -151,7 +151,7 @@ abstract class AbstractDeployment extends AbstractMojo {
     /**
      * The target directory the archive is located. The default is {@code project.build.directory}.
      *
-     * @return the target directory the archvie is located.
+     * @return the target directory the archive is located.
      */
     public final File targetDirectory() {
         return targetDir;
