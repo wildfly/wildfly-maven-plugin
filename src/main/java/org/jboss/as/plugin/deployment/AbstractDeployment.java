@@ -82,6 +82,13 @@ abstract class AbstractDeployment extends AbstractMojo {
     private String hostname;
 
     /**
+     * Specifies the packaging type.
+     *
+     * @parameter expression="${project.packaging}" default-value="${project.packaging}"
+     */
+    private String packaging;
+
+    /**
      * Specifies the port number the server is listening on.
      *
      * @parameter expression="${echo.port}" default-value="9999"
@@ -240,38 +247,43 @@ abstract class AbstractDeployment extends AbstractMojo {
     @Override
     public final void execute() throws MojoExecutionException, MojoFailureException {
         try {
-            final File file = new File(targetDirectory(), filename());
-            final InetAddress host = hostAddress();
-            getLog().info(String.format("Executing goal %s for %s on server %s (%s) port %s.", goal(), file, host.getHostName(), host.getHostAddress(), port()));
-            if (force()) {
-                getLog().debug("force option is enabled");
-            }
-            final ServerDeploymentManager manager = ServerDeploymentManager.Factory.create(client());
-            final DeploymentPlanBuilder builder = manager.newDeploymentPlan();
-            final DeploymentPlan plan = createPlan(builder);
-            if (plan.getDeploymentActions().size() > 0) {
-                final ServerDeploymentPlanResult planResult = manager.execute(plan).get();
-                // Check the results
-                for (DeploymentAction action : plan.getDeploymentActions()) {
-                    final ServerDeploymentActionResult actionResult = planResult.getDeploymentActionResult(action.getId());
-                    final ServerUpdateActionResult.Result result = actionResult.getResult();
-                    switch (result) {
-                        case FAILED:
-                            throw new MojoExecutionException("Deployment failed.", actionResult.getDeploymentException());
-                        case NOT_EXECUTED:
-                            throw new MojoExecutionException("Deployment not executed.", actionResult.getDeploymentException());
-                        case ROLLED_BACK:
-                            throw new MojoExecutionException("Deployment failed and was rolled back.", actionResult.getDeploymentException());
-                        case CONFIGURATION_MODIFIED_REQUIRES_RESTART:
-                            getLog().warn("Action was executed, but the server requires a restart.");
-                            break;
-                        default:
-                            break;
-                    }
-                    getLog().debug(String.format("Deployment Plan Id : %s", planResult.getDeploymentPlanId()));
-                }
+            // Check the packaging type
+            if (IgnoredPackageTypes.isIgnored(packaging)) {
+                getLog().debug(String.format("Ignoring packaging type %s.", packaging));
             } else {
-                getLog().warn(String.format("Goal %s failed on file %s. No deployment actions exist. Plan: %s", goal(), filename(), plan));
+                final File file = new File(targetDirectory(), filename());
+                final InetAddress host = hostAddress();
+                getLog().info(String.format("Executing goal %s for %s on server %s (%s) port %s.", goal(), file, host.getHostName(), host.getHostAddress(), port()));
+                if (force()) {
+                    getLog().debug("force option is enabled");
+                }
+                final ServerDeploymentManager manager = ServerDeploymentManager.Factory.create(client());
+                final DeploymentPlanBuilder builder = manager.newDeploymentPlan();
+                final DeploymentPlan plan = createPlan(builder);
+                if (plan.getDeploymentActions().size() > 0) {
+                    final ServerDeploymentPlanResult planResult = manager.execute(plan).get();
+                    // Check the results
+                    for (DeploymentAction action : plan.getDeploymentActions()) {
+                        final ServerDeploymentActionResult actionResult = planResult.getDeploymentActionResult(action.getId());
+                        final ServerUpdateActionResult.Result result = actionResult.getResult();
+                        switch (result) {
+                            case FAILED:
+                                throw new MojoExecutionException("Deployment failed.", actionResult.getDeploymentException());
+                            case NOT_EXECUTED:
+                                throw new MojoExecutionException("Deployment not executed.", actionResult.getDeploymentException());
+                            case ROLLED_BACK:
+                                throw new MojoExecutionException("Deployment failed and was rolled back.", actionResult.getDeploymentException());
+                            case CONFIGURATION_MODIFIED_REQUIRES_RESTART:
+                                getLog().warn("Action was executed, but the server requires a restart.");
+                                break;
+                            default:
+                                break;
+                        }
+                        getLog().debug(String.format("Deployment Plan Id : %s", planResult.getDeploymentPlanId()));
+                    }
+                } else {
+                    getLog().warn(String.format("Goal %s failed on file %s. No deployment actions exist. Plan: %s", goal(), filename(), plan));
+                }
             }
         } catch (Exception e) {
             throw new MojoExecutionException(String.format("Could not execute goal %s on %s. Reason: %s", goal(), filename(), e.getMessage()), e);
