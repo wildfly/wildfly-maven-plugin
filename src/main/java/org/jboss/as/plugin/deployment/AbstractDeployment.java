@@ -42,15 +42,12 @@ import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CHILD_TYPE;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEPLOYMENT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.FAILED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.FAILURE_DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OUTCOME;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.READ_CHILDREN_NAMES_OPERATION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.RESULT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUCCESS;
+import static org.jboss.as.controller.client.helpers.ClientConstants.OP;
+import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT;
+import static org.jboss.as.controller.client.helpers.ClientConstants.FAILURE_DESCRIPTION;
+import static org.jboss.as.controller.client.helpers.ClientConstants.OUTCOME;
+import static org.jboss.as.controller.client.helpers.ClientConstants.RESULT;
+import static org.jboss.as.controller.client.helpers.ClientConstants.SUCCESS;
 
 /**
  * The default implementation for executing build plans on the server.
@@ -59,6 +56,10 @@ import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUC
  * @requiresDependencyResolution runtime
  */
 abstract class AbstractDeployment extends AbstractMojo {
+    // These will be moved org.jboss.as.controller.client.helpers.ClientConstants next release.
+    private static final String CHILD_TYPE = "child-type";
+    private static final String FAILED = "failed";
+    private static final String READ_CHILDREN_NAMES_OPERATION = "read-children-names";
 
     private static final String NO_NAME_MSG = "No name defined, using default deployment name.";
     private static final String NAME_DEFINED_MSG_FMT = "Using '%s' for the deployment name.";
