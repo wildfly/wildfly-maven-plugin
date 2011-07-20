@@ -32,41 +32,34 @@ import static org.jboss.as.plugin.deployment.Util.deployPlan;
 import static org.jboss.as.plugin.deployment.Util.redeployPlan;
 
 /**
- * Deploys the archived result of the project to the application server.
- * <p>
- * Example Usage: {@literal
- *    <build>
- *        <plugins>
- *            ...
- *            <plugin>
- *                <groupId>org.jboss.as.plugins</groupId>
- *              <artifactId>jboss-as-maven-plugin</artifactId>
- *              <version>${jboss-as-maven-plugin-version}</version>
- *                <executions>
- *                    <execution>
- *                        <phase>package</phase>
- *                        <goals>
- *                            <goal>deploy</goal>
- *                        </goals>
- *                    </execution>
- *                </executions>
- *            </plugin>
- *            ...
- *        </plugins>
- *    </build>
- * }
- * </p>
- *
- * @goal deploy
+ * Deploys the application to the JBoss Application Server.
+ * <p/>
+ * If {@code force} is set to {@code true}, the server is queried to see if the application already exists. If the
+ * application already exists, the application is redeployed instead of deployed. If the application does not exist the
+ * application is deployed as normal.
+ * <p/>
+ * If {@code force} is set to {@code false} and the application has already been deployed to the server, an error
+ * will occur and the deployment will fail.
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
+ * @goal deploy
  */
 public final class Deploy extends AbstractDeployment {
+
+    /**
+     * Specifies whether force mode should be used or not.
+     * </p>
+     * If force mode is disabled, the deploy goal will cause a build failure if the application being deployed already
+     * exists.
+     *
+     * @parameter expression="${echo.force}" default-value="true"
+     */
+    private boolean force;
 
     @Override
     public DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException, MojoFailureException {
         final DeploymentPlan plan;
-        if (force()) {
+        if (force) {
             if (deploymentExists()) {
                 getLog().debug("Deployment already exists, redeploying application.");
                 plan = redeployPlan(this, builder);

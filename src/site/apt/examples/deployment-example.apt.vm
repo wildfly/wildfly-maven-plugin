@@ -1,0 +1,81 @@
+ ------
+ Deploy/Undeploy Examples
+ ------
+ James R. Perkins
+ ------
+ 2011-07-19
+ ------
+
+Deploy/Undeploy Examples
+
+* Deploying the archives
+
+  The plugin goals {{{../deploy-mojo.html}deploy}}, {{{../undeploy-mojo.html}undeploy}},
+  and {{{../redeploy-mojo.html}redeploy}} can be used to deploy, redeploy and undeploy applications
+  to a JBoss Application Server. The first step is to add the appropriate configuration
+  to your plugin configuration in the POM.
+
+----------
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>org.jboss.as.plugins</groupId>
+                <artifactId>jboss-as-maven-plugin</artifactId>
+                <version>${project.version}</version>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+----------
+
+  The file listed under the <<<filename>>> parameter can be deployed to the
+  server using the <<<{{{../deploy-mojo.html}deploy}}>>> goal.
+
++---------
+  mvn jboss-as:deploy
++---------
+
+  The file can later be redeployed or undeployed using the appropriate goals.
+
++---------
+  mvn jboss-as:redeploy
+  mvn jboss-as:undeploy
++---------
+
+  You can also set the deployment operation to execute at a specific phase, for example the <<<install>>> phase.
+
+----------
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>org.jboss.as.plugins</groupId>
+                <artifactId>jboss-as-maven-plugin</artifactId>
+                <version>${project.version}</version>
+                <executions>
+                    <execution>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>deploy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+----------
+

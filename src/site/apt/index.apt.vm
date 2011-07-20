@@ -1,0 +1,74 @@
+ ------
+ Introduction
+ ------
+ James R. Perkins
+ ------
+ 2011-07-19
+ ------
+
+  ~~ JBoss, Home of Professional Open Source.
+  ~~ Copyright 2011, Red Hat, Inc., and individual contributors
+  ~~ as indicated by the @author tags. See the copyright.txt file in the
+  ~~ distribution for a full listing of individual contributors.
+  ~~
+  ~~ This is free software; you can redistribute it and/or modify it
+  ~~ under the terms of the GNU Lesser General Public License as
+  ~~ published by the Free Software Foundation; either version 2.1 of
+  ~~ the License, or (at your option) any later version.
+  ~~
+  ~~ This software is distributed in the hope that it will be useful,
+  ~~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~~ Lesser General Public License for more details.
+  ~~
+  ~~ You should have received a copy of the GNU Lesser General Public
+  ~~ License along with this software; if not, write to the Free
+  ~~ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  ~~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+
+
+${project.name} (${project.artifactId})
+
+  The ${project.artifactId} allows you to deploy, redeploy or undeploy applications to JBoss Application Server 7.
+  With {{{./deploy-mojo.html#force}force}} set to <<<true>>> the {{{./deploy-mojo.html}deploy}} goal will <<<redeploy>>>
+  the application if the deployment already exists on the server. By default <<<force>>> is set to <<<true>>>.
+
+  If the {{{./deploy-mojo.html#packaging}packaging type}} is of type <<<pom>>> or <<<maven-plugin>>> all execution of
+  all goals for this plugin are ignored.
+
+* Goals Overview
+
+  General information about the goals.
+
+  * {{{./deploy-mojo.html}jboss-as:deploy}} deploys the application.
+
+  * {{{./redeploy-mojo.html}jboss-as:redeploy}} redeploys the application.
+
+  * {{{./undeploy-mojo.html}jboss-as:undeploy}} undeploys the application.
+
+* Usage
+
+  General instructions on how to use the ${project.name} can be found on the {{{./usage.html}usage page}}. Some more
+  specific use cases are described in the examples given below. Last but not least, users occasionally contribute
+  additional examples, tips or errata to the
+  {{{http://community.jboss.org/en/jbossas}JBoss Application Server wiki page}}.
+
+  In case you still have questions regarding the plugin's usage, please have a look at the {{{./faq.html}FAQ}} and feel
+  free to contact the {{{./mail-lists.html}user mailing list}}. The posts to the mailing list are archived and could
+  already contain the answer to your question as part of an older thread. Hence, it is also worth browsing/searching
+  the {{{./mail-lists.html}mail archive}}.
+
+  If you feel like the plugin is missing a feature or has a defect, you can fill a feature request or bug report in our
+  {{{./issue-tracking.html}issue tracker}}. When creating a new issue, please provide a comprehensive description of your
+  concern. Especially for fixing bugs it is crucial that the developers can reproduce your problem. For this reason,
+  entire debug logs, POMs or most preferably little demo projects attached to the issue are very much appreciated.
+  Of course, patches are welcome, too. Contributors can check out the project from our
+  {{{./source-repository.html}source repository}} and will find supplementary information in the
+  {{{http://maven.apache.org/guides/development/guide-helping.html}guide to helping with Maven}}.
+
+* Examples
+
+  To provide you with better understanding of some usages of the ${project.name}, you can take a look into the
+  following example:
+
+  * {{{./examples/deployment-example.html}Deployment Example}}

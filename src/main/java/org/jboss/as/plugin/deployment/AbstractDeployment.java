@@ -111,16 +111,6 @@ abstract class AbstractDeployment extends AbstractMojo {
     private String filename;
 
     /**
-     * Specifies whether force mode should be used or not.
-     * </p>
-     * If force mode is disabled, the deploy goal will cause a build failure if the application being deployed already
-     * exists.
-     *
-     * @parameter expression="${echo.force}" default-value="true"
-     */
-    private boolean force;
-
-    /**
      * The deployment name. The default is {@code null}.
      *
      * @return the deployment name, otherwise {@code null}.
@@ -145,15 +135,6 @@ abstract class AbstractDeployment extends AbstractMojo {
      */
     public final int port() {
         return port;
-    }
-
-    /**
-     * Returns {@code true} if force is enabled, otherwise false.
-     *
-     * @return {@code true} if force is enabled, otherwise false.
-     */
-    public final boolean force() {
-        return force;
     }
 
     /**
@@ -255,9 +236,6 @@ abstract class AbstractDeployment extends AbstractMojo {
                 final File file = new File(targetDirectory(), filename());
                 final InetAddress host = hostAddress();
                 getLog().info(String.format("Executing goal %s for %s on server %s (%s) port %s.", goal(), file, host.getHostName(), host.getHostAddress(), port()));
-                if (force()) {
-                    getLog().debug("force option is enabled");
-                }
                 final ServerDeploymentManager manager = ServerDeploymentManager.Factory.create(client());
                 final DeploymentPlanBuilder builder = manager.newDeploymentPlan();
                 final DeploymentPlan plan = createPlan(builder);

@@ -1,0 +1,65 @@
+ ------
+ Usage
+ ------
+ James R. Perkins
+ ------
+ 2011-07-19
+ ------
+
+  ~~ JBoss, Home of Professional Open Source.
+  ~~ Copyright 2011, Red Hat, Inc., and individual contributors
+  ~~ as indicated by the @author tags. See the copyright.txt file in the
+  ~~ distribution for a full listing of individual contributors.
+  ~~
+  ~~ This is free software; you can redistribute it and/or modify it
+  ~~ under the terms of the GNU Lesser General Public License as
+  ~~ published by the Free Software Foundation; either version 2.1 of
+  ~~ the License, or (at your option) any later version.
+  ~~
+  ~~ This software is distributed in the hope that it will be useful,
+  ~~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~~ Lesser General Public License for more details.
+  ~~
+  ~~ You should have received a copy of the GNU Lesser General Public
+  ~~ License along with this software; if not, write to the Free
+  ~~ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  ~~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+
+Usage
+
+  The ${project.name} is generally used to deploy applications to a running JBoss Application
+  Server. Each goal can be explicitly executed from the command line or specified in the execution portion of the plugin
+  in the POM file.
+
+* The <<<jboss-as:deploy>>> Goal
+
+  The <<<jboss-as:deploy>>> goal deploys the application to the running JBoss Application Server.
+
+  For example to deploy, or redeploy by default, you type the following on the command line:
+
++-----+
+mvn package jboss-as:deploy
++-----+
+
+* The <<<jboss-as:redeploy>>> Goal
+
+  The <<<jboss-as:redeploy>>> goal will redeploy your application if and only if the application has already been
+  deployed to the application server.
+
+  To execute the the redeploy goal type the following on the command line:
+
++-----+
+mvn jboss-as:redeploy
++-----+
+
+* The <<<jboss-as:undeploy>>> Goal
+
+  The <<<jboss-as:undeploy>>> goal will undeploy your application from the from the running application server if the
+  application has already been deployed.
+
+  To execute the the redeploy goal type the following on the command line:
+
++-----+
+mvn jboss-as:undeploy
++-----+

@@ -31,34 +31,10 @@ import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
 import static org.jboss.as.plugin.deployment.Util.undeployPlan;
 
 /**
- * Undeploys the archived result of the project from application server.
- * <p>
- * Example Usage: {@literal
- *    <build>
- *        <plugins>
- *            ...
- *            <plugin>
- *                <groupId>org.jboss.as.plugins</groupId>
- *              <artifactId>jboss-as-maven-plugin</artifactId>
- *              <version>${jboss-as-maven-plugin-version}</version>
- *                <executions>
- *                    <execution>
- *                        <phase>package</phase>
- *                        <goals>
- *                            <goal>undeploy</goal>
- *                        </goals>
- *                    </execution>
- *                </executions>
- *            </plugin>
- *            ...
- *        </plugins>
- *    </build>
- * }
- * </p>
- *
- * @goal undeploy
+ * Undeploys the application to the JBoss Application Server.
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
+ * @goal undeploy
  */
 public final class Undeploy extends AbstractDeployment {
 
