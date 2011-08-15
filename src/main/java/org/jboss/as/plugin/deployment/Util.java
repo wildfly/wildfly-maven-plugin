@@ -29,7 +29,7 @@ class Util {
         DeploymentPlan plan = null;
         if (deployment.name() == null) {
             deployment.getLog().debug(deployment.nameNotDefinedMessage());
-            plan = builder.add(deployment.file()).deploy(deployment.filename()).build();
+            plan = builder.add(deployment.file()).deploy(deployment.file().getName()).build();
         } else {
             deployment.getLog().debug(deployment.nameDefinedMessage());
             plan = builder.add(deployment.name(), deployment.file()).deploy(deployment.name()).build();
@@ -52,7 +52,7 @@ class Util {
         DeploymentPlan plan = null;
         if (deployment.name() == null) {
             deployment.getLog().debug(deployment.nameNotDefinedMessage());
-            plan = builder.replace(deployment.file()).redeploy(deployment.filename()).build();
+            plan = builder.replace(deployment.file()).redeploy(deployment.file().getName()).build();
         } else {
             deployment.getLog().debug(deployment.nameDefinedMessage());
             plan = builder.replace(deployment.name(), deployment.file()).redeploy(deployment.name()).build();
@@ -75,7 +75,7 @@ class Util {
         DeploymentPlan plan = null;
         if (deployment.name() == null) {
             deployment.getLog().debug(deployment.nameNotDefinedMessage());
-            plan = builder.undeploy(deployment.filename()).remove(deployment.filename()).build();
+            plan = builder.undeploy(deployment.file().getName()).remove(deployment.file().getName()).build();
         } else {
             deployment.getLog().debug(deployment.nameNotDefinedMessage());
             plan = builder.undeploy(deployment.name()).remove(deployment.name()).build();

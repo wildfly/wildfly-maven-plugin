@@ -115,7 +115,7 @@ abstract class AbstractDeployment extends AbstractMojo {
      *
      * @return the deployment name, otherwise {@code null}.
      */
-    public final String name() {
+    public String name() {
         return name;
     }
 
@@ -147,24 +147,21 @@ abstract class AbstractDeployment extends AbstractMojo {
     }
 
     /**
-     * The file name of the archive not including the directory. The default is
-     * {@code project.build.finalName + . + project.packaging}
-     *
-     * @return the file name of the archive.
-     */
-    public final String filename() {
-        return filename;
-    }
-
-    /**
      * The archive file.
      *
      * @return the archive file.
      */
-    public final File file() {
+    public File file() {
         return new File(targetDir, filename);
     }
 
+    /**
+     *
+     * @return The deployment name
+     */
+    public String deploymentName() {
+        return  (name() == null ? file().getName() : name());
+    }
     /**
      * Creates the deployment plan.
      *
@@ -233,9 +230,8 @@ abstract class AbstractDeployment extends AbstractMojo {
             if (IgnoredPackageTypes.isIgnored(packaging)) {
                 getLog().debug(String.format("Ignoring packaging type %s.", packaging));
             } else {
-                final File file = new File(targetDirectory(), filename());
                 final InetAddress host = hostAddress();
-                getLog().info(String.format("Executing goal %s for %s on server %s (%s) port %s.", goal(), file, host.getHostName(), host.getHostAddress(), port()));
+                getLog().info(String.format("Executing goal %s on server %s (%s) port %s.", goal(), host.getHostName(), host.getHostAddress(), port()));
                 final ServerDeploymentManager manager = ServerDeploymentManager.Factory.create(client());
                 final DeploymentPlanBuilder builder = manager.newDeploymentPlan();
                 final DeploymentPlan plan = createPlan(builder);
@@ -261,11 +257,11 @@ abstract class AbstractDeployment extends AbstractMojo {
                         getLog().debug(String.format("Deployment Plan Id : %s", planResult.getDeploymentPlanId()));
                     }
                 } else {
-                    getLog().warn(String.format("Goal %s failed on file %s. No deployment actions exist. Plan: %s", goal(), filename(), plan));
+                    getLog().warn(String.format("Goal %s failed on file %s. No deployment actions exist. Plan: %s", goal(), file().getName(), plan));
                 }
             }
         } catch (Exception e) {
-            throw new MojoExecutionException(String.format("Could not execute goal %s on %s. Reason: %s", goal(), filename(), e.getMessage()), e);
+            throw new MojoExecutionException(String.format("Could not execute goal %s on %s. Reason: %s", goal(), file().getName(), e.getMessage()), e);
         }
     }
 
@@ -283,7 +279,7 @@ abstract class AbstractDeployment extends AbstractMojo {
         op.get(OP).set(READ_CHILDREN_NAMES_OPERATION);
         op.get(CHILD_TYPE).set(DEPLOYMENT);
         final ModelNode result = client().execute(op);
-        final String deploymentName = (name() == null ? filename() : name());
+        final String deploymentName = deploymentName();
         // Check to make sure there is an outcome
         if (result.hasDefined(OUTCOME)) {
             if (result.get(OUTCOME).asString().equals(SUCCESS)) {

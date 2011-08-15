@@ -44,7 +44,7 @@ import static org.jboss.as.plugin.deployment.Util.redeployPlan;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  * @goal deploy
  */
-public final class Deploy extends AbstractDeployment {
+public class Deploy extends AbstractDeployment {
 
     /**
      * Specifies whether force mode should be used or not.
