@@ -25,7 +25,7 @@ class Util {
      *
      * @throws IOException if the deployment plan found an error.
      */
-    protected static DeploymentPlan deployPlan(final AbstractDeployment deployment, final DeploymentPlanBuilder builder) throws IOException {
+    static DeploymentPlan deployPlan(final AbstractDeployment deployment, final DeploymentPlanBuilder builder) throws IOException {
         DeploymentPlan plan = null;
         if (deployment.name() == null) {
             deployment.getLog().debug(deployment.nameNotDefinedMessage());
@@ -48,7 +48,7 @@ class Util {
      *
      * @throws IOException if the deployment plan found an error.
      */
-    protected static DeploymentPlan redeployPlan(final AbstractDeployment deployment, final DeploymentPlanBuilder builder) throws IOException {
+    static DeploymentPlan redeployPlan(final AbstractDeployment deployment, final DeploymentPlanBuilder builder) throws IOException {
         DeploymentPlan plan = null;
         if (deployment.name() == null) {
             deployment.getLog().debug(deployment.nameNotDefinedMessage());
@@ -71,7 +71,7 @@ class Util {
      *
      * @throws IOException if the deployment plan found an error.
      */
-    protected static DeploymentPlan undeployPlan(final AbstractDeployment deployment, final DeploymentPlanBuilder builder) throws IOException {
+    static DeploymentPlan undeployPlan(final AbstractDeployment deployment, final DeploymentPlanBuilder builder) throws IOException {
         DeploymentPlan plan = null;
         if (deployment.name() == null) {
             deployment.getLog().debug(deployment.nameNotDefinedMessage());

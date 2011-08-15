@@ -71,42 +71,42 @@ abstract class AbstractDeployment extends AbstractMojo {
     /**
      * Specifies the name used for the deployment.
      *
-     * @parameter expression="${echo.name}"
+     * @parameter
      */
     private String name;
 
     /**
      * Specifies the host name of the server where the deployment plan should be executed.
      *
-     * @parameter expression="${echo.hostname}" default-value="localhost"
+     * @parameter default-value="localhost"
      */
     private String hostname;
 
     /**
      * Specifies the packaging type.
      *
-     * @parameter expression="${project.packaging}" default-value="${project.packaging}"
+     * @parameter default-value="${project.packaging}"
      */
     private String packaging;
 
     /**
      * Specifies the port number the server is listening on.
      *
-     * @parameter expression="${echo.port}" default-value="9999"
+     * @parameter default-value="9999"
      */
     private int port;
 
     /**
      * The target directory the application to be deployed is located.
      *
-     * @parameter expression="${echo.target}" default-value="${project.build.directory}/"
+     * @parameter default-value="${project.build.directory}/"
      */
     private File targetDir;
 
     /**
      * The file name of the application to be deployed.
      *
-     * @parameter expression="${echo.filename}" default-value="${project.build.finalName}.${project.packaging}"
+     * @parameter default-value="${project.build.finalName}.${project.packaging}"
      */
     private String filename;
 
