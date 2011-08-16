@@ -72,3 +72,4 @@ ${project.name} (${project.artifactId})
   following example:
 
   * {{{./examples/deployment-example.html}Deployment Example}}
+  * {{{./examples/add-resource-example.html}Adding Resources Example}}

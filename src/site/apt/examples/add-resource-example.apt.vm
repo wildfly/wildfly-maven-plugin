@@ -1,0 +1,156 @@
+ ------
+ Adding Resources Example
+ ------
+ Stuart Douglas
+ ------
+ 2011-08-16
+ ------
+
+Adding Resources Examples
+
+* The add-resources goal allows you to add resources such as datsources etc to a running AS7 instance.
+  This can be combined with the deploy-artifact goal to automatically deploy the datasource drivers.
+
+  The example below shows how to add a datasource that uses the default h2 database:
+----------
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>org.jboss.as.plugins</groupId>
+                <artifactId>jboss-as-maven-plugin</artifactId>
+                <version>${plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>add-datasource</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                        <configuration>
+                            <address>subsystem=datasources,data-source=java:jboss/myDs</address>
+                            <properties>
+                                <jndi-name>java:jboss/myDs</jndi-name>
+                                <enabled>true</enabled>
+                                <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</connection-url>
+                                <driver-class>org.h2.Driver</driver-class>
+                                <driver-name>h2</driver-name>
+                                <security.user-name>sa</security.user-name>
+                                <security.password>sa</security.password>
+                                <pool-name>mypool</pool-name>
+                            </properties>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+----------
+
+  The example below shows how to configure a postgresql XA data source, including deploying the driver. The postgresql
+  driver module must be listed in the <dependencies> section of the pom.
+
+----------
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>org.jboss.as.plugins</groupId>
+                <artifactId>jboss-as-maven-plugin</artifactId>
+                <version>${plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>deploy-postgresql</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>deploy-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <groupId>postgresql</groupId>
+                            <artifactId>postgresql</artifactId>
+                            <name>postgresql.jar</name>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>add-datasource</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                        <configuration>
+                            <address>subsystem=datasources,xa-data-source=java:jboss/datasources/postgresDS</address>
+                            <properties>
+                                <xa-data-source-class>org.postgresql.xa.PGXADataSource</xa-data-source-class>
+                                <xa-data-source-properties>!![("DatabaseName"=>"myDatabase"),("ServerName"=>"localhost"),("User"=>"dbuser"),("Password"=>"supersecret")]</xa-data-source-properties>
+                                <jndi-name>java:jboss/datasources/postgresDS</jndi-name>
+                                <enabled>true</enabled>
+                                <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
+                                <pool-name>myPool</pool-name>
+                                <driver-name>postgresql.jar</driver-name>
+                            </properties>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+----------
+
+The xml tags in the <properties> element correspond directly to the DMR nodes in the corresponding management operation.
+If you need to use DMR nodes of a non-primitive type then you must prefix the value with the !! escape sequence, which
+will cause the value to be interpreted as a string representation of a DMR node. For example in the <xa-data-source-properties>
+element about <xa-datasource-properties> is a DMR property list.
+
+
+It is also possible to deploy resources other than datasources, the example below shows how to deploy a JMS queue:
+
+
+----------
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>org.jboss.as.plugins</groupId>
+                <artifactId>jboss-as-maven-plugin</artifactId>
+                <version>${plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>add-jms-queue</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                        <configuration>
+                            <address>subsystem=messaging,jms-queue=myJmsQueue</address>
+                            <properties>
+                                <durable>true</durable>
+                                <entries>!!["java:jboss/myJmsQueue", "java:jboss/myJmsQueueAlias"]</entries>
+                            </properties>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+----------
