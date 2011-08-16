@@ -154,7 +154,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     public final void execute() throws MojoExecutionException, MojoFailureException {
         try {
             // Check the packaging type
-            if (IgnoredPackageTypes.isIgnored(packaging)) {
+            if (checkPackaging() && IgnoredPackageTypes.isIgnored(packaging)) {
                 getLog().debug(String.format("Ignoring packaging type %s.", packaging));
             } else {
                 final InetAddress host = hostAddress();
@@ -244,4 +244,11 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         return String.format(NAME_DEFINED_MSG_FMT, name());
     }
 
+    /**
+     *
+     * @return True if the package type should be checked for ignored packaging types
+     */
+    protected boolean checkPackaging() {
+        return true;
+    }
 }

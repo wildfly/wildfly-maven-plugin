@@ -89,9 +89,11 @@ public class AddResource extends AbstractServerConnection {
             ModelNode r = client.execute(new OperationBuilder(request).build());
             reportFailure(r);
             boolean found = false;
-            for (ModelNode dataSource : r.get(ClientConstants.RESULT).get(childAddress.type).asList()) {
-                if (dataSource.asProperty().getName().equals(childAddress.name)) {
-                    found = true;
+            if (r.get(ClientConstants.RESULT).get(childAddress.type).isDefined()) {
+                for (ModelNode dataSource : r.get(ClientConstants.RESULT).get(childAddress.type).asList()) {
+                    if (dataSource.asProperty().getName().equals(childAddress.name)) {
+                        found = true;
+                    }
                 }
             }
 
@@ -119,7 +121,12 @@ public class AddResource extends AbstractServerConnection {
                 for (int i = 0; i < props.length - 1; ++i) {
                     node = node.get(props[i]);
                 }
-                node.get(props[props.length - 1]).set(prop.getValue());
+                final String value = prop.getValue();
+                if(value.startsWith("!!")) {
+                    handleDmrString(node, props[props.length - 1], value);
+                } else {
+                    node.get(props[props.length - 1]).set(value);
+                }
             }
             r = client.execute(new OperationBuilder(request).build());
             reportFailure(r);
@@ -127,6 +134,14 @@ public class AddResource extends AbstractServerConnection {
         } catch (Exception e) {
             throw new MojoExecutionException(String.format("Could not execute goal %s. Reason: %s", goal(), e.getMessage()), e);
         }
+    }
+
+    /**
+     * Handles DMR strings in the configuration
+     */
+    private void handleDmrString(final ModelNode node, final String name, final String value) {
+        final String realValue = value.substring(2);
+        node.get(name).set(ModelNode.fromString(realValue));
     }
 
     private void setupAddress(final ModelNode request) {
@@ -141,7 +156,7 @@ public class AddResource extends AbstractServerConnection {
     }
 
     private void reportFailure(final ModelNode node) {
-        if(!node.get(ClientConstants.OUTCOME).asString().equals(ClientConstants.SUCCESS)) {
+        if (!node.get(ClientConstants.OUTCOME).asString().equals(ClientConstants.SUCCESS)) {
             throw new RuntimeException("Operation failed " + node);
         }
     }

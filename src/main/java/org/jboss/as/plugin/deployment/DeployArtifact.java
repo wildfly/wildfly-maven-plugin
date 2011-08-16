@@ -115,4 +115,8 @@ public final class DeployArtifact extends Deploy {
         return "deploy";
     }
 
+    @Override
+    protected boolean checkPackaging() {
+        return false;
+    }
 }

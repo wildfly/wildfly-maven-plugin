@@ -20,9 +20,7 @@ class Util {
      *
      * @param deployment the deployment to crate the plan for.
      * @param builder    the builder used to create the plan.
-     *
      * @return the deployment plan.
-     *
      * @throws IOException if the deployment plan found an error.
      */
     static DeploymentPlan deployPlan(final AbstractDeployment deployment, final DeploymentPlanBuilder builder) throws IOException {
@@ -43,9 +41,7 @@ class Util {
      *
      * @param deployment the deployment to crate the plan for.
      * @param builder    the builder used to create the plan.
-     *
      * @return the deployment plan.
-     *
      * @throws IOException if the deployment plan found an error.
      */
     static DeploymentPlan redeployPlan(final AbstractDeployment deployment, final DeploymentPlanBuilder builder) throws IOException {
@@ -66,9 +62,7 @@ class Util {
      *
      * @param deployment the deployment to crate the plan for.
      * @param builder    the builder used to create the plan.
-     *
      * @return the deployment plan.
-     *
      * @throws IOException if the deployment plan found an error.
      */
     static DeploymentPlan undeployPlan(final AbstractDeployment deployment, final DeploymentPlanBuilder builder) throws IOException {
