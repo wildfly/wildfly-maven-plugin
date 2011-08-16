@@ -130,7 +130,6 @@ public class AddResource extends AbstractServerConnection {
             }
             r = client.execute(new OperationBuilder(request).build());
             reportFailure(r);
-            System.out.println(r);
         } catch (Exception e) {
             throw new MojoExecutionException(String.format("Could not execute goal %s. Reason: %s", goal(), e.getMessage()), e);
         }
