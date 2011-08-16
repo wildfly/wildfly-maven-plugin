@@ -31,6 +31,7 @@ import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentActionR
 import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentManager;
 import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentPlanResult;
 import org.jboss.as.controller.client.helpers.standalone.ServerUpdateActionResult;
+import org.jboss.as.plugin.deployment.common.AbstractServerConnection;
 import org.jboss.dmr.ModelNode;
 
 import java.io.File;

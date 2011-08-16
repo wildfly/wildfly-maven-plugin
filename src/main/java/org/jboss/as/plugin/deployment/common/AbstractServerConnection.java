@@ -20,34 +20,13 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.as.plugin.deployment;
+package org.jboss.as.plugin.deployment.common;
 
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.controller.client.helpers.standalone.DeploymentAction;
-import org.jboss.as.controller.client.helpers.standalone.DeploymentPlan;
-import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
-import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentActionResult;
-import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentManager;
-import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentPlanResult;
-import org.jboss.as.controller.client.helpers.standalone.ServerUpdateActionResult;
-import org.jboss.dmr.ModelNode;
 
-import java.io.File;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collections;
-import java.util.List;
-
-import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT;
-import static org.jboss.as.controller.client.helpers.ClientConstants.FAILURE_DESCRIPTION;
-import static org.jboss.as.controller.client.helpers.ClientConstants.OP;
-import static org.jboss.as.controller.client.helpers.ClientConstants.OUTCOME;
-import static org.jboss.as.controller.client.helpers.ClientConstants.RESULT;
-import static org.jboss.as.controller.client.helpers.ClientConstants.SUCCESS;
 
 /**
  * The default implementation for connecting to a running AS7 instance
@@ -56,7 +35,7 @@ import static org.jboss.as.controller.client.helpers.ClientConstants.SUCCESS;
  * @author Stuart Douglas
  * @requiresDependencyResolution runtime
  */
-abstract class AbstractServerConnection extends AbstractMojo {
+public abstract class AbstractServerConnection extends AbstractMojo {
     // These will be moved org.jboss.as.controller.client.helpers.ClientConstants next release.
 
     private volatile InetAddress address = null;
