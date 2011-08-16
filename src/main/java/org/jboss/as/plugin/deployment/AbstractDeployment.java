@@ -22,10 +22,8 @@
 
 package org.jboss.as.plugin.deployment;
 
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentAction;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlan;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
@@ -38,13 +36,12 @@ import org.jboss.dmr.ModelNode;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
 
-import static org.jboss.as.controller.client.helpers.ClientConstants.OP;
 import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT;
 import static org.jboss.as.controller.client.helpers.ClientConstants.FAILURE_DESCRIPTION;
+import static org.jboss.as.controller.client.helpers.ClientConstants.OP;
 import static org.jboss.as.controller.client.helpers.ClientConstants.OUTCOME;
 import static org.jboss.as.controller.client.helpers.ClientConstants.RESULT;
 import static org.jboss.as.controller.client.helpers.ClientConstants.SUCCESS;
@@ -53,9 +50,10 @@ import static org.jboss.as.controller.client.helpers.ClientConstants.SUCCESS;
  * The default implementation for executing build plans on the server.
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
+ * @author Stuart Douglas
  * @requiresDependencyResolution runtime
  */
-abstract class AbstractDeployment extends AbstractMojo {
+abstract class AbstractDeployment extends AbstractServerConnection {
     // These will be moved org.jboss.as.controller.client.helpers.ClientConstants next release.
     private static final String CHILD_TYPE = "child-type";
     private static final String FAILED = "failed";
@@ -63,10 +61,6 @@ abstract class AbstractDeployment extends AbstractMojo {
 
     private static final String NO_NAME_MSG = "No name defined, using default deployment name.";
     private static final String NAME_DEFINED_MSG_FMT = "Using '%s' for the deployment name.";
-
-    private volatile InetAddress address = null;
-
-    private volatile ModelControllerClient client = null;
 
     /**
      * Specifies the name used for the deployment.
@@ -76,25 +70,12 @@ abstract class AbstractDeployment extends AbstractMojo {
     private String name;
 
     /**
-     * Specifies the host name of the server where the deployment plan should be executed.
-     *
-     * @parameter default-value="localhost"
-     */
-    private String hostname;
-
-    /**
      * Specifies the packaging type.
      *
      * @parameter default-value="${project.packaging}"
      */
     private String packaging;
 
-    /**
-     * Specifies the port number the server is listening on.
-     *
-     * @parameter default-value="9999"
-     */
-    private int port;
 
     /**
      * The target directory the application to be deployed is located.
@@ -119,23 +100,6 @@ abstract class AbstractDeployment extends AbstractMojo {
         return name;
     }
 
-    /**
-     * The hostname to deploy the archive to. The default is localhost.
-     *
-     * @return the hostname of the server.
-     */
-    public final String hostname() {
-        return hostname;
-    }
-
-    /**
-     * The port number of the server to deploy to. The default is 9999.
-     *
-     * @return the port number to deploy to.
-     */
-    public final int port() {
-        return port;
-    }
 
     /**
      * The target directory the archive is located. The default is {@code project.build.directory}.
@@ -179,44 +143,6 @@ abstract class AbstractDeployment extends AbstractMojo {
      * @return the goal of the deployment.
      */
     public abstract String goal();
-
-    /**
-     * Creates gets the address to the host name.
-     *
-     * @return the address.
-     *
-     * @throws UnknownHostException if the host name was not found.
-     */
-    protected final InetAddress hostAddress() throws UnknownHostException {
-        // Lazy load the address
-        if (address == null) {
-            synchronized (this) {
-                if (address == null) {
-                    address = InetAddress.getByName(hostname());
-                }
-            }
-        }
-        return address;
-    }
-
-    /**
-     * Creates a model controller client.
-     *
-     * @return the client.
-     *
-     * @throws UnknownHostException if the host name does not exist.
-     */
-    protected final ModelControllerClient client() throws UnknownHostException {
-        // Lazy load the client
-        if (client == null) {
-            synchronized (this) {
-                if (client == null) {
-                    client = ModelControllerClient.Factory.create(hostAddress(), port());
-                }
-            }
-        }
-        return client;
-    }
 
     /*
      * (non-Javadoc)
