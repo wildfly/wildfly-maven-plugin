@@ -28,9 +28,19 @@
 
 Usage
 
-  The ${project.name} is generally used to deploy applications to a running JBoss Application
+  The ${project.name} is generally used to deploy applications or application artifacts to a running JBoss Application
   Server. Each goal can be explicitly executed from the command line or specified in the execution portion of the plugin
   in the POM file.
+
+* The <<<jboss-as:add-resource>>> Goal
+
+  The <<<jboss-as:add-resource>>> goal adds a resource to the running JBoss Application Server.
+
+  For example to add a resource you type the following on the command line:
+
++-----+
+mvn jboss-as:add-resource
++-----+
 
 * The <<<jboss-as:deploy>>> Goal
 
@@ -39,7 +49,17 @@ Usage
   For example to deploy, or redeploy by default, you type the following on the command line:
 
 +-----+
-mvn package jboss-as:deploy
+mvn jboss-as:deploy
++-----+
+
+* The <<<jboss-as:deploy-artifact>>> Goal
+
+  The <<<jboss-as:deploy-artifact>>> goal deploys an arbitrary artifact to the running JBoss Application Server.
+
+  For example to deploy the arbitrary artifact specified in you POM, you type the following on the command line:
+
++-----+
+mvn jboss-as:deploy-artifact
 +-----+
 
 * The <<<jboss-as:redeploy>>> Goal

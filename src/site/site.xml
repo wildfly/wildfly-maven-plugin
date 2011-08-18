@@ -31,7 +31,8 @@
         </menu>
 
         <menu name="Examples">
-            <item name="Deployment Example" href="examples/deployment-example.html"/>
+            <item name="Add Resource Example" href="examples/add-resource-example.html"/>
+            <item name="Deploy Application Example" href="examples/deployment-example.html"/>
         </menu>
 
         <menu name="Project Documentation">

@@ -8,10 +8,14 @@
 
 Adding Resources Examples
 
-* The add-resources goal allows you to add resources such as datsources etc to a running AS7 instance.
-  This can be combined with the deploy-artifact goal to automatically deploy the datasource drivers.
+  The add-resources goal allows you to add resources such as datsources etc to a running AS7 instance.
+
+* Adding datasources
+
+  This can be combined with the {{{{./add-resource-mojo.html}add-resource}} goal to automatically deploy the datasource drivers.
 
   The example below shows how to add a datasource that uses the default h2 database:
+
 ----------
 <project>
     ...
@@ -110,13 +114,15 @@ Adding Resources Examples
 </project>
 ----------
 
-The xml tags in the <properties> element correspond directly to the DMR nodes in the corresponding management operation.
-If you need to use DMR nodes of a non-primitive type then you must prefix the value with the !! escape sequence, which
-will cause the value to be interpreted as a string representation of a DMR node. For example in the <xa-data-source-properties>
-element about <xa-datasource-properties> is a DMR property list.
+  The xml tags in the <properties> element correspond directly to the DMR nodes in the corresponding management operation.
+  If you need to use DMR nodes of a non-primitive type then you must prefix the value with the !! escape sequence, which
+  will cause the value to be interpreted as a string representation of a DMR node. For example in the <xa-data-source-properties>
+  element about <xa-datasource-properties> is a DMR property list.
 
 
-It is also possible to deploy resources other than datasources, the example below shows how to deploy a JMS queue:
+* Adding other resources
+
+  It is also possible to deploy resources other than datasources, the example below shows how to deploy a JMS queue:
 
 
 ----------

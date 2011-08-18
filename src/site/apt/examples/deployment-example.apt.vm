@@ -8,7 +8,7 @@
 
 Deploy/Undeploy Examples
 
-* Deploying the archives
+* Deploying your application
 
   The plugin goals {{{../deploy-mojo.html}deploy}}, {{{../undeploy-mojo.html}undeploy}},
   and {{{../redeploy-mojo.html}redeploy}} can be used to deploy, redeploy and undeploy applications
@@ -79,7 +79,9 @@ Deploy/Undeploy Examples
 </project>
 ----------
 
-It is also possible to deploy other artifacts that are not related to your deployment, e.g. database drivers:
+* Deploying other artifacts
+
+  It is also possible to deploy other artifacts that are not related to your deployment, e.g. database drivers:
 
 
 ----------
@@ -115,4 +117,4 @@ It is also possible to deploy other artifacts that are not related to your deplo
 </project>
 ----------
 
-The artifact must be already listed as a dependency in the projects pom.xml.
+  The artifact must be already listed as a dependency in the projects pom.xml.

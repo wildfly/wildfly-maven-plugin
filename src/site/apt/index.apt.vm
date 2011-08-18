@@ -40,7 +40,11 @@ ${project.name} (${project.artifactId})
 
   General information about the goals.
 
+  * {{{./add-resource-mojo.html}jboss-as:add-resource}} adds a resource.
+
   * {{{./deploy-mojo.html}jboss-as:deploy}} deploys the application.
+
+  * {{{./deploy-artifact-mojo.html}jboss-as:deploy-artifact}} deploys an arbitrary artifact to the server.
 
   * {{{./redeploy-mojo.html}jboss-as:redeploy}} redeploys the application.
 
@@ -72,4 +76,5 @@ ${project.name} (${project.artifactId})
   following example:
 
   * {{{./examples/deployment-example.html}Deployment Example}}
+
   * {{{./examples/add-resource-example.html}Adding Resources Example}}
