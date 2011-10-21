@@ -24,6 +24,7 @@ package org.jboss.as.plugin.deployment;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.project.MavenProject;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentAction;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlan;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
@@ -64,6 +65,13 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     private static final String NAME_DEFINED_MSG_FMT = "Using '%s' for the deployment name.";
 
     /**
+     * @parameter default-value="${project}"
+     * @readonly
+     * @required
+     */
+    private MavenProject project;
+
+    /**
      * Specifies the name used for the deployment.
      *
      * @parameter
@@ -91,6 +99,13 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      * @parameter default-value="${project.build.finalName}.${project.packaging}"
      */
     private String filename;
+
+    /**
+     * Set to {@code true} if you want the deployment to be skipped, otherwise {@code false}.
+     *
+     * @parameter default-value="false"
+     */
+    private boolean skip;
 
     /**
      * The deployment name. The default is {@code null}.
@@ -121,12 +136,12 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     }
 
     /**
-     *
      * @return The deployment name
      */
     public String deploymentName() {
-        return  (name() == null ? file().getName() : name());
+        return (name() == null ? file().getName() : name());
     }
+
     /**
      * Creates the deployment plan.
      *
@@ -152,6 +167,10 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      */
     @Override
     public final void execute() throws MojoExecutionException, MojoFailureException {
+        if (skip) {
+            getLog().debug(String.format("Skipping deployment of %s:%s", project.getGroupId(), project.getArtifactId()));
+            return;
+        }
         try {
             // Check the packaging type
             if (checkPackaging() && IgnoredPackageTypes.isIgnored(packaging)) {
@@ -245,7 +264,6 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     }
 
     /**
-     *
      * @return True if the package type should be checked for ignored packaging types
      */
     protected boolean checkPackaging() {
