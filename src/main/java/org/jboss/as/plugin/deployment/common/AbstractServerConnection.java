@@ -56,6 +56,25 @@ public abstract class AbstractServerConnection extends AbstractMojo {
      */
     private int port;
 
+    /**
+     * Specifies the username to use if prompted to authenticate by the server.
+     *
+     * If no username is specified and the server requests authentication the user
+     * will be prompted to supply the username,
+     *
+     * @parameter
+     */
+    private String username;
+
+    /**
+     * Specifies the password to use if prompted to authenticate by the server.
+     *
+     * If no password is specified and the server requests authentication the user
+     * will be prompted to supply the password,
+     *
+     * @parameter
+     */
+    private String password;
 
     /**
      * The hostname to deploy the archive to. The default is localhost.
@@ -113,7 +132,8 @@ public abstract class AbstractServerConnection extends AbstractMojo {
         if (client == null) {
             synchronized (this) {
                 if (client == null) {
-                    client = ModelControllerClient.Factory.create(hostAddress(), port());
+                    client = ModelControllerClient.Factory.create(hostAddress(), port(),
+                                                                  new ClientCallbackHandler(username, password));
                 }
             }
         }

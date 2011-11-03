@@ -26,6 +26,10 @@ Configuration information can also be specified. The following configurations ar
 
 - <port /> The port the server is listening for administration requests on. The default is 9999.
 
+- <username /> The username to connect as if prompted to authenticate by the server.
+
+- <password /> The password to use for authentication if prompted by the server.
+
 - <force /> Whether or not for force the actions, e.g. if the deploy goal is executed redeploy if it already exists. The default is true.
 
 Goals:
