@@ -121,7 +121,7 @@ public class AddResource extends AbstractServerConnection {
                 for (int i = 0; i < props.length - 1; ++i) {
                     node = node.get(props[i]);
                 }
-                final String value = prop.getValue();
+                final String value = prop.getValue() == null ? "" : prop.getValue();
                 if(value.startsWith("!!")) {
                     handleDmrString(node, props[props.length - 1], value);
                 } else {
