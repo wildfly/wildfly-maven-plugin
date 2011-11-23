@@ -31,7 +31,7 @@
     </parent>
     <groupId>org.jboss.as.plugins</groupId>
     <artifactId>jboss-as-maven-plugin</artifactId>
-    <version>7.1.0.Alpha2-SNAPSHOT</version>
+    <version>7.1.0.Beta1-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
     <name>JBoss AS7 Deployment Plugin</name>
 
@@ -48,7 +48,7 @@
 
 
     <properties>
-        <as.version>7.1.0.Alpha2-SNAPSHOT</as.version>
+        <as.version>7.1.0.Beta1</as.version>
     </properties>
 
     <build>
