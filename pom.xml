@@ -47,7 +47,7 @@
 
 
     <properties>
-        <as.version>7.1.0.Beta1</as.version>
+        <as.version>7.1.0.Beta1b</as.version>
     </properties>
 
     <build>
