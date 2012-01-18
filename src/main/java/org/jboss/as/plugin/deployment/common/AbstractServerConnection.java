@@ -25,6 +25,7 @@ package org.jboss.as.plugin.deployment.common;
 import org.apache.maven.plugin.AbstractMojo;
 import org.jboss.as.controller.client.ModelControllerClient;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -138,5 +139,16 @@ public abstract class AbstractServerConnection extends AbstractMojo {
             }
         }
         return client;
+    }
+
+    protected synchronized final void safeCloseClient() {
+        if (client != null) {
+            try {
+                client.close();
+                client = null;
+            } catch (IOException e) {
+                getLog().warn("Error closing the management connection.", e);
+            }
+        }
     }
 }

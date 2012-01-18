@@ -36,16 +36,19 @@ Adding Resources Examples
                         </goals>
                         <configuration>
                             <address>subsystem=datasources,data-source=java:jboss/myDs</address>
-                            <properties>
-                                <jndi-name>java:jboss/myDs</jndi-name>
-                                <enabled>true</enabled>
-                                <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</connection-url>
-                                <driver-class>org.h2.Driver</driver-class>
-                                <driver-name>h2</driver-name>
-                                <security.user-name>sa</security.user-name>
-                                <security.password>sa</security.password>
-                                <pool-name>mypool</pool-name>
-                            </properties>
+                            <resource>
+                                <enable-resource>true</enable-resource>
+                                <properties>
+                                    <jndi-name>java:jboss/myDs</jndi-name>
+                                    <enabled>true</enabled>
+                                    <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</connection-url>
+                                    <driver-class>org.h2.Driver</driver-class>
+                                    <driver-name>h2</driver-name>
+                                    <security.user-name>sa</security.user-name>
+                                    <security.password>sa</security.password>
+                                    <pool-name>mypool</pool-name>
+                                </properties>
+                            </resource>
                         </configuration>
                     </execution>
                 </executions>
@@ -92,16 +95,45 @@ Adding Resources Examples
                             <goal>add-resource</goal>
                         </goals>
                         <configuration>
-                            <address>subsystem=datasources,xa-data-source=java:jboss/datasources/postgresDS</address>
-                            <properties>
-                                <xa-data-source-class>org.postgresql.xa.PGXADataSource</xa-data-source-class>
-                                <xa-data-source-properties>!![("DatabaseName"=>"myDatabase"),("ServerName"=>"localhost"),("User"=>"dbuser"),("Password"=>"supersecret")]</xa-data-source-properties>
-                                <jndi-name>java:jboss/datasources/postgresDS</jndi-name>
-                                <enabled>true</enabled>
-                                <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
-                                <pool-name>myPool</pool-name>
-                                <driver-name>postgresql.jar</driver-name>
-                            </properties>
+                            <address>subsystem=datasources</address>
+                            <resources>
+                                <resource>
+                                    <address>xa-data-source=java:jboss/datasources/postgresDS</address>
+                                    <enable-resource>true</enable-resource>
+                                    <properties>
+                                        <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
+                                        <jndi-name>java:jboss/datasources/postgresDS</jndi-name>
+                                        <enabled>true</enabled>
+                                        <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
+                                        <pool-name>myPool</pool-name>
+                                        <driver-name>postgresql.jar</driver-name>
+                                    </properties>
+                                </resource>
+                                <resource>
+                                    <address>xa-data-source=java:jboss/datasources/postgresDS,xa-datasource-properties=DatabaseName</address>
+                                    <properties>
+                                        <value>myDatabase</value>
+                                    </properties>
+                                </resource>
+                                <resource>
+                                    <address>xa-data-source=java:jboss/datasources/postgresDS,xa-datasource-properties=ServerName</address>
+                                    <properties>
+                                        <value>localhost</value>
+                                    </properties>
+                                </resource>
+                                <resource>
+                                    <address>xa-data-source=java:jboss/datasources/postgresDS,xa-datasource-properties=User</address>
+                                    <properties>
+                                        <value>dbuser</value>
+                                    </properties>
+                                </resource>
+                                <resource>
+                                    <address>xa-data-source=java:jboss/datasources/postgresDS,xa-datasource-properties=Password</address>
+                                    <properties>
+                                        <value>supersecret</value>
+                                    </properties>
+                                </resource>
+                            </resources>
                         </configuration>
                     </execution>
                 </executions>
@@ -144,11 +176,13 @@ Adding Resources Examples
                             <goal>add-resource</goal>
                         </goals>
                         <configuration>
-                            <address>subsystem=messaging,jms-queue=myJmsQueue</address>
-                            <properties>
-                                <durable>true</durable>
-                                <entries>!!["java:jboss/myJmsQueue", "java:jboss/myJmsQueueAlias"]</entries>
-                            </properties>
+                            <resource>
+                                <address>subsystem=messaging,jms-queue=myJmsQueue</address>
+                                <properties>
+                                    <durable>true</durable>
+                                    <entries>!!["java:jboss/myJmsQueue", "java:jboss/myJmsQueueAlias"]</entries>
+                                </properties>
+                            </resource>
                         </configuration>
                     </execution>
                 </executions>
