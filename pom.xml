@@ -30,7 +30,7 @@
     </parent>
     <groupId>org.jboss.as.plugins</groupId>
     <artifactId>jboss-as-maven-plugin</artifactId>
-    <version>7.1.0.CR1b-SNAPSHOT</version>
+    <version>7.1.0.CR1b</version>
     <packaging>maven-plugin</packaging>
     <name>JBoss AS7 Deployment Plugin</name>
 
