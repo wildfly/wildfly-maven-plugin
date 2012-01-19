@@ -22,6 +22,19 @@
 
 package org.jboss.as.plugin.deployment;
 
+import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT;
+import static org.jboss.as.controller.client.helpers.ClientConstants.FAILURE_DESCRIPTION;
+import static org.jboss.as.controller.client.helpers.ClientConstants.OP;
+import static org.jboss.as.controller.client.helpers.ClientConstants.OUTCOME;
+import static org.jboss.as.controller.client.helpers.ClientConstants.RESULT;
+import static org.jboss.as.controller.client.helpers.ClientConstants.SUCCESS;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
@@ -34,19 +47,6 @@ import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentPlanRes
 import org.jboss.as.controller.client.helpers.standalone.ServerUpdateActionResult;
 import org.jboss.as.plugin.deployment.common.AbstractServerConnection;
 import org.jboss.dmr.ModelNode;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.util.Collections;
-import java.util.List;
-
-import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT;
-import static org.jboss.as.controller.client.helpers.ClientConstants.FAILURE_DESCRIPTION;
-import static org.jboss.as.controller.client.helpers.ClientConstants.OP;
-import static org.jboss.as.controller.client.helpers.ClientConstants.OUTCOME;
-import static org.jboss.as.controller.client.helpers.ClientConstants.RESULT;
-import static org.jboss.as.controller.client.helpers.ClientConstants.SUCCESS;
 
 /**
  * The default implementation for executing build plans on the server.
@@ -147,7 +147,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      *
      * @param builder the builder used to create the deployment plan.
      *
-     * @return the deployment plan.
+     * @return the deployment plan or {@code null} to ignore the plan.
      *
      * @throws IOException if the deployment plan cannot be created.
      */
@@ -181,29 +181,33 @@ abstract class AbstractDeployment extends AbstractServerConnection {
                 final ServerDeploymentManager manager = ServerDeploymentManager.Factory.create(client());
                 final DeploymentPlanBuilder builder = manager.newDeploymentPlan();
                 final DeploymentPlan plan = createPlan(builder);
-                if (plan.getDeploymentActions().size() > 0) {
-                    final ServerDeploymentPlanResult planResult = manager.execute(plan).get();
-                    // Check the results
-                    for (DeploymentAction action : plan.getDeploymentActions()) {
-                        final ServerDeploymentActionResult actionResult = planResult.getDeploymentActionResult(action.getId());
-                        final ServerUpdateActionResult.Result result = actionResult.getResult();
-                        switch (result) {
-                            case FAILED:
-                                throw new MojoExecutionException("Deployment failed.", actionResult.getDeploymentException());
-                            case NOT_EXECUTED:
-                                throw new MojoExecutionException("Deployment not executed.", actionResult.getDeploymentException());
-                            case ROLLED_BACK:
-                                throw new MojoExecutionException("Deployment failed and was rolled back.", actionResult.getDeploymentException());
-                            case CONFIGURATION_MODIFIED_REQUIRES_RESTART:
-                                getLog().warn("Action was executed, but the server requires a restart.");
-                                break;
-                            default:
-                                break;
-                        }
-                        getLog().debug(String.format("Deployment Plan Id : %s", planResult.getDeploymentPlanId()));
-                    }
+                if (plan == null) {
+                    getLog().debug(String.format("Ignoring goal %s as the plan was null.", goal()));
                 } else {
-                    getLog().warn(String.format("Goal %s failed on file %s. No deployment actions exist. Plan: %s", goal(), file().getName(), plan));
+                    if (plan.getDeploymentActions().size() > 0) {
+                        final ServerDeploymentPlanResult planResult = manager.execute(plan).get();
+                        // Check the results
+                        for (DeploymentAction action : plan.getDeploymentActions()) {
+                            final ServerDeploymentActionResult actionResult = planResult.getDeploymentActionResult(action.getId());
+                            final ServerUpdateActionResult.Result result = actionResult.getResult();
+                            switch (result) {
+                                case FAILED:
+                                    throw new MojoExecutionException("Deployment failed.", actionResult.getDeploymentException());
+                                case NOT_EXECUTED:
+                                    throw new MojoExecutionException("Deployment not executed.", actionResult.getDeploymentException());
+                                case ROLLED_BACK:
+                                    throw new MojoExecutionException("Deployment failed and was rolled back.", actionResult.getDeploymentException());
+                                case CONFIGURATION_MODIFIED_REQUIRES_RESTART:
+                                    getLog().warn("Action was executed, but the server requires a restart.");
+                                    break;
+                                default:
+                                    break;
+                            }
+                            getLog().debug(String.format("Deployment Plan Id : %s", planResult.getDeploymentPlanId()));
+                        }
+                    } else {
+                        getLog().warn(String.format("Goal %s failed on file %s. No deployment actions exist. Plan: %s", goal(), file().getName(), plan));
+                    }
                 }
             }
         } catch (Exception e) {

@@ -38,9 +38,18 @@ import static org.jboss.as.plugin.deployment.Util.undeployPlan;
  */
 public final class Undeploy extends AbstractDeployment {
 
+    /**
+     *
+     * @parameter default-value="false" expression="${undeploy.ignoreMissingDeployment}"
+     */
+    private boolean ignoreMissingDeployment;
+
     @Override
     public DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException, MojoFailureException {
         getLog().debug("Undeploying application.");
+        if (ignoreMissingDeployment && !deploymentExists()) {
+            return null;
+        }
         return undeployPlan(this, builder);
     }
 
