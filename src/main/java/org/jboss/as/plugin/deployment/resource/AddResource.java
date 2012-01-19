@@ -49,7 +49,7 @@ public class AddResource extends AbstractServerConnection {
     /**
      * The operation address, as a comma separated string.
      * <p/>
-     * If the resources or resources also define and address, this address will be used as the parent address. Meaning
+     * If the resource or resources also define and address, this address will be used as the parent address. Meaning
      * the resource addresses will be prepended with this address.
      *
      * @parameter
@@ -66,6 +66,13 @@ public class AddResource extends AbstractServerConnection {
 
     /**
      * The resource to add.
+     *
+     * A resource could consist of;
+     * <ul>
+     *     <li>An address, which may be appended to this address if defined {@literal <address/>}.</li>
+     *     <li>A mapping of properties to be set on the resource {@literal <properties/>}.</li>
+     *     <li>A flag to indicate whether or not the resource should be enabled {@literal <enableResource/>}</li>
+     * </ul>
      *
      * @parameter
      */
