@@ -52,7 +52,7 @@ public class Deploy extends AbstractDeployment {
      * If force mode is disabled, the deploy goal will cause a build failure if the application being deployed already
      * exists.
      *
-     * @parameter default-value="true"
+     * @parameter default-value="true" expression="${deploy.force}"
      */
     private boolean force;
 

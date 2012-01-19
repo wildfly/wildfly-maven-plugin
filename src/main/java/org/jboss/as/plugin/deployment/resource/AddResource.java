@@ -84,7 +84,7 @@ public class AddResource extends AbstractServerConnection {
      * If force mode is disabled, the add-resource goal will cause a build failure if the resource is already present
      * on the server
      *
-     * @parameter default-value="true"
+     * @parameter default-value="true" expression="${add-resource.force}"
      */
     private boolean force;
 
