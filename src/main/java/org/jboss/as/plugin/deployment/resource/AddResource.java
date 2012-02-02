@@ -132,8 +132,14 @@ public class AddResource extends AbstractServerConnection {
                 address = resource.getAddress();
             } else if (this.address.equals(resource.getAddress())) {
                 address = resource.getAddress();
+            } else if (resource.getAddress() == null) {
+                address = this.address;
             } else {
                 address = String.format("%s,%s", this.address, resource.getAddress());
+            }
+            // The address cannot be null
+            if (address == null) {
+                throw new RuntimeException("You must specify the address to deploy the resource to.");
             }
             final boolean found = resourceExists(address, client);
             if (found && force) {
