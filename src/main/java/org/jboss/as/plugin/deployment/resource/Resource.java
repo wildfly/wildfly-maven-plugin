@@ -39,6 +39,13 @@ public class Resource {
      */
     private String address;
 
+    /**
+     * Only adds the resource if the resource does not already exist. If the resource already exists, the resource is
+     * skipped.
+     *
+     * @parameter
+     */
+    private boolean addIfAbsent;
 
     /**
      * The operation properties for the resource.
@@ -54,6 +61,9 @@ public class Resource {
      */
     private boolean enableResource;
 
+    /**
+     * Default constructor.
+     */
     public Resource() {
 
     }
@@ -69,6 +79,7 @@ public class Resource {
         this.address = address;
         this.properties = new HashMap<String, String>(properties);
         this.enableResource = enableResource;
+        this.addIfAbsent = false;
     }
 
     /**
@@ -78,6 +89,15 @@ public class Resource {
      */
     public String getAddress() {
         return address;
+    }
+
+    /**
+     * Whether or not we should add only if the resource is absent.
+     *
+     * @return {@code true} if the resource should only be added if it does not already exist, otherwise {@code false}.
+     */
+    public boolean isAddIfAbsent() {
+        return addIfAbsent;
     }
 
     /**

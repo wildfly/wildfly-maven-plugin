@@ -142,6 +142,9 @@ public class AddResource extends AbstractServerConnection {
                 throw new RuntimeException("You must specify the address to deploy the resource to.");
             }
             final boolean found = resourceExists(address, client);
+            if (resource.isAddIfAbsent() && found) {
+                continue;
+            }
             if (found && force) {
                 ModelNode r = client.execute(OperationBuilder.create(buildRemoveOperation(address)).build());
                 reportFailure(r);
