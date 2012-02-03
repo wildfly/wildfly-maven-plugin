@@ -1,3 +1,5 @@
+
+
 /*
  * JBoss, Home of Professional Open Source.
  * Copyright 2012, Red Hat, Inc., and individual contributors
@@ -62,6 +64,15 @@ public class Resource {
     private boolean enableResource;
 
     /**
+     * An array of resources that rely on this resource.
+     * <p/>
+     * Note all resources will be ignored if the {@code <addIfAbsent/>} is defined and his resource is already defined.
+     *
+     * @parameter
+     */
+    private Resource[] resources;
+
+    /**
      * Default constructor.
      */
     public Resource() {
@@ -116,5 +127,17 @@ public class Resource {
      */
     public boolean isEnableResource() {
         return enableResource;
+    }
+
+    /**
+     * Returns an array of resources that depend on this resource.
+     * <p/>
+     * Note all sub-resources will be ignored if the {@link #isAddIfAbsent()} is defined and his resource is already
+     * defined.
+     *
+     * @return an array of resources that depend on this resource or {@code null} if there are no child resources.
+     */
+    public Resource[] getResources() {
+        return resources;
     }
 }

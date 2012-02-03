@@ -36,8 +36,8 @@ import org.jboss.dmr.ModelNode;
 /**
  * Adds a resource
  * <p/>
- * If {@code force} is set to {@code false} and the resource has already been deployed to the server, an error
- * will occur and the operation will fail.
+ * If {@code force} is set to {@code false} and the resource has already been deployed to the server, an error will
+ * occur and the operation will fail.
  *
  * @author Stuart Douglas
  * @goal add-resource
@@ -66,13 +66,10 @@ public class AddResource extends AbstractServerConnection {
 
     /**
      * The resource to add.
-     *
-     * A resource could consist of;
-     * <ul>
-     *     <li>An address, which may be appended to this address if defined {@literal <address/>}.</li>
-     *     <li>A mapping of properties to be set on the resource {@literal <properties/>}.</li>
-     *     <li>A flag to indicate whether or not the resource should be enabled {@literal <enableResource/>}</li>
-     * </ul>
+     * <p/>
+     * A resource could consist of; <ul> <li>An address, which may be appended to this address if defined {@literal
+     * <address/>}.</li> <li>A mapping of properties to be set on the resource {@literal <properties/>}.</li> <li>A flag
+     * to indicate whether or not the resource should be enabled {@literal <enableResource/>}</li> </ul>
      *
      * @parameter
      */
@@ -86,10 +83,8 @@ public class AddResource extends AbstractServerConnection {
     private Resource[] resources;
 
     /**
-     * Specifies whether force mode should be used or not.
-     * </p>
-     * If force mode is disabled, the add-resource goal will cause a build failure if the resource is already present
-     * on the server
+     * Specifies whether force mode should be used or not. </p> If force mode is disabled, the add-resource goal will
+     * cause a build failure if the resource is already present on the server
      *
      * @parameter default-value="true" expression="${add-resource.force}"
      */
@@ -127,41 +122,54 @@ public class AddResource extends AbstractServerConnection {
 
     private void processResources(final ModelControllerClient client, final Resource... resources) throws IOException {
         for (Resource resource : resources) {
-            final String address;
-            if (this.address == null) {
-                address = resource.getAddress();
-            } else if (this.address.equals(resource.getAddress())) {
-                address = resource.getAddress();
-            } else if (resource.getAddress() == null) {
-                address = this.address;
-            } else {
-                address = String.format("%s,%s", this.address, resource.getAddress());
-            }
-            // The address cannot be null
-            if (address == null) {
-                throw new RuntimeException("You must specify the address to deploy the resource to.");
-            }
-            final boolean found = resourceExists(address, client);
-            if (resource.isAddIfAbsent() && found) {
-                continue;
-            }
-            if (found && force) {
-                ModelNode r = client.execute(OperationBuilder.create(buildRemoveOperation(address)).build());
-                reportFailure(r);
-            } else if (found && !force) {
-                throw new RuntimeException("Resource " + address + " already exists ");
-            }
             final ModelNode op = new ModelNode();
             op.get(ClientConstants.OP).set(ClientConstants.COMPOSITE);
             op.get(ClientConstants.OP_ADDR).setEmptyList();
             op.get(ClientConstants.ROLLBACK_ON_RUNTIME_FAILURE).set(true);
-            op.get(ClientConstants.STEPS).add(buildAddOperation(address, resource.getProperties()));
-            if (resource.isEnableResource()) {
-                op.get(ClientConstants.STEPS).add(buildEnableOperation(address));
+            if (addCompositeResource(client, resource, op, true)) {
+                ModelNode r = client.execute(OperationBuilder.create(op).build());
+                reportFailure(r);
             }
-            ModelNode r = client.execute(OperationBuilder.create(op).build());
-            reportFailure(r);
         }
+    }
+
+    private boolean addCompositeResource(final ModelControllerClient client, final Resource resource, final ModelNode compositeOp, final boolean checkExistence) throws IOException {
+        final String address;
+        if (this.address == null) {
+            address = resource.getAddress();
+        } else if (this.address.equals(resource.getAddress())) {
+            address = resource.getAddress();
+        } else if (resource.getAddress() == null) {
+            address = this.address;
+        } else {
+            address = String.format("%s,%s", this.address, resource.getAddress());
+        }
+        // The address cannot be null
+        if (address == null) {
+            throw new RuntimeException("You must specify the address to deploy the resource to.");
+        }
+        if (checkExistence) {
+            final boolean exists = resourceExists(address, client);
+            if (resource.isAddIfAbsent() && exists) {
+                return false;
+            }
+            if (exists && force) {
+                ModelNode r = client.execute(OperationBuilder.create(buildRemoveOperation(address)).build());
+                reportFailure(r);
+            } else if (exists && !force) {
+                throw new RuntimeException("Resource " + address + " already exists.");
+            }
+        }
+        compositeOp.get(ClientConstants.STEPS).add(buildAddOperation(address, resource.getProperties()));
+        if (resource.getResources() != null) {
+            for (Resource r : resource.getResources()) {
+                addCompositeResource(client, r, compositeOp, false);
+            }
+        }
+        if (resource.isEnableResource()) {
+            compositeOp.get(ClientConstants.STEPS).add(buildEnableOperation(address));
+        }
+        return true;
     }
 
     /**
