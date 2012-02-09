@@ -1,29 +1,28 @@
-
-
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2012, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
- *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
- * the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
- */
+* JBoss, Home of Professional Open Source.
+* Copyright 2012, Red Hat, Inc., and individual contributors
+* as indicated by the @author tags. See the copyright.txt file in the
+* distribution for a full listing of individual contributors.
+*
+* This is free software; you can redistribute it and/or modify it
+* under the terms of the GNU Lesser General Public License as
+* published by the Free Software Foundation; either version 2.1 of
+* the License, or (at your option) any later version.
+*
+* This software is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+* Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public
+* License along with this software; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+* 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+*/
 
 package org.jboss.as.plugin.deployment.resource;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -88,7 +87,7 @@ public class Resource {
      */
     Resource(final String address, final Map<String, String> properties, final boolean enableResource) {
         this.address = address;
-        this.properties = new HashMap<String, String>(properties);
+        this.properties = properties;
         this.enableResource = enableResource;
         this.addIfAbsent = false;
     }
@@ -112,11 +111,14 @@ public class Resource {
     }
 
     /**
-     * The properties for the resource.
+     * The properties for the resource. If no properties were defined an empty map is returned.
      *
      * @return the properties.
      */
     public Map<String, String> getProperties() {
+        if (properties == null) {
+            return Collections.emptyMap();
+        }
         return properties;
     }
 

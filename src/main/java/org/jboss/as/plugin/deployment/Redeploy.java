@@ -22,13 +22,7 @@
 
 package org.jboss.as.plugin.deployment;
 
-import java.io.IOException;
-
-import org.apache.maven.plugin.MojoFailureException;
-import org.jboss.as.controller.client.helpers.standalone.DeploymentPlan;
-import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
-
-import static org.jboss.as.plugin.deployment.Util.redeployPlan;
+import org.jboss.as.plugin.deployment.Deployment.Type;
 
 /**
  * Redeploys the application to the JBoss Application Server.
@@ -39,14 +33,13 @@ import static org.jboss.as.plugin.deployment.Util.redeployPlan;
 public final class Redeploy extends AbstractDeployment {
 
     @Override
-    public DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException, MojoFailureException {
-        getLog().debug("Redeploying application.");
-        return redeployPlan(this, builder);
+    public String goal() {
+        return "redeploy";
     }
 
     @Override
-    public String goal() {
-        return "redeploy";
+    public Type getType() {
+        return Type.REDEPLOY;
     }
 
 }

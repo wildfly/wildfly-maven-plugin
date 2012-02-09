@@ -23,6 +23,8 @@ package org.jboss.as.plugin.deployment.resource;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -32,19 +34,25 @@ import org.jboss.as.controller.client.OperationBuilder;
 import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.as.plugin.deployment.common.AbstractServerConnection;
 import org.jboss.dmr.ModelNode;
+import org.jboss.dmr.Property;
 
 /**
  * Adds a resource
  * <p/>
  * If {@code force} is set to {@code false} and the resource has already been deployed to the server, an error will
  * occur and the operation will fail.
+ * <p/>
+ * <b>Note:</b> this currently only works with adding resources to subsystems when your server is running in domain
+ * mode.
  *
  * @author Stuart Douglas
+ * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  * @goal add-resource
  */
 public class AddResource extends AbstractServerConnection {
 
     public static final String GOAL = "add-resource";
+    public static final String PROFILE = "profile";
 
     /**
      * The operation address, as a comma separated string.
@@ -68,7 +76,8 @@ public class AddResource extends AbstractServerConnection {
      * The resource to add.
      * <p/>
      * A resource could consist of; <ul> <li>An address, which may be appended to this address if defined {@literal
-     * <address/>}.</li> <li>A mapping of properties to be set on the resource {@literal <properties/>}.</li> <li>A flag
+     * <address/>}.</li> <li>A mapping of properties to be set on the resource {@literal <properties/>}.</li> <li>A
+     * flag
      * to indicate whether or not the resource should be enabled {@literal <enableResource/>}</li> </ul>
      *
      * @parameter
@@ -98,9 +107,9 @@ public class AddResource extends AbstractServerConnection {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
-            final InetAddress host = hostAddress();
-            getLog().info(String.format("Executing goal %s on server %s (%s) port %s.", goal(), host.getHostName(), host.getHostAddress(), port()));
-            final ModelControllerClient client = client();
+            final InetAddress host = getHostAddress();
+            getLog().info(String.format("Executing goal %s on server %s (%s) port %s.", goal(), host.getHostName(), host.getHostAddress(), getPort()));
+            final ModelControllerClient client = ModelControllerClient.Factory.create(getHostAddress(), getPort(), getCallbackHandler());
             try {
                 if (resources == null) {
                     final Resource resource = (this.resource == null ? new Resource(address, properties, false) : this.resource);
@@ -113,7 +122,7 @@ public class AddResource extends AbstractServerConnection {
                     }
                 }
             } finally {
-                safeCloseClient();
+                safeClose(client);
             }
         } catch (Exception e) {
             throw new MojoExecutionException(String.format("Could not execute goal %s. Reason: %s", goal(), e.getMessage()), e);
@@ -121,31 +130,49 @@ public class AddResource extends AbstractServerConnection {
     }
 
     private void processResources(final ModelControllerClient client, final Resource... resources) throws IOException {
+        final ModelNode op = new ModelNode();
+        op.get(ClientConstants.OP).set(ClientConstants.COMPOSITE);
+        op.get(ClientConstants.OP_ADDR).setEmptyList();
+        op.get(ClientConstants.ROLLBACK_ON_RUNTIME_FAILURE).set(true);
         for (Resource resource : resources) {
-            final ModelNode op = new ModelNode();
-            op.get(ClientConstants.OP).set(ClientConstants.COMPOSITE);
-            op.get(ClientConstants.OP_ADDR).setEmptyList();
-            op.get(ClientConstants.ROLLBACK_ON_RUNTIME_FAILURE).set(true);
-            if (addCompositeResource(client, resource, op, true)) {
-                ModelNode r = client.execute(OperationBuilder.create(op).build());
-                reportFailure(r);
+            if (isDomainServer()) {
+                // Profiles are required when adding resources in domain mode
+                final List<String> profiles = getDomain().getProfiles();
+                if (profiles.isEmpty()) {
+                    throw new IllegalStateException("Cannot add resources when no profiles were defined.");
+                }
+                for (String profile : profiles) {
+                    final ModelNode model = new ModelNode();
+                    if (addCompositeResource(profile, client, resource, address, model, true)) {
+                        op.get(ClientConstants.STEPS).set(model.get(ClientConstants.STEPS));
+                        ModelNode r = client.execute(OperationBuilder.create(op).build());
+                        reportFailure(r);
+                    }
+                }
+            } else {
+                final ModelNode model = new ModelNode();
+                if (addCompositeResource(null, client, resource, address, model, true)) {
+                    op.get(ClientConstants.STEPS).set(model.get(ClientConstants.STEPS));
+                    ModelNode r = client.execute(OperationBuilder.create(op).build());
+                    reportFailure(r);
+                }
             }
         }
     }
 
-    private boolean addCompositeResource(final ModelControllerClient client, final Resource resource, final ModelNode compositeOp, final boolean checkExistence) throws IOException {
-        final String address;
-        if (this.address == null) {
-            address = resource.getAddress();
-        } else if (this.address.equals(resource.getAddress())) {
-            address = resource.getAddress();
+    private boolean addCompositeResource(final String profileName, final ModelControllerClient client, final Resource resource, final String parentAddress, final ModelNode compositeOp, final boolean checkExistence) throws IOException {
+        final ModelNode address = new ModelNode();
+        if (parentAddress == null) {
+            setupAddress(profileName, resource.getAddress(), address);
+        } else if (parentAddress.equals(resource.getAddress())) {
+            setupAddress(profileName, resource.getAddress(), address);
         } else if (resource.getAddress() == null) {
-            address = this.address;
+            setupAddress(profileName, parentAddress, address);
         } else {
-            address = String.format("%s,%s", this.address, resource.getAddress());
+            setupAddress(profileName, String.format("%s,%s", parentAddress, resource.getAddress()), address);
         }
         // The address cannot be null
-        if (address == null) {
+        if (!address.isDefined()) {
             throw new RuntimeException("You must specify the address to deploy the resource to.");
         }
         if (checkExistence) {
@@ -162,8 +189,19 @@ public class AddResource extends AbstractServerConnection {
         }
         compositeOp.get(ClientConstants.STEPS).add(buildAddOperation(address, resource.getProperties()));
         if (resource.getResources() != null) {
+            final String resourceAddress = resource.getAddress();
+            final String addr;
+            if (parentAddress != null && resourceAddress != null) {
+                addr = parentAddress + "," + resourceAddress;
+            } else if (parentAddress != null) {
+                addr = parentAddress;
+            } else if (resourceAddress != null) {
+                addr = resourceAddress;
+            } else {
+                addr = null;
+            }
             for (Resource r : resource.getResources()) {
-                addCompositeResource(client, r, compositeOp, false);
+                addCompositeResource(profileName, client, r, addr, compositeOp, false);
             }
         }
         if (resource.isEnableResource()) {
@@ -179,12 +217,12 @@ public class AddResource extends AbstractServerConnection {
      *
      * @return the operation.
      */
-    private ModelNode buildRemoveOperation(final String address) {
+    private ModelNode buildRemoveOperation(final ModelNode address) {
         //we need to remove the datasource
         final ModelNode op = new ModelNode();
         op.get(ClientConstants.OP).set("remove");
         op.get("recursive").set(true);
-        setupAddress(address, op);
+        op.get(ClientConstants.OP_ADDR).set(address.get(ClientConstants.OP_ADDR));
         return op;
     }
 
@@ -195,10 +233,10 @@ public class AddResource extends AbstractServerConnection {
      *
      * @return the operation.
      */
-    private ModelNode buildEnableOperation(final String address) {
+    private ModelNode buildEnableOperation(final ModelNode address) {
         final ModelNode op = new ModelNode();
         op.get(ClientConstants.OP).set("enable");
-        setupAddress(address, op);
+        op.get(ClientConstants.OP_ADDR).set(address.get(ClientConstants.OP_ADDR));
         return op;
     }
 
@@ -210,10 +248,10 @@ public class AddResource extends AbstractServerConnection {
      *
      * @return the operation.
      */
-    private ModelNode buildAddOperation(final String address, final Map<String, String> properties) {
+    private ModelNode buildAddOperation(final ModelNode address, final Map<String, String> properties) {
         final ModelNode op = new ModelNode();
         op.get(ClientConstants.OP).set(ClientConstants.ADD);
-        setupAddress(address, op);
+        op.get(ClientConstants.OP_ADDR).set(address.get(ClientConstants.OP_ADDR));
         for (Map.Entry<String, String> prop : properties.entrySet()) {
             final String[] props = prop.getKey().split(",");
             if (props.length == 0) {
@@ -244,19 +282,20 @@ public class AddResource extends AbstractServerConnection {
      * @throws IOException      if an error occurs executing the operation.
      * @throws RuntimeException if the operation fails.
      */
-    private boolean resourceExists(final String address, final ModelControllerClient client) throws IOException {
+    private boolean resourceExists(final ModelNode address, final ModelControllerClient client) throws IOException {
         //first we check if the resource already exists
-        ModelNode request = new ModelNode();
+        final ModelNode request = new ModelNode();
         request.get(ClientConstants.OP).set("read-resource");
         request.get("recursive").set(false);
-        AddressPair childAddress = setupParentAddress(address, request);
+        final Property childAddress = setupParentAddress(address, request);
 
         ModelNode r = client.execute(new OperationBuilder(request).build());
         reportFailure(r);
         boolean found = false;
-        if (r.get(ClientConstants.RESULT).get(childAddress.type).isDefined()) {
-            for (ModelNode dataSource : r.get(ClientConstants.RESULT).get(childAddress.type).asList()) {
-                if (dataSource.asProperty().getName().equals(childAddress.name)) {
+        final String name = childAddress.getName();
+        if (r.get(ClientConstants.RESULT).get(name).isDefined()) {
+            for (ModelNode dataSource : r.get(ClientConstants.RESULT).get(name).asList()) {
+                if (dataSource.asProperty().getName().equals(childAddress.getValue().asString())) {
                     found = true;
                 }
             }
@@ -266,21 +305,52 @@ public class AddResource extends AbstractServerConnection {
 
     /**
      * Handles DMR strings in the configuration
+     *
+     * @param node  the node to create.
+     * @param name  the name for the node.
+     * @param value the value for the node.
      */
     private void handleDmrString(final ModelNode node, final String name, final String value) {
         final String realValue = value.substring(2);
         node.get(name).set(ModelNode.fromString(realValue));
     }
 
-    private void setupAddress(String inputAddress, final ModelNode request) {
+    /**
+     * Set up the address.
+     *
+     * @param profileName  the profile, if required, where the resource should be added.
+     * @param inputAddress the address to parse.
+     * @param request      the request to add the address to.
+     */
+    private void setupAddress(final String profileName, final String inputAddress, final ModelNode request) {
+        if (inputAddress != null) {
+            if (profileName != null) {
+                request.get(ClientConstants.OP_ADDR).add(PROFILE, profileName);
+            }
+            for (ModelNode part : parseAddressParts(inputAddress)) {
+                request.get(ClientConstants.OP_ADDR).add(part);
+            }
+        }
+    }
+
+    /**
+     * Parses the comma delimited address into model nodes.
+     *
+     * @param inputAddress the address.
+     *
+     * @return a collection of the address nodes.
+     */
+    private List<ModelNode> parseAddressParts(final String inputAddress) {
         String[] parts = inputAddress.split(",");
+        final List<ModelNode> result = new ArrayList<ModelNode>(parts.length);
         for (String part : parts) {
             String[] address = part.split("=");
             if (address.length != 2) {
                 throw new RuntimeException(part + " is not a valid address segment");
             }
-            request.get(ClientConstants.OP_ADDR).add(address[0], address[1]);
+            result.add(new ModelNode().set(address[0], address[1]));
         }
+        return result;
     }
 
     private void reportFailure(final ModelNode node) {
@@ -307,32 +377,14 @@ public class AddResource extends AbstractServerConnection {
      *
      * @return the address pair.
      */
-    private AddressPair setupParentAddress(final String address, final ModelNode request) {
-        String[] parts = address.split(",");
-        for (int i = 0; i < parts.length - 1; ++i) {
-            String part = parts[i];
-            String[] addressParts = part.split("=");
-            if (addressParts.length != 2) {
-                throw new RuntimeException(part + " is not a valid address segment");
+    private Property setupParentAddress(final ModelNode address, final ModelNode request) {
+        if (address.isDefined()) {
+            final List<ModelNode> addresses = address.get(ClientConstants.OP_ADDR).asList();
+            for (int i = 0; i < addresses.size() - 1; ++i) {
+                request.get(ClientConstants.OP_ADDR).add(addresses.get(i));
             }
-            request.get(ClientConstants.OP_ADDR).add(addressParts[0], addressParts[1]);
+            return addresses.get(addresses.size() - 1).asProperty();
         }
-        String part = parts[parts.length - 1];
-        String[] addressParts = part.split("=");
-        if (addressParts.length != 2) {
-            throw new RuntimeException(part + " is not a valid address segment");
-        }
-        return new AddressPair(addressParts[0], addressParts[1]);
-    }
-
-
-    private static class AddressPair {
-        private final String name;
-        private final String type;
-
-        public AddressPair(final String type, final String name) {
-            this.name = name;
-            this.type = type;
-        }
+        return null;
     }
 }

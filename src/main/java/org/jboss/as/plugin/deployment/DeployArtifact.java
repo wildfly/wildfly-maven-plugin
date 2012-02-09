@@ -67,23 +67,16 @@ public final class DeployArtifact extends Deploy {
      */
     private File file;
 
-    /**
-     * The deployment name
-     *
-     * @parameter
-     */
-    private String name;
-
 
     @Override
-    public DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException, MojoFailureException {
+    public void validate() throws MojoFailureException {
         if (artifactId == null) {
             throw new MojoFailureException("deploy-artifact must specify the artifactId");
         }
         if (groupId == null) {
             throw new MojoFailureException("deploy-artifact must specify the groupId");
         }
-
+        @SuppressWarnings("unchecked")
         final Set<Artifact> dependencies = project.getArtifacts();
         Artifact artifact = null;
         for (final Artifact a : dependencies) {
@@ -97,7 +90,6 @@ public final class DeployArtifact extends Deploy {
             throw new MojoFailureException("Could not resolve artifact to deploy " + groupId + ":" + artifactId);
         }
         file = artifact.getFile();
-        return super.createPlan(builder);
     }
 
     @Override
@@ -106,13 +98,8 @@ public final class DeployArtifact extends Deploy {
     }
 
     @Override
-    public String name() {
-        return name;
-    }
-
-    @Override
     public String goal() {
-        return "deploy";
+        return "deploy-artifact";
     }
 
     @Override

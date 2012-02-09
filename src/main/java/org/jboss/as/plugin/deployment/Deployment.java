@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2010, Red Hat, Inc., and individual contributors
+ * Copyright 2012, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -22,29 +22,49 @@
 
 package org.jboss.as.plugin.deployment;
 
-import org.jboss.as.plugin.deployment.Deployment.Type;
+import java.io.Closeable;
+
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 
 /**
- * Undeploys the application to the JBoss Application Server.
- *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
- * @goal undeploy
  */
-public final class Undeploy extends AbstractDeployment {
+public interface Deployment extends Closeable {
+
+    public enum Type {
+        DEPLOY,
+        FORCE_DEPLOY,
+        UNDEPLOY,
+        UNDEPLOY_IGNORE_MISSING,
+        REDEPLOY,
+    }
+
+    public enum Status {
+        SUCCESS,
+        REQUIRES_RESTART
+    }
+
+    static final String CHILD_TYPE = "child-type";
+
+    static final String FAILED = "failed";
+
+    static final String READ_CHILDREN_NAMES_OPERATION = "read-children-names";
 
     /**
-     * @parameter default-value="false" expression="${undeploy.ignoreMissingDeployment}"
+     * Executes the deployment
+     *
+     * @return the status of the execution.
+     *
+     * @throws MojoExecutionException if the deployment fails
+     * @throws MojoFailureException   if a failure occurs.
      */
-    private boolean ignoreMissingDeployment;
+    Status execute() throws MojoExecutionException, MojoFailureException;
 
-    @Override
-    public String goal() {
-        return "undeploy";
-    }
-
-    @Override
-    public Type getType() {
-        return (ignoreMissingDeployment ? Type.UNDEPLOY_IGNORE_MISSING : Type.UNDEPLOY);
-    }
-
+    /**
+     * The type of the deployment.
+     *
+     * @return the type of the deployment.
+     */
+    Type getType();
 }

@@ -22,12 +22,14 @@
 
 package org.jboss.as.plugin.deployment.common;
 
-import org.apache.maven.plugin.AbstractMojo;
-import org.jboss.as.controller.client.ModelControllerClient;
-
-import java.io.IOException;
+import java.io.Closeable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import javax.security.auth.callback.CallbackHandler;
+
+import org.apache.maven.plugin.AbstractMojo;
+import org.jboss.as.plugin.deployment.ConnectionInfo;
+import org.jboss.as.plugin.deployment.domain.Domain;
 
 /**
  * The default implementation for connecting to a running AS7 instance
@@ -36,12 +38,12 @@ import java.net.UnknownHostException;
  * @author Stuart Douglas
  * @requiresDependencyResolution runtime
  */
-public abstract class AbstractServerConnection extends AbstractMojo {
+public abstract class AbstractServerConnection extends AbstractMojo implements ConnectionInfo {
     // These will be moved org.jboss.as.controller.client.helpers.ClientConstants next release.
 
     private volatile InetAddress address = null;
 
-    private volatile ModelControllerClient client = null;
+    private volatile CallbackHandler handler;
 
     /**
      * Specifies the host name of the server where the deployment plan should be executed.
@@ -59,7 +61,7 @@ public abstract class AbstractServerConnection extends AbstractMojo {
 
     /**
      * Specifies the username to use if prompted to authenticate by the server.
-     *
+     * <p/>
      * If no username is specified and the server requests authentication the user
      * will be prompted to supply the username,
      *
@@ -69,13 +71,20 @@ public abstract class AbstractServerConnection extends AbstractMojo {
 
     /**
      * Specifies the password to use if prompted to authenticate by the server.
-     *
+     * <p/>
      * If no password is specified and the server requests authentication the user
      * will be prompted to supply the password,
      *
      * @parameter expression="${deploy.password}"
      */
     private String password;
+
+    /**
+     * Indicates if this should be a domain deployment.
+     *
+     * @parameter
+     */
+    private Domain domain;
 
     /**
      * The hostname to deploy the archive to. The default is localhost.
@@ -91,8 +100,27 @@ public abstract class AbstractServerConnection extends AbstractMojo {
      *
      * @return the port number to deploy to.
      */
-    public final int port() {
+    @Override
+    public final int getPort() {
         return port;
+    }
+
+    /**
+     * Returns {@code true} if the connection is for a domain server, otherwise {@code false}.
+     *
+     * @return {@code true} if the connection is for a domain server, otherwise {@code false}.
+     */
+    public final boolean isDomainServer() {
+        return domain != null;
+    }
+
+    /**
+     * Returns the domain if {@link #isDomainServer()} returns {@code true}, otherwise {@code null} is returned.
+     *
+     * @return the domain or {@code null}.
+     */
+    public final Domain getDomain() {
+        return domain;
     }
 
     /**
@@ -106,49 +134,45 @@ public abstract class AbstractServerConnection extends AbstractMojo {
      * Creates gets the address to the host name.
      *
      * @return the address.
-     *
-     * @throws java.net.UnknownHostException if the host name was not found.
      */
-    protected final InetAddress hostAddress() throws UnknownHostException {
+    @Override
+    public final InetAddress getHostAddress() {
+        InetAddress result = address;
         // Lazy load the address
-        if (address == null) {
+        if (result == null) {
             synchronized (this) {
-                if (address == null) {
-                    address = InetAddress.getByName(hostname());
+                result = address;
+                if (result == null) {
+                    try {
+                        result = address = InetAddress.getByName(hostname());
+                    } catch (UnknownHostException e) {
+                        throw new IllegalArgumentException(String.format("Host name '%s' is invalid.", hostname), e);
+                    }
                 }
             }
         }
-        return address;
+        return result;
     }
 
-    /**
-     * Creates a model controller client.
-     *
-     * @return the client.
-     *
-     * @throws java.net.UnknownHostException if the host name does not exist.
-     */
-    protected final ModelControllerClient client() throws UnknownHostException {
-        // Lazy load the client
-        if (client == null) {
+    @Override
+    public final CallbackHandler getCallbackHandler() {
+        CallbackHandler result = handler;
+        if (result == null) {
             synchronized (this) {
-                if (client == null) {
-                    client = ModelControllerClient.Factory.create(hostAddress(), port(),
-                                                                  new ClientCallbackHandler(username, password));
+                result = handler;
+                if (result == null) {
+                    result = handler = new ClientCallbackHandler(username, password);
                 }
             }
         }
-        return client;
+        return result;
     }
 
-    protected synchronized final void safeCloseClient() {
-        if (client != null) {
-            try {
-                client.close();
-                client = null;
-            } catch (IOException e) {
-                getLog().warn("Error closing the management connection.", e);
-            }
+    public void safeClose(final Closeable closeable) {
+        if (closeable != null) try {
+            closeable.close();
+        } catch (Exception e) {
+            getLog().warn("Error closing " + closeable);
         }
     }
 }

@@ -22,14 +22,7 @@
 
 package org.jboss.as.plugin.deployment;
 
-import org.apache.maven.plugin.MojoFailureException;
-import org.jboss.as.controller.client.helpers.standalone.DeploymentPlan;
-import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
-
-import java.io.IOException;
-
-import static org.jboss.as.plugin.deployment.Util.deployPlan;
-import static org.jboss.as.plugin.deployment.Util.redeployPlan;
+import org.jboss.as.plugin.deployment.Deployment.Type;
 
 /**
  * Deploys the application to the JBoss Application Server.
@@ -57,29 +50,13 @@ public class Deploy extends AbstractDeployment {
     private boolean force;
 
     @Override
-    public DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException, MojoFailureException {
-        final DeploymentPlan plan;
-        if (force) {
-            if (deploymentExists()) {
-                getLog().debug("Deployment already exists, redeploying application.");
-                plan = redeployPlan(this, builder);
-            } else {
-                getLog().debug("Deployment does not exist, deploying application.");
-                plan = deployPlan(this, builder);
-            }
-        } else {
-            if (deploymentExists()) {
-                throw new MojoFailureException("Cannot deploy an application that already exists when force is set to false.");
-            }
-            getLog().debug("Deploying application.");
-            plan = deployPlan(this, builder);
-        }
-        return plan;
+    public String goal() {
+        return "deploy";
     }
 
     @Override
-    public String goal() {
-        return "deploy";
+    public Type getType() {
+        return (force ? Type.FORCE_DEPLOY : Type.DEPLOY);
     }
 
 }
