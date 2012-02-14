@@ -46,14 +46,14 @@ public abstract class AbstractServerConnection extends AbstractMojo {
     /**
      * Specifies the host name of the server where the deployment plan should be executed.
      *
-     * @parameter default-value="localhost"
+     * @parameter default-value="localhost" expression="${deploy.hostname}"
      */
     private String hostname;
 
     /**
      * Specifies the port number the server is listening on.
      *
-     * @parameter default-value="9999"
+     * @parameter default-value="9999" expression="${deploy.port}"
      */
     private int port;
 
@@ -63,7 +63,7 @@ public abstract class AbstractServerConnection extends AbstractMojo {
      * If no username is specified and the server requests authentication the user
      * will be prompted to supply the username,
      *
-     * @parameter
+     * @parameter expression="${deploy.username}"
      */
     private String username;
 
@@ -73,7 +73,7 @@ public abstract class AbstractServerConnection extends AbstractMojo {
      * If no password is specified and the server requests authentication the user
      * will be prompted to supply the password,
      *
-     * @parameter
+     * @parameter expression="${deploy.password}"
      */
     private String password;
 
