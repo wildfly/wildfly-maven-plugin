@@ -211,7 +211,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
                 }
             }
         } catch (Exception e) {
-            throw new MojoExecutionException(String.format("Could not execute goal %s on %s. Reason: %s", goal(), file().getName(), e.getMessage()), e);
+            throw new MojoExecutionException(String.format("Could not execute goal %s on %s. Reason: %s", goal(), file(), e.getMessage()), e);
         } finally {
             safeCloseClient();
         }
