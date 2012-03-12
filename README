@@ -42,3 +42,5 @@ jboss-as:redeploy
 jboss-as:undeploy
   - Undeploys the application.
 
+Plugin documentation is at https://docs.jboss.org/jbossas/7/plugins/maven/latest/
+
