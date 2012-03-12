@@ -79,3 +79,5 @@ ${project.name} (${project.artifactId})
   * {{{./examples/deployment-example.html}Deployment Example}}
 
   * {{{./examples/add-resource-example.html}Adding Resources Example}}
+
+  * {{{./examples/complex-example.html}Complex Examples}}

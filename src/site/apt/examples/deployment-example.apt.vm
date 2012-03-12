@@ -118,3 +118,36 @@ Deploy/Undeploy Examples
 ----------
 
   The artifact must be already listed as a dependency in the projects pom.xml.
+
+
+* Deploying your application in domain mode.
+
+  Deploying in domain mode works the same as the examples above, except you need to add the <domain> tag as well as
+  specify at least one server group.
+
+----------
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>org.jboss.as.plugins</groupId>
+                <artifactId>jboss-as-maven-plugin</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <domain>
+                        <server-groups>
+                            <server-group>main-server-group</server-group>
+                        </server-groups>
+                    </domain>
+                </configuration>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+----------

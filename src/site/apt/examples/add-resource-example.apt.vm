@@ -177,10 +177,66 @@ Adding Resources Examples
                         </goals>
                         <configuration>
                             <resource>
-                                <address>subsystem=messaging,jms-queue=myJmsQueue</address>
+                                <address>subsystem=messaging,hornetq-server=default,jms-queue=myJmsQueue</address>
                                 <properties>
                                     <durable>true</durable>
                                     <entries>!!["java:jboss/myJmsQueue", "java:jboss/myJmsQueueAlias"]</entries>
+                                </properties>
+                            </resource>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+----------
+
+
+* Adding resources in domain mode
+
+  Adding resources in domain mode works the same as the examples above, except you need to add the <domain> tag as well
+  as specify at least one profile.
+
+----------
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>org.jboss.as.plugins</groupId>
+                <artifactId>jboss-as-maven-plugin</artifactId>
+                <version>${plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>add-datasource</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                        <configuration>
+                            <domain>
+                                <profiles>
+                                    <profile>default</profile>
+                                </profiles>
+                            </domain>
+                            <address>subsystem=datasources,data-source=java:jboss/myDs</address>
+                            <resource>
+                                <enable-resource>true</enable-resource>
+                                <properties>
+                                    <jndi-name>java:jboss/myDs</jndi-name>
+                                    <enabled>true</enabled>
+                                    <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</connection-url>
+                                    <driver-class>org.h2.Driver</driver-class>
+                                    <driver-name>h2</driver-name>
+                                    <security.user-name>sa</security.user-name>
+                                    <security.password>sa</security.password>
+                                    <pool-name>mypool</pool-name>
                                 </properties>
                             </resource>
                         </configuration>

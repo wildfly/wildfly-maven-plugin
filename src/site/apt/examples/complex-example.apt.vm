@@ -1,0 +1,325 @@
+ ------
+ Deploy/Undeploy Examples
+ ------
+ James R. Perkins
+ ------
+ 2012-03-12
+ ------
+
+Complex Deployment and Resource Examples
+
+* Complex standalone example
+
+    The following example will undeploy the application, if it's previously been deployed, when the clean <<<goal>>> is
+    executed.
+
+    When the <<<install>>> goal is executed the plugin will deploy the application, deploy a data source library, add a
+    data source connection resource and add an XA data source connect.
+
+----------
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>org.jboss.as.plugins</groupId>
+                <artifactId>jboss-as-maven-plugin</artifactId>
+                <version>${plugin.version}</version>
+                <executions>
+                    <!-- Undeploy the application on clean -->
+                    <execution>
+                        <id>undeploy</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>undeploy</goal>
+                        </goals>
+                        <configuration>
+                            <ignoreMissingDeployment>true</ignoreMissingDeployment>
+                        </configuration>
+                    </execution>
+
+                    <!-- Deploy the application on package -->
+                    <execution>
+                        <id>deploy</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>deploy</goal>
+                        </goals>
+                        </configuration>
+                    </execution>
+
+                    <!-- Deploy the JDBC library -->
+                    <execution>
+                        <id>deploy-driver</id>
+                        <phase>install</phase>
+                        <configuration>
+                            <groupId>postgresql</groupId>
+                            <artifactId>postgresql</artifactId>
+                            <name>postgresql.jar</name>
+                        </configuration>
+                        <goals>
+                            <goal>deploy-artifact</goal>
+                        </goals>
+                    </execution>
+
+                    <!-- Add a data source -->
+                    <execution>
+                        <id>add-datasource</id>
+                        <phase>install</phase>
+                        <configuration>
+                            <address>subsystem=datasources,data-source=myDatasource</address>
+                            <resource>
+                                <enableResource>true</enableResource>
+                                <properties>
+                                    <connection-url>jdbc:postgresql://localhost/myDatabase</connection-url>
+                                    <jndi-name>java:jboss/myDatasource</jndi-name>
+                                    <enabled>true</enabled>
+                                    <enable>true</enable>
+                                    <pool-name>myPool</pool-name>
+                                    <user-name>dbuser</user-name>
+                                    <password>supersecret</password>
+                                    <driver-name>postgresql.jar</driver-name>
+                                    <use-ccm>false</use-ccm>
+                                </properties>
+                            </resource>
+                        </configuration>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                    </execution>
+
+                    <!-- Add an XA datasource -->
+                    <execution>
+                        <id>add-xa-datasource</id>
+                        <phase>install</phase>
+                        <configuration>
+                            <address>subsystem=datasources</address>
+                            <resources>
+                                <resource>
+                                    <address>xa-data-source=java:jboss/datasources/postgresDS</address>
+                                    <enableResource>true</enableResource>
+                                    <properties>
+                                        <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
+                                        <jndi-name>java:jboss/datasources/postgresDS</jndi-name>
+                                        <enabled>true</enabled>
+                                        <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
+                                        <pool-name>myPool</pool-name>
+                                        <driver-name>postgresql.jar</driver-name>
+                                    </properties>
+                                    <!-- Add the XA data source properties. The nested addresses will prepended the address above. -->
+                                    <resources>
+                                        <resource>
+                                            <address>
+                                                xa-datasource-properties=DatabaseName
+                                            </address>
+                                            <properties>
+                                                <value>myDatabase</value>
+                                            </properties>
+                                        </resource>
+                                        <resource>
+                                            <address>
+                                                xa-datasource-properties=ServerName
+                                            </address>
+                                            <properties>
+                                                <value>localhost</value>
+                                            </properties>
+                                        </resource>
+                                        <resource>
+                                            <address>
+                                                xa-datasource-properties=User
+                                            </address>
+                                            <properties>
+                                                <value>dbuser</value>
+                                            </properties>
+                                        </resource>
+                                        <resource>
+                                            <address>
+                                                xa-datasource-properties=Password
+                                            </address>
+                                            <properties>
+                                                <value>supersecret</value>
+                                            </properties>
+                                        </resource>
+                                    </resources>
+                                </resource>
+                            </resources>
+                        </configuration>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+----------
+
+* Complex domain example
+
+    The following example will undeploy the application, if it's previously been deployed, when the clean <<<goal>>> is
+    executed.
+
+    When the <<<install>>> goal is executed the plugin will deploy the application, deploy a data source library, add a
+    data source connection resource and add an XA data source connect.
+
+----------
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>org.jboss.as.plugins</groupId>
+                <artifactId>jboss-as-maven-plugin</artifactId>
+                <version>${plugin.version}</version>
+                <configuration>
+                    <domain>
+                        <server-groups>
+                            <server-group>main-server-group</server-group>
+                        </server-groups>
+                        <profiles>
+                            <profile>default</profile>
+                            <profile>ha</profile>
+                            <profile>full-ha</profile>
+                        </profiles>
+                    </domain>
+                </configuration>
+                <executions>
+                    <!-- Undeploy the application on clean -->
+                    <execution>
+                        <id>undeploy</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>undeploy</goal>
+                        </goals>
+                        <configuration>
+                            <ignoreMissingDeployment>true</ignoreMissingDeployment>
+                        </configuration>
+                    </execution>
+
+                    <!-- Deploy the application on package -->
+                    <execution>
+                        <id>deploy</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>deploy</goal>
+                        </goals>
+                        </configuration>
+                    </execution>
+
+                    <!-- Deploy the JDBC library -->
+                    <execution>
+                        <id>deploy-driver</id>
+                        <phase>install</phase>
+                        <configuration>
+                            <groupId>postgresql</groupId>
+                            <artifactId>postgresql</artifactId>
+                            <name>postgresql.jar</name>
+                        </configuration>
+                        <goals>
+                            <goal>deploy-artifact</goal>
+                        </goals>
+                    </execution>
+
+                    <!-- Add a data source -->
+                    <execution>
+                        <id>add-datasource</id>
+                        <phase>install</phase>
+                        <configuration>
+                            <address>subsystem=datasources,data-source=myDatasource</address>
+                            <resource>
+                                <enableResource>true</enableResource>
+                                <properties>
+                                    <connection-url>jdbc:postgresql://localhost/myDatabase</connection-url>
+                                    <jndi-name>java:jboss/myDatasource</jndi-name>
+                                    <enabled>true</enabled>
+                                    <enable>true</enable>
+                                    <pool-name>myPool</pool-name>
+                                    <user-name>dbuser</user-name>
+                                    <password>supersecret</password>
+                                    <driver-name>postgresql.jar</driver-name>
+                                    <use-ccm>false</use-ccm>
+                                </properties>
+                            </resource>
+                        </configuration>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                    </execution>
+
+                    <!-- Add an XA datasource -->
+                    <execution>
+                        <id>add-xa-datasource</id>
+                        <phase>install</phase>
+                        <configuration>
+                            <address>subsystem=datasources</address>
+                            <resources>
+                                <resource>
+                                    <address>xa-data-source=java:jboss/datasources/postgresDS</address>
+                                    <enableResource>true</enableResource>
+                                    <properties>
+                                        <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
+                                        <jndi-name>java:jboss/datasources/postgresDS</jndi-name>
+                                        <enabled>true</enabled>
+                                        <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
+                                        <pool-name>myPool</pool-name>
+                                        <driver-name>postgresql.jar</driver-name>
+                                    </properties>
+                                    <!-- Add the XA data source properties. The nested addresses will prepended the address above. -->
+                                    <resources>
+                                        <resource>
+                                            <address>
+                                                xa-datasource-properties=DatabaseName
+                                            </address>
+                                            <properties>
+                                                <value>myDatabase</value>
+                                            </properties>
+                                        </resource>
+                                        <resource>
+                                            <address>
+                                                xa-datasource-properties=ServerName
+                                            </address>
+                                            <properties>
+                                                <value>localhost</value>
+                                            </properties>
+                                        </resource>
+                                        <resource>
+                                            <address>
+                                                xa-datasource-properties=User
+                                            </address>
+                                            <properties>
+                                                <value>dbuser</value>
+                                            </properties>
+                                        </resource>
+                                        <resource>
+                                            <address>
+                                                xa-datasource-properties=Password
+                                            </address>
+                                            <properties>
+                                                <value>supersecret</value>
+                                            </properties>
+                                        </resource>
+                                    </resources>
+                                </resource>
+                            </resources>
+                        </configuration>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+----------
