@@ -35,8 +35,8 @@
     <name>JBoss AS7 Deployment Plugin</name>
 
     <issueManagement>
-        <system>JIRA</system>
-        <url>https://issues.jboss.org/browse/AS7</url>
+        <system>GitHub</system>
+        <url>https://github.com/jbossas/jboss-as-maven-plugin/issues</url>
     </issueManagement>
 
     <scm>
