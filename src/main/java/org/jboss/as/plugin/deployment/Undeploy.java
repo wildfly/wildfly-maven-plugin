@@ -33,7 +33,7 @@ import org.jboss.as.plugin.deployment.Deployment.Type;
 public final class Undeploy extends AbstractDeployment {
 
     /**
-     * @parameter default-value="false" expression="${undeploy.ignoreMissingDeployment}"
+     * @parameter default-value="true" expression="${undeploy.ignoreMissingDeployment}"
      */
     private boolean ignoreMissingDeployment;
 
