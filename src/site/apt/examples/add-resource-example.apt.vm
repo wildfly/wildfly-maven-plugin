@@ -104,7 +104,6 @@ Adding Resources Examples
                                         <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
                                         <jndi-name>java:jboss/datasources/postgresDS</jndi-name>
                                         <enabled>true</enabled>
-                                        <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
                                         <pool-name>myPool</pool-name>
                                         <driver-name>postgresql.jar</driver-name>
                                     </properties>

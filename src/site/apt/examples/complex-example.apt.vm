@@ -40,16 +40,6 @@ Complex Deployment and Resource Examples
                         </configuration>
                     </execution>
 
-                    <!-- Deploy the application on package -->
-                    <execution>
-                        <id>deploy</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>deploy</goal>
-                        </goals>
-                        </configuration>
-                    </execution>
-
                     <!-- Deploy the JDBC library -->
                     <execution>
                         <id>deploy-driver</id>
@@ -104,7 +94,6 @@ Complex Deployment and Resource Examples
                                         <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
                                         <jndi-name>java:jboss/datasources/postgresDS</jndi-name>
                                         <enabled>true</enabled>
-                                        <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
                                         <pool-name>myPool</pool-name>
                                         <driver-name>postgresql.jar</driver-name>
                                     </properties>
@@ -148,6 +137,15 @@ Complex Deployment and Resource Examples
                         </configuration>
                         <goals>
                             <goal>add-resource</goal>
+                        </goals>
+                    </execution>
+
+                    <!-- Deploy the application on install -->
+                    <execution>
+                        <id>deploy</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>deploy</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -204,16 +202,6 @@ Complex Deployment and Resource Examples
                         </configuration>
                     </execution>
 
-                    <!-- Deploy the application on package -->
-                    <execution>
-                        <id>deploy</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>deploy</goal>
-                        </goals>
-                        </configuration>
-                    </execution>
-
                     <!-- Deploy the JDBC library -->
                     <execution>
                         <id>deploy-driver</id>
@@ -268,7 +256,6 @@ Complex Deployment and Resource Examples
                                         <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
                                         <jndi-name>java:jboss/datasources/postgresDS</jndi-name>
                                         <enabled>true</enabled>
-                                        <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
                                         <pool-name>myPool</pool-name>
                                         <driver-name>postgresql.jar</driver-name>
                                     </properties>
@@ -312,6 +299,15 @@ Complex Deployment and Resource Examples
                         </configuration>
                         <goals>
                             <goal>add-resource</goal>
+                        </goals>
+                    </execution>
+
+                    <!-- Deploy the application on install -->
+                    <execution>
+                        <id>deploy</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>deploy</goal>
                         </goals>
                     </execution>
                 </executions>
