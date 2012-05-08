@@ -30,7 +30,7 @@ import org.jboss.as.plugin.deployment.Deployment.Type;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  * @goal undeploy
  */
-public final class Undeploy extends AbstractDeployment {
+public class Undeploy extends AbstractDeployment {
 
     /**
      * @parameter default-value="true" expression="${undeploy.ignoreMissingDeployment}"
