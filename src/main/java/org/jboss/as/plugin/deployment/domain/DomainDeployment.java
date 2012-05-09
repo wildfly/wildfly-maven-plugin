@@ -52,7 +52,7 @@ import org.jboss.as.controller.client.helpers.domain.ServerGroupDeploymentPlanBu
 import org.jboss.as.controller.client.helpers.domain.ServerIdentity;
 import org.jboss.as.controller.client.helpers.domain.ServerStatus;
 import org.jboss.as.controller.client.helpers.domain.ServerUpdateResult;
-import org.jboss.as.plugin.deployment.ConnectionInfo;
+import org.jboss.as.plugin.common.ConnectionInfo;
 import org.jboss.as.plugin.deployment.Deployment;
 import org.jboss.dmr.ModelNode;
 
@@ -77,8 +77,21 @@ public class DomainDeployment implements Deployment {
      * @param type           the deployment type.
      */
     public DomainDeployment(final ConnectionInfo connectionInfo, final Domain domain, final File content, final String name, final Type type) {
+        this(DomainClient.Factory.create(connectionInfo.getHostAddress(), connectionInfo.getPort(), connectionInfo.getCallbackHandler()), domain, content, name, type);
+    }
+
+    /**
+     * Creates a new deployment.
+     *
+     * @param client  the client for the server
+     * @param domain  the domain information
+     * @param content the content for the deployment
+     * @param name    the name of the deployment, if {@code null} the name of the content file is used
+     * @param type    the deployment type
+     */
+    public DomainDeployment(final DomainClient client, final Domain domain, final File content, final String name, final Type type) {
         this.content = content;
-        this.client = DomainClient.Factory.create(connectionInfo.getHostAddress(), connectionInfo.getPort(), connectionInfo.getCallbackHandler());
+        this.client = client;
         this.domain = domain;
         this.name = (name == null ? content.getName() : name);
         this.type = type;
@@ -97,6 +110,21 @@ public class DomainDeployment implements Deployment {
      */
     public static DomainDeployment create(final ConnectionInfo connectionInfo, final Domain domain, final File content, final String name, final Type type) {
         return new DomainDeployment(connectionInfo, domain, content, name, type);
+    }
+
+    /**
+     * Creates a new deployment.
+     *
+     * @param client  the client for the server
+     * @param domain  the domain information
+     * @param content the content for the deployment
+     * @param name    the name of the deployment, if {@code null} the name of the content file is used
+     * @param type    the deployment type
+     *
+     * @return the new deployment
+     */
+    public static DomainDeployment create(final DomainClient client, final Domain domain, final File content, final String name, final Type type) {
+        return new DomainDeployment(client, domain, content, name, type);
     }
 
     private DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException, DuplicateDeploymentNameException, MojoFailureException {

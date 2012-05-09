@@ -20,33 +20,40 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.as.plugin.deployment;
+package org.jboss.as.plugin.server;
 
-import java.net.InetAddress;
-import javax.security.auth.callback.CallbackHandler;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 /**
+ * Security actions to perform possibly privileged operations. No methods in this class are to be made public under any
+ * circumstances!
+ *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-public interface ConnectionInfo {
-    /**
-     * The port number of the server to deploy to. The default is 9999.
-     *
-     * @return the port number to deploy to.
-     */
-    int getPort();
+final class SecurityActions {
+    static void addShutdownHook(final Thread hook) {
+        if (System.getSecurityManager() == null) {
+            Runtime.getRuntime().addShutdownHook(hook);
+        } else {
+            AccessController.doPrivileged(new PrivilegedAction<Object>() {
+                public Object run() {
+                    Runtime.getRuntime().addShutdownHook(hook);
+                    return null;
+                }
+            });
+        }
+    }
 
-    /**
-     * Creates gets the address to the host name.
-     *
-     * @return the address.
-     */
-    InetAddress getHostAddress();
-
-    /**
-     * The callback handler for authentication.
-     *
-     * @return the callback handler.
-     */
-    CallbackHandler getCallbackHandler();
+    static String getEnvironmentVariable(final String key) {
+        if (System.getSecurityManager() == null) {
+            return System.getenv(key);
+        }
+        return AccessController.doPrivileged(new PrivilegedAction<String>() {
+            @Override
+            public String run() {
+                return System.getenv(key);
+            }
+        });
+    }
 }

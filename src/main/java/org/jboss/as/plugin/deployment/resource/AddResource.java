@@ -32,7 +32,8 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.OperationBuilder;
 import org.jboss.as.controller.client.helpers.ClientConstants;
-import org.jboss.as.plugin.deployment.common.AbstractServerConnection;
+import org.jboss.as.plugin.common.AbstractServerConnection;
+import org.jboss.as.plugin.common.Streams;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.Property;
 
@@ -122,7 +123,7 @@ public class AddResource extends AbstractServerConnection {
                     }
                 }
             } finally {
-                safeClose(client);
+                Streams.safeClose(client);
             }
         } catch (Exception e) {
             throw new MojoExecutionException(String.format("Could not execute goal %s. Reason: %s", goal(), e.getMessage()), e);

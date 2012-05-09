@@ -27,7 +27,8 @@ import java.io.File;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
-import org.jboss.as.plugin.deployment.common.AbstractServerConnection;
+import org.jboss.as.plugin.common.AbstractServerConnection;
+import org.jboss.as.plugin.common.Streams;
 import org.jboss.as.plugin.deployment.domain.DomainDeployment;
 import org.jboss.as.plugin.deployment.standalone.StandaloneDeployment;
 
@@ -138,7 +139,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
                     deployment.execute();
                     deployment.close();
                 } finally {
-                    safeClose(deployment);
+                    Streams.safeClose(deployment);
                 }
             }
         } catch (MojoFailureException e) {

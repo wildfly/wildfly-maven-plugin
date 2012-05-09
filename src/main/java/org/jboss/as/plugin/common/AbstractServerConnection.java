@@ -20,15 +20,13 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.as.plugin.deployment.common;
+package org.jboss.as.plugin.common;
 
-import java.io.Closeable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import javax.security.auth.callback.CallbackHandler;
 
 import org.apache.maven.plugin.AbstractMojo;
-import org.jboss.as.plugin.deployment.ConnectionInfo;
 import org.jboss.as.plugin.deployment.domain.Domain;
 
 /**
@@ -166,13 +164,5 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
             }
         }
         return result;
-    }
-
-    public void safeClose(final Closeable closeable) {
-        if (closeable != null) try {
-            closeable.close();
-        } catch (Exception e) {
-            getLog().warn("Error closing " + closeable);
-        }
     }
 }
