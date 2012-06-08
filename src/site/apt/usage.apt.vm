@@ -83,3 +83,14 @@ mvn jboss-as:redeploy
 +-----+
 mvn jboss-as:undeploy
 +-----+
+
+* The <<<jboss-as:run>>> Goal
+
+  The <<<jboss-as:run>>> goal will run JBoss Application Server and deploy your application. If the <<<jboss-as.home>>>
+  property is not set, the server will be downloaded.
+
+  To execute the the redeploy goal type the following on the command line:
+
++-----+
+mvn jboss-as:run
++-----+

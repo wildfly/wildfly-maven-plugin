@@ -51,6 +51,8 @@ ${project.name} (${project.artifactId})
 
   * {{{./undeploy-mojo.html}jboss-as:undeploy}} undeploys the application.
 
+  * {{{./run-mojo.html}jboss-as:run}} runs the application server and deploys your application.
+
 * Usage
 
   General instructions on how to use the ${project.name} can be found on the {{{./usage.html}usage page}}. Some more
