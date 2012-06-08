@@ -22,6 +22,11 @@
 
 package org.jboss.as.plugin.deployment;
 
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.jboss.as.plugin.deployment.Deployment.Type;
 
 /**
@@ -35,8 +40,9 @@ import org.jboss.as.plugin.deployment.Deployment.Type;
  * will occur and the deployment will fail.
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
- * @goal deploy
  */
+@Mojo(name = "deploy", requiresDependencyResolution = ResolutionScope.RUNTIME)
+@Execute(phase = LifecyclePhase.PACKAGE)
 public class Deploy extends AbstractDeployment {
 
     /**
@@ -44,9 +50,8 @@ public class Deploy extends AbstractDeployment {
      * </p>
      * If force mode is disabled, the deploy goal will cause a build failure if the application being deployed already
      * exists.
-     *
-     * @parameter default-value="true" expression="${deploy.force}"
      */
+    @Parameter(defaultValue = "true", property = "deploy.force")
     private boolean force;
 
     @Override

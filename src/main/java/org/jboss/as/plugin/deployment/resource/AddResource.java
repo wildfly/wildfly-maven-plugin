@@ -29,6 +29,8 @@ import java.util.Map;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.OperationBuilder;
 import org.jboss.as.controller.client.helpers.ClientConstants;
@@ -48,8 +50,8 @@ import org.jboss.dmr.Property;
  *
  * @author Stuart Douglas
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
- * @goal add-resource
  */
+@Mojo(name = "add-resource")
 public class AddResource extends AbstractServerConnection {
 
     public static final String GOAL = "add-resource";
@@ -60,44 +62,45 @@ public class AddResource extends AbstractServerConnection {
      * <p/>
      * If the resource or resources also define and address, this address will be used as the parent address. Meaning
      * the resource addresses will be prepended with this address.
-     *
-     * @parameter
      */
+    @Parameter
     private String address;
 
     /**
      * The operation properties.
-     *
-     * @parameter
      * @deprecated prefer the {@code resources} or {@code resource} configuration.
      */
+    @Parameter
+    @Deprecated
     private Map<String, String> properties;
 
     /**
      * The resource to add.
      * <p/>
-     * A resource could consist of; <ul> <li>An address, which may be appended to this address if defined {@literal
-     * <address/>}.</li> <li>A mapping of properties to be set on the resource {@literal <properties/>}.</li> <li>A
-     * flag
-     * to indicate whether or not the resource should be enabled {@literal <enableResource/>}</li> </ul>
-     *
-     * @parameter
+     * A resource could consist of;
+     * <ul>
+     * <li>An address, which may be appended to this address if defined {@literal <address/>}.
+     * </li>
+     * <li>A mapping of properties to be set on the resource {@literal <properties/>}.</li>
+     * <li>A flag to indicate whether or not the resource should be enabled {@literal <enableResource/>}</li>
+     * </ul>
      */
+    @Parameter
     private Resource resource;
 
     /**
      * A collection of resources to add.
-     *
-     * @parameter
      */
+    @Parameter
     private Resource[] resources;
 
     /**
-     * Specifies whether force mode should be used or not. </p> If force mode is disabled, the add-resource goal will
-     * cause a build failure if the resource is already present on the server
-     *
-     * @parameter default-value="true" expression="${add-resource.force}"
+     * Specifies whether force mode should be used or not.
+     * </p>
+     * If force mode is disabled, the add-resource goal will
+     * cause a build failure if the resource is already present on the server.
      */
+    @Parameter(defaultValue = "true", property = "add-resource.force")
     private boolean force;
 
     @Override

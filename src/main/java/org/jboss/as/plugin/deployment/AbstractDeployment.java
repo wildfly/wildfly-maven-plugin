@@ -26,6 +26,7 @@ import java.io.File;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.jboss.as.plugin.common.AbstractServerConnection;
 import org.jboss.as.plugin.common.Streams;
@@ -37,7 +38,6 @@ import org.jboss.as.plugin.deployment.standalone.StandaloneDeployment;
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  * @author Stuart Douglas
- * @requiresDependencyResolution runtime
  */
 abstract class AbstractDeployment extends AbstractServerConnection {
 
@@ -46,47 +46,38 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     private static final String NO_NAME_MSG = "No name defined, using default deployment name.";
     private static final String NAME_DEFINED_MSG_FMT = "Using '%s' for the deployment name.";
 
-    /**
-     * @parameter default-value="${project}"
-     * @readonly
-     * @required
-     */
+    @Parameter(defaultValue = "${project}", readonly = true, required = true)
     private MavenProject project;
 
     /**
      * Specifies the name used for the deployment.
-     *
-     * @parameter
      */
+    @Parameter
     private String name;
 
     /**
      * Specifies the packaging type.
-     *
-     * @parameter default-value="${project.packaging}"
      */
+    @Parameter(defaultValue = "${project.packaging}")
     private String packaging;
 
 
     /**
      * The target directory the application to be deployed is located.
-     *
-     * @parameter default-value="${project.build.directory}/"
      */
+    @Parameter(defaultValue = "${project.build.directory}/")
     private File targetDir;
 
     /**
      * The file name of the application to be deployed.
-     *
-     * @parameter default-value="${project.build.finalName}.${project.packaging}"
      */
+    @Parameter(defaultValue = "${project.build.finalName}.${project.packaging}")
     private String filename;
 
     /**
      * Set to {@code true} if you want the deployment to be skipped, otherwise {@code false}.
-     *
-     * @parameter default-value="false"
      */
+    @Parameter(defaultValue = "false")
     private boolean skip;
 
     /**

@@ -27,36 +27,36 @@ import java.util.Set;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 /**
  * Undeploys (removes) an arbitrary artifact to the JBoss application server
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
- * @goal undeploy-artifact
  */
+@Mojo(name = "undeploy-artifact", requiresDependencyResolution = ResolutionScope.RUNTIME)
+@Execute(phase = LifecyclePhase.PACKAGE)
 public final class UndeployArtifact extends Undeploy {
 
     /**
      * The artifact to deploys groupId
-     *
-     * @parameter
      */
+    @Parameter
     private String groupId;
 
 
     /**
      * The artifact to deploys artifactId
-     *
-     * @parameter
      */
+    @Parameter
     private String artifactId;
 
-    /**
-     * @parameter default-value="${project}"
-     * @readonly
-     * @required
-     */
+    @Parameter(defaultValue = "${project}", readonly = true, required = true)
     private MavenProject project;
 
     /**

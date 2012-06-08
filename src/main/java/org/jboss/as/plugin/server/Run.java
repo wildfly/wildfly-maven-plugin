@@ -36,6 +36,12 @@ import java.util.zip.ZipFile;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.jboss.as.plugin.common.ConnectionInfo;
 import org.jboss.as.plugin.common.Streams;
@@ -52,133 +58,110 @@ import org.sonatype.aether.util.artifact.DefaultArtifact;
 /**
  * @author Stuart Douglas
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
- * @goal run
- * @requiresDependencyResolution runtime
- * @execute phase="package"
  */
+@Mojo(name = "run", requiresDependencyResolution = ResolutionScope.RUNTIME)
+@Execute(phase = LifecyclePhase.PACKAGE)
 public class Run extends AbstractMojo {
 
     public static final String JBOSS_DIR = "jboss-as-run";
 
-    /**
-     * @parameter default-value="${project}"
-     * @readonly
-     * @required
-     */
+    @Parameter(defaultValue = "${project}", readonly = true, required = true)
     private MavenProject project;
 
     /**
      * The entry point to Aether, i.e. the component doing all the work.
-     *
-     * @component
      */
+    @Component
     private RepositorySystem repoSystem;
 
     /**
      * The current repository/network configuration of Maven.
-     *
-     * @parameter default-value="${repositorySystemSession}"
-     * @readonly
      */
+    @Parameter(defaultValue = "${repositorySystemSession}", readonly = true)
     private RepositorySystemSession repoSession;
 
     /**
      * The project's remote repositories
-     *
-     * @parameter default-value="${project.remotePluginRepositories}"
-     * @readonly
      */
+    @Parameter(defaultValue = "${project.remotePluginRepositories}", readonly = true)
     private List<RemoteRepository> remoteRepos;
 
     /**
      * The JBoss Application Server's home directory. If not used, JBoss Application Server will be downloaded.
-     *
-     * @parameter alias="jboss-home" expression="${jboss-as.home}"
      */
+    @Parameter(alias = "jboss-home", property = "jboss-as.home")
     private String jbossHome;
 
     /**
      * The group id for the JBoss Application Server.
-     *
-     * @parameter alias="jboss-as-groupId" default-value="org.jboss.as" expression="${jboss-as.groupId}"
      */
+    @Parameter(alias = "jboss-as-groupId", defaultValue = "org.jboss.as", property = "jboss-as.groupId")
     private String jbossAsGroupId;
 
     /**
      * The artifact id for the JBoss Application Server.
-     *
-     * @parameter alias="jboss-as-artifactId" default-value="jboss-as-dist" expression="${jboss-as.artifactId}"
      */
+    @Parameter(alias = "jboss-as-artifactId", defaultValue = "jboss-as-dist", property = "jboss-as.artifactId")
     private String jbossAsArtifactId;
 
     /**
      * The type of the archive.
-     *
-     * @parameter alias="jboss-as-archive-type" default-value="zip" expression="${jboss-as.archiveType}"
      */
+    @Parameter(alias = "jboss-as-archive-type", defaultValue = "zip", property = "jboss-as.archiveType")
     private String jbossAsArchiveType;
 
     /**
      * The version of the JBoss Application Server to run.
-     *
-     * @parameter alias="jboss-as.version" default-value="7.1.1.Final" expression="${jboss-as.version}"
      */
+    @Parameter(alias = "jboss-as.version", defaultValue = "7.1.1.Final", property = "jboss-as.version")
     private String jbossAsVersion;
 
     /**
      * The modules path to use.
-     *
-     * @parameter alias="modules-path" expression="${jboss-as.modulesPath}"
      */
+    @Parameter(alias = "modules-path", property = "jboss-as.modulesPath")
     private String modulesPath;
 
     /**
      * The bundles path to use.
-     *
-     * @parameter alias="bundles-path" expression="${jboss-as.bundlesPath}"
      */
+    @Parameter(alias = "bundles-path", property = "jboss-as.bundlesPath")
     private String bundlesPath;
 
     /**
      * A space delimited list of JVM arguments.
-     *
-     * @parameter alias="jvm-args" expression="${jboss-as.jvmArgs}"
      */
+    @Parameter(alias = "jvm-args", property = "jboss-as.jvmArgs")
     private String jvmArgs;
 
     /**
      * The {@code JAVA_HOME} to use for launching the server.
-     *
-     * @parameter alias="java-home" expression="${java.home}"
      */
+    @Parameter(alias = "java-home", property = "java.home")
     private String javaHome;
 
     /**
      * The path to the server configuration to use.
-     *
-     * @parameter alias="server-config" expression="${jboss-as.serverConfig}"
      */
+    @Parameter(alias = "server-config", property = "jboss-as.serverConfig")
     private String serverConfig;
 
     /**
      * The timeout value to use when starting the server.
-     *
-     * @parameter alias="startup-timeout" default-value=60 expression="${jboss-as.startupTimeout}"
      */
+    @Parameter(alias = "startup-timeout", defaultValue = "60", property = "jboss-as.startupTimeout")
     private long startupTimeout;
 
     /**
      * The target directory the application to be deployed is located.
-     *
-     * @parameter
      */
+    @Parameter
     private File targetDir;
 
     /**
      * The file name of the application to be deployed.
-     *
-     * @parameter
      */
+    @Parameter
     private String filename;
 
 

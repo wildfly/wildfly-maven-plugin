@@ -22,14 +22,19 @@
 
 package org.jboss.as.plugin.deployment;
 
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.jboss.as.plugin.deployment.Deployment.Type;
 
 /**
  * Redeploys the application to the JBoss Application Server.
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
- * @goal redeploy
  */
+@Mojo(name = "redeploy", requiresDependencyResolution = ResolutionScope.RUNTIME)
+@Execute(phase = LifecyclePhase.PACKAGE)
 public final class Redeploy extends AbstractDeployment {
 
     @Override

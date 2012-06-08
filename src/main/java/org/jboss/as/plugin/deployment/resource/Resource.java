@@ -26,6 +26,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.maven.plugins.annotations.Parameter;
+
 /**
  * Defines a resource.
  *
@@ -35,40 +37,35 @@ public class Resource {
 
     /**
      * The operation address.
-     *
-     * @parameter
      */
+    @Parameter
     private String address;
 
     /**
      * Only adds the resource if the resource does not already exist. If the resource already exists, the resource is
      * skipped.
-     *
-     * @parameter
      */
+    @Parameter
     private boolean addIfAbsent;
 
     /**
      * The operation properties for the resource.
-     *
-     * @parameter
      */
+    @Parameter
     private Map<String, String> properties;
 
     /**
-     * Flag to start the operation, if necessary
-     *
-     * @parameter default-value="false" expression="${add-resource.enableResource}"
+     * Flag to start the operation, if necessary.
      */
+    @Parameter(defaultValue = "false", property = "add-resource.enableResource")
     private boolean enableResource;
 
     /**
      * An array of resources that rely on this resource.
      * <p/>
      * Note all resources will be ignored if the {@code <addIfAbsent/>} is defined and his resource is already defined.
-     *
-     * @parameter
      */
+    @Parameter
     private Resource[] resources;
 
     /**

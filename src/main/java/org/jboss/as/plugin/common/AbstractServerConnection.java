@@ -27,6 +27,9 @@ import java.net.UnknownHostException;
 import javax.security.auth.callback.CallbackHandler;
 
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.jboss.as.plugin.deployment.domain.Domain;
 
 /**
@@ -34,7 +37,6 @@ import org.jboss.as.plugin.deployment.domain.Domain;
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  * @author Stuart Douglas
- * @requiresDependencyResolution runtime
  */
 public abstract class AbstractServerConnection extends AbstractMojo implements ConnectionInfo {
     // These will be moved org.jboss.as.controller.client.helpers.ClientConstants next release.
@@ -45,16 +47,14 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
 
     /**
      * Specifies the host name of the server where the deployment plan should be executed.
-     *
-     * @parameter default-value="localhost" expression="${deploy.hostname}"
      */
+    @Parameter(defaultValue = "localhost", property = "deploy.hostname")
     private String hostname;
 
     /**
      * Specifies the port number the server is listening on.
-     *
-     * @parameter default-value="9999" expression="${deploy.port}"
      */
+    @Parameter(defaultValue = "9999", property = "deploy.port")
     private int port;
 
     /**
@@ -62,9 +62,8 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
      * <p/>
      * If no username is specified and the server requests authentication the user
      * will be prompted to supply the username,
-     *
-     * @parameter expression="${deploy.username}"
      */
+    @Parameter(property = "deploy.username")
     private String username;
 
     /**
@@ -72,16 +71,14 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
      * <p/>
      * If no password is specified and the server requests authentication the user
      * will be prompted to supply the password,
-     *
-     * @parameter expression="${deploy.password}"
      */
+    @Parameter(property = "deploy.password")
     private String password;
 
     /**
      * Indicates if this should be a domain deployment.
-     *
-     * @parameter
      */
+    @Parameter
     private Domain domain;
 
     /**

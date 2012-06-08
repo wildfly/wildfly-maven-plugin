@@ -24,6 +24,10 @@ package org.jboss.as.plugin.deployment;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlan;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
@@ -36,30 +40,24 @@ import java.util.Set;
  * Deploys an arbitrary artifact to the JBoss application server
  *
  * @author Stuart Douglas
- * @goal deploy-artifact
  */
+@Mojo(name = "deploy-artifact", requiresDependencyResolution = ResolutionScope.RUNTIME)
 public final class DeployArtifact extends Deploy {
 
     /**
      * The artifact to deploys groupId
-     *
-     * @parameter
      */
+    @Parameter
     private String groupId;
 
 
     /**
      * The artifact to deploys artifactId
-     *
-     * @parameter
      */
+    @Parameter
     private String artifactId;
 
-    /**
-     * @parameter default-value="${project}"
-     * @readonly
-     * @required
-     */
+    @Parameter(defaultValue = "${project}", readonly = true, required = true)
     private MavenProject project;
 
     /**
