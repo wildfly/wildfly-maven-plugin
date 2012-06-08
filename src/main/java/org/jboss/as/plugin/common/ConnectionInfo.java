@@ -52,6 +52,7 @@ public interface ConnectionInfo {
     CallbackHandler getCallbackHandler();
 
     public ConnectionInfo DEFAULT = new ConnectionInfo() {
+        private final CallbackHandler handler = new ClientCallbackHandler(null, null);
         @Override
         public int getPort() {
             return 9999;
@@ -68,7 +69,7 @@ public interface ConnectionInfo {
 
         @Override
         public CallbackHandler getCallbackHandler() {
-            return null;
+            return handler;
         }
     };
 }
