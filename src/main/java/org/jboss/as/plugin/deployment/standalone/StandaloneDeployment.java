@@ -34,8 +34,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentAction;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlan;
@@ -45,6 +43,8 @@ import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentManager
 import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentPlanResult;
 import org.jboss.as.controller.client.helpers.standalone.ServerUpdateActionResult;
 import org.jboss.as.plugin.common.ConnectionInfo;
+import org.jboss.as.plugin.common.DeploymentExecutionException;
+import org.jboss.as.plugin.common.DeploymentFailureException;
 import org.jboss.as.plugin.deployment.Deployment;
 import org.jboss.dmr.ModelNode;
 
@@ -151,7 +151,7 @@ public class StandaloneDeployment implements Deployment {
     }
 
     @Override
-    public Status execute() throws MojoExecutionException, MojoFailureException {
+    public Status execute() throws DeploymentExecutionException, DeploymentFailureException {
         Status resultStatus = Status.SUCCESS;
         try {
             final ServerDeploymentManager manager = ServerDeploymentManager.Factory.create(client);
@@ -166,11 +166,11 @@ public class StandaloneDeployment implements Deployment {
                         final ServerUpdateActionResult.Result result = actionResult.getResult();
                         switch (result) {
                             case FAILED:
-                                throw new MojoExecutionException("Deployment failed.", actionResult.getDeploymentException());
+                                throw new DeploymentExecutionException("Deployment failed.", actionResult.getDeploymentException());
                             case NOT_EXECUTED:
-                                throw new MojoExecutionException("Deployment not executed.", actionResult.getDeploymentException());
+                                throw new DeploymentExecutionException("Deployment not executed.", actionResult.getDeploymentException());
                             case ROLLED_BACK:
-                                throw new MojoExecutionException("Deployment failed and was rolled back.", actionResult.getDeploymentException());
+                                throw new DeploymentExecutionException("Deployment failed and was rolled back.", actionResult.getDeploymentException());
                             case CONFIGURATION_MODIFIED_REQUIRES_RESTART:
                                 resultStatus = Status.REQUIRES_RESTART;
                                 break;
@@ -178,12 +178,17 @@ public class StandaloneDeployment implements Deployment {
                     }
                 }
             }
-        } catch (MojoExecutionException e) {
+        } catch (DeploymentExecutionException e) {
             throw e;
         } catch (Exception e) {
-            throw new MojoExecutionException(String.format("Error executing %s", type), e);
+            throw new DeploymentExecutionException(String.format("Error executing %s", type), e);
         }
         return resultStatus;
+    }
+
+    @Override
+    public ModelControllerClient getClient() {
+        return client;
     }
 
     @Override

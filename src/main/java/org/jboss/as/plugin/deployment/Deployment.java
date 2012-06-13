@@ -26,6 +26,9 @@ import java.io.Closeable;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.plugin.common.DeploymentExecutionException;
+import org.jboss.as.plugin.common.DeploymentFailureException;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
@@ -56,10 +59,17 @@ public interface Deployment extends Closeable {
      *
      * @return the status of the execution.
      *
-     * @throws MojoExecutionException if the deployment fails
-     * @throws MojoFailureException   if a failure occurs.
+     * @throws DeploymentExecutionException if the deployment fails
+     * @throws DeploymentFailureException   if a failure occurs.
      */
-    Status execute() throws MojoExecutionException, MojoFailureException;
+    Status execute() throws DeploymentExecutionException, DeploymentFailureException;
+
+    /**
+     * Gets the client associated with the deployment.
+     *
+     * @return the client associated with the deployment
+     */
+    ModelControllerClient getClient();
 
     /**
      * The type of the deployment.

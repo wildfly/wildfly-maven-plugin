@@ -53,6 +53,8 @@ import org.jboss.as.controller.client.helpers.domain.ServerIdentity;
 import org.jboss.as.controller.client.helpers.domain.ServerStatus;
 import org.jboss.as.controller.client.helpers.domain.ServerUpdateResult;
 import org.jboss.as.plugin.common.ConnectionInfo;
+import org.jboss.as.plugin.common.DeploymentExecutionException;
+import org.jboss.as.plugin.common.DeploymentFailureException;
 import org.jboss.as.plugin.deployment.Deployment;
 import org.jboss.dmr.ModelNode;
 
@@ -174,7 +176,7 @@ public class DomainDeployment implements Deployment {
     }
 
     @Override
-    public Status execute() throws MojoExecutionException, MojoFailureException {
+    public Status execute() throws DeploymentExecutionException, DeploymentFailureException {
         try {
             validate();
             final DomainDeploymentManager manager = client.getDeploymentManager();
@@ -183,14 +185,19 @@ public class DomainDeployment implements Deployment {
             if (plan != null) {
                 executePlan(manager, plan);
             }
-        } catch (MojoFailureException e) {
+        } catch (DeploymentFailureException e) {
             throw e;
-        } catch (MojoExecutionException e) {
+        } catch (DeploymentExecutionException e) {
             throw e;
         } catch (Exception e) {
-            throw new MojoExecutionException(String.format("Error executing %s", type), e);
+            throw new DeploymentExecutionException(String.format("Error executing %s", type), e);
         }
         return Status.SUCCESS;
+    }
+
+    @Override
+    public DomainClient getClient() {
+        return client;
     }
 
     void validate() throws MojoFailureException {

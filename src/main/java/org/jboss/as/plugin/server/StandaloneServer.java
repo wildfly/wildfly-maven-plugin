@@ -32,6 +32,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.ClientConstants;
+import org.jboss.as.plugin.common.DeploymentExecutionException;
+import org.jboss.as.plugin.common.DeploymentFailureException;
 import org.jboss.as.plugin.common.Files;
 import org.jboss.as.plugin.common.Streams;
 import org.jboss.as.plugin.deployment.Deployment;
@@ -154,7 +156,7 @@ public final class StandaloneServer extends Server {
     }
 
     @Override
-    public synchronized void deploy(final File file, final String deploymentName) throws MojoExecutionException, MojoFailureException, IOException {
+    public synchronized void deploy(final File file, final String deploymentName) throws DeploymentExecutionException, DeploymentFailureException, IOException {
         if (isStarted) {
             switch (StandaloneDeployment.create(client, file, deploymentName, Deployment.Type.DEPLOY).execute()) {
                 case REQUIRES_RESTART: {
