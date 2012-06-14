@@ -23,6 +23,7 @@
 package org.jboss.as.plugin.deployment;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -42,11 +43,6 @@ import org.jboss.as.plugin.deployment.standalone.StandaloneDeployment;
  * @author Stuart Douglas
  */
 abstract class AbstractDeployment extends AbstractServerConnection {
-
-    // These will be moved org.jboss.as.controller.client.helpers.ClientConstants next release.
-
-    private static final String NO_NAME_MSG = "No name defined, using default deployment name.";
-    private static final String NAME_DEFINED_MSG_FMT = "Using '%s' for the deployment name.";
 
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     private MavenProject project;
@@ -133,8 +129,13 @@ abstract class AbstractDeployment extends AbstractServerConnection {
                         client = ModelControllerClient.Factory.create(getHostAddress(), getPort(), getCallbackHandler());
                         deployment = StandaloneDeployment.create(client, file(), name, getType());
                     }
+                    // Execute before deployment hook
+                    getBeforeDeploymentHook().execute(client);
                     // Deploy the deployment
+                    getLog().debug("Executing deployment");
                     deployment.execute();
+                    // Execute after deployment hook
+                    getAfterDeploymentHook().execute(client);
                 } finally {
                     Streams.safeClose(client);
                 }
@@ -157,22 +158,12 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         // no-op by default
     }
 
-    /**
-     * A message indicating the name has not been defined.
-     *
-     * @return the message.
-     */
-    protected String nameNotDefinedMessage() {
-        return NO_NAME_MSG;
+    protected Hook getBeforeDeploymentHook() {
+        return Hook.NO_OP_HOOK;
     }
 
-    /**
-     * A message indicating the name has been defined and will be used.
-     *
-     * @return the message.
-     */
-    protected String nameDefinedMessage() {
-        return String.format(NAME_DEFINED_MSG_FMT, name);
+    protected Hook getAfterDeploymentHook() {
+        return Hook.NO_OP_HOOK;
     }
 
     /**
@@ -180,5 +171,20 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      */
     protected boolean checkPackaging() {
         return true;
+    }
+
+    interface Hook {
+
+        final Hook NO_OP_HOOK = new Hook() {
+            @Override
+            public void execute(final ModelControllerClient client) {
+                // no-op
+            }
+        };
+
+        /**
+         * Executes operations for the hook.
+         */
+        void execute(ModelControllerClient client) throws IOException;
     }
 }

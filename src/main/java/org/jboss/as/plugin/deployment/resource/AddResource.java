@@ -34,6 +34,7 @@ import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.as.plugin.common.AbstractServerConnection;
 import org.jboss.as.plugin.common.Operations;
+import org.jboss.as.plugin.common.Operations.CompositeOperationBuilder;
 import org.jboss.as.plugin.common.Streams;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.Property;
@@ -133,7 +134,6 @@ public class AddResource extends AbstractServerConnection {
     }
 
     private void processResources(final ModelControllerClient client, final Resource... resources) throws IOException {
-        final ModelNode op = Operations.createCompositeOperation();
         for (Resource resource : resources) {
             if (isDomainServer()) {
                 // Profiles are required when adding resources in domain mode
@@ -142,23 +142,37 @@ public class AddResource extends AbstractServerConnection {
                     throw new IllegalStateException("Cannot add resources when no profiles were defined.");
                 }
                 for (String profile : profiles) {
-                    final ModelNode model = new ModelNode();
-                    if (addCompositeResource(profile, client, resource, address, model, true)) {
-                        op.get(ClientConstants.STEPS).set(model.get(ClientConstants.STEPS));
-                        reportFailure(client.execute(op));
+                    final CompositeOperationBuilder compositeOperationBuilder = CompositeOperationBuilder.create();
+                    if (addCompositeResource(profile, client, resource, address, compositeOperationBuilder, true)) {
+                        if (resource.hasBeforeDeployCommands()) {
+                            resource.getBeforeDeployment().executeCommands(client);
+                        }
+                        // Execute the add resource operation
+                        reportFailure(client.execute(compositeOperationBuilder.build()));
+
+                        if (resource.hasAfterDeployCommands()) {
+                            resource.getAfterDeployment().executeCommands(client);
+                        }
                     }
                 }
             } else {
-                final ModelNode model = new ModelNode();
-                if (addCompositeResource(null, client, resource, address, model, true)) {
-                    op.get(ClientConstants.STEPS).set(model.get(ClientConstants.STEPS));
-                    reportFailure(client.execute(op));
+                final CompositeOperationBuilder compositeOperationBuilder = CompositeOperationBuilder.create();
+                if (addCompositeResource(null, client, resource, address, compositeOperationBuilder, true)) {
+                    if (resource.hasBeforeDeployCommands()) {
+                        resource.getBeforeDeployment().executeCommands(client);
+                    }
+                    // Execute the add resource operation
+                    reportFailure(client.execute(compositeOperationBuilder.build()));
+
+                    if (resource.hasAfterDeployCommands()) {
+                        resource.getAfterDeployment().executeCommands(client);
+                    }
                 }
             }
         }
     }
 
-    private boolean addCompositeResource(final String profileName, final ModelControllerClient client, final Resource resource, final String parentAddress, final ModelNode compositeOp, final boolean checkExistence) throws IOException {
+    private boolean addCompositeResource(final String profileName, final ModelControllerClient client, final Resource resource, final String parentAddress, final CompositeOperationBuilder compositeOp, final boolean checkExistence) throws IOException {
         final String inputAddress;
         if (parentAddress == null) {
             inputAddress = resource.getAddress();
@@ -185,7 +199,7 @@ public class AddResource extends AbstractServerConnection {
                 throw new RuntimeException(String.format("Resource %s already exists.", address));
             }
         }
-        compositeOp.get(ClientConstants.STEPS).add(buildAddOperation(address, resource.getProperties()));
+        compositeOp.addStep(buildAddOperation(address, resource.getProperties()));
         if (resource.getResources() != null) {
             final String resourceAddress = resource.getAddress();
             final String addr;
@@ -203,7 +217,7 @@ public class AddResource extends AbstractServerConnection {
             }
         }
         if (resource.isEnableResource()) {
-            compositeOp.get(ClientConstants.STEPS).add(Operations.createOperation(Operations.ENABLE, address));
+            compositeOp.addStep(Operations.createOperation(Operations.ENABLE, address));
         }
         return true;
     }
@@ -249,8 +263,9 @@ public class AddResource extends AbstractServerConnection {
      * @throws RuntimeException if the operation fails.
      */
     private boolean resourceExists(final ModelNode address, final ModelControllerClient client) throws IOException {
-        final Property childAddress = Operations.getLastAddress(address);
-        final ModelNode r = client.execute(Operations.createOperation(Operations.READ_RESOURCE, address, false));
+        final Property childAddress = Operations.getChildAddress(address);
+        final ModelNode parentAddress = Operations.getParentAddress(address);
+        final ModelNode r = client.execute(Operations.createOperation(Operations.READ_RESOURCE, parentAddress, false));
         reportFailure(r);
         boolean found = false;
         final String name = childAddress.getName();

@@ -24,6 +24,8 @@ package org.jboss.as.plugin.common;
 
 import java.util.List;
 
+import org.jboss.as.controller.client.Operation;
+import org.jboss.as.controller.client.OperationBuilder;
 import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
@@ -196,7 +198,7 @@ public class Operations {
      *
      * @throws IllegalArgumentException if the address is not of type {@link ModelType#LIST} or is empty
      */
-    public static Property getLastAddress(final ModelNode address) {
+    public static Property getChildAddress(final ModelNode address) {
         if (address.getType() != ModelType.LIST) {
             throw new IllegalArgumentException("The address type must be a list.");
         }
@@ -205,5 +207,55 @@ public class Operations {
             throw new IllegalArgumentException("The address is empty.");
         }
         return addressParts.get(addressParts.size() - 1);
+    }
+
+    /**
+     * Finds the parent address, everything before the last address part.
+     *
+     * @param address the address to get the parent
+     *
+     * @return the parent address
+     *
+     * @throws IllegalArgumentException if the address is not of type {@link ModelType#LIST} or is empty
+     */
+    public static ModelNode getParentAddress(final ModelNode address) {
+        if (address.getType() != ModelType.LIST) {
+            throw new IllegalArgumentException("The address type must be a list.");
+        }
+        final ModelNode result = new ModelNode();
+        final List<Property> addressParts = address.asPropertyList();
+        if (addressParts.isEmpty()) {
+            throw new IllegalArgumentException("The address is empty.");
+        }
+        for (int i = 0; i < addressParts.size() - 1; ++i) {
+            final Property property = addressParts.get(i);
+            result.add(property.getName(), property.getValue());
+        }
+        return result;
+    }
+
+    public static class CompositeOperationBuilder {
+        private final ModelNode op;
+
+        private CompositeOperationBuilder(final ModelNode op) {
+            this.op = op;
+        }
+
+        public static CompositeOperationBuilder create() {
+            return new CompositeOperationBuilder(createCompositeOperation());
+        }
+
+        public Operation build() {
+            return OperationBuilder.create(op).build();
+        }
+
+        public CompositeOperationBuilder addStep(final ModelNode op) {
+            if (op.hasDefined(ClientConstants.OP)) {
+                this.op.get(ClientConstants.STEPS).add(op);
+            } else {
+                throw new IllegalArgumentException(String.format("Invalid operations: %s", op));
+            }
+            return this;
+        }
     }
 }

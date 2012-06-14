@@ -31,7 +31,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.jboss.as.cli.CommandContext;
+import org.jboss.as.cli.CommandFormatException;
 import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.plugin.cli.Cli;
+import org.jboss.as.plugin.common.Operations;
+import org.jboss.dmr.ModelNode;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
@@ -40,6 +45,7 @@ public abstract class Server {
     private final ServerInfo serverInfo;
     private Process process;
     private ConsoleConsumer console;
+    private volatile CommandContext commandContext;
     private final String shutdownId;
 
     protected Server(final ServerInfo serverInfo) {
@@ -109,6 +115,13 @@ public abstract class Server {
     public synchronized final void stop() {
         try {
             stopServer();
+            try {
+                if (commandContext != null) {
+                    commandContext.terminateSession();
+                }
+            } catch (Exception ignore) {
+                // no-op
+            }
         } finally {
             if (process != null) {
                 process.destroy();
@@ -166,6 +179,36 @@ public abstract class Server {
      * @throws IOException
      */
     public abstract void deploy(final File file, final String deploymentName) throws MojoExecutionException, MojoFailureException, IOException;
+
+    /**
+     * Execute a CLI command.
+     *
+     * @param cmd the command to execute
+     *
+     * @throws IOException              if an error occurs on the connected client
+     * @throws IllegalArgumentException if the command is invalid or was unsuccessful
+     */
+    public synchronized void executeCliCommand(final String cmd) throws IOException {
+        if (!isStarted()) {
+            throw new IllegalStateException("Cannot execute commands on a server that is not running.");
+        }
+        CommandContext ctx = commandContext;
+        if (ctx == null) {
+            commandContext = ctx = Cli.createAndBind(null);
+        }
+        final ModelControllerClient client = getClient();
+        final ModelNode op;
+        final ModelNode result;
+        try {
+            op = ctx.buildRequest(cmd);
+            result = client.execute(op);
+        } catch (CommandFormatException e) {
+            throw new IllegalArgumentException(String.format("Command '%s' is invalid", cmd), e);
+        }
+        if (!Operations.successful(result)) {
+            throw new IllegalArgumentException(String.format("Command '%s' was unsuccessful. Reason: %s", cmd, Operations.getFailureDescription(result)));
+        }
+    }
 
 
     private int destroyProcess() {

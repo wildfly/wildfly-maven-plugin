@@ -35,6 +35,7 @@ import java.util.zip.ZipFile;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -42,10 +43,10 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.jboss.as.plugin.cli.CliCommands;
 import org.jboss.as.plugin.common.AbstractServerConnection;
 import org.jboss.as.plugin.common.Streams;
 import org.jboss.as.plugin.deployment.Deployments;
-import org.jboss.as.plugin.deployment.domain.Domain;
 import org.sonatype.aether.RepositorySystem;
 import org.sonatype.aether.RepositorySystemSession;
 import org.sonatype.aether.repository.RemoteRepository;
@@ -152,6 +153,18 @@ public class Run extends AbstractServerConnection {
     private long startupTimeout;
 
     /**
+     * Commands to run before the deployment
+     */
+    @Parameter(alias = "before-deployment")
+    private CliCommands beforeDeployment;
+
+    /**
+     * Executions to run after the deployment
+     */
+    @Parameter(alias = "after-deployment")
+    private CliCommands afterDeployment;
+
+    /**
      * The target directory the application to be deployed is located.
      */
     @Parameter
@@ -162,9 +175,6 @@ public class Run extends AbstractServerConnection {
      */
     @Parameter
     private String filename;
-
-
-    private final Domain domain = null;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -200,11 +210,11 @@ public class Run extends AbstractServerConnection {
             // Create the server
             final Server server;
             // Currently this will never be true, see comments in DomainServer for details
-            if (domain != null) {
-                server = new DomainServer(serverInfo, domain);
-            } else {
-                server = new StandaloneServer(serverInfo);
+            if (isDomainServer()) {
+                getLog().info("Domain is not supported for the run goal, a standalone server will be started.");
+                // server = new DomainServer(serverInfo, domain);
             }
+            server = new StandaloneServer(serverInfo);
             final Thread shutdownThread = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -217,11 +227,18 @@ public class Run extends AbstractServerConnection {
                     }
                 }
             });
+            // Add the shutdown hook
             SecurityActions.addShutdownHook(shutdownThread);
+            // Start the server
             getLog().info("Server is starting up. Press CTRL + C to stop the server.");
             server.start();
+            // Execute commands before the deployment
+            executeCliCommands(server, beforeDeployment);
+            // Deploy the application
             getLog().info(String.format("Deploying application '%s'%n", file.getName()));
             server.deploy(file, deploymentName);
+            // Execute commands after the deployment
+            executeCliCommands(server, afterDeployment);
             while (server.isStarted()) {
             }
         } catch (Exception e) {
@@ -291,5 +308,17 @@ public class Run extends AbstractServerConnection {
     @Override
     public String goal() {
         return "run";
+    }
+
+    private void executeCliCommands(final Server server, final CliCommands cliCommands) throws IOException {
+        final Log log = getLog();
+        if (cliCommands != null && cliCommands.hasCommands()) {
+            for (String cmd : cliCommands.getCommands()) {
+                if (log.isDebugEnabled()) {
+                    log.debug(String.format("Command being executed: %s", cmd));
+                }
+                server.executeCliCommand(cmd);
+            }
+        }
     }
 }

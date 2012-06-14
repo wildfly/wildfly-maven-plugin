@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.apache.maven.plugins.annotations.Parameter;
+import org.jboss.as.plugin.cli.CliCommands;
 
 /**
  * Defines a resource.
@@ -52,6 +53,18 @@ public class Resource {
      */
     @Parameter
     private Map<String, String> properties;
+
+    /**
+     * Commands to run before the deployment
+     */
+    @Parameter(alias = "before-deployment")
+    private CliCommands beforeDeployment;
+
+    /**
+     * Executions to run after the deployment
+     */
+    @Parameter(alias = "after-deployment")
+    private CliCommands afterDeployment;
 
     /**
      * Flag to start the operation, if necessary.
@@ -137,5 +150,43 @@ public class Resource {
      */
     public Resource[] getResources() {
         return resources;
+    }
+
+    /**
+     * Checks if there are commands that should be executed before the deployment.
+     *
+     * @return {@code true} if there are commands that need to be executed before the deployment, otherwise {@code
+     *         false}
+     */
+    public boolean hasBeforeDeployCommands() {
+        return beforeDeployment != null && beforeDeployment.hasCommands();
+    }
+
+    /**
+     * Returns the commands that should be executed before the resource is deployed.
+     *
+     * @return the commands to execute
+     */
+    public CliCommands getBeforeDeployment() {
+        return beforeDeployment;
+    }
+
+    /**
+     * Checks if there are commands that should be executed after the deployment.
+     *
+     * @return {@code true} if there are commands that need to be executed after the deployment, otherwise {@code
+     *         false}
+     */
+    public boolean hasAfterDeployCommands() {
+        return afterDeployment != null && afterDeployment.hasCommands();
+    }
+
+    /**
+     * Returns the commands that should be executed after the resource is deployed.
+     *
+     * @return the commands to execute
+     */
+    public CliCommands getAfterDeployment() {
+        return afterDeployment;
     }
 }

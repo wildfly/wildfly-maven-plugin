@@ -117,6 +117,12 @@
         </dependency>
         <dependency>
             <groupId>org.jboss.as</groupId>
+            <artifactId>jboss-as-cli</artifactId>
+            <version>${as.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.as</groupId>
             <artifactId>jboss-as-controller-client</artifactId>
             <version>${as.version}</version>
             <scope>compile</scope>

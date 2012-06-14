@@ -22,11 +22,15 @@
 
 package org.jboss.as.plugin.deployment;
 
+import java.io.IOException;
+
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.plugin.cli.CliCommands;
 import org.jboss.as.plugin.deployment.Deployment.Type;
 
 /**
@@ -46,6 +50,18 @@ import org.jboss.as.plugin.deployment.Deployment.Type;
 public class Deploy extends AbstractDeployment {
 
     /**
+     * Commands to run before the deployment
+     */
+    @Parameter(alias = "before-deployment")
+    private CliCommands beforeDeployment;
+
+    /**
+     * Executions to run after the deployment
+     */
+    @Parameter(alias = "after-deployment")
+    private CliCommands afterDeployment;
+
+    /**
      * Specifies whether force mode should be used or not.
      * </p>
      * If force mode is disabled, the deploy goal will cause a build failure if the application being deployed already
@@ -53,6 +69,32 @@ public class Deploy extends AbstractDeployment {
      */
     @Parameter(defaultValue = "true", property = "deploy.force")
     private boolean force;
+
+    @Override
+    protected Hook getAfterDeploymentHook() {
+        return new Hook() {
+            @Override
+            public void execute(final ModelControllerClient client) throws IOException {
+                if (afterDeployment != null) {
+                    getLog().debug("Executing after deployment commands");
+                    afterDeployment.executeCommands(client);
+                }
+            }
+        };
+    }
+
+    @Override
+    protected Hook getBeforeDeploymentHook() {
+        return new Hook() {
+            @Override
+            public void execute(final ModelControllerClient client) throws IOException {
+                if (beforeDeployment != null) {
+                    getLog().debug("Executing before deployment commands");
+                    beforeDeployment.executeCommands(client);
+                }
+            }
+        };
+    }
 
     @Override
     public String goal() {
