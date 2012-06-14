@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.maven.plugins.annotations.Parameter;
+
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
@@ -33,16 +35,14 @@ public class Domain {
 
     /**
      * The profiles where resources should be deployed.
-     *
-     * @parameter
      */
+    @Parameter
     private List<String> profiles;
 
     /**
      * The server groups the content should be deployed to.
-     *
-     * @parameter alias="server-groups"
      */
+    @Parameter(alias = "server-groups")
     private List<String> serverGroups;
 
     /**

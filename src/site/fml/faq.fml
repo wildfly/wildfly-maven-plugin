@@ -31,7 +31,9 @@
         <faq id="usage">
             <question>I'm getting an XNIO error on occasion. Was my deployment goal successful?</question>
             <answer>
-                <p>Yes, your application deployed without errors. We are working on fixing this erroneous error in XNIO.</p>
+                <p>Yes, your application deployed without errors. We are working on fixing this erroneous error in
+                    XNIO.
+                </p>
             </answer>
         </faq>
     </part>

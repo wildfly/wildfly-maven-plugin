@@ -85,14 +85,14 @@
     </build>
 
     <reporting>
-    <plugins>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-plugin-plugin</artifactId>
-            <version>${version.plugin.plugin}</version>
-        </plugin>
-    </plugins>
-</reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+                <version>${version.plugin.plugin}</version>
+            </plugin>
+        </plugins>
+    </reporting>
 
     <dependencies>
         <dependency>

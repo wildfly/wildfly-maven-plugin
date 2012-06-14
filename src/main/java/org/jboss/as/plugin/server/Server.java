@@ -32,19 +32,24 @@ import java.util.concurrent.TimeUnit;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.dmr.ModelNode;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 public abstract class Server {
-    protected static final ModelNode RELOAD = new ModelNode("reload");
     private final ServerInfo serverInfo;
     private Process process;
     private ConsoleConsumer console;
+    private final String shutdownId;
 
     protected Server(final ServerInfo serverInfo) {
         this.serverInfo = serverInfo;
+        shutdownId = null;
+    }
+
+    protected Server(final ServerInfo serverInfo, final String shutdownId) {
+        this.serverInfo = serverInfo;
+        this.shutdownId = shutdownId;
     }
 
     /**
@@ -72,7 +77,7 @@ public abstract class Server {
         final ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         processBuilder.redirectErrorStream(true);
         process = processBuilder.start();
-        console = ConsoleConsumer.start(process.getInputStream());
+        console = ConsoleConsumer.start(process.getInputStream(), shutdownId);
         long timeout = serverInfo.getStartupTimeout() * 1000;
         boolean serverAvailable = false;
         long sleep = 50;
@@ -191,8 +196,8 @@ public abstract class Server {
      */
     static class ConsoleConsumer implements Runnable {
 
-        static ConsoleConsumer start(final InputStream stream) {
-            final ConsoleConsumer result = new ConsoleConsumer(stream);
+        static ConsoleConsumer start(final InputStream stream, final String shutdownId) {
+            final ConsoleConsumer result = new ConsoleConsumer(stream, shutdownId);
             final Thread t = new Thread(result);
             t.setName("AS7-Console");
             t.start();
@@ -200,11 +205,13 @@ public abstract class Server {
         }
 
         private final InputStream in;
+        private final String shutdownId;
         private final CountDownLatch latch;
 
-        private ConsoleConsumer(final InputStream in) {
+        private ConsoleConsumer(final InputStream in, final String shutdownId) {
             this.in = in;
             latch = new CountDownLatch(1);
+            this.shutdownId = shutdownId;
         }
 
         @Override
@@ -215,7 +222,7 @@ public abstract class Server {
                 int num;
                 while ((num = in.read(buf)) != -1) {
                     System.out.write(buf, 0, num);
-                    if (new String(buf).contains("JBAS015950"))
+                    if (shutdownId != null && new String(buf).contains(shutdownId))
                         latch.countDown();
                 }
             } catch (IOException ignore) {
@@ -223,6 +230,7 @@ public abstract class Server {
         }
 
         void awaitShutdown(final long seconds) throws InterruptedException {
+            if (shutdownId == null) latch.countDown();
             latch.await(seconds, TimeUnit.SECONDS);
         }
 

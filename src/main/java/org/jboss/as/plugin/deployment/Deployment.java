@@ -22,18 +22,13 @@
 
 package org.jboss.as.plugin.deployment;
 
-import java.io.Closeable;
-
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
-import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.plugin.common.DeploymentExecutionException;
 import org.jboss.as.plugin.common.DeploymentFailureException;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-public interface Deployment extends Closeable {
+public interface Deployment {
 
     public enum Type {
         DEPLOY,
@@ -48,12 +43,6 @@ public interface Deployment extends Closeable {
         REQUIRES_RESTART
     }
 
-    static final String CHILD_TYPE = "child-type";
-
-    static final String FAILED = "failed";
-
-    static final String READ_CHILDREN_NAMES_OPERATION = "read-children-names";
-
     /**
      * Executes the deployment
      *
@@ -63,13 +52,6 @@ public interface Deployment extends Closeable {
      * @throws DeploymentFailureException   if a failure occurs.
      */
     Status execute() throws DeploymentExecutionException, DeploymentFailureException;
-
-    /**
-     * Gets the client associated with the deployment.
-     *
-     * @return the client associated with the deployment
-     */
-    ModelControllerClient getClient();
 
     /**
      * The type of the deployment.

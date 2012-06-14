@@ -33,7 +33,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -43,7 +42,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-import org.jboss.as.plugin.common.ConnectionInfo;
+import org.jboss.as.plugin.common.AbstractServerConnection;
 import org.jboss.as.plugin.common.Streams;
 import org.jboss.as.plugin.deployment.Deployments;
 import org.jboss.as.plugin.deployment.domain.Domain;
@@ -61,7 +60,7 @@ import org.sonatype.aether.util.artifact.DefaultArtifact;
  */
 @Mojo(name = "run", requiresDependencyResolution = ResolutionScope.RUNTIME)
 @Execute(phase = LifecyclePhase.PACKAGE)
-public class Run extends AbstractMojo {
+public class Run extends AbstractServerConnection {
 
     public static final String JBOSS_DIR = "jboss-as-run";
 
@@ -190,7 +189,7 @@ public class Run extends AbstractMojo {
         } else {
             javaHome = this.javaHome;
         }
-        final ServerInfo serverInfo = ServerInfo.of(ConnectionInfo.DEFAULT, javaHome, jbossHome, modulesPath, bundlesPath, jvmArgs, serverConfig, startupTimeout);
+        final ServerInfo serverInfo = ServerInfo.of(this, javaHome, jbossHome, modulesPath, bundlesPath, jvmArgs, serverConfig, startupTimeout);
         if (!serverInfo.getModulesPath().isDirectory()) {
             throw new MojoExecutionException(String.format("Modules path '%s' is not a valid directory.", modulesPath));
         }
@@ -287,5 +286,10 @@ public class Run extends AbstractMojo {
             Streams.safeClose(file);
         }
         return new File(target.getAbsoluteFile(), String.format("jboss-as-%s", jbossAsVersion));
+    }
+
+    @Override
+    public String goal() {
+        return "run";
     }
 }

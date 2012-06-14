@@ -23,7 +23,6 @@
 package org.jboss.as.plugin.common;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import javax.security.auth.callback.CallbackHandler;
 
 /**
@@ -50,26 +49,4 @@ public interface ConnectionInfo {
      * @return the callback handler.
      */
     CallbackHandler getCallbackHandler();
-
-    public ConnectionInfo DEFAULT = new ConnectionInfo() {
-        private final CallbackHandler handler = new ClientCallbackHandler(null, null);
-        @Override
-        public int getPort() {
-            return 9999;
-        }
-
-        @Override
-        public InetAddress getHostAddress() {
-            try {
-                return InetAddress.getLocalHost();
-            } catch (UnknownHostException e) {
-                throw new IllegalStateException(e);
-            }
-        }
-
-        @Override
-        public CallbackHandler getCallbackHandler() {
-            return handler;
-        }
-    };
 }

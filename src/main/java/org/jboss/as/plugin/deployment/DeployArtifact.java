@@ -22,19 +22,15 @@
 
 package org.jboss.as.plugin.deployment;
 
+import java.io.File;
+import java.util.Set;
+
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-import org.jboss.as.controller.client.helpers.standalone.DeploymentPlan;
-import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Set;
 
 /**
  * Deploys an arbitrary artifact to the JBoss application server

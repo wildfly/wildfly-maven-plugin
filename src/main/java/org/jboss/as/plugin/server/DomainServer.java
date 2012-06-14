@@ -37,6 +37,7 @@ import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.jboss.as.controller.client.helpers.domain.ServerIdentity;
 import org.jboss.as.controller.client.helpers.domain.ServerStatus;
 import org.jboss.as.plugin.common.Files;
+import org.jboss.as.plugin.common.Operations;
 import org.jboss.as.plugin.common.Streams;
 import org.jboss.as.plugin.deployment.Deployment.Type;
 import org.jboss.as.plugin.deployment.domain.Domain;
@@ -178,7 +179,7 @@ public final class DomainServer extends Server {
         if (isStarted) {
             switch (DomainDeployment.create(client, domain, file, deploymentName, Type.DEPLOY).execute()) {
                 case REQUIRES_RESTART: {
-                    client.execute(RELOAD);
+                    client.execute(Operations.createOperation(Operations.RELOAD));
                     break;
                 }
                 case SUCCESS:

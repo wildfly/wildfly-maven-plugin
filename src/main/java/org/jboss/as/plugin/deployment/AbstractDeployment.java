@@ -28,6 +28,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.jboss.as.plugin.common.AbstractServerConnection;
 import org.jboss.as.plugin.common.Streams;
 import org.jboss.as.plugin.deployment.domain.DomainDeployment;
@@ -120,17 +122,21 @@ abstract class AbstractDeployment extends AbstractServerConnection {
                 getLog().debug(String.format("Ignoring packaging type %s.", packaging));
             } else {
                 validate();
-                Deployment deployment = null;
+                ModelControllerClient client = null;
                 try {
+                    final Deployment deployment;
                     if (isDomainServer()) {
-                        deployment = DomainDeployment.create(this, getDomain(), file(), name, getType());
+                        final DomainClient domainClient = DomainClient.Factory.create(getHostAddress(), getPort(), getCallbackHandler());
+                        deployment = DomainDeployment.create(domainClient, getDomain(), file(), name, getType());
+                        client = domainClient;
                     } else {
-                        deployment = StandaloneDeployment.create(this, file(), name, getType());
+                        client = ModelControllerClient.Factory.create(getHostAddress(), getPort(), getCallbackHandler());
+                        deployment = StandaloneDeployment.create(client, file(), name, getType());
                     }
+                    // Deploy the deployment
                     deployment.execute();
-                    deployment.close();
                 } finally {
-                    Streams.safeClose(deployment);
+                    Streams.safeClose(client);
                 }
             }
         } catch (MojoFailureException e) {

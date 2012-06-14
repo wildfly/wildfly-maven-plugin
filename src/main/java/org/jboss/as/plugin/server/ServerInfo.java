@@ -23,9 +23,6 @@
 package org.jboss.as.plugin.server;
 
 import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import javax.security.auth.callback.CallbackHandler;
 
 import org.jboss.as.plugin.common.ConnectionInfo;
 import org.jboss.as.plugin.common.Files;

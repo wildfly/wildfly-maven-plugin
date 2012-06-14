@@ -22,19 +22,13 @@
 
 package org.jboss.as.plugin.deployment.standalone;
 
-import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT;
-import static org.jboss.as.controller.client.helpers.ClientConstants.FAILURE_DESCRIPTION;
-import static org.jboss.as.controller.client.helpers.ClientConstants.OP;
-import static org.jboss.as.controller.client.helpers.ClientConstants.OUTCOME;
-import static org.jboss.as.controller.client.helpers.ClientConstants.RESULT;
-import static org.jboss.as.controller.client.helpers.ClientConstants.SUCCESS;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
 import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentAction;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlan;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
@@ -42,9 +36,9 @@ import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentActionR
 import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentManager;
 import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentPlanResult;
 import org.jboss.as.controller.client.helpers.standalone.ServerUpdateActionResult;
-import org.jboss.as.plugin.common.ConnectionInfo;
 import org.jboss.as.plugin.common.DeploymentExecutionException;
 import org.jboss.as.plugin.common.DeploymentFailureException;
+import org.jboss.as.plugin.common.Operations;
 import org.jboss.as.plugin.deployment.Deployment;
 import org.jboss.dmr.ModelNode;
 
@@ -63,18 +57,6 @@ public class StandaloneDeployment implements Deployment {
     /**
      * Creates a new deployment.
      *
-     * @param connectionInfo the connection information.
-     * @param content        the content for the deployment.
-     * @param name           the name of the deployment, if {@code null} the name of the content file is used.
-     * @param type           the deployment type.
-     */
-    public StandaloneDeployment(final ConnectionInfo connectionInfo, final File content, final String name, final Type type) {
-        this(ModelControllerClient.Factory.create(connectionInfo.getHostAddress(), connectionInfo.getPort(), connectionInfo.getCallbackHandler()), content, name, type);
-    }
-
-    /**
-     * Creates a new deployment.
-     *
      * @param client  the client that is connected.
      * @param content the content for the deployment.
      * @param name    the name of the deployment, if {@code null} the name of the content file is used.
@@ -85,20 +67,6 @@ public class StandaloneDeployment implements Deployment {
         this.client = client;
         this.name = (name == null ? content.getName() : name);
         this.type = type;
-    }
-
-    /**
-     * Creates a new deployment.
-     *
-     * @param connectionInfo the connection information.
-     * @param content        the content for the deployment.
-     * @param name           the name of the deployment, if {@code null} the name of the content file is used.
-     * @param type           the deployment type.
-     *
-     * @return the new deployment
-     */
-    public static StandaloneDeployment create(final ConnectionInfo connectionInfo, final File content, final String name, final Type type) {
-        return new StandaloneDeployment(connectionInfo, content, name, type);
     }
 
     /**
@@ -187,52 +155,31 @@ public class StandaloneDeployment implements Deployment {
     }
 
     @Override
-    public ModelControllerClient getClient() {
-        return client;
-    }
-
-    @Override
     public Type getType() {
         return type;
     }
 
     private boolean exists() {
         // CLI :read-children-names(child-type=deployment)
-        final ModelNode op = new ModelNode();
-        op.get(OP).set(READ_CHILDREN_NAMES_OPERATION);
-        op.get(CHILD_TYPE).set(DEPLOYMENT);
+        final ModelNode op = Operations.createListDeploymentsOperation();
         final ModelNode result;
         try {
             result = client.execute(op);
             final String deploymentName = name;
             // Check to make sure there is an outcome
-            if (result.hasDefined(OUTCOME)) {
-                if (result.get(OUTCOME).asString().equals(SUCCESS)) {
-                    final List<ModelNode> deployments = (result.hasDefined(RESULT) ? result.get(RESULT).asList() : Collections.<ModelNode>emptyList());
-                    for (ModelNode n : deployments) {
-                        if (n.asString().equals(deploymentName)) {
-                            return true;
-                        }
+            if (Operations.successful(result)) {
+                final List<ModelNode> deployments = (result.hasDefined(ClientConstants.RESULT) ? result.get(ClientConstants.RESULT).asList() : Collections.<ModelNode>emptyList());
+                for (ModelNode n : deployments) {
+                    if (n.asString().equals(deploymentName)) {
+                        return true;
                     }
-                } else if (result.get(OUTCOME).asString().equals(FAILED)) {
-                    throw new IllegalStateException(String.format("A failure occurred when checking existing deployments. Error: %s",
-                            (result.hasDefined(FAILURE_DESCRIPTION) ? result.get(FAILURE_DESCRIPTION).asString() : "Unknown")));
                 }
             } else {
-                throw new IllegalStateException(String.format("An unexpected response was found checking the deployment. Result: %s", result));
+                throw new IllegalStateException(Operations.getFailureDescription(result));
             }
         } catch (IOException e) {
             throw new IllegalStateException(String.format("Could not execute operation '%s'", op), e);
         }
         return false;
-    }
-
-    @Override
-    public void close() {
-        if (client != null) try {
-            client.close();
-        } catch (Throwable t) {
-            // no-op
-        }
     }
 }

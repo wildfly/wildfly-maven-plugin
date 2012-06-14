@@ -27,9 +27,7 @@ import java.net.UnknownHostException;
 import javax.security.auth.callback.CallbackHandler;
 
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.jboss.as.plugin.deployment.domain.Domain;
 
 /**
@@ -39,7 +37,6 @@ import org.jboss.as.plugin.deployment.domain.Domain;
  * @author Stuart Douglas
  */
 public abstract class AbstractServerConnection extends AbstractMojo implements ConnectionInfo {
-    // These will be moved org.jboss.as.controller.client.helpers.ClientConstants next release.
 
     private volatile InetAddress address = null;
 

@@ -28,13 +28,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.as.plugin.common.DeploymentExecutionException;
 import org.jboss.as.plugin.common.DeploymentFailureException;
 import org.jboss.as.plugin.common.Files;
+import org.jboss.as.plugin.common.Operations;
 import org.jboss.as.plugin.common.Streams;
 import org.jboss.as.plugin.deployment.Deployment;
 import org.jboss.as.plugin.deployment.standalone.StandaloneDeployment;
@@ -46,13 +45,15 @@ import org.jboss.dmr.ModelNode;
 public final class StandaloneServer extends Server {
 
     private static final String CONFIG_PATH = "/standalone/configuration/";
+    private static final String STARTING = "STARTING";
+    private static final String STOPPING = "STOPPING";
 
     private final ServerInfo serverInfo;
     private boolean isStarted;
     private ModelControllerClient client;
 
     public StandaloneServer(final ServerInfo serverInfo) {
-        super(serverInfo);
+        super(serverInfo, "JBAS015950");
         this.serverInfo = serverInfo;
         isStarted = false;
     }
@@ -66,10 +67,8 @@ public final class StandaloneServer extends Server {
     protected void stopServer() {
         try {
             if (client != null) {
-                final ModelNode op = new ModelNode();
-                op.get(ClientConstants.OP).set("shutdown");
                 try {
-                    client.execute(op);
+                    client.execute(Operations.createOperation(Operations.SHUTDOWN));
                 } catch (IOException e) {
                     // no-op
                 } finally {
@@ -96,15 +95,10 @@ public final class StandaloneServer extends Server {
             isStarted = false;
         } else {
             try {
-                ModelNode op = new ModelNode();
-                op.get(ClientConstants.OP_ADDR).set(new ModelNode());
-                op.get(ClientConstants.OP).set("read-attribute");
-                op.get(ClientConstants.NAME).set("server-state");
-
-                ModelNode rsp = client.execute(op);
+                ModelNode rsp = client.execute(Operations.createReadAttributeOperation(Operations.SERVER_STATE));
                 isStarted = ClientConstants.SUCCESS.equals(rsp.get(ClientConstants.OUTCOME).asString())
-                        && !"STARTING".equals(rsp.get(ClientConstants.RESULT).asString())
-                        && !"STOPPING".equals(rsp.get(ClientConstants.RESULT).asString());
+                        && !STARTING.equals(rsp.get(ClientConstants.RESULT).asString())
+                        && !STOPPING.equals(rsp.get(ClientConstants.RESULT).asString());
             } catch (Throwable ignore) {
                 isStarted = false;
             }
@@ -160,7 +154,7 @@ public final class StandaloneServer extends Server {
         if (isStarted) {
             switch (StandaloneDeployment.create(client, file, deploymentName, Deployment.Type.DEPLOY).execute()) {
                 case REQUIRES_RESTART: {
-                    client.execute(RELOAD);
+                    client.execute(Operations.createOperation(Operations.RELOAD));
                     break;
                 }
                 case SUCCESS:

@@ -84,7 +84,7 @@ public final class UndeployArtifact extends Undeploy {
             }
         }
         if (artifact == null) {
-            throw new MojoFailureException("Could not resolve artifact to deploy " + groupId + ":" + artifactId);
+            throw new MojoFailureException(String.format("Could not resolve artifact to deploy %s:%s", groupId, artifactId));
         }
         file = artifact.getFile();
     }

@@ -23,7 +23,6 @@
 package org.jboss.as.plugin.deployment.resource;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.maven.plugins.annotations.Parameter;

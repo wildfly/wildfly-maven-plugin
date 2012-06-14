@@ -22,13 +22,6 @@
 
 package org.jboss.as.plugin.deployment.domain;
 
-import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT;
-import static org.jboss.as.controller.client.helpers.ClientConstants.FAILURE_DESCRIPTION;
-import static org.jboss.as.controller.client.helpers.ClientConstants.OP;
-import static org.jboss.as.controller.client.helpers.ClientConstants.OUTCOME;
-import static org.jboss.as.controller.client.helpers.ClientConstants.RESULT;
-import static org.jboss.as.controller.client.helpers.ClientConstants.SUCCESS;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -37,8 +30,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
+import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.as.controller.client.helpers.domain.DeploymentActionResult;
 import org.jboss.as.controller.client.helpers.domain.DeploymentActionsCompleteBuilder;
 import org.jboss.as.controller.client.helpers.domain.DeploymentPlan;
@@ -52,9 +44,9 @@ import org.jboss.as.controller.client.helpers.domain.ServerGroupDeploymentPlanBu
 import org.jboss.as.controller.client.helpers.domain.ServerIdentity;
 import org.jboss.as.controller.client.helpers.domain.ServerStatus;
 import org.jboss.as.controller.client.helpers.domain.ServerUpdateResult;
-import org.jboss.as.plugin.common.ConnectionInfo;
 import org.jboss.as.plugin.common.DeploymentExecutionException;
 import org.jboss.as.plugin.common.DeploymentFailureException;
+import org.jboss.as.plugin.common.Operations;
 import org.jboss.as.plugin.deployment.Deployment;
 import org.jboss.dmr.ModelNode;
 
@@ -68,19 +60,6 @@ public class DomainDeployment implements Deployment {
     private final Domain domain;
     private final String name;
     private final Type type;
-
-    /**
-     * Creates a new deployment.
-     *
-     * @param connectionInfo the connection information.
-     * @param domain         the domain information.
-     * @param content        the content for the deployment.
-     * @param name           the name of the deployment, if {@code null} the name of the content file is used.
-     * @param type           the deployment type.
-     */
-    public DomainDeployment(final ConnectionInfo connectionInfo, final Domain domain, final File content, final String name, final Type type) {
-        this(DomainClient.Factory.create(connectionInfo.getHostAddress(), connectionInfo.getPort(), connectionInfo.getCallbackHandler()), domain, content, name, type);
-    }
 
     /**
      * Creates a new deployment.
@@ -102,21 +81,6 @@ public class DomainDeployment implements Deployment {
     /**
      * Creates a new deployment.
      *
-     * @param connectionInfo the connection information.
-     * @param domain         the domain information.
-     * @param content        the content for the deployment.
-     * @param name           the name of the deployment, if {@code null} the name of the content file is used.
-     * @param type           the deployment type.
-     *
-     * @return the new deployment
-     */
-    public static DomainDeployment create(final ConnectionInfo connectionInfo, final Domain domain, final File content, final String name, final Type type) {
-        return new DomainDeployment(connectionInfo, domain, content, name, type);
-    }
-
-    /**
-     * Creates a new deployment.
-     *
      * @param client  the client for the server
      * @param domain  the domain information
      * @param content the content for the deployment
@@ -129,7 +93,7 @@ public class DomainDeployment implements Deployment {
         return new DomainDeployment(client, domain, content, name, type);
     }
 
-    private DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException, DuplicateDeploymentNameException, MojoFailureException {
+    private DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException, DuplicateDeploymentNameException, DeploymentFailureException {
         final boolean deploymentExists = exists();
         DeploymentActionsCompleteBuilder completeBuilder = null;
         switch (type) {
@@ -168,7 +132,7 @@ public class DomainDeployment implements Deployment {
                         groupDeploymentBuilder.toServerGroup(serverGroupName));
             }
             if (groupDeploymentBuilder == null) {
-                throw new MojoFailureException("No server groups were defined for the deployment.");
+                throw new DeploymentFailureException("No server groups were defined for the deployment.");
             }
             return groupDeploymentBuilder.build();
         }
@@ -195,12 +159,7 @@ public class DomainDeployment implements Deployment {
         return Status.SUCCESS;
     }
 
-    @Override
-    public DomainClient getClient() {
-        return client;
-    }
-
-    void validate() throws MojoFailureException {
+    void validate() throws DeploymentFailureException {
         final Map<ServerIdentity, ServerStatus> statuses = client.getServerStatuses();
         final List<String> serverGroups = domain.getServerGroups();
         for (String serverGroup : serverGroups) {
@@ -210,7 +169,7 @@ public class DomainDeployment implements Deployment {
                 if (serverGroup.equals(serverId.getServerGroupName())) {
                     ServerStatus currentStatus = statuses.get(serverId);
                     if (currentStatus != ServerStatus.STARTED) {
-                        throw new MojoFailureException(
+                        throw new DeploymentFailureException(
                                 String.format("Status of server group '%s' is '%s', but is required to be '%s'.",
                                         serverGroup, currentStatus, ServerStatus.STARTED));
                     }
@@ -219,7 +178,7 @@ public class DomainDeployment implements Deployment {
                 }
             }
             if (notFound) {
-                throw new MojoFailureException(String.format("Server group '%s' does not exist on the server.", serverGroup));
+                throw new DeploymentFailureException(String.format("Server group '%s' does not exist on the server.", serverGroup));
             }
         }
     }
@@ -229,7 +188,7 @@ public class DomainDeployment implements Deployment {
         return type;
     }
 
-    private void executePlan(final DomainDeploymentManager manager, final DeploymentPlan plan) throws MojoExecutionException, ExecutionException, InterruptedException {
+    private void executePlan(final DomainDeploymentManager manager, final DeploymentPlan plan) throws DeploymentExecutionException, ExecutionException, InterruptedException {
         if (plan.getDeploymentActions().size() > 0) {
             final DeploymentPlanResult planResult = manager.execute(plan).get();
             final Map<UUID, DeploymentActionResult> actionResults = planResult.getDeploymentActionResults();
@@ -240,7 +199,7 @@ public class DomainDeployment implements Deployment {
                     for (String server : serverUpdateResults.keySet()) {
                         final Throwable t = serverUpdateResults.get(server).getFailureResult();
                         if (t != null) {
-                            throw new MojoExecutionException(String.format("Error executing %s", type), t);
+                            throw new DeploymentExecutionException(String.format("Error executing %s", type), t);
                         }
                     }
                 }
@@ -249,42 +208,25 @@ public class DomainDeployment implements Deployment {
     }
 
     private boolean exists() {
-        // CLI :read-children-names(child-type=deployment)
-        final ModelNode op = new ModelNode();
-        op.get(OP).set(READ_CHILDREN_NAMES_OPERATION);
-        op.get(CHILD_TYPE).set(DEPLOYMENT);
+        final ModelNode op = Operations.createListDeploymentsOperation();
         final ModelNode result;
         try {
             result = client.execute(op);
             final String deploymentName = name;
             // Check to make sure there is an outcome
-            if (result.hasDefined(OUTCOME)) {
-                if (result.get(OUTCOME).asString().equals(SUCCESS)) {
-                    final List<ModelNode> deployments = (result.hasDefined(RESULT) ? result.get(RESULT).asList() : Collections.<ModelNode>emptyList());
-                    for (ModelNode n : deployments) {
-                        if (n.asString().equals(deploymentName)) {
-                            return true;
-                        }
+            if (Operations.successful(result)) {
+                final List<ModelNode> deployments = (result.hasDefined(ClientConstants.RESULT) ? result.get(ClientConstants.RESULT).asList() : Collections.<ModelNode>emptyList());
+                for (ModelNode n : deployments) {
+                    if (n.asString().equals(deploymentName)) {
+                        return true;
                     }
-                } else if (result.get(OUTCOME).asString().equals(FAILED)) {
-                    throw new IllegalStateException(String.format("A failure occurred when checking existing deployments. Error: %s",
-                            (result.hasDefined(FAILURE_DESCRIPTION) ? result.get(FAILURE_DESCRIPTION).asString() : "Unknown")));
                 }
             } else {
-                throw new IllegalStateException(String.format("An unexpected response was found checking the deployment. Result: %s", result));
+                throw new IllegalStateException(Operations.getFailureDescription(result));
             }
         } catch (IOException e) {
             throw new IllegalStateException(String.format("Could not execute operation '%s'", op), e);
         }
         return false;
-    }
-
-    @Override
-    public void close() {
-        if (client != null) try {
-            client.close();
-        } catch (Throwable t) {
-            // no-op
-        }
     }
 }

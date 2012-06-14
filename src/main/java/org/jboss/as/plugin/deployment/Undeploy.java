@@ -25,6 +25,7 @@ package org.jboss.as.plugin.deployment;
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.jboss.as.plugin.deployment.Deployment.Type;
 
@@ -38,8 +39,9 @@ import org.jboss.as.plugin.deployment.Deployment.Type;
 public class Undeploy extends AbstractDeployment {
 
     /**
-     * @parameter default-value="true" expression="${undeploy.ignoreMissingDeployment}"
+     * Indicates whether undeploy should ignore the undeploy operation if the deployment does not exist.
      */
+    @Parameter(defaultValue = "true", property = "undeploy.ignoreMissingDeployment")
     private boolean ignoreMissingDeployment;
 
     @Override
