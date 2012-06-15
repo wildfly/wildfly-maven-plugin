@@ -50,6 +50,7 @@ class ClientCallbackHandler implements CallbackHandler {
         }
     }
 
+    @Override
     public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
         // Special case for anonymous authentication to avoid prompting user for their name.
         if (callbacks.length == 1 && callbacks[0] instanceof NameCallback) {

@@ -48,7 +48,7 @@ import org.jboss.as.plugin.deployment.domain.DomainDeployment;
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-public final class DomainServer extends Server {
+final class DomainServer extends Server {
 
     private static final String CONFIG_PATH = "/domain/configuration/";
 
@@ -58,6 +58,12 @@ public final class DomainServer extends Server {
     private DomainClient client;
     private final Map<ServerIdentity, ServerStatus> servers;
 
+    /**
+     * Creates a new domain server.
+     *
+     * @param serverInfo the server information used
+     * @param domain     the domain information for deployments
+     */
     public DomainServer(final ServerInfo serverInfo, final Domain domain) {
         super(serverInfo);
         this.serverInfo = serverInfo;
@@ -153,13 +159,14 @@ public final class DomainServer extends Server {
         cmd.add("-Djboss.home.dir=" + jbossHome);
         cmd.add("-Dorg.jboss.boot.log.file=" + jbossHome + "/domain/log/process-controller.log");
         cmd.add("-Dlogging.configuration=file:" + jbossHome + CONFIG_PATH + "logging.properties");
-        cmd.add("-Djboss.bundles.dir=" + serverInfo.getBundlesPath().getAbsolutePath());
+        cmd.add("-Djboss.bundles.dir=" + serverInfo.getBundlesDir().getAbsolutePath());
+        // TODO (jrp) if this goes into production, these need to be used
         // cmd.add("-Djboss.domain.default.config=" + config.getDomainConfig());
         // cmd.add("-Djboss.host.default.config=" + config.getHostConfig());
         cmd.add("-jar");
         cmd.add(modulesJar.getAbsolutePath());
         cmd.add("-mp");
-        cmd.add(serverInfo.getModulesPath().getAbsolutePath());
+        cmd.add(serverInfo.getModulesDir().getAbsolutePath());
         cmd.add("org.jboss.as.process-controller");
         cmd.add("-jboss-home");
         cmd.add(jbossHome.getAbsolutePath());

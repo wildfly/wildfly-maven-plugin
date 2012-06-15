@@ -32,6 +32,8 @@ import org.jboss.dmr.ModelType;
 import org.jboss.dmr.Property;
 
 /**
+ * A helper for creating operations.
+ *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 public class Operations {
@@ -131,6 +133,13 @@ public class Operations {
         return op;
     }
 
+    /**
+     * Creates an operation to read the attribute represented by the {@code attributeName} parameter.
+     *
+     * @param attributeName the name of the parameter to read
+     *
+     * @return the operation
+     */
     public static ModelNode createReadAttributeOperation(final String attributeName) {
         ModelNode op = new ModelNode();
         op.get(ClientConstants.OP_ADDR).setEmptyList();
@@ -234,6 +243,12 @@ public class Operations {
         return result;
     }
 
+    /**
+     * A builder for building composite operations.
+     * <p/>
+     *
+     * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
+     */
     public static class CompositeOperationBuilder {
         private final ModelNode op;
 
@@ -241,14 +256,34 @@ public class Operations {
             this.op = op;
         }
 
+        /**
+         * Creates a new builder.
+         *
+         * @return a new builder
+         */
         public static CompositeOperationBuilder create() {
             return new CompositeOperationBuilder(createCompositeOperation());
         }
 
+        /**
+         * Builds the operation.
+         *
+         * @return the built operation
+         */
         public Operation build() {
             return OperationBuilder.create(op).build();
         }
 
+        /**
+         * Adds a new operation to the composite operation.
+         * <p/>
+         * Note that subsequent calls after a {@link #build() build} invocation will result the operation being
+         * appended to.
+         *
+         * @param op the operation to add
+         *
+         * @return the current builder
+         */
         public CompositeOperationBuilder addStep(final ModelNode op) {
             if (op.hasDefined(ClientConstants.OP)) {
                 this.op.get(ClientConstants.STEPS).add(op);

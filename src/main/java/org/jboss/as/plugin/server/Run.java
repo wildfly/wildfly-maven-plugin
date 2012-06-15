@@ -178,6 +178,7 @@ public class Run extends AbstractServerConnection {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        final Log log = getLog();
         final MavenProject project = Deployments.resolveProject(this.project);
         final String deploymentName = Deployments.resolveFileName(project, this.filename);
         final File targetDir = Deployments.resolveTargetDir(project, this.targetDir);
@@ -200,18 +201,21 @@ public class Run extends AbstractServerConnection {
             javaHome = this.javaHome;
         }
         final ServerInfo serverInfo = ServerInfo.of(this, javaHome, jbossHome, modulesPath, bundlesPath, jvmArgs, serverConfig, startupTimeout);
-        if (!serverInfo.getModulesPath().isDirectory()) {
+        if (!serverInfo.getModulesDir().isDirectory()) {
             throw new MojoExecutionException(String.format("Modules path '%s' is not a valid directory.", modulesPath));
         }
-        if (!serverInfo.getBundlesPath().isDirectory()) {
+        if (!serverInfo.getBundlesDir().isDirectory()) {
             throw new MojoExecutionException(String.format("Bundles path '%s' is not a valid directory.", bundlesPath));
         }
+        // Print some server information
+        log.info(String.format("JAVA_HOME=%s", javaHome));
+        log.info(String.format("JBOSS_HOME=%s%n", jbossHome));
         try {
             // Create the server
             final Server server;
             // Currently this will never be true, see comments in DomainServer for details
             if (isDomainServer()) {
-                getLog().info("Domain is not supported for the run goal, a standalone server will be started.");
+                log.warn(String.format("Domain is not supported for the run goal, a standalone server will be started.%n"));
                 // server = new DomainServer(serverInfo, domain);
             }
             server = new StandaloneServer(serverInfo);
@@ -230,15 +234,15 @@ public class Run extends AbstractServerConnection {
             // Add the shutdown hook
             SecurityActions.addShutdownHook(shutdownThread);
             // Start the server
-            getLog().info("Server is starting up. Press CTRL + C to stop the server.");
+            log.info("Server is starting up. Press CTRL + C to stop the server.");
             server.start();
             // Execute commands before the deployment
-            executeCliCommands(server, beforeDeployment);
+            if (beforeDeployment != null) beforeDeployment.executeCommands(server.getClient());
             // Deploy the application
-            getLog().info(String.format("Deploying application '%s'%n", file.getName()));
+            log.info(String.format("Deploying application '%s'%n", file.getName()));
             server.deploy(file, deploymentName);
             // Execute commands after the deployment
-            executeCliCommands(server, afterDeployment);
+            if (afterDeployment != null) afterDeployment.executeCommands(server.getClient());
             while (server.isStarted()) {
             }
         } catch (Exception e) {
@@ -256,7 +260,7 @@ public class Run extends AbstractServerConnection {
         final String jbossAsArtifact = String.format("%s:%s:%s:%s", jbossAsGroupId, jbossAsArtifactId, jbossAsArchiveType, jbossAsVersion);
         request.setArtifact(new DefaultArtifact(jbossAsArtifact));
         request.setRepositories(remoteRepos);
-        getLog().info("Resolving artifact " + jbossAsArtifact + " from " + remoteRepos);
+        getLog().info(String.format("Resolving artifact %s from %s", jbossAsArtifact, remoteRepos));
         final ArtifactResult result;
         try {
             result = repoSystem.resolveArtifact(repoSession, request);
@@ -308,17 +312,5 @@ public class Run extends AbstractServerConnection {
     @Override
     public String goal() {
         return "run";
-    }
-
-    private void executeCliCommands(final Server server, final CliCommands cliCommands) throws IOException {
-        final Log log = getLog();
-        if (cliCommands != null && cliCommands.hasCommands()) {
-            for (String cmd : cliCommands.getCommands()) {
-                if (log.isDebugEnabled()) {
-                    log.debug(String.format("Command being executed: %s", cmd));
-                }
-                server.executeCliCommand(cmd);
-            }
-        }
     }
 }

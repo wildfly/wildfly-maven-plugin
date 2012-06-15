@@ -26,6 +26,8 @@ import java.io.Closeable;
 import java.util.zip.ZipFile;
 
 /**
+ * Utilities for handling streams.
+ *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 public class Streams {

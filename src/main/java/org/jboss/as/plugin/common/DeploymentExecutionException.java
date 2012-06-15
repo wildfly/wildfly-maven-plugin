@@ -25,6 +25,8 @@ package org.jboss.as.plugin.common;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
+ * Wrapped exception for {@link MojoExecutionException}.
+ *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 public class DeploymentExecutionException extends MojoExecutionException {

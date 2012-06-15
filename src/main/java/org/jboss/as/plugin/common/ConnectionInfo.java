@@ -26,6 +26,8 @@ import java.net.InetAddress;
 import javax.security.auth.callback.CallbackHandler;
 
 /**
+ * Holds information on how to connect to the JBoss Aplication Server.
+ *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 public interface ConnectionInfo {

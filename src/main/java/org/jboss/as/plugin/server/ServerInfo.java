@@ -28,61 +28,117 @@ import org.jboss.as.plugin.common.ConnectionInfo;
 import org.jboss.as.plugin.common.Files;
 
 /**
+ * Server configuration information.
+ *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-public class ServerInfo {
+class ServerInfo {
     private final ConnectionInfo connectionInfo;
     private final File jbossHome;
-    private final File modulesPath;
-    private final File bundlesPath;
+    private final File modulesDir;
+    private final File bundlesDir;
     private final String[] jvmArgs;
     private final String javaHome;
     private final String serverConfig;
     private final long startupTimeout;
 
-    private ServerInfo(final ConnectionInfo connectionInfo, final String javaHome, final File jbossHome, final String modulesPath, final String bundlesPath, final String[] jvmArgs, final String serverConfig, final long startupTimeout) {
+    private ServerInfo(final ConnectionInfo connectionInfo, final String javaHome, final File jbossHome, final String modulesDir, final String bundlesDir, final String[] jvmArgs, final String serverConfig, final long startupTimeout) {
         this.connectionInfo = connectionInfo;
         this.javaHome = javaHome;
         this.jbossHome = jbossHome;
-        this.modulesPath = (modulesPath == null ? Files.createFile(jbossHome, "modules") : new File(modulesPath));
-        this.bundlesPath = (bundlesPath == null ? Files.createFile(jbossHome, "bundles") : new File(bundlesPath));
+        this.modulesDir = (modulesDir == null ? Files.createFile(jbossHome, "modules") : new File(modulesDir));
+        this.bundlesDir = (bundlesDir == null ? Files.createFile(jbossHome, "bundles") : new File(bundlesDir));
         this.jvmArgs = jvmArgs;
         this.serverConfig = serverConfig;
         this.startupTimeout = startupTimeout;
     }
 
-    public static ServerInfo of(final ConnectionInfo connectionInfo, final String javaHome, final File jbossHome, final String modulesPath, final String bundlesPath, final String[] jvmArgs, final String serverConfig, final long startupTimeout) {
-        return new ServerInfo(connectionInfo, javaHome, jbossHome, modulesPath, bundlesPath, jvmArgs, serverConfig, startupTimeout);
+    /**
+     * Creates the server information.
+     *
+     * @param connectionInfo the connection information for the management client
+     * @param javaHome       the Java home directory
+     * @param jbossHome      the home directory for the JBoss Application Server
+     * @param modulesDir     the directory for the modules to use
+     * @param bundlesDir     the bundles directory
+     * @param jvmArgs        the JVM arguments
+     * @param serverConfig   the path to the servers configuration file
+     * @param startupTimeout the startup timeout
+     *
+     * @return the server configuration information
+     */
+    public static ServerInfo of(final ConnectionInfo connectionInfo, final String javaHome, final File jbossHome, final String modulesDir, final String bundlesDir, final String[] jvmArgs, final String serverConfig, final long startupTimeout) {
+        return new ServerInfo(connectionInfo, javaHome, jbossHome, modulesDir, bundlesDir, jvmArgs, serverConfig, startupTimeout);
     }
 
+    /**
+     * The connection information for the management operations.
+     *
+     * @return the connection information
+     */
     public ConnectionInfo getConnectionInfo() {
         return connectionInfo;
     }
 
+    /**
+     * The JBoss Application Server home directory.
+     *
+     * @return the home directory
+     */
     public File getJbossHome() {
         return jbossHome;
     }
 
-    public File getModulesPath() {
-        return modulesPath;
+    /**
+     * The directory for all the modules.
+     *
+     * @return the modules directory
+     */
+    public File getModulesDir() {
+        return modulesDir;
     }
 
-    public File getBundlesPath() {
-        return bundlesPath;
+    /**
+     * The directory for the bundles.
+     *
+     * @return the bundles directory
+     */
+    public File getBundlesDir() {
+        return bundlesDir;
     }
 
+    /**
+     * The optional JVM arguments.
+     *
+     * @return the JVM arguments or {@code null} if there are none
+     */
     public String[] getJvmArgs() {
         return jvmArgs;
     }
 
+    /**
+     * The Java home directory.
+     *
+     * @return the Java home directory
+     */
     public String getJavaHome() {
         return javaHome;
     }
 
+    /**
+     * The path to the server configuration file to use.
+     *
+     * @return the path to the configuration file or {@code null} if the default configuration file is being used
+     */
     public String getServerConfig() {
         return serverConfig;
     }
 
+    /**
+     * The timeout to use for the server startup.
+     *
+     * @return the server startup timeout
+     */
     public long getStartupTimeout() {
         return startupTimeout;
     }

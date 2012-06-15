@@ -40,9 +40,11 @@ import org.jboss.as.plugin.deployment.standalone.StandaloneDeployment;
 import org.jboss.dmr.ModelNode;
 
 /**
+ * A standalone server.
+ *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-public final class StandaloneServer extends Server {
+final class StandaloneServer extends Server {
 
     private static final String CONFIG_PATH = "/standalone/configuration/";
     private static final String STARTING = "STARTING";
@@ -52,6 +54,11 @@ public final class StandaloneServer extends Server {
     private boolean isStarted;
     private ModelControllerClient client;
 
+    /**
+     * Creates a new standalone server.
+     *
+     * @param serverInfo the configuration information for the server
+     */
     public StandaloneServer(final ServerInfo serverInfo) {
         super(serverInfo, "JBAS015950");
         this.serverInfo = serverInfo;
@@ -133,12 +140,12 @@ public final class StandaloneServer extends Server {
         cmd.add("-Djboss.home.dir=" + jbossHome);
         cmd.add("-Dorg.jboss.boot.log.file=" + jbossHome + "/standalone/log/boot.log");
         cmd.add("-Dlogging.configuration=file:" + jbossHome + CONFIG_PATH + "logging.properties");
-        cmd.add("-Djboss.modules.dir=" + serverInfo.getModulesPath().getAbsolutePath());
-        cmd.add("-Djboss.bundles.dir=" + serverInfo.getBundlesPath().getAbsolutePath());
+        cmd.add("-Djboss.modules.dir=" + serverInfo.getModulesDir().getAbsolutePath());
+        cmd.add("-Djboss.bundles.dir=" + serverInfo.getBundlesDir().getAbsolutePath());
         cmd.add("-jar");
         cmd.add(modulesJar.getAbsolutePath());
         cmd.add("-mp");
-        cmd.add(serverInfo.getModulesPath().getAbsolutePath());
+        cmd.add(serverInfo.getModulesDir().getAbsolutePath());
         cmd.add("-jaxpmodule");
         cmd.add("javax.xml.jaxp-provider");
         cmd.add("org.jboss.as.standalone");

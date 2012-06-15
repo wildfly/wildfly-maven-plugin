@@ -158,10 +158,20 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         // no-op by default
     }
 
+    /**
+     * Adds an optional hook to be run before the deployment takes place.
+     *
+     * @return the hook to execute
+     */
     protected Hook getBeforeDeploymentHook() {
         return Hook.NO_OP_HOOK;
     }
 
+    /**
+     * Adds an optional hook to be run after the deployment takes place.
+     *
+     * @return the hook to execute
+     */
     protected Hook getAfterDeploymentHook() {
         return Hook.NO_OP_HOOK;
     }
@@ -173,6 +183,9 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         return true;
     }
 
+    /**
+     * A simple hook to execute operations.
+     */
     interface Hook {
 
         final Hook NO_OP_HOOK = new Hook() {

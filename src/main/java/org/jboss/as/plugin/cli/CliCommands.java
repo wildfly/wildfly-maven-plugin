@@ -26,7 +26,9 @@ import java.io.IOException;
 import java.util.Set;
 
 import org.apache.maven.plugins.annotations.Parameter;
+import org.jboss.as.cli.CliInitializationException;
 import org.jboss.as.cli.CommandContext;
+import org.jboss.as.cli.CommandContextFactory;
 import org.jboss.as.cli.CommandFormatException;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.plugin.common.Operations;
@@ -34,6 +36,8 @@ import org.jboss.as.plugin.common.Operations.CompositeOperationBuilder;
 import org.jboss.dmr.ModelNode;
 
 /**
+ * CLI commands to run.
+ *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 public class CliCommands {
@@ -51,14 +55,31 @@ public class CliCommands {
     @Parameter
     private Set<String> commands;
 
+    /**
+     * Indicates whether or not commands should be executed in a batch.
+     *
+     * @return {@code true} if commands should be executed in a batch, otherwise {@code false}
+     */
     public boolean isBatch() {
         return batch;
     }
 
+    /**
+     * Checks of there are commands that should be executed.
+     *
+     * @return {@code true} if there are commands to be processed, otherwise {@code false}
+     */
     public boolean hasCommands() {
         return commands != null && !commands.isEmpty();
     }
 
+    /**
+     * Returns the set of commands to process.
+     * <p/>
+     * Could be {@code null} if not defined. Use {@link #hasCommands()} to ensure there are commands to execute.
+     *
+     * @return the set of commands to process
+     */
     public Set<String> getCommands() {
         return commands;
     }
@@ -72,37 +93,61 @@ public class CliCommands {
      * @throws IllegalArgumentException if an command is invalid
      */
     public final void executeCommands(final ModelControllerClient client) throws IOException {
-        if (commands == null || !hasCommands()) return;
-        final CommandContext ctx = Cli.createAndBind(null);
-        try {
-            if (isBatch()) {
-                final CompositeOperationBuilder builder = CompositeOperationBuilder.create();
-                for (String cmd : getCommands()) {
-                    try {
-                        builder.addStep(ctx.buildRequest(cmd));
-                    } catch (CommandFormatException e) {
-                        throw new IllegalArgumentException(String.format("Command '%s' is invalid", cmd), e);
+        if (hasCommands()) {
+            final CommandContext ctx = createAndBind(null);
+            try {
+                if (isBatch()) {
+                    final CompositeOperationBuilder builder = CompositeOperationBuilder.create();
+                    for (String cmd : getCommands()) {
+                        try {
+                            builder.addStep(ctx.buildRequest(cmd));
+                        } catch (CommandFormatException e) {
+                            throw new IllegalArgumentException(String.format("Command '%s' is invalid", cmd), e);
+                        }
                     }
-                }
-                final ModelNode result = client.execute(builder.build());
-                if (!Operations.successful(result)) {
-                    throw new IllegalArgumentException(Operations.getFailureDescription(result));
-                }
-            } else {
-                for (String cmd : getCommands()) {
-                    final ModelNode result;
-                    try {
-                        result = client.execute(ctx.buildRequest(cmd));
-                    } catch (CommandFormatException e) {
-                        throw new IllegalArgumentException(String.format("Command '%s' is invalid", cmd), e);
-                    }
+                    final ModelNode result = client.execute(builder.build());
                     if (!Operations.successful(result)) {
-                        throw new IllegalArgumentException(String.format("Command '%s' was unsuccessful. Reason: %s", cmd, Operations.getFailureDescription(result)));
+                        throw new IllegalArgumentException(Operations.getFailureDescription(result));
+                    }
+                } else {
+                    for (String cmd : getCommands()) {
+                        final ModelNode result;
+                        try {
+                            result = client.execute(ctx.buildRequest(cmd));
+                        } catch (CommandFormatException e) {
+                            throw new IllegalArgumentException(String.format("Command '%s' is invalid", cmd), e);
+                        }
+                        if (!Operations.successful(result)) {
+                            throw new IllegalArgumentException(String.format("Command '%s' was unsuccessful. Reason: %s", cmd, Operations.getFailureDescription(result)));
+                        }
                     }
                 }
+            } finally {
+                ctx.terminateSession();
             }
-        } finally {
-            ctx.terminateSession();
         }
+    }
+
+    /**
+     * Creates the command context and binds the client to the context.
+     * <p/>
+     * If the client is {@code null}, no client is bound to the context.
+     *
+     * @param client the client to bind or {@code null} to not bind a client
+     *
+     * @return the command line context
+     *
+     * @throws IllegalStateException if the context fails to initialize
+     */
+    public static CommandContext createAndBind(final ModelControllerClient client) {
+        final CommandContext commandContext;
+        try {
+            commandContext = CommandContextFactory.getInstance().newCommandContext();
+            if (client != null)
+                commandContext.bindClient(client);
+        } catch (CliInitializationException e) {
+            throw new IllegalStateException("Failed to initialize CLI context", e);
+        }
+        return commandContext;
     }
 }

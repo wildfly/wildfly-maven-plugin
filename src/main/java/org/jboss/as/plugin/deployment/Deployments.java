@@ -28,6 +28,8 @@ import java.util.List;
 import org.apache.maven.project.MavenProject;
 
 /**
+ * Utilities for interacting with maven,
+ *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 public class Deployments {
