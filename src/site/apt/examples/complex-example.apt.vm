@@ -26,7 +26,7 @@ Complex Deployment and Resource Examples
             <plugin>
                 <groupId>org.jboss.as.plugins</groupId>
                 <artifactId>jboss-as-maven-plugin</artifactId>
-                <version>${plugin.version}</version>
+                <version>${project.version}</version>
                 <executions>
                     <!-- Undeploy the application on clean -->
                     <execution>
@@ -176,7 +176,7 @@ Complex Deployment and Resource Examples
             <plugin>
                 <groupId>org.jboss.as.plugins</groupId>
                 <artifactId>jboss-as-maven-plugin</artifactId>
-                <version>${plugin.version}</version>
+                <version>${project.version}</version>
                 <configuration>
                     <domain>
                         <server-groups>

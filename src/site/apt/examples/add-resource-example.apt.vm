@@ -26,7 +26,7 @@ Adding Resources Examples
             <plugin>
                 <groupId>org.jboss.as.plugins</groupId>
                 <artifactId>jboss-as-maven-plugin</artifactId>
-                <version>${plugin.version}</version>
+                <version>${project.version}</version>
                 <executions>
                     <execution>
                         <id>add-datasource</id>
@@ -74,7 +74,7 @@ Adding Resources Examples
             <plugin>
                 <groupId>org.jboss.as.plugins</groupId>
                 <artifactId>jboss-as-maven-plugin</artifactId>
-                <version>${plugin.version}</version>
+                <version>${project.version}</version>
                 <executions>
                     <execution>
                         <id>deploy-postgresql</id>
@@ -166,7 +166,7 @@ Adding Resources Examples
             <plugin>
                 <groupId>org.jboss.as.plugins</groupId>
                 <artifactId>jboss-as-maven-plugin</artifactId>
-                <version>${plugin.version}</version>
+                <version>${project.version}</version>
                 <executions>
                     <execution>
                         <id>add-jms-queue</id>
@@ -210,7 +210,7 @@ Adding Resources Examples
             <plugin>
                 <groupId>org.jboss.as.plugins</groupId>
                 <artifactId>jboss-as-maven-plugin</artifactId>
-                <version>${plugin.version}</version>
+                <version>${project.version}</version>
                 <executions>
                     <execution>
                         <id>add-datasource</id>

@@ -67,7 +67,7 @@ mvn jboss-as:deploy-artifact
   The <<<jboss-as:redeploy>>> goal will redeploy your application if and only if the application has already been
   deployed to the application server.
 
-  To execute the the redeploy goal type the following on the command line:
+  To execute the redeploy goal type the following on the command line:
 
 +-----+
 mvn jboss-as:redeploy
@@ -78,7 +78,7 @@ mvn jboss-as:redeploy
   The <<<jboss-as:undeploy>>> goal will undeploy your application from the from the running application server if the
   application has already been deployed.
 
-  To execute the the redeploy goal type the following on the command line:
+  To execute the undeploy goal type the following on the command line:
 
 +-----+
 mvn jboss-as:undeploy
@@ -89,8 +89,18 @@ mvn jboss-as:undeploy
   The <<<jboss-as:run>>> goal will run JBoss Application Server and deploy your application. If the <<<jboss-as.home>>>
   property is not set, the server will be downloaded.
 
-  To execute the the redeploy goal type the following on the command line:
+  To execute the run goal type the following on the command line:
 
 +-----+
 mvn jboss-as:run
++-----+
+
+* The <<<jboss-as:execute-commands>>> Goal
+
+  The <<<jboss-as:execute-commands>>> goal will execute commands, formatted like CLI commands, on the running server.
+
+  To execute the execute-commands goal type the following on the command line:
+
++-----+
+mvn jboss-as:execute-commands
 +-----+

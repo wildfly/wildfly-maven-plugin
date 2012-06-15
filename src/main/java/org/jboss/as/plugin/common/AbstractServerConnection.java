@@ -73,7 +73,7 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     private String password;
 
     /**
-     * Indicates if this should be a domain deployment.
+     * Specifies the configuration for a domain server.
      */
     @Parameter
     private Domain domain;

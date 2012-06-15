@@ -34,6 +34,7 @@
             <item name="Add Resource Example" href="examples/add-resource-example.html"/>
             <item name="Deploy Application Example" href="examples/deployment-example.html"/>
             <item name="Complex Example" href="examples/complex-example.html"/>
+            <item name="Execute Commands Example" href="examples/execute-commands-example.html"/>
         </menu>
 
         <menu name="Project Documentation">

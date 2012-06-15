@@ -30,7 +30,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.plugin.cli.CliCommands;
+import org.jboss.as.plugin.cli.Commands;
 import org.jboss.as.plugin.deployment.Deployment.Type;
 
 /**
@@ -53,13 +53,13 @@ public class Deploy extends AbstractDeployment {
      * Commands to run before the deployment
      */
     @Parameter(alias = "before-deployment")
-    private CliCommands beforeDeployment;
+    private Commands beforeDeployment;
 
     /**
      * Executions to run after the deployment
      */
     @Parameter(alias = "after-deployment")
-    private CliCommands afterDeployment;
+    private Commands afterDeployment;
 
     /**
      * Specifies whether force mode should be used or not.

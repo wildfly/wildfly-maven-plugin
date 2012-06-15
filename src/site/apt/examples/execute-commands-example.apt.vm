@@ -1,0 +1,43 @@
+ ------
+ Execute Commands Example
+ ------
+ James R. Perkins
+ ------
+ 2012-06-15
+ ------
+
+Execute Commands Examples
+
+  The execute-commands goal allows you to execute commands, in the CLI format, on the running JBoss Application Server.
+
+* Execute commands
+
+  The example below shows how to add a debug logger with a debug log file:
+
+----------
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>org.jboss.as.plugins</groupId>
+                <artifactId>jboss-as-maven-plugin</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <execute-commands>
+                        <commands>
+                            <command>/subsystem=logging/file-handler=debug:add(level=DEBUG,autoflush=true,file={&quot;relative-to&quot;=&gt;&quot;jboss.server.log.dir&quot;, &quot;path&quot;=&gt;&quot;debug.log&quot;})</command>
+                            <command>/subsystem=logging/logger=org.jboss.as:add(level=DEBUG,handlers=[debug])</command>
+                        </commands>
+                    </execute-commands>
+                </configuration>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+----------

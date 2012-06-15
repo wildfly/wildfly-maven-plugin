@@ -40,7 +40,7 @@ import org.jboss.dmr.ModelNode;
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-public class CliCommands {
+public class Commands {
 
     /**
      * {@code true} if commands should be executed in a batch or {@code false} if they should be executed one at a

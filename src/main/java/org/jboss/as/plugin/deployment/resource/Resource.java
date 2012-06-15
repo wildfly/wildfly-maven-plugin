@@ -26,7 +26,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.apache.maven.plugins.annotations.Parameter;
-import org.jboss.as.plugin.cli.CliCommands;
+import org.jboss.as.plugin.cli.Commands;
 
 /**
  * Defines a resource.
@@ -58,13 +58,13 @@ public class Resource {
      * Commands to run before the deployment
      */
     @Parameter(alias = "before-deployment")
-    private CliCommands beforeDeployment;
+    private Commands beforeDeployment;
 
     /**
      * Executions to run after the deployment
      */
     @Parameter(alias = "after-deployment")
-    private CliCommands afterDeployment;
+    private Commands afterDeployment;
 
     /**
      * Flag to start the operation, if necessary.
@@ -167,7 +167,7 @@ public class Resource {
      *
      * @return the commands to execute
      */
-    public CliCommands getBeforeDeployment() {
+    public Commands getBeforeDeployment() {
         return beforeDeployment;
     }
 
@@ -186,7 +186,7 @@ public class Resource {
      *
      * @return the commands to execute
      */
-    public CliCommands getAfterDeployment() {
+    public Commands getAfterDeployment() {
         return afterDeployment;
     }
 }

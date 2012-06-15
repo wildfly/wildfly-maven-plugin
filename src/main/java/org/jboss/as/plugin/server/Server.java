@@ -34,7 +34,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.jboss.as.cli.CommandContext;
 import org.jboss.as.cli.CommandFormatException;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.plugin.cli.CliCommands;
+import org.jboss.as.plugin.cli.Commands;
 import org.jboss.as.plugin.common.Operations;
 import org.jboss.dmr.ModelNode;
 
@@ -194,7 +194,7 @@ abstract class Server {
         }
         CommandContext ctx = commandContext;
         if (ctx == null) {
-            commandContext = ctx = CliCommands.createAndBind(null);
+            commandContext = ctx = Commands.createAndBind(null);
         }
         final ModelControllerClient client = getClient();
         final ModelNode op;

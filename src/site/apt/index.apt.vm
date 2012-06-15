@@ -53,6 +53,8 @@ ${project.name} (${project.artifactId})
 
   * {{{./run-mojo.html}jboss-as:run}} runs the application server and deploys your application.
 
+  * {{{./execute-commands-mojo.html}jboss-as:execute-commands}} executes commands on the running server.
+
 * Usage
 
   General instructions on how to use the ${project.name} can be found on the {{{./usage.html}usage page}}. Some more
@@ -83,3 +85,5 @@ ${project.name} (${project.artifactId})
   * {{{./examples/add-resource-example.html}Adding Resources Example}}
 
   * {{{./examples/complex-example.html}Complex Examples}}
+
+  * {{{./execute-commands-mojo.html}Execute Commands Example}}

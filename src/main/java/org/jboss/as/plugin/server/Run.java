@@ -43,7 +43,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-import org.jboss.as.plugin.cli.CliCommands;
+import org.jboss.as.plugin.cli.Commands;
 import org.jboss.as.plugin.common.AbstractServerConnection;
 import org.jboss.as.plugin.common.Streams;
 import org.jboss.as.plugin.deployment.Deployments;
@@ -156,13 +156,13 @@ public class Run extends AbstractServerConnection {
      * Commands to run before the deployment
      */
     @Parameter(alias = "before-deployment")
-    private CliCommands beforeDeployment;
+    private Commands beforeDeployment;
 
     /**
      * Executions to run after the deployment
      */
     @Parameter(alias = "after-deployment")
-    private CliCommands afterDeployment;
+    private Commands afterDeployment;
 
     /**
      * The target directory the application to be deployed is located.
