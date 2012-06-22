@@ -29,12 +29,12 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.jboss.as.cli.CommandContext;
 import org.jboss.as.cli.CommandFormatException;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.plugin.cli.Commands;
+import org.jboss.as.plugin.common.DeploymentExecutionException;
+import org.jboss.as.plugin.common.DeploymentFailureException;
 import org.jboss.as.plugin.common.Operations;
 import org.jboss.dmr.ModelNode;
 
@@ -174,11 +174,11 @@ abstract class Server {
      * @param file           the file to deploy
      * @param deploymentName the name of the deployment
      *
-     * @throws MojoExecutionException
-     * @throws MojoFailureException
+     * @throws DeploymentExecutionException
+     * @throws DeploymentFailureException
      * @throws IOException
      */
-    public abstract void deploy(final File file, final String deploymentName) throws MojoExecutionException, MojoFailureException, IOException;
+    public abstract void deploy(final File file, final String deploymentName) throws DeploymentExecutionException, DeploymentFailureException, IOException;
 
     /**
      * Execute a CLI command.

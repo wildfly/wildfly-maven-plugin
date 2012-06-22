@@ -113,7 +113,7 @@ public class Run extends AbstractServerConnection {
     /**
      * The version of the JBoss Application Server to run.
      */
-    @Parameter(alias = "jboss-as.version", defaultValue = "7.1.1.Final", property = "jboss-as.version")
+    @Parameter(alias = "jboss-as-version", defaultValue = "7.1.1.Final", property = "jboss-as.version")
     private String jbossAsVersion;
 
     /**
