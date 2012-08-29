@@ -93,28 +93,10 @@ public class Run extends AbstractServerConnection {
     private String jbossHome;
 
     /**
-     * The group id for the JBoss Application Server.
-     */
-    @Parameter(alias = "jboss-as-groupId", defaultValue = "org.jboss.as", property = "jboss-as.groupId")
-    private String jbossAsGroupId;
-
-    /**
-     * The artifact id for the JBoss Application Server.
-     */
-    @Parameter(alias = "jboss-as-artifactId", defaultValue = "jboss-as-dist", property = "jboss-as.artifactId")
-    private String jbossAsArtifactId;
-
-    /**
-     * The type of the archive.
-     */
-    @Parameter(alias = "jboss-as-archive-type", defaultValue = "zip", property = "jboss-as.archiveType")
-    private String jbossAsArchiveType;
-
-    /**
      * The version of the JBoss Application Server to run.
      */
     @Parameter(alias = "jboss-as-version", defaultValue = "7.1.1.Final", property = "jboss-as.version")
-    private String jbossAsVersion;
+    private String version;
 
     /**
      * The modules path to use.
@@ -257,7 +239,7 @@ public class Run extends AbstractServerConnection {
             return new File(jbossHome);
         }
         final ArtifactRequest request = new ArtifactRequest();
-        final String jbossAsArtifact = String.format("%s:%s:%s:%s", jbossAsGroupId, jbossAsArtifactId, jbossAsArchiveType, jbossAsVersion);
+        final String jbossAsArtifact = String.format("org.jboss.as:jboss-as-dist:zip:%s", version);
         request.setArtifact(new DefaultArtifact(jbossAsArtifact));
         request.setRepositories(remoteRepos);
         getLog().info(String.format("Resolving artifact %s from %s", jbossAsArtifact, remoteRepos));
@@ -306,7 +288,8 @@ public class Run extends AbstractServerConnection {
         } finally {
             Streams.safeClose(file);
         }
-        return new File(target.getAbsoluteFile(), String.format("jboss-as-%s", jbossAsVersion));
+
+        return new File(target.getAbsoluteFile(), String.format("jboss-as-%s", version));
     }
 
     @Override
