@@ -194,7 +194,7 @@ abstract class Server {
         }
         CommandContext ctx = commandContext;
         if (ctx == null) {
-            commandContext = ctx = Commands.createAndBind(null);
+            commandContext = ctx = Commands.create();
         }
         final ModelControllerClient client = getClient();
         final ModelNode op;

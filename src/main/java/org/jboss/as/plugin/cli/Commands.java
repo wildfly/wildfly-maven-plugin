@@ -94,7 +94,7 @@ public class Commands {
      */
     public final void executeCommands(final ModelControllerClient client) throws IOException {
         if (hasCommands()) {
-            final CommandContext ctx = createAndBind(null);
+            final CommandContext ctx = create();
             try {
                 if (isBatch()) {
                     final CompositeOperationBuilder builder = CompositeOperationBuilder.create();
@@ -133,18 +133,14 @@ public class Commands {
      * <p/>
      * If the client is {@code null}, no client is bound to the context.
      *
-     * @param client the client to bind or {@code null} to not bind a client
-     *
      * @return the command line context
      *
      * @throws IllegalStateException if the context fails to initialize
      */
-    public static CommandContext createAndBind(final ModelControllerClient client) {
+    public static CommandContext create() {
         final CommandContext commandContext;
         try {
             commandContext = CommandContextFactory.getInstance().newCommandContext();
-            if (client != null)
-                commandContext.bindClient(client);
         } catch (CliInitializationException e) {
             throw new IllegalStateException("Failed to initialize CLI context", e);
         }
