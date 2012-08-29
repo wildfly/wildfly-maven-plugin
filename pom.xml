@@ -48,8 +48,13 @@
 
 
     <properties>
-        <as.version>7.2.0.Alpha1-SNAPSHOT</as.version>
-        <version.plugin.plugin>3.0</version.plugin.plugin>
+        <version.org.jboss.as>7.2.0.Alpha1-SNAPSHOT</version.org.jboss.as>
+        <version.org.apache.maven.maven-plugin>2.2.1</version.org.apache.maven.maven-plugin>
+        <version.org.apache.maven.plugin-api>3.0</version.org.apache.maven.plugin-api>
+        <version.org.apache.maven.plugin-tools>3.0</version.org.apache.maven.plugin-tools>
+        <version.org.apache.maven.plugins.plugin>3.0</version.org.apache.maven.plugins.plugin>
+        <version.org.codehaus.plexus.plexus-utils>3.0.1</version.org.codehaus.plexus.plexus-utils>
+        <version.org.sonatype.aether>1.8</version.org.sonatype.aether>
     </properties>
 
     <build>
@@ -61,7 +66,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
-                <version>${version.plugin.plugin}</version>
+                <version>${version.org.apache.maven.plugins.plugin}</version>
                 <configuration>
                     <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
                 </configuration>
@@ -92,7 +97,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
-                <version>${version.plugin.plugin}</version>
+                <version>${version.org.apache.maven.plugins.plugin}</version>
             </plugin>
         </plugins>
     </reporting>
@@ -101,48 +106,45 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
-            <version>3.0</version>
+            <version>${version.org.apache.maven.plugin-api}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-project</artifactId>
-            <version>2.2.1</version>
+            <version>${version.org.apache.maven.maven-plugin}</version>
         </dependency>
         <dependency>
             <groupId>org.sonatype.aether</groupId>
             <artifactId>aether-api</artifactId>
-            <version>1.8</version>
+            <version>${version.org.sonatype.aether}</version>
         </dependency>
         <dependency>
             <groupId>org.sonatype.aether</groupId>
             <artifactId>aether-util</artifactId>
-            <version>1.8</version>
+            <version>${version.org.sonatype.aether}</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.as</groupId>
             <artifactId>jboss-as-cli</artifactId>
-            <version>${as.version}</version>
-            <scope>compile</scope>
+            <version>${version.org.jboss.as}</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.as</groupId>
             <artifactId>jboss-as-controller-client</artifactId>
-            <version>${as.version}</version>
-            <scope>compile</scope>
+            <version>${version.org.jboss.as}</version>
         </dependency>
 
         <!-- dependencies to annotations -->
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>maven-plugin-annotations</artifactId>
-            <version>3.0</version>
-            <scope>compile</scope>
+            <version>${version.org.apache.maven.plugin-tools}</version>
         </dependency>
         <!-- generated help mojo has a dependency to plexus-utils -->
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-utils</artifactId>
-            <version>3.0.1</version>
+            <version>${version.org.codehaus.plexus.plexus-utils}</version>
         </dependency>
     </dependencies>
 </project>
