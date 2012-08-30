@@ -57,14 +57,14 @@ public class Resource {
     /**
      * Commands to run before the deployment
      */
-    @Parameter(alias = "before-deployment")
-    private Commands beforeDeployment;
+    @Parameter(alias = "before-add")
+    private Commands beforeAdd;
 
     /**
      * Executions to run after the deployment
      */
-    @Parameter(alias = "after-deployment")
-    private Commands afterDeployment;
+    @Parameter(alias = "after-add")
+    private Commands afterAdd;
 
     /**
      * Flag to start the operation, if necessary.
@@ -158,8 +158,8 @@ public class Resource {
      * @return {@code true} if there are commands that need to be executed before the deployment, otherwise {@code
      *         false}
      */
-    public boolean hasBeforeDeployCommands() {
-        return beforeDeployment != null && beforeDeployment.hasCommands();
+    public boolean hasBeforeAddCommands() {
+        return beforeAdd != null && beforeAdd.hasCommands();
     }
 
     /**
@@ -167,8 +167,8 @@ public class Resource {
      *
      * @return the commands to execute
      */
-    public Commands getBeforeDeployment() {
-        return beforeDeployment;
+    public Commands getBeforeAdd() {
+        return beforeAdd;
     }
 
     /**
@@ -177,8 +177,8 @@ public class Resource {
      * @return {@code true} if there are commands that need to be executed after the deployment, otherwise {@code
      *         false}
      */
-    public boolean hasAfterDeployCommands() {
-        return afterDeployment != null && afterDeployment.hasCommands();
+    public boolean hasAfterAddCommands() {
+        return afterAdd != null && afterAdd.hasCommands();
     }
 
     /**
@@ -186,7 +186,7 @@ public class Resource {
      *
      * @return the commands to execute
      */
-    public Commands getAfterDeployment() {
-        return afterDeployment;
+    public Commands getAfterAdd() {
+        return afterAdd;
     }
 }

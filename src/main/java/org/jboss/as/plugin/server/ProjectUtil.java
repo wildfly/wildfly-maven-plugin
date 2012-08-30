@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.as.plugin.deployment;
+package org.jboss.as.plugin.server;
 
 import java.io.File;
 import java.util.List;
@@ -32,9 +32,9 @@ import org.apache.maven.project.MavenProject;
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-public class Deployments {
+class ProjectUtil {
 
-    private Deployments() {
+    private ProjectUtil() {
     }
 
     /**

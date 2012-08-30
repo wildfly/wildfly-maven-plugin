@@ -46,7 +46,6 @@ import org.apache.maven.project.MavenProject;
 import org.jboss.as.plugin.cli.Commands;
 import org.jboss.as.plugin.common.AbstractServerConnection;
 import org.jboss.as.plugin.common.Streams;
-import org.jboss.as.plugin.deployment.Deployments;
 import org.sonatype.aether.RepositorySystem;
 import org.sonatype.aether.RepositorySystemSession;
 import org.sonatype.aether.repository.RemoteRepository;
@@ -161,9 +160,9 @@ public class Run extends AbstractServerConnection {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         final Log log = getLog();
-        final MavenProject project = Deployments.resolveProject(this.project);
-        final String deploymentName = Deployments.resolveFileName(project, this.filename);
-        final File targetDir = Deployments.resolveTargetDir(project, this.targetDir);
+        final MavenProject project = ProjectUtil.resolveProject(this.project);
+        final String deploymentName = ProjectUtil.resolveFileName(project, this.filename);
+        final File targetDir = ProjectUtil.resolveTargetDir(project, this.targetDir);
         final File file = new File(targetDir, deploymentName);
         // The deployment must exist before we do anything
         if (!file.exists()) {
@@ -219,12 +218,12 @@ public class Run extends AbstractServerConnection {
             log.info("Server is starting up. Press CTRL + C to stop the server.");
             server.start();
             // Execute commands before the deployment
-            if (beforeDeployment != null) beforeDeployment.executeCommands(server.getClient());
+            if (beforeDeployment != null) beforeDeployment.execute(server.getClient());
             // Deploy the application
             log.info(String.format("Deploying application '%s'%n", file.getName()));
             server.deploy(file, deploymentName);
             // Execute commands after the deployment
-            if (afterDeployment != null) afterDeployment.executeCommands(server.getClient());
+            if (afterDeployment != null) afterDeployment.execute(server.getClient());
             while (server.isStarted()) {
             }
         } catch (Exception e) {

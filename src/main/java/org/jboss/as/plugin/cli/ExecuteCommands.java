@@ -57,7 +57,7 @@ public class ExecuteCommands extends AbstractServerConnection {
         getLog().debug("Executing commands");
         final ModelControllerClient client = ModelControllerClient.Factory.create(getHostAddress(), getPort(), getCallbackHandler());
         try {
-            execCommands.executeCommands(client);
+            execCommands.execute(client);
         } catch (IOException e) {
             throw new MojoFailureException("Could not execute commands.", e);
         }

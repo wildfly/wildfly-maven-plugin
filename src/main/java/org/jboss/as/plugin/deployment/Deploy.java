@@ -77,7 +77,7 @@ public class Deploy extends AbstractDeployment {
             public void execute(final ModelControllerClient client) throws IOException {
                 if (afterDeployment != null) {
                     getLog().debug("Executing after deployment commands");
-                    afterDeployment.executeCommands(client);
+                    afterDeployment.execute(client);
                 }
             }
         };
@@ -90,7 +90,7 @@ public class Deploy extends AbstractDeployment {
             public void execute(final ModelControllerClient client) throws IOException {
                 if (beforeDeployment != null) {
                     getLog().debug("Executing before deployment commands");
-                    beforeDeployment.executeCommands(client);
+                    beforeDeployment.execute(client);
                 }
             }
         };

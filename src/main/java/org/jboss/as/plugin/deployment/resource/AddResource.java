@@ -144,28 +144,28 @@ public class AddResource extends AbstractServerConnection {
                 for (String profile : profiles) {
                     final CompositeOperationBuilder compositeOperationBuilder = CompositeOperationBuilder.create();
                     if (addCompositeResource(profile, client, resource, address, compositeOperationBuilder, true)) {
-                        if (resource.hasBeforeDeployCommands()) {
-                            resource.getBeforeDeployment().executeCommands(client);
+                        if (resource.hasBeforeAddCommands()) {
+                            resource.getBeforeAdd().execute(client);
                         }
                         // Execute the add resource operation
                         reportFailure(client.execute(compositeOperationBuilder.build()));
 
-                        if (resource.hasAfterDeployCommands()) {
-                            resource.getAfterDeployment().executeCommands(client);
+                        if (resource.hasAfterAddCommands()) {
+                            resource.getAfterAdd().execute(client);
                         }
                     }
                 }
             } else {
                 final CompositeOperationBuilder compositeOperationBuilder = CompositeOperationBuilder.create();
                 if (addCompositeResource(null, client, resource, address, compositeOperationBuilder, true)) {
-                    if (resource.hasBeforeDeployCommands()) {
-                        resource.getBeforeDeployment().executeCommands(client);
+                    if (resource.hasBeforeAddCommands()) {
+                        resource.getBeforeAdd().execute(client);
                     }
                     // Execute the add resource operation
                     reportFailure(client.execute(compositeOperationBuilder.build()));
 
-                    if (resource.hasAfterDeployCommands()) {
-                        resource.getAfterDeployment().executeCommands(client);
+                    if (resource.hasAfterAddCommands()) {
+                        resource.getAfterAdd().execute(client);
                     }
                 }
             }

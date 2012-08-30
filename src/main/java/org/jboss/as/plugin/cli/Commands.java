@@ -46,7 +46,7 @@ public class Commands {
      * {@code true} if commands should be executed in a batch or {@code false} if they should be executed one at a
      * time.
      */
-    @Parameter(defaultValue = "true")
+    @Parameter
     private boolean batch;
 
     /**
@@ -92,7 +92,7 @@ public class Commands {
      * @throws IOException              if the client has an IOException
      * @throws IllegalArgumentException if an command is invalid
      */
-    public final void executeCommands(final ModelControllerClient client) throws IOException {
+    public final void execute(final ModelControllerClient client) throws IOException {
         if (hasCommands()) {
             final CommandContext ctx = create();
             try {
