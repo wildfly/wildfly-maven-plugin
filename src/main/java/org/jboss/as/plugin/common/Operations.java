@@ -36,10 +36,11 @@ import org.jboss.dmr.Property;
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-public class Operations {
+public class Operations extends ClientConstants {
 
     public static final String CHILD_TYPE = "child-type";
     public static final String ENABLE = "enable";
+    public static final String LAUNCH_TYPE = "launch-type";
     public static final String PROFILE = "profile";
     public static final String READ_ATTRIBUTE = "read-attribute";
     public static final String READ_CHILDREN_NAMES = "read-children-names";
@@ -58,7 +59,7 @@ public class Operations {
      * @return {@code true} if the operation was successful, otherwise {@code false}
      */
     public static boolean successful(final ModelNode result) {
-        return result.get(ClientConstants.OUTCOME).asString().equals(ClientConstants.SUCCESS);
+        return result.get(OUTCOME).asString().equals(SUCCESS);
     }
 
     /**
@@ -74,11 +75,11 @@ public class Operations {
             return "";
         }
         final String msg;
-        if (result.hasDefined(ClientConstants.FAILURE_DESCRIPTION)) {
-            if (result.hasDefined(ClientConstants.OP)) {
-                msg = String.format("Operation '%s' at address '%s' failed: %s", result.get(ClientConstants.OP), result.get(ClientConstants.OP_ADDR), result.get(ClientConstants.FAILURE_DESCRIPTION));
+        if (result.hasDefined(FAILURE_DESCRIPTION)) {
+            if (result.hasDefined(OP)) {
+                msg = String.format("Operation '%s' at address '%s' failed: %s", result.get(OP), result.get(OP_ADDR), result.get(FAILURE_DESCRIPTION));
             } else {
-                msg = String.format("Operation failed: %s", result.get(ClientConstants.FAILURE_DESCRIPTION));
+                msg = String.format("Operation failed: %s", result.get(FAILURE_DESCRIPTION));
             }
         } else {
             msg = String.format("An unexpected response was found checking the deployment. Result: %s", result);
@@ -94,7 +95,7 @@ public class Operations {
      * @return the operation
      */
     public static ModelNode createAddOperation(final ModelNode address) {
-        return createOperation(ClientConstants.ADD, address);
+        return createOperation(ADD, address);
     }
 
     /**
@@ -115,7 +116,7 @@ public class Operations {
      */
     public static ModelNode createListDeploymentsOperation() {
         final ModelNode op = createOperation(Operations.READ_CHILDREN_NAMES);
-        op.get(Operations.CHILD_TYPE).set(ClientConstants.DEPLOYMENT);
+        op.get(Operations.CHILD_TYPE).set(DEPLOYMENT);
         return op;
     }
 
@@ -125,11 +126,11 @@ public class Operations {
      * @return the operation
      */
     public static ModelNode createCompositeOperation() {
-        final ModelNode op = createOperation(ClientConstants.COMPOSITE);
-        op.get(ClientConstants.OP).set(ClientConstants.COMPOSITE);
-        op.get(ClientConstants.OP_ADDR).setEmptyList();
-        op.get(ClientConstants.ROLLBACK_ON_RUNTIME_FAILURE).set(true);
-        op.get(ClientConstants.STEPS).setEmptyList();
+        final ModelNode op = createOperation(COMPOSITE);
+        op.get(OP).set(COMPOSITE);
+        op.get(OP_ADDR).setEmptyList();
+        op.get(ROLLBACK_ON_RUNTIME_FAILURE).set(true);
+        op.get(STEPS).setEmptyList();
         return op;
     }
 
@@ -142,9 +143,9 @@ public class Operations {
      */
     public static ModelNode createReadAttributeOperation(final String attributeName) {
         ModelNode op = new ModelNode();
-        op.get(ClientConstants.OP_ADDR).setEmptyList();
-        op.get(ClientConstants.OP).set(READ_ATTRIBUTE);
-        op.get(ClientConstants.NAME).set(attributeName);
+        op.get(OP_ADDR).setEmptyList();
+        op.get(OP).set(READ_ATTRIBUTE);
+        op.get(NAME).set(attributeName);
         return op;
     }
 
@@ -157,8 +158,8 @@ public class Operations {
      */
     public static ModelNode createOperation(final String operation) {
         final ModelNode op = new ModelNode();
-        op.get(ClientConstants.OP).set(operation);
-        op.get(ClientConstants.OP_ADDR).setEmptyList();
+        op.get(OP).set(operation);
+        op.get(OP_ADDR).setEmptyList();
         return op;
     }
 
@@ -177,7 +178,7 @@ public class Operations {
             throw new IllegalArgumentException("The address type must be a list.");
         }
         final ModelNode op = createOperation(operation);
-        op.get(ClientConstants.OP_ADDR).set(address);
+        op.get(OP_ADDR).set(address);
         return op;
     }
 
@@ -285,8 +286,8 @@ public class Operations {
          * @return the current builder
          */
         public CompositeOperationBuilder addStep(final ModelNode op) {
-            if (op.hasDefined(ClientConstants.OP)) {
-                this.op.get(ClientConstants.STEPS).add(op);
+            if (op.hasDefined(OP)) {
+                this.op.get(STEPS).add(op);
             } else {
                 throw new IllegalArgumentException(String.format("Invalid operations: %s", op));
             }

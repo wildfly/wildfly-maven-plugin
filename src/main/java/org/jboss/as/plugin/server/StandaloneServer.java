@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.as.plugin.common.DeploymentExecutionException;
 import org.jboss.as.plugin.common.DeploymentFailureException;
 import org.jboss.as.plugin.common.Files;
@@ -103,9 +102,9 @@ final class StandaloneServer extends Server {
         } else {
             try {
                 ModelNode rsp = client.execute(Operations.createReadAttributeOperation(Operations.SERVER_STATE));
-                isStarted = ClientConstants.SUCCESS.equals(rsp.get(ClientConstants.OUTCOME).asString())
-                        && !STARTING.equals(rsp.get(ClientConstants.RESULT).asString())
-                        && !STOPPING.equals(rsp.get(ClientConstants.RESULT).asString());
+                isStarted = Operations.SUCCESS.equals(rsp.get(Operations.OUTCOME).asString())
+                        && !STARTING.equals(rsp.get(Operations.RESULT).asString())
+                        && !STOPPING.equals(rsp.get(Operations.RESULT).asString());
             } catch (Throwable ignore) {
                 isStarted = false;
             }

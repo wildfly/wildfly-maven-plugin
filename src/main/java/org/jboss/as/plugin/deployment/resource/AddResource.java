@@ -31,7 +31,6 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.as.plugin.common.AbstractServerConnection;
 import org.jboss.as.plugin.common.Operations;
 import org.jboss.as.plugin.common.Operations.CompositeOperationBuilder;
@@ -269,8 +268,8 @@ public class AddResource extends AbstractServerConnection {
         reportFailure(r);
         boolean found = false;
         final String name = childAddress.getName();
-        if (r.get(ClientConstants.RESULT).get(name).isDefined()) {
-            for (ModelNode dataSource : r.get(ClientConstants.RESULT).get(name).asList()) {
+        if (r.get(Operations.RESULT).get(name).isDefined()) {
+            for (ModelNode dataSource : r.get(Operations.RESULT).get(name).asList()) {
                 if (dataSource.asProperty().getName().equals(childAddress.getValue().asString())) {
                     found = true;
                 }

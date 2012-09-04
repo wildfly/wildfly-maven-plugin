@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
-import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.as.controller.client.helpers.domain.DeploymentActionResult;
 import org.jboss.as.controller.client.helpers.domain.DeploymentActionsCompleteBuilder;
 import org.jboss.as.controller.client.helpers.domain.DeploymentPlan;
@@ -215,7 +214,7 @@ public class DomainDeployment implements Deployment {
             final String deploymentName = name;
             // Check to make sure there is an outcome
             if (Operations.successful(result)) {
-                final List<ModelNode> deployments = (result.hasDefined(ClientConstants.RESULT) ? result.get(ClientConstants.RESULT).asList() : Collections.<ModelNode>emptyList());
+                final List<ModelNode> deployments = (result.hasDefined(Operations.RESULT) ? result.get(Operations.RESULT).asList() : Collections.<ModelNode>emptyList());
                 for (ModelNode n : deployments) {
                     if (n.asString().equals(deploymentName)) {
                         return true;

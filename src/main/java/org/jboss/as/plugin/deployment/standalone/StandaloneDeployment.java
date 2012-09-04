@@ -28,7 +28,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentAction;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlan;
 import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
@@ -168,7 +167,7 @@ public class StandaloneDeployment implements Deployment {
             final String deploymentName = name;
             // Check to make sure there is an outcome
             if (Operations.successful(result)) {
-                final List<ModelNode> deployments = (result.hasDefined(ClientConstants.RESULT) ? result.get(ClientConstants.RESULT).asList() : Collections.<ModelNode>emptyList());
+                final List<ModelNode> deployments = (result.hasDefined(Operations.RESULT) ? result.get(Operations.RESULT).asList() : Collections.<ModelNode>emptyList());
                 for (ModelNode n : deployments) {
                     if (n.asString().equals(deploymentName)) {
                         return true;
