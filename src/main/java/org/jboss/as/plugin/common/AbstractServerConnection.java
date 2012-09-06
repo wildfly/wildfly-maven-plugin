@@ -22,13 +22,17 @@
 
 package org.jboss.as.plugin.common;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import javax.security.auth.callback.CallbackHandler;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.jboss.as.plugin.deployment.domain.Domain;
+import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.controller.client.helpers.domain.DomainClient;
+import org.jboss.dmr.ModelNode;
 
 /**
  * The default implementation for connecting to a running AS7 instance
@@ -36,7 +40,9 @@ import org.jboss.as.plugin.deployment.domain.Domain;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  * @author Stuart Douglas
  */
-public abstract class AbstractServerConnection extends AbstractMojo implements ConnectionInfo {
+public abstract class AbstractServerConnection extends AbstractMojo implements ConnectionInfo, Closeable {
+
+    protected static final Object CLIENT_LOCK = new Object();
 
     private volatile InetAddress address = null;
 
@@ -72,11 +78,7 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     @Parameter(property = "jboss-as.password")
     private String password;
 
-    /**
-     * Specifies the configuration for a domain server.
-     */
-    @Parameter
-    private Domain domain;
+    private ModelControllerClient client;
 
     /**
      * The hostname to deploy the archive to. The default is localhost.
@@ -100,19 +102,12 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     /**
      * Returns {@code true} if the connection is for a domain server, otherwise {@code false}.
      *
-     * @return {@code true} if the connection is for a domain server, otherwise {@code false}.
+     * @return {@code true} if the connection is for a domain server, otherwise {@code false}
      */
     public final boolean isDomainServer() {
-        return domain != null;
-    }
-
-    /**
-     * Returns the domain if {@link #isDomainServer()} returns {@code true}, otherwise {@code null} is returned.
-     *
-     * @return the domain or {@code null}.
-     */
-    public final Domain getDomain() {
-        return domain;
+        synchronized (CLIENT_LOCK) {
+            return isDomainServer(getClient());
+        }
     }
 
     /**
@@ -123,39 +118,72 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     public abstract String goal();
 
     /**
+     * Gets or creates a new connection to the server and returns the client.
+     * <p/>
+     * For a domain server a {@link DomainClient} will be returned.
+     *
+     * @return the client
+     */
+    public final ModelControllerClient getClient() {
+        synchronized (CLIENT_LOCK) {
+            ModelControllerClient result = client;
+            if (result == null) {
+                result = client = ModelControllerClient.Factory.create(getHostAddress(), getPort(), getCallbackHandler());
+                if (isDomainServer(result)) {
+                    result = client = DomainClient.Factory.create(result);
+                }
+            }
+            return result;
+        }
+    }
+
+    @Override
+    public final void close() {
+        synchronized (CLIENT_LOCK) {
+            Streams.safeClose(client);
+            client = null;
+        }
+    }
+
+    /**
      * Creates gets the address to the host name.
      *
      * @return the address.
      */
     @Override
-    public final InetAddress getHostAddress() {
+    public synchronized final InetAddress getHostAddress() {
         InetAddress result = address;
         // Lazy load the address
         if (result == null) {
-            synchronized (this) {
-                result = address;
-                if (result == null) {
-                    try {
-                        result = address = InetAddress.getByName(hostname());
-                    } catch (UnknownHostException e) {
-                        throw new IllegalArgumentException(String.format("Host name '%s' is invalid.", hostname), e);
-                    }
-                }
+            try {
+                result = address = InetAddress.getByName(hostname());
+            } catch (UnknownHostException e) {
+                throw new IllegalArgumentException(String.format("Host name '%s' is invalid.", hostname), e);
             }
         }
         return result;
     }
 
     @Override
-    public final CallbackHandler getCallbackHandler() {
+    public synchronized final CallbackHandler getCallbackHandler() {
         CallbackHandler result = handler;
         if (result == null) {
-            synchronized (this) {
-                result = handler;
-                if (result == null) {
-                    result = handler = new ClientCallbackHandler(username, password);
-                }
+            result = handler = new ClientCallbackHandler(username, password);
+        }
+        return result;
+    }
+
+    private boolean isDomainServer(final ModelControllerClient client) {
+        boolean result = false;
+        // Check this is really a domain server
+        final ModelNode op = Operations.createReadAttributeOperation(Operations.LAUNCH_TYPE);
+        try {
+            final ModelNode opResult = client.execute(op);
+            if (Operations.successful(opResult)) {
+                result = ("DOMAIN".equals(Operations.readResultAsString(opResult)));
             }
+        } catch (IOException e) {
+            throw new IllegalStateException(String.format("Error could not execute operation '%s'.", op), e);
         }
         return result;
     }

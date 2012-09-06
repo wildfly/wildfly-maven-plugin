@@ -193,13 +193,7 @@ public class Run extends AbstractServerConnection {
         log.info(String.format("JBOSS_HOME=%s%n", jbossHome));
         try {
             // Create the server
-            final Server server;
-            // Currently this will never be true, see comments in DomainServer for details
-            if (isDomainServer()) {
-                log.warn(String.format("Domain is not supported for the run goal, a standalone server will be started.%n"));
-                // server = new DomainServer(serverInfo, domain);
-            }
-            server = new StandaloneServer(serverInfo);
+            final Server server = new StandaloneServer(serverInfo);
             final Thread shutdownThread = new Thread(new Runnable() {
                 @Override
                 public void run() {

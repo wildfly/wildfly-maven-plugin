@@ -33,13 +33,14 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.jboss.as.plugin.common.DeploymentFailureException;
 
 /**
  * Undeploys (removes) an arbitrary artifact to the JBoss application server
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-@Mojo(name = "undeploy-artifact", requiresDependencyResolution = ResolutionScope.RUNTIME)
+@Mojo(name = "undeploy-artifact", requiresDependencyResolution = ResolutionScope.RUNTIME, threadSafe = true)
 @Execute(phase = LifecyclePhase.PACKAGE)
 public final class UndeployArtifact extends Undeploy {
 
@@ -66,12 +67,13 @@ public final class UndeployArtifact extends Undeploy {
 
 
     @Override
-    public void validate() throws MojoFailureException {
+    public void validate() throws DeploymentFailureException {
+        super.validate();
         if (artifactId == null) {
-            throw new MojoFailureException("undeploy-artifact must specify the artifactId");
+            throw new DeploymentFailureException("undeploy-artifact must specify the artifactId");
         }
         if (groupId == null) {
-            throw new MojoFailureException("undeploy-artifact must specify the groupId");
+            throw new DeploymentFailureException("undeploy-artifact must specify the groupId");
         }
         @SuppressWarnings("unchecked")
         final Set<Artifact> dependencies = project.getArtifacts();
@@ -84,7 +86,7 @@ public final class UndeployArtifact extends Undeploy {
             }
         }
         if (artifact == null) {
-            throw new MojoFailureException(String.format("Could not resolve artifact to deploy %s:%s", groupId, artifactId));
+            throw new DeploymentFailureException("Could not resolve artifact to deploy %s:%s", groupId, artifactId);
         }
         file = artifact.getFile();
     }

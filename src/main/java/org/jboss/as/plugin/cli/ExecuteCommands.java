@@ -55,11 +55,15 @@ public class ExecuteCommands extends AbstractServerConnection {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         getLog().debug("Executing commands");
-        final ModelControllerClient client = ModelControllerClient.Factory.create(getHostAddress(), getPort(), getCallbackHandler());
-        try {
-            execCommands.execute(client);
-        } catch (IOException e) {
-            throw new MojoFailureException("Could not execute commands.", e);
+        synchronized (CLIENT_LOCK) {
+            final ModelControllerClient client = getClient();
+            try {
+                execCommands.execute(client);
+            } catch (IOException e) {
+                throw new MojoFailureException("Could not execute commands.", e);
+            } finally {
+                close();
+            }
         }
     }
 }

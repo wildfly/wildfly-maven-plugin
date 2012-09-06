@@ -34,7 +34,7 @@ import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.plugin.common.AbstractServerConnection;
 import org.jboss.as.plugin.common.Operations;
 import org.jboss.as.plugin.common.Operations.CompositeOperationBuilder;
-import org.jboss.as.plugin.common.Streams;
+import org.jboss.as.plugin.deployment.domain.Domain;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.Property;
 
@@ -50,10 +50,16 @@ import org.jboss.dmr.Property;
  * @author Stuart Douglas
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-@Mojo(name = "add-resource")
+@Mojo(name = "add-resource", threadSafe = true)
 public class AddResource extends AbstractServerConnection {
 
     public static final String GOAL = "add-resource";
+
+    /**
+     * Specifies the configuration for a domain server.
+     */
+    @Parameter
+    private Domain domain;
 
     /**
      * The operation address, as a comma separated string.
@@ -112,8 +118,8 @@ public class AddResource extends AbstractServerConnection {
         try {
             final InetAddress host = getHostAddress();
             getLog().info(String.format("Executing goal %s on server %s (%s) port %s.", goal(), host.getHostName(), host.getHostAddress(), getPort()));
-            final ModelControllerClient client = ModelControllerClient.Factory.create(getHostAddress(), getPort(), getCallbackHandler());
-            try {
+            synchronized (CLIENT_LOCK) {
+                final ModelControllerClient client = getClient();
                 if (resources == null) {
                     final Resource resource = (this.resource == null ? new Resource(address, properties, false) : this.resource);
                     processResources(client, resource);
@@ -124,11 +130,11 @@ public class AddResource extends AbstractServerConnection {
                         getLog().warn("No resources were provided.");
                     }
                 }
-            } finally {
-                Streams.safeClose(client);
             }
         } catch (Exception e) {
             throw new MojoExecutionException(String.format("Could not execute goal %s. Reason: %s", goal(), e.getMessage()), e);
+        } finally {
+            close();
         }
     }
 
@@ -136,7 +142,7 @@ public class AddResource extends AbstractServerConnection {
         for (Resource resource : resources) {
             if (isDomainServer()) {
                 // Profiles are required when adding resources in domain mode
-                final List<String> profiles = getDomain().getProfiles();
+                final List<String> profiles = domain.getProfiles();
                 if (profiles.isEmpty()) {
                     throw new IllegalStateException("Cannot add resources when no profiles were defined.");
                 }

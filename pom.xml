@@ -48,7 +48,7 @@
 
 
     <properties>
-        <version.org.jboss.as>7.1.1.Final</version.org.jboss.as>
+        <version.org.jboss.as>7.1.2.Final</version.org.jboss.as>
         <version.org.apache.maven.maven-plugin>2.2.1</version.org.apache.maven.maven-plugin>
         <version.org.apache.maven.plugin-api>3.0</version.org.apache.maven.plugin-api>
         <version.org.apache.maven.plugin-tools>3.0</version.org.apache.maven.plugin-tools>

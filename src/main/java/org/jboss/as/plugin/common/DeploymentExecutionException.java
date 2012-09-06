@@ -30,19 +30,31 @@ import org.apache.maven.plugin.MojoExecutionException;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 public class DeploymentExecutionException extends MojoExecutionException {
-    public DeploymentExecutionException(Object source, String shortMessage, String longMessage) {
+    public DeploymentExecutionException(final Object source, final String shortMessage, final String longMessage) {
         super(source, shortMessage, longMessage);
     }
 
-    public DeploymentExecutionException(String message, Exception cause) {
+    public DeploymentExecutionException(final String message, final Exception cause) {
         super(message, cause);
     }
 
-    public DeploymentExecutionException(String message, Throwable cause) {
+    public DeploymentExecutionException(final Exception cause, final String format, final Object... args) {
+        this(String.format(format, args), cause);
+    }
+
+    public DeploymentExecutionException(final String message, final Throwable cause) {
         super(message, cause);
     }
 
-    public DeploymentExecutionException(String message) {
+    public DeploymentExecutionException(final Throwable cause, final String format, final Object... args) {
+        this(String.format(format, args), cause);
+    }
+
+    public DeploymentExecutionException(final String message) {
         super(message);
+    }
+
+    public DeploymentExecutionException(final String format, final Object... args) {
+        this(String.format(format, args));
     }
 }

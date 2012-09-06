@@ -148,7 +148,7 @@ public class StandaloneDeployment implements Deployment {
         } catch (DeploymentExecutionException e) {
             throw e;
         } catch (Exception e) {
-            throw new DeploymentExecutionException(String.format("Error executing %s", type), e);
+            throw new DeploymentExecutionException(e, "Error executing %s", type);
         }
         return resultStatus;
     }

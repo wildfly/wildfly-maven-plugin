@@ -245,6 +245,18 @@ public class Operations extends ClientConstants {
     }
 
     /**
+     * Reads the result of an operation and returns the result as a string. If the operation does not have a {@link
+     * #RESULT} attribute and empty string is returned.
+     *
+     * @param result the result of executing an operation
+     *
+     * @return the result of the operation or an empty string
+     */
+    public static String readResultAsString(final ModelNode result) {
+        return (result.hasDefined(RESULT) ? result.get(RESULT).asString() : "");
+    }
+
+    /**
      * A builder for building composite operations.
      * <p/>
      *

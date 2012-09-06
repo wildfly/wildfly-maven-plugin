@@ -33,7 +33,7 @@ import org.jboss.as.plugin.deployment.Deployment.Type;
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-@Mojo(name = "redeploy", requiresDependencyResolution = ResolutionScope.RUNTIME)
+@Mojo(name = "redeploy", requiresDependencyResolution = ResolutionScope.RUNTIME, threadSafe = true)
 @Execute(phase = LifecyclePhase.PACKAGE)
 public final class Redeploy extends AbstractDeployment {
 

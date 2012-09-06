@@ -31,13 +31,14 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.jboss.as.plugin.common.DeploymentFailureException;
 
 /**
  * Deploys an arbitrary artifact to the JBoss application server
  *
  * @author Stuart Douglas
  */
-@Mojo(name = "deploy-artifact", requiresDependencyResolution = ResolutionScope.RUNTIME)
+@Mojo(name = "deploy-artifact", requiresDependencyResolution = ResolutionScope.RUNTIME, threadSafe = true)
 public final class DeployArtifact extends Deploy {
 
     /**
@@ -63,12 +64,13 @@ public final class DeployArtifact extends Deploy {
 
 
     @Override
-    public void validate() throws MojoFailureException {
+    public void validate() throws DeploymentFailureException {
+        super.validate();
         if (artifactId == null) {
-            throw new MojoFailureException("deploy-artifact must specify the artifactId");
+            throw new DeploymentFailureException("deploy-artifact must specify the artifactId");
         }
         if (groupId == null) {
-            throw new MojoFailureException("deploy-artifact must specify the groupId");
+            throw new DeploymentFailureException("deploy-artifact must specify the groupId");
         }
         @SuppressWarnings("unchecked")
         final Set<Artifact> dependencies = project.getArtifacts();
@@ -81,7 +83,7 @@ public final class DeployArtifact extends Deploy {
             }
         }
         if (artifact == null) {
-            throw new MojoFailureException("Could not resolve artifact to deploy " + groupId + ":" + artifactId);
+            throw new DeploymentFailureException("Could not resolve artifact to deploy " + groupId + ":" + artifactId);
         }
         file = artifact.getFile();
     }

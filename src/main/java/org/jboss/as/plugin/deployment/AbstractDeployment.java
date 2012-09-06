@@ -32,7 +32,8 @@ import org.apache.maven.project.MavenProject;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.jboss.as.plugin.common.AbstractServerConnection;
-import org.jboss.as.plugin.common.Streams;
+import org.jboss.as.plugin.common.DeploymentFailureException;
+import org.jboss.as.plugin.deployment.domain.Domain;
 import org.jboss.as.plugin.deployment.domain.DomainDeployment;
 import org.jboss.as.plugin.deployment.standalone.StandaloneDeployment;
 
@@ -46,6 +47,12 @@ abstract class AbstractDeployment extends AbstractServerConnection {
 
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     private MavenProject project;
+
+    /**
+     * Specifies the configuration for a domain server.
+     */
+    @Parameter
+    private Domain domain;
 
     /**
      * Specifies the name used for the deployment.
@@ -117,16 +124,13 @@ abstract class AbstractDeployment extends AbstractServerConnection {
             if (checkPackaging() && IgnoredPackageTypes.isIgnored(packaging)) {
                 getLog().debug(String.format("Ignoring packaging type %s.", packaging));
             } else {
-                validate();
-                ModelControllerClient client = null;
-                try {
+                synchronized (CLIENT_LOCK) {
+                    validate();
+                    final ModelControllerClient client = getClient();
                     final Deployment deployment;
                     if (isDomainServer()) {
-                        final DomainClient domainClient = DomainClient.Factory.create(getHostAddress(), getPort(), getCallbackHandler());
-                        deployment = DomainDeployment.create(domainClient, getDomain(), file(), name, getType());
-                        client = domainClient;
+                        deployment = DomainDeployment.create((DomainClient) getClient(), domain, file(), name, getType());
                     } else {
-                        client = ModelControllerClient.Factory.create(getHostAddress(), getPort(), getCallbackHandler());
                         deployment = StandaloneDeployment.create(client, file(), name, getType());
                     }
                     // Execute before deployment hook
@@ -136,8 +140,6 @@ abstract class AbstractDeployment extends AbstractServerConnection {
                     deployment.execute();
                     // Execute after deployment hook
                     getAfterDeploymentHook().execute(client);
-                } finally {
-                    Streams.safeClose(client);
                 }
             }
         } catch (MojoFailureException e) {
@@ -146,16 +148,24 @@ abstract class AbstractDeployment extends AbstractServerConnection {
             throw e;
         } catch (Exception e) {
             throw new MojoExecutionException(String.format("Could not execute goal %s on %s. Reason: %s", goal(), file(), e.getMessage()), e);
+        } finally {
+            close();
         }
     }
 
     /**
      * Validates the deployment.
      *
-     * @throws MojoFailureException if the deployment is invalid.
+     * @throws DeploymentFailureException if the deployment is invalid.
      */
-    protected void validate() throws MojoFailureException {
-        // no-op by default
+    protected void validate() throws DeploymentFailureException {
+        if (isDomainServer()) {
+            if (domain == null || domain.getServerGroups().isEmpty()) {
+                throw new DeploymentFailureException("Server is running in domain mode, but no server groups have been defined.");
+            }
+        } else if (domain != null && !domain.getServerGroups().isEmpty()) {
+            throw new DeploymentFailureException("Server is running in standalone mode, but server groups have been defined.");
+        }
     }
 
     /**

@@ -153,13 +153,14 @@ public class DomainDeployment implements Deployment {
         } catch (DeploymentExecutionException e) {
             throw e;
         } catch (Exception e) {
-            throw new DeploymentExecutionException(String.format("Error executing %s", type), e);
+            throw new DeploymentExecutionException(e, "Error executing %s", type);
         }
         return Status.SUCCESS;
     }
 
     void validate() throws DeploymentFailureException {
         final Map<ServerIdentity, ServerStatus> statuses = client.getServerStatuses();
+        // Check for NPE
         final List<String> serverGroups = domain.getServerGroups();
         for (String serverGroup : serverGroups) {
             boolean notFound = true;
@@ -168,16 +169,15 @@ public class DomainDeployment implements Deployment {
                 if (serverGroup.equals(serverId.getServerGroupName())) {
                     ServerStatus currentStatus = statuses.get(serverId);
                     if (currentStatus != ServerStatus.STARTED) {
-                        throw new DeploymentFailureException(
-                                String.format("Status of server group '%s' is '%s', but is required to be '%s'.",
-                                        serverGroup, currentStatus, ServerStatus.STARTED));
+                        throw new DeploymentFailureException("Status of server group '%s' is '%s', but is required to be '%s'.",
+                                        serverGroup, currentStatus, ServerStatus.STARTED);
                     }
                     notFound = false;
                     break;
                 }
             }
             if (notFound) {
-                throw new DeploymentFailureException(String.format("Server group '%s' does not exist on the server.", serverGroup));
+                throw new DeploymentFailureException("Server group '%s' does not exist on the server.", serverGroup);
             }
         }
     }
@@ -198,7 +198,7 @@ public class DomainDeployment implements Deployment {
                     for (String server : serverUpdateResults.keySet()) {
                         final Throwable t = serverUpdateResults.get(server).getFailureResult();
                         if (t != null) {
-                            throw new DeploymentExecutionException(String.format("Error executing %s", type), t);
+                            throw new DeploymentExecutionException(t, "Error executing %s", type);
                         }
                     }
                 }
