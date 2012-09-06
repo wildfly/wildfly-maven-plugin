@@ -31,6 +31,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.domain.DomainClient;
+import org.jboss.as.plugin.cli.Commands;
 import org.jboss.as.plugin.common.AbstractServerConnection;
 import org.jboss.as.plugin.common.DeploymentFailureException;
 import org.jboss.as.plugin.deployment.domain.Domain;
@@ -61,23 +62,16 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     private String name;
 
     /**
-     * Specifies the packaging type.
+     * Commands to run before the deployment
      */
-    @Parameter(defaultValue = "${project.packaging}")
-    private String packaging;
-
-
-    /**
-     * The target directory the application to be deployed is located.
-     */
-    @Parameter(defaultValue = "${project.build.directory}/")
-    private File targetDir;
+    @Parameter(alias = "before-deployment")
+    private Commands beforeDeployment;
 
     /**
-     * The file name of the application to be deployed.
+     * Executions to run after the deployment
      */
-    @Parameter(defaultValue = "${project.build.finalName}.${project.packaging}")
-    private String filename;
+    @Parameter(alias = "after-deployment")
+    private Commands afterDeployment;
 
     /**
      * Set to {@code true} if you want the deployment to be skipped, otherwise {@code false}.
@@ -90,9 +84,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      *
      * @return the archive file.
      */
-    public File file() {
-        return new File(targetDir, filename);
-    }
+    protected abstract File file();
 
     /**
      * The goal of the deployment.
@@ -108,6 +100,11 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      */
     public abstract Deployment.Type getType();
 
+    /**
+     * @return {@code true} if the package type should be checked for ignored packaging types
+     */
+    protected abstract boolean checkPackaging();
+
     /*
      * (non-Javadoc)
      *
@@ -121,8 +118,8 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         }
         try {
             // Check the packaging type
-            if (checkPackaging() && IgnoredPackageTypes.isIgnored(packaging)) {
-                getLog().debug(String.format("Ignoring packaging type %s.", packaging));
+            if (checkPackaging() && IgnoredPackageTypes.isIgnored(project.getPackaging())) {
+                getLog().debug(String.format("Ignoring packaging type %s.", project.getPackaging()));
             } else {
                 synchronized (CLIENT_LOCK) {
                     validate();
@@ -174,7 +171,15 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      * @return the hook to execute
      */
     protected Hook getBeforeDeploymentHook() {
-        return Hook.NO_OP_HOOK;
+        return new Hook() {
+            @Override
+            public void execute(final ModelControllerClient client) throws IOException {
+                if (beforeDeployment != null) {
+                    getLog().debug("Executing before deployment commands");
+                    beforeDeployment.execute(client);
+                }
+            }
+        };
     }
 
     /**
@@ -183,14 +188,15 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      * @return the hook to execute
      */
     protected Hook getAfterDeploymentHook() {
-        return Hook.NO_OP_HOOK;
-    }
-
-    /**
-     * @return True if the package type should be checked for ignored packaging types
-     */
-    protected boolean checkPackaging() {
-        return true;
+        return new Hook() {
+            @Override
+            public void execute(final ModelControllerClient client) throws IOException {
+                if (afterDeployment != null) {
+                    getLog().debug("Executing after deployment commands");
+                    afterDeployment.execute(client);
+                }
+            }
+        };
     }
 
     /**

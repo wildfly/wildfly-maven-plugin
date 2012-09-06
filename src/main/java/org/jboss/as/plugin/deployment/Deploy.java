@@ -22,15 +22,11 @@
 
 package org.jboss.as.plugin.deployment;
 
-import java.io.IOException;
-
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.plugin.cli.Commands;
 import org.jboss.as.plugin.deployment.Deployment.Type;
 
 /**
@@ -47,19 +43,7 @@ import org.jboss.as.plugin.deployment.Deployment.Type;
  */
 @Mojo(name = "deploy", requiresDependencyResolution = ResolutionScope.RUNTIME, threadSafe = true)
 @Execute(phase = LifecyclePhase.PACKAGE)
-public class Deploy extends AbstractDeployment {
-
-    /**
-     * Commands to run before the deployment
-     */
-    @Parameter(alias = "before-deployment")
-    private Commands beforeDeployment;
-
-    /**
-     * Executions to run after the deployment
-     */
-    @Parameter(alias = "after-deployment")
-    private Commands afterDeployment;
+public class Deploy extends AbstractAppDeployment {
 
     /**
      * Specifies whether force mode should be used or not.
@@ -69,32 +53,6 @@ public class Deploy extends AbstractDeployment {
      */
     @Parameter(defaultValue = "true", property = "deploy.force")
     private boolean force;
-
-    @Override
-    protected Hook getAfterDeploymentHook() {
-        return new Hook() {
-            @Override
-            public void execute(final ModelControllerClient client) throws IOException {
-                if (afterDeployment != null) {
-                    getLog().debug("Executing after deployment commands");
-                    afterDeployment.execute(client);
-                }
-            }
-        };
-    }
-
-    @Override
-    protected Hook getBeforeDeploymentHook() {
-        return new Hook() {
-            @Override
-            public void execute(final ModelControllerClient client) throws IOException {
-                if (beforeDeployment != null) {
-                    getLog().debug("Executing before deployment commands");
-                    beforeDeployment.execute(client);
-                }
-            }
-        };
-    }
 
     @Override
     public String goal() {

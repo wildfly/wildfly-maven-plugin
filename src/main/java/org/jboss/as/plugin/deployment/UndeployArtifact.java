@@ -26,7 +26,6 @@ import java.io.File;
 import java.util.Set;
 
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -34,6 +33,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.jboss.as.plugin.common.DeploymentFailureException;
+import org.jboss.as.plugin.deployment.Deployment.Type;
 
 /**
  * Undeploys (removes) an arbitrary artifact to the JBoss application server
@@ -42,7 +42,7 @@ import org.jboss.as.plugin.common.DeploymentFailureException;
  */
 @Mojo(name = "undeploy-artifact", requiresDependencyResolution = ResolutionScope.RUNTIME, threadSafe = true)
 @Execute(phase = LifecyclePhase.PACKAGE)
-public final class UndeployArtifact extends Undeploy {
+public final class UndeployArtifact extends AbstractDeployment {
 
     /**
      * The artifact to deploys groupId
@@ -59,6 +59,12 @@ public final class UndeployArtifact extends Undeploy {
 
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     private MavenProject project;
+
+    /**
+     * Indicates whether undeploy should ignore the undeploy operation if the deployment does not exist.
+     */
+    @Parameter(defaultValue = "true", property = "undeploy.ignoreMissingDeployment")
+    private boolean ignoreMissingDeployment;
 
     /**
      * The resolved dependency file
@@ -92,13 +98,18 @@ public final class UndeployArtifact extends Undeploy {
     }
 
     @Override
-    public File file() {
+    protected File file() {
         return file;
     }
 
     @Override
     public String goal() {
         return "undeploy-artifact";
+    }
+
+    @Override
+    public Type getType() {
+        return (ignoreMissingDeployment ? Type.UNDEPLOY_IGNORE_MISSING : Type.UNDEPLOY);
     }
 
     @Override

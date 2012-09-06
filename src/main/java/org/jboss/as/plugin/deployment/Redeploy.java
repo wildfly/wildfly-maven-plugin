@@ -35,7 +35,7 @@ import org.jboss.as.plugin.deployment.Deployment.Type;
  */
 @Mojo(name = "redeploy", requiresDependencyResolution = ResolutionScope.RUNTIME, threadSafe = true)
 @Execute(phase = LifecyclePhase.PACKAGE)
-public final class Redeploy extends AbstractDeployment {
+public final class Redeploy extends AbstractAppDeployment {
 
     @Override
     public String goal() {

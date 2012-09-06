@@ -26,12 +26,12 @@ import java.io.File;
 import java.util.Set;
 
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.jboss.as.plugin.common.DeploymentFailureException;
+import org.jboss.as.plugin.deployment.Deployment.Type;
 
 /**
  * Deploys an arbitrary artifact to the JBoss application server
@@ -39,7 +39,7 @@ import org.jboss.as.plugin.common.DeploymentFailureException;
  * @author Stuart Douglas
  */
 @Mojo(name = "deploy-artifact", requiresDependencyResolution = ResolutionScope.RUNTIME, threadSafe = true)
-public final class DeployArtifact extends Deploy {
+public final class DeployArtifact extends AbstractDeployment {
 
     /**
      * The artifact to deploys groupId
@@ -56,6 +56,15 @@ public final class DeployArtifact extends Deploy {
 
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     private MavenProject project;
+
+    /**
+     * Specifies whether force mode should be used or not.
+     * </p>
+     * If force mode is disabled, the deploy goal will cause a build failure if the application being deployed already
+     * exists.
+     */
+    @Parameter(defaultValue = "true", property = "deploy.force")
+    private boolean force;
 
     /**
      * The resolved dependency file
@@ -89,13 +98,18 @@ public final class DeployArtifact extends Deploy {
     }
 
     @Override
-    public File file() {
+    protected File file() {
         return file;
     }
 
     @Override
     public String goal() {
         return "deploy-artifact";
+    }
+
+    @Override
+    public Type getType() {
+        return (force ? Type.FORCE_DEPLOY : Type.DEPLOY);
     }
 
     @Override
