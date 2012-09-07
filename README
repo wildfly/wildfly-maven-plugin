@@ -1,46 +1,10 @@
-A simple Maven plug-in to deploy, redeploy or undeploy your web application to JBoss AS7.
+A Maven plug-in for JBoss Application Server 7. This plugin allows you to:
 
-Example Usage:
-        <!-- Deploy's the application with the default name of the archive file -->
-        <plugins>
-            <plugin>
-                <groupId>org.jboss.as.plugins</groupId>
-                <artifactId>jboss-as-maven-plugin</artifactId>
-                <version>${jboss-as-maven-plugin-version}</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>deploy</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-
-
-Configuration information can also be specified. The following configurations are available:
-- <name /> The name you want to use for the deployment. This defaults to the file name.
-
-- <hostname /> The host name of the server. The default is localhost.
-
-- <port /> The port the server is listening for administration requests on. The default is 9999.
-
-- <username /> The username to connect as if prompted to authenticate by the server.
-
-- <password /> The password to use for authentication if prompted by the server.
-
-- <force /> Whether or not for force the actions, e.g. if the deploy goal is executed redeploy if it already exists. The default is true.
-
-Goals:
-jboss-as:deploy
-  - Deploys the application.
-
-jboss-as:redeploy
-  - Redeploys the application.
-
-jboss-as:undeploy
-  - Undeploys the application.
+  * Deploy, redeploy or undeploy your application
+  * Add resources
+  * Deploy and undeploy artifacts
+  * Execute CLI commands
+  * Run a standalone server within Maven
 
 Plugin documentation is at https://docs.jboss.org/jbossas/7/plugins/maven/latest/
 
