@@ -130,13 +130,13 @@ abstract class AbstractDeployment extends AbstractServerConnection {
                     } else {
                         deployment = StandaloneDeployment.create(client, file(), name, getType());
                     }
-                    // Execute before deployment hook
-                    getBeforeDeploymentHook().execute(client);
+                    // Execute before deployment commands
+                    if (beforeDeployment != null) beforeDeployment.execute(client);
                     // Deploy the deployment
                     getLog().debug("Executing deployment");
                     deployment.execute();
-                    // Execute after deployment hook
-                    getAfterDeploymentHook().execute(client);
+                    // Execute after deployment commands
+                    if (afterDeployment != null) afterDeployment.execute(client);
                 }
             }
         } catch (MojoFailureException e) {
@@ -163,57 +163,5 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         } else if (domain != null && !domain.getServerGroups().isEmpty()) {
             throw new DeploymentFailureException("Server is running in standalone mode, but server groups have been defined.");
         }
-    }
-
-    /**
-     * Adds an optional hook to be run before the deployment takes place.
-     *
-     * @return the hook to execute
-     */
-    protected Hook getBeforeDeploymentHook() {
-        return new Hook() {
-            @Override
-            public void execute(final ModelControllerClient client) throws IOException {
-                if (beforeDeployment != null) {
-                    getLog().debug("Executing before deployment commands");
-                    beforeDeployment.execute(client);
-                }
-            }
-        };
-    }
-
-    /**
-     * Adds an optional hook to be run after the deployment takes place.
-     *
-     * @return the hook to execute
-     */
-    protected Hook getAfterDeploymentHook() {
-        return new Hook() {
-            @Override
-            public void execute(final ModelControllerClient client) throws IOException {
-                if (afterDeployment != null) {
-                    getLog().debug("Executing after deployment commands");
-                    afterDeployment.execute(client);
-                }
-            }
-        };
-    }
-
-    /**
-     * A simple hook to execute operations.
-     */
-    interface Hook {
-
-        final Hook NO_OP_HOOK = new Hook() {
-            @Override
-            public void execute(final ModelControllerClient client) {
-                // no-op
-            }
-        };
-
-        /**
-         * Executes operations for the hook.
-         */
-        void execute(ModelControllerClient client) throws IOException;
     }
 }
