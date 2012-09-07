@@ -73,6 +73,7 @@ public final class DeployArtifact extends AbstractDeployment {
 
 
     @Override
+    @SuppressWarnings("unchecked")
     public void validate() throws DeploymentFailureException {
         super.validate();
         if (artifactId == null) {
@@ -81,8 +82,9 @@ public final class DeployArtifact extends AbstractDeployment {
         if (groupId == null) {
             throw new DeploymentFailureException("deploy-artifact must specify the groupId");
         }
-        @SuppressWarnings("unchecked")
         final Set<Artifact> dependencies = project.getArtifacts();
+        // Allows provided dependencies to be seen
+        dependencies.addAll(project.getDependencyArtifacts());
         Artifact artifact = null;
         for (final Artifact a : dependencies) {
             if (a.getArtifactId().equals(artifactId) &&
