@@ -27,35 +27,32 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.jboss.as.cli.CommandContext;
-import org.jboss.as.cli.CommandFormatException;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.plugin.cli.Commands;
 import org.jboss.as.plugin.common.DeploymentExecutionException;
 import org.jboss.as.plugin.common.DeploymentFailureException;
-import org.jboss.as.plugin.common.Operations;
-import org.jboss.dmr.ModelNode;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 abstract class Server {
+    private final ScheduledExecutorService timerService;
     private final ServerInfo serverInfo;
     private Process process;
     private ConsoleConsumer console;
-    private volatile CommandContext commandContext;
     private final String shutdownId;
 
     protected Server(final ServerInfo serverInfo) {
-        this.serverInfo = serverInfo;
-        shutdownId = null;
+        this(serverInfo, null);
     }
 
     protected Server(final ServerInfo serverInfo, final String shutdownId) {
         this.serverInfo = serverInfo;
         this.shutdownId = shutdownId;
+        timerService = Executors.newScheduledThreadPool(1);
     }
 
     /**
@@ -73,7 +70,7 @@ abstract class Server {
      * @throws IOException the an error occurs creating the process
      */
     public synchronized final void start() throws IOException {
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+        SecurityActions.addShutdownHook(new Thread(new Runnable() {
             @Override
             public void run() {
                 stop();
@@ -83,13 +80,13 @@ abstract class Server {
         final ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         processBuilder.redirectErrorStream(true);
         process = processBuilder.start();
-        console = ConsoleConsumer.start(process.getInputStream(), shutdownId);
+        console = startConsoleConsumer(process.getInputStream(), shutdownId);
         long timeout = serverInfo.getStartupTimeout() * 1000;
         boolean serverAvailable = false;
         long sleep = 50;
         init();
         while (timeout > 0 && !serverAvailable) {
-            serverAvailable = isStarted();
+            serverAvailable = isRunning();
             if (!serverAvailable) {
                 if (processHasDied(process))
                     break;
@@ -103,7 +100,9 @@ abstract class Server {
                 sleep = Math.max(sleep / 2, 100);
             }
         }
-        if (!serverAvailable) {
+        if (serverAvailable) {
+            timerService.scheduleWithFixedDelay(new Reaper(), 20, 10, TimeUnit.SECONDS);
+        } else {
             destroyProcess();
             throw new IllegalStateException(String.format("Managed server was not started within [%d] s", serverInfo.getStartupTimeout()));
         }
@@ -115,13 +114,6 @@ abstract class Server {
     public synchronized final void stop() {
         try {
             stopServer();
-            try {
-                if (commandContext != null) {
-                    commandContext.terminateSession();
-                }
-            } catch (Exception ignore) {
-                // no-op
-            }
         } finally {
             if (process != null) {
                 process.destroy();
@@ -131,6 +123,7 @@ abstract class Server {
                     // no-op
                 }
             }
+            timerService.shutdown();
         }
     }
 
@@ -152,7 +145,7 @@ abstract class Server {
      *
      * @return {@code true} if the server is fully started, otherwise {@code false}
      */
-    public abstract boolean isStarted();
+    public abstract boolean isRunning();
 
     /**
      * Returns the client that used to execute management operations on the server.
@@ -180,6 +173,12 @@ abstract class Server {
      */
     public abstract void deploy(final File file, final String deploymentName) throws DeploymentExecutionException, DeploymentFailureException, IOException;
 
+    /**
+     * Checks whether the server is running or not. If the server is no longer running the {@link #isRunning()} should
+     * return {@code false}.
+     */
+    protected abstract void checkServerState();
+
     private int destroyProcess() {
         if (process == null)
             return 0;
@@ -201,26 +200,37 @@ abstract class Server {
         }
     }
 
+    private ConsoleConsumer startConsoleConsumer(final InputStream stream, final String shutdownId) {
+        final ConsoleConsumer result = new ConsoleConsumer(stream, shutdownId);
+        final Thread t = new Thread(result);
+        t.setName("AS7-Console");
+        t.start();
+        return result;
+    }
+
+    private class Reaper implements Runnable {
+
+        @Override
+        public void run() {
+            checkServerState();
+            if (!isRunning()) {
+                stop();
+            }
+        }
+    }
+
     /**
      * Runnable that consumes the output of the process.
      *
      * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
      */
-    static class ConsoleConsumer implements Runnable {
-
-        static ConsoleConsumer start(final InputStream stream, final String shutdownId) {
-            final ConsoleConsumer result = new ConsoleConsumer(stream, shutdownId);
-            final Thread t = new Thread(result);
-            t.setName("AS7-Console");
-            t.start();
-            return result;
-        }
+    class ConsoleConsumer implements Runnable {
 
         private final InputStream in;
         private final String shutdownId;
         private final CountDownLatch latch;
 
-        private ConsoleConsumer(final InputStream in, final String shutdownId) {
+        protected ConsoleConsumer(final InputStream in, final String shutdownId) {
             this.in = in;
             latch = new CountDownLatch(1);
             this.shutdownId = shutdownId;
@@ -234,8 +244,12 @@ abstract class Server {
                 int num;
                 while ((num = in.read(buf)) != -1) {
                     System.out.write(buf, 0, num);
-                    if (shutdownId != null && new String(buf).contains(shutdownId))
+                    if (shutdownId != null && new String(buf).contains(shutdownId)) {
                         latch.countDown();
+                        if (isRunning()) {
+                            stop();
+                        }
+                    }
                 }
             } catch (IOException ignore) {
             }

@@ -54,7 +54,7 @@ final class DomainServer extends Server {
 
     private final ServerInfo serverInfo;
     private final Domain domain;
-    private volatile boolean isStarted;
+    private volatile boolean isRunning;
     private DomainClient client;
     private final Map<ServerIdentity, ServerStatus> servers;
 
@@ -68,7 +68,7 @@ final class DomainServer extends Server {
         super(serverInfo);
         this.serverInfo = serverInfo;
         this.domain = domain;
-        isStarted = false;
+        isRunning = false;
         servers = new HashMap<ServerIdentity, ServerStatus>();
     }
 
@@ -100,17 +100,17 @@ final class DomainServer extends Server {
                 }
             }
         } finally {
-            isStarted = false;
+            isRunning = false;
         }
     }
 
     @Override
-    public synchronized boolean isStarted() {
-        if (isStarted) {
-            return isStarted;
+    public synchronized boolean isRunning() {
+        if (isRunning) {
+            return isRunning;
         }
         if (client == null) {
-            isStarted = false;
+            isRunning = false;
         } else {
             try {
                 final Map<ServerIdentity, ServerStatus> statuses = client.getServerStatuses();
@@ -124,12 +124,12 @@ final class DomainServer extends Server {
                         }
                     }
                 }
-                isStarted = statuses.size() == servers.size();
+                isRunning = statuses.size() == servers.size();
             } catch (Throwable ignore) {
-                isStarted = false;
+                isRunning = false;
             }
         }
-        return isStarted;
+        return isRunning;
     }
 
     @Override
@@ -183,7 +183,7 @@ final class DomainServer extends Server {
 
     @Override
     public synchronized void deploy(final File file, final String deploymentName) throws DeploymentExecutionException, DeploymentFailureException, IOException {
-        if (isStarted) {
+        if (isRunning) {
             switch (DomainDeployment.create(client, domain, file, deploymentName, Type.DEPLOY).execute()) {
                 case REQUIRES_RESTART: {
                     client.execute(Operations.createOperation(Operations.RELOAD));
@@ -195,5 +195,10 @@ final class DomainServer extends Server {
         } else {
             throw new IllegalStateException("Cannot deploy to a server that is not running.");
         }
+    }
+
+    @Override
+    protected void checkServerState() {
+        // TODO need to implement
     }
 }

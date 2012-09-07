@@ -50,7 +50,7 @@ final class StandaloneServer extends Server {
     private static final String STOPPING = "STOPPING";
 
     private final ServerInfo serverInfo;
-    private boolean isStarted;
+    private boolean isRunning;
     private ModelControllerClient client;
 
     /**
@@ -61,7 +61,7 @@ final class StandaloneServer extends Server {
     public StandaloneServer(final ServerInfo serverInfo) {
         super(serverInfo, "JBAS015950");
         this.serverInfo = serverInfo;
-        isStarted = false;
+        isRunning = false;
     }
 
     @Override
@@ -88,28 +88,17 @@ final class StandaloneServer extends Server {
                 }
             }
         } finally {
-            isStarted = false;
+            isRunning = false;
         }
     }
 
     @Override
-    public synchronized boolean isStarted() {
-        if (isStarted) {
-            return isStarted;
+    public synchronized boolean isRunning() {
+        if (isRunning) {
+            return isRunning;
         }
-        if (client == null) {
-            isStarted = false;
-        } else {
-            try {
-                ModelNode rsp = client.execute(Operations.createReadAttributeOperation(Operations.SERVER_STATE));
-                isStarted = Operations.SUCCESS.equals(rsp.get(Operations.OUTCOME).asString())
-                        && !STARTING.equals(rsp.get(Operations.RESULT).asString())
-                        && !STOPPING.equals(rsp.get(Operations.RESULT).asString());
-            } catch (Throwable ignore) {
-                isStarted = false;
-            }
-        }
-        return isStarted;
+        checkServerState();
+        return isRunning;
     }
 
     @Override
@@ -157,7 +146,8 @@ final class StandaloneServer extends Server {
 
     @Override
     public synchronized void deploy(final File file, final String deploymentName) throws DeploymentExecutionException, DeploymentFailureException, IOException {
-        if (isStarted) {
+        checkServerState();
+        if (isRunning()) {
             switch (StandaloneDeployment.create(client, file, deploymentName, Deployment.Type.DEPLOY).execute()) {
                 case REQUIRES_RESTART: {
                     client.execute(Operations.createOperation(Operations.RELOAD));
@@ -167,7 +157,22 @@ final class StandaloneServer extends Server {
                     break;
             }
         } else {
-            throw new IllegalStateException("Cannot deploy to a server that is not running.");
+            throw new DeploymentFailureException("Cannot deploy to a server that is not running.");
+        }
+    }
+
+    @Override
+    protected void checkServerState() {
+        if (client == null) {
+            isRunning = false;
+        } else {
+            try {
+                final ModelNode result = client.execute(Operations.createReadAttributeOperation(Operations.SERVER_STATE));
+                isRunning = Operations.successful(result) && !STARTING.equals(Operations.readResultAsString(result)) &&
+                        !STOPPING.equals(Operations.readResultAsString(result));
+            } catch (Throwable ignore) {
+                isRunning = false;
+            }
         }
     }
 

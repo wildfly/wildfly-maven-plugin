@@ -218,7 +218,7 @@ public class Run extends AbstractServerConnection {
             server.deploy(file, deploymentName);
             // Execute commands after the deployment
             if (afterDeployment != null) afterDeployment.execute(server.getClient());
-            while (server.isStarted()) {
+            while (server.isRunning()) {
             }
         } catch (Exception e) {
             throw new MojoExecutionException("The server failed to start", e);
