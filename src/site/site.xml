@@ -21,7 +21,15 @@
   ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
   -->
 
-<project>
+<project xmlns="http://maven.apache.org/DECORATION/1.3.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/DECORATION/1.3.0 http://maven.apache.org/xsd/decoration-1.3.0.xsd"
+        name="JBoss Application Server 7 Maven Plugin">
+    <bannerLeft>
+        <name>JBoss AS 7 Maven Plugin</name>
+        <src>./images/jbossas7-logo.png</src>
+        <href>http://www.jboss.org/jbossas</href>
+    </bannerLeft>
+
     <body>
         <menu name="Overview">
             <item name="Introduction" href="index.html"/>
@@ -39,7 +47,7 @@
 
         <menu name="Project Documentation">
             <item name="JavaDoc" href="apidocs/index.html"/>
-            <item name="JBoss Application Server 7" href="/http://www.jboss.org/jbossas/docs/7-x"/>
+            <item name="JBoss Application Server 7" href="http://www.jboss.org/jbossas/docs/7-x"/>
         </menu>
     </body>
 </project>

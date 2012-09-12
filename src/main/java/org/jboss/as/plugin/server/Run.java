@@ -55,6 +55,8 @@ import org.sonatype.aether.resolution.ArtifactResult;
 import org.sonatype.aether.util.artifact.DefaultArtifact;
 
 /**
+ * Starts a standalone instance of JBoss Application Server 7 and deploys the application to the server.
+ *
  * @author Stuart Douglas
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */

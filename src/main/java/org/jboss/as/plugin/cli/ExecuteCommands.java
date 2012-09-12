@@ -35,6 +35,16 @@ import org.jboss.as.plugin.common.AbstractServerConnection;
  * Execute commands to the running JBoss Application Server.
  * <p/>
  * Commands should be formatted in the same manor CLI commands are formatted.
+ * <p/>
+ * Executing commands in a batch will rollback all changes if one command fails.
+ * <pre>
+ *      &lt;execute-commands&gt;
+ *          &lt;batch&gt;true&lt;/batch&gt;
+ *          &lt;commands&gt;
+ *              &lt;command&gt;/subsystem=logging/console=CONSOLE:write-attribute(name=level,value=DEBUG)&lt;/command&gt;
+ *          &lt;/commands&gt;
+ *      &lt;/execute-commands&gt;
+ * </pre>
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */

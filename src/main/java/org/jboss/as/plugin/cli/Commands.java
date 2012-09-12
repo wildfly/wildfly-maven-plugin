@@ -38,6 +38,13 @@ import org.jboss.dmr.ModelNode;
 /**
  * CLI commands to run.
  *
+ * <pre>
+ *      &lt;commands&gt;
+ *          &lt;batch&gt;false&lt;/batch&gt;
+ *          &lt;command&gt;/subsystem=logging/console-handler:CONSOLE:write-attribute(name=level,value=TRACE)&lt;/command&gt;
+ *      &lt;/commands&gt;
+ * </pre>
+ *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 public class Commands {

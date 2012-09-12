@@ -28,7 +28,7 @@ Execute Commands Examples
                 <configuration>
                     <execute-commands>
                         <commands>
-                            <command>/subsystem=logging/file-handler=debug:add(level=DEBUG,autoflush=true,file={&quot;relative-to&quot;=&gt;&quot;jboss.server.log.dir&quot;, &quot;path&quot;=&gt;&quot;debug.log&quot;})</command>
+                            <command>/subsystem=logging/file-handler=debug:add(level=DEBUG,autoflush=true,file={"relative-to"=>"jboss.server.log.dir", "path"=>"debug.log"})</command>
                             <command>/subsystem=logging/logger=org.jboss.as:add(level=DEBUG,handlers=[debug])</command>
                         </commands>
                     </execute-commands>

@@ -29,13 +29,8 @@
 
 ${project.name} (${project.artifactId})
 
-  The ${project.artifactId} allows you to deploy, redeploy or undeploy applications to JBoss Application Server 7. You
-  can also deploy resources and artifacts like datasources.  With {{{./deploy-mojo.html#force}force}} set to <<<true>>>
-  the {{{./deploy-mojo.html}deploy}} goal will <<<redeploy>>> the application if the deployment already exists on the s
-  erver. By default <<<force>>> is set to <<<true>>>.
-
-  If the {{{./deploy-mojo.html#packaging}packaging type}} is of type <<<pom>>> or <<<maven-plugin>>> all execution of
-  all goals for this plugin are ignored.
+  The ${project.artifactId} is used to deploy, redeploy, undeploy or run your application. You can also deploy or undeploy
+  artifacts, such as JDBC drivers, and add or remove resources. There is also the ability to execute CLI commands.
 
 * Goals Overview
 
@@ -43,7 +38,7 @@ ${project.name} (${project.artifactId})
 
   * {{{./add-resource-mojo.html}jboss-as:add-resource}} adds a resource.
 
-  * {{{./deploy-mojo.html}jboss-as:deploy}} deploys the application.
+  * {{{./deploy-mojo.html}jboss-as:deploy}} deploys the application to.
 
   * {{{./deploy-artifact-mojo.html}jboss-as:deploy-artifact}} deploys an arbitrary artifact to the server.
 
