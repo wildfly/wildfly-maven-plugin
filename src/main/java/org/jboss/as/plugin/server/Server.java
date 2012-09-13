@@ -22,7 +22,6 @@
 
 package org.jboss.as.plugin.server;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -32,8 +31,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.plugin.common.DeploymentExecutionException;
-import org.jboss.as.plugin.common.DeploymentFailureException;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
@@ -160,18 +157,6 @@ abstract class Server {
      * @return the commands used to launch the server
      */
     protected abstract List<String> createLaunchCommand();
-
-    /**
-     * Deploys the application to the server.
-     *
-     * @param file           the file to deploy
-     * @param deploymentName the name of the deployment
-     *
-     * @throws DeploymentExecutionException
-     * @throws DeploymentFailureException
-     * @throws IOException
-     */
-    public abstract void deploy(final File file, final String deploymentName) throws DeploymentExecutionException, DeploymentFailureException, IOException;
 
     /**
      * Checks whether the server is running or not. If the server is no longer running the {@link #isRunning()} should

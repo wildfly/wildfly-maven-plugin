@@ -23,6 +23,7 @@
 package org.jboss.as.plugin.deployment;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -32,7 +33,9 @@ import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.jboss.as.plugin.cli.Commands;
 import org.jboss.as.plugin.common.AbstractServerConnection;
+import org.jboss.as.plugin.common.DeploymentExecutionException;
 import org.jboss.as.plugin.common.DeploymentFailureException;
+import org.jboss.as.plugin.deployment.Deployment.Status;
 import org.jboss.as.plugin.deployment.domain.Domain;
 import org.jboss.as.plugin.deployment.domain.DomainDeployment;
 import org.jboss.as.plugin.deployment.standalone.StandaloneDeployment;
@@ -106,39 +109,55 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      */
     protected abstract boolean checkPackaging();
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.maven.plugin.Mojo#execute()
-     */
     @Override
     public final void execute() throws MojoExecutionException, MojoFailureException {
         if (skip) {
             getLog().debug(String.format("Skipping deployment of %s:%s", project.getGroupId(), project.getArtifactId()));
             return;
         }
+        // Check the packaging type
+        final PackageType packageType = getPackageType();
+        if (checkPackaging() && packageType.isIgnored()) {
+            getLog().debug(String.format("Ignoring packaging type %s.", packageType.getPackaging()));
+        } else {
+            doExecute();
+        }
+    }
+
+    protected final Status executeDeployment(final ModelControllerClient client, final Deployment deployment) throws DeploymentExecutionException, DeploymentFailureException, IOException {
+        // Execute before deployment commands
+        if (beforeDeployment != null) beforeDeployment.execute(client);
+        // Deploy the deployment
+        getLog().debug("Executing deployment");
+        final Status status = deployment.execute();
+        // Execute after deployment commands
+        if (afterDeployment != null) afterDeployment.execute(client);
+        return status;
+    }
+
+    /**
+     * Executes additional processing.
+     *
+     * @see #execute()
+     */
+    protected void doExecute() throws MojoExecutionException, MojoFailureException {
         try {
-            // Check the packaging type
-            final PackageType packageType = getPackageType();
-            if (checkPackaging() && packageType.isIgnored()) {
-                getLog().debug(String.format("Ignoring packaging type %s.", packageType.getPackaging()));
-            } else {
-                synchronized (CLIENT_LOCK) {
-                    validate();
-                    final ModelControllerClient client = getClient();
-                    final Deployment deployment;
-                    if (isDomainServer()) {
-                        deployment = DomainDeployment.create((DomainClient) getClient(), domain, file(), name, getType());
-                    } else {
-                        deployment = StandaloneDeployment.create(client, file(), name, getType());
+            synchronized (CLIENT_LOCK) {
+                validate();
+                final ModelControllerClient client = getClient();
+                final Deployment deployment;
+                if (isDomainServer()) {
+                    deployment = DomainDeployment.create((DomainClient) client, domain, file(), name, getType());
+                } else {
+                    deployment = StandaloneDeployment.create(client, file(), name, getType());
+                }
+                switch (executeDeployment(client, deployment)) {
+                    case REQUIRES_RESTART: {
+                        getLog().info("Server requires a restart");
+                        break;
                     }
-                    // Execute before deployment commands
-                    if (beforeDeployment != null) beforeDeployment.execute(client);
-                    // Deploy the deployment
-                    getLog().debug("Executing deployment");
-                    deployment.execute();
-                    // Execute after deployment commands
-                    if (afterDeployment != null) afterDeployment.execute(client);
+                    case SUCCESS:
+                        break;
                 }
             }
         } catch (MojoFailureException e) {

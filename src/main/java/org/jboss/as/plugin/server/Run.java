@@ -43,9 +43,14 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-import org.jboss.as.plugin.cli.Commands;
-import org.jboss.as.plugin.common.AbstractServerConnection;
+import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.plugin.common.DeploymentFailureException;
+import org.jboss.as.plugin.common.Operations;
 import org.jboss.as.plugin.common.Streams;
+import org.jboss.as.plugin.deployment.Deploy;
+import org.jboss.as.plugin.deployment.Deployment;
+import org.jboss.as.plugin.deployment.Deployment.Type;
+import org.jboss.as.plugin.deployment.standalone.StandaloneDeployment;
 import org.sonatype.aether.RepositorySystem;
 import org.sonatype.aether.RepositorySystemSession;
 import org.sonatype.aether.repository.RemoteRepository;
@@ -62,12 +67,9 @@ import org.sonatype.aether.util.artifact.DefaultArtifact;
  */
 @Mojo(name = "run", requiresDependencyResolution = ResolutionScope.RUNTIME)
 @Execute(phase = LifecyclePhase.PACKAGE)
-public class Run extends AbstractServerConnection {
+public class Run extends Deploy {
 
     public static final String JBOSS_DIR = "jboss-as-run";
-
-    @Parameter(defaultValue = "${project}", readonly = true, required = true)
-    private MavenProject project;
 
     /**
      * The entry point to Aether, i.e. the component doing all the work.
@@ -114,7 +116,8 @@ public class Run extends AbstractServerConnection {
     /**
      * A space delimited list of JVM arguments.
      */
-    @Parameter(alias = "jvm-args", property = "jboss-as.jvmArgs")
+    @Parameter(alias = "jvm-args", property = "jboss-as.jvmArgs",
+            defaultValue = "-Xms64m -Xmx512m -XX:MaxPermSize=256m -Djava.net.preferIPv4Stack=true -Dorg.jboss.resolver.warning=true -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000")
     private String jvmArgs;
 
     /**
@@ -135,40 +138,15 @@ public class Run extends AbstractServerConnection {
     @Parameter(alias = "startup-timeout", defaultValue = "60", property = "jboss-as.startupTimeout")
     private long startupTimeout;
 
-    /**
-     * Commands to run before the deployment
-     */
-    @Parameter(alias = "before-deployment")
-    private Commands beforeDeployment;
-
-    /**
-     * Executions to run after the deployment
-     */
-    @Parameter(alias = "after-deployment")
-    private Commands afterDeployment;
-
-    /**
-     * The target directory the application to be deployed is located.
-     */
-    @Parameter
-    private File targetDir;
-
-    /**
-     * The file name of the application to be deployed.
-     */
-    @Parameter
-    private String filename;
-
     @Override
-    public void execute() throws MojoExecutionException, MojoFailureException {
+    protected void doExecute() throws MojoExecutionException, MojoFailureException {
         final Log log = getLog();
-        final MavenProject project = ProjectUtil.resolveProject(this.project);
-        final String deploymentName = ProjectUtil.resolveFileName(project, this.filename);
-        final File targetDir = ProjectUtil.resolveTargetDir(project, this.targetDir);
-        final File file = new File(targetDir, deploymentName);
+        final File deploymentFile = file();
+        final String deploymentName = deploymentFile.getName();
+        final File targetDir = deploymentFile.getParentFile();
         // The deployment must exist before we do anything
-        if (!file.exists()) {
-            throw new MojoExecutionException(String.format("The deployment '%s' could not be found.", file.getAbsolutePath()));
+        if (!deploymentFile.exists()) {
+            throw new MojoExecutionException(String.format("The deployment '%s' could not be found.", deploymentFile.getAbsolutePath()));
         }
         // Validate the environment
         final File jbossHome = extractIfRequired(targetDir);
@@ -213,13 +191,23 @@ public class Run extends AbstractServerConnection {
             // Start the server
             log.info("Server is starting up. Press CTRL + C to stop the server.");
             server.start();
-            // Execute commands before the deployment
-            if (beforeDeployment != null) beforeDeployment.execute(server.getClient());
             // Deploy the application
-            log.info(String.format("Deploying application '%s'%n", file.getName()));
-            server.deploy(file, deploymentName);
-            // Execute commands after the deployment
-            if (afterDeployment != null) afterDeployment.execute(server.getClient());
+            server.checkServerState();
+            if (server.isRunning()) {
+                log.info(String.format("Deploying application '%s'%n", deploymentFile.getName()));
+                final ModelControllerClient client = server.getClient();
+                final Deployment deployment = StandaloneDeployment.create(client, deploymentFile, deploymentName, getType());
+                switch (executeDeployment(client, deployment)) {
+                    case REQUIRES_RESTART: {
+                        client.execute(Operations.createOperation(Operations.RELOAD));
+                        break;
+                    }
+                    case SUCCESS:
+                        break;
+                }
+            } else {
+                throw new DeploymentFailureException("Cannot deploy to a server that is not running.");
+            }
             while (server.isRunning()) {
             }
         } catch (Exception e) {

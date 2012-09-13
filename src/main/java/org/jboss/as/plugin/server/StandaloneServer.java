@@ -29,13 +29,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.plugin.common.DeploymentExecutionException;
-import org.jboss.as.plugin.common.DeploymentFailureException;
 import org.jboss.as.plugin.common.Files;
 import org.jboss.as.plugin.common.Operations;
 import org.jboss.as.plugin.common.Streams;
-import org.jboss.as.plugin.deployment.Deployment;
-import org.jboss.as.plugin.deployment.standalone.StandaloneDeployment;
 import org.jboss.dmr.ModelNode;
 
 /**
@@ -142,23 +138,6 @@ final class StandaloneServer extends Server {
             cmd.add(serverInfo.getServerConfig());
         }
         return cmd;
-    }
-
-    @Override
-    public synchronized void deploy(final File file, final String deploymentName) throws DeploymentExecutionException, DeploymentFailureException, IOException {
-        checkServerState();
-        if (isRunning()) {
-            switch (StandaloneDeployment.create(client, file, deploymentName, Deployment.Type.DEPLOY).execute()) {
-                case REQUIRES_RESTART: {
-                    client.execute(Operations.createOperation(Operations.RELOAD));
-                    break;
-                }
-                case SUCCESS:
-                    break;
-            }
-        } else {
-            throw new DeploymentFailureException("Cannot deploy to a server that is not running.");
-        }
     }
 
     @Override

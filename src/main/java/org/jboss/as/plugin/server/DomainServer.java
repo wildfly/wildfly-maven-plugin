@@ -34,14 +34,9 @@ import java.util.concurrent.TimeUnit;
 import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.jboss.as.controller.client.helpers.domain.ServerIdentity;
 import org.jboss.as.controller.client.helpers.domain.ServerStatus;
-import org.jboss.as.plugin.common.DeploymentExecutionException;
-import org.jboss.as.plugin.common.DeploymentFailureException;
 import org.jboss.as.plugin.common.Files;
-import org.jboss.as.plugin.common.Operations;
 import org.jboss.as.plugin.common.Streams;
-import org.jboss.as.plugin.deployment.Deployment.Type;
 import org.jboss.as.plugin.deployment.domain.Domain;
-import org.jboss.as.plugin.deployment.domain.DomainDeployment;
 
 /**
  * This is not yet in production. Here only as a place holder in case it's needed in the future.
@@ -179,22 +174,6 @@ final class DomainServer extends Server {
         cmd.add("-default-jvm");
         cmd.add(javaExec);
         return cmd;
-    }
-
-    @Override
-    public synchronized void deploy(final File file, final String deploymentName) throws DeploymentExecutionException, DeploymentFailureException, IOException {
-        if (isRunning) {
-            switch (DomainDeployment.create(client, domain, file, deploymentName, Type.DEPLOY).execute()) {
-                case REQUIRES_RESTART: {
-                    client.execute(Operations.createOperation(Operations.RELOAD));
-                    break;
-                }
-                case SUCCESS:
-                    break;
-            }
-        } else {
-            throw new IllegalStateException("Cannot deploy to a server that is not running.");
-        }
     }
 
     @Override
