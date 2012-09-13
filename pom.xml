@@ -64,6 +64,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
                 <version>${version.org.apache.maven.plugins.site-plugin}</version>
+                <configuration>
+                    <relativizeDecorationLinks>false</relativizeDecorationLinks>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

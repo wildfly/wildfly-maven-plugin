@@ -23,7 +23,6 @@
 package org.jboss.as.plugin.deployment;
 
 import java.io.File;
-import java.io.IOException;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -47,7 +46,7 @@ import org.jboss.as.plugin.deployment.standalone.StandaloneDeployment;
 abstract class AbstractDeployment extends AbstractServerConnection {
 
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
-    private MavenProject project;
+    protected MavenProject project;
 
     /**
      * Specifies the configuration for a domain server.
@@ -78,6 +77,8 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      */
     @Parameter(defaultValue = "false")
     private boolean skip;
+
+    private PackageType packageType;
 
     /**
      * The archive file.
@@ -118,8 +119,9 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         }
         try {
             // Check the packaging type
-            if (checkPackaging() && IgnoredPackageTypes.isIgnored(project.getPackaging())) {
-                getLog().debug(String.format("Ignoring packaging type %s.", project.getPackaging()));
+            final PackageType packageType = getPackageType();
+            if (checkPackaging() && packageType.isIgnored()) {
+                getLog().debug(String.format("Ignoring packaging type %s.", packageType.getPackaging()));
             } else {
                 synchronized (CLIENT_LOCK) {
                     validate();
@@ -148,6 +150,13 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         } finally {
             close();
         }
+    }
+
+    protected final synchronized PackageType getPackageType() {
+        if (packageType == null) {
+            packageType = PackageType.resolve(project);
+        }
+        return packageType;
     }
 
     /**

@@ -35,24 +35,36 @@ abstract class AbstractAppDeployment extends AbstractDeployment {
     /**
      * The target directory the application to be deployed is located.
      */
-    @Parameter(defaultValue = "${project.build.directory}/")
+    @Parameter(defaultValue = "${project.build.directory}/", property = "jboss-as.deployment.targetDir")
     private File targetDir;
 
     /**
      * The file name of the application to be deployed.
+     * <p>
+     * The {@code filename} property does have a default of <code>${project.build.finalName}.${project.packaging}</code>.
+     * The default value is not injected as it normally would be due to packaging types like {@code ejb} that result in
+     * a file with a {@code .jar} extension rather than an {@code .ejb} extension.
+     * </p>
      */
-    @Parameter(defaultValue = "${project.build.finalName}.${project.packaging}")
+    @Parameter(property = "jboss-as.deployment.filename")
     private String filename;
 
     /**
-     * By default certain package types are ignored when processing. Set this value to {@code false} if this check
-     * should be bypassed.
+     * By default certain package types are ignored when processing, e.g. {@code maven-project} and {@code pom}. Set
+     * this value to {@code false} if this check should be bypassed.
      */
-    @Parameter(alias = "check-packing", property = "jboss-as.checkPackaging", defaultValue = "true")
+    @Parameter(alias = "check-packaging", property = "jboss-as.checkPackaging", defaultValue = "true")
     private boolean checkPackaging;
 
     @Override
     protected File file() {
+        final PackageType packageType = getPackageType();
+        final String filename;
+        if (this.filename == null) {
+            filename = String.format("%s.%s", project.getBuild().getFinalName(), packageType.getFileExtension());
+        } else {
+            filename = this.filename;
+        }
         return new File(targetDir, filename);
     }
 
