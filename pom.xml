@@ -55,6 +55,7 @@
         <version.org.apache.maven.plugins.plugin>3.1</version.org.apache.maven.plugins.plugin>
         <version.org.apache.maven.plugins.site-plugin>3.0</version.org.apache.maven.plugins.site-plugin>
         <version.org.codehaus.plexus.plexus-utils>3.0.1</version.org.codehaus.plexus.plexus-utils>
+        <version.org.jboss.remoting3>3.2.12.GA</version.org.jboss.remoting3>
         <version.org.sonatype.aether>1.8</version.org.sonatype.aether>
     </properties>
 
@@ -137,6 +138,15 @@
             <groupId>org.jboss.as</groupId>
             <artifactId>jboss-as-controller-client</artifactId>
             <version>${version.org.jboss.as}</version>
+        </dependency>
+        <!--
+            This is only added as remoting 3 has some backwards compatibility issues when deploying to newer releases.
+            Remove this when AS version aligns the remoting version.
+         -->
+        <dependency>
+            <groupId>org.jboss.remoting3</groupId>
+            <artifactId>jboss-remoting</artifactId>
+            <version>${version.org.jboss.remoting3}</version>
         </dependency>
 
         <!-- dependencies to annotations -->
