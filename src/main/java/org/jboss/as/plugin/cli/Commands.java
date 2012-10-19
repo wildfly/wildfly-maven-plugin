@@ -23,7 +23,7 @@
 package org.jboss.as.plugin.cli;
 
 import java.io.IOException;
-import java.util.Set;
+import java.util.List;
 
 import org.apache.maven.plugins.annotations.Parameter;
 import org.jboss.as.cli.CliInitializationException;
@@ -60,7 +60,7 @@ public class Commands {
      * The CLI commands to execute.
      */
     @Parameter
-    private Set<String> commands;
+    private List<String> commands;
 
     /**
      * Indicates whether or not commands should be executed in a batch.
@@ -87,7 +87,7 @@ public class Commands {
      *
      * @return the set of commands to process
      */
-    public Set<String> getCommands() {
+    public List<String> getCommands() {
         return commands;
     }
 
