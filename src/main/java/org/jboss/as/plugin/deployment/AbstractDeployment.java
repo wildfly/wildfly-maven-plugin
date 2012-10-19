@@ -81,8 +81,6 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     @Parameter(defaultValue = "false")
     private boolean skip;
 
-    private PackageType packageType;
-
     /**
      * The archive file.
      *
@@ -104,24 +102,13 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      */
     public abstract Deployment.Type getType();
 
-    /**
-     * @return {@code true} if the package type should be checked for ignored packaging types
-     */
-    protected abstract boolean checkPackaging();
-
     @Override
     public final void execute() throws MojoExecutionException, MojoFailureException {
         if (skip) {
             getLog().debug(String.format("Skipping deployment of %s:%s", project.getGroupId(), project.getArtifactId()));
             return;
         }
-        // Check the packaging type
-        final PackageType packageType = getPackageType();
-        if (checkPackaging() && packageType.isIgnored()) {
-            getLog().debug(String.format("Ignoring packaging type %s.", packageType.getPackaging()));
-        } else {
-            doExecute();
-        }
+        doExecute();
     }
 
     protected final Status executeDeployment(final ModelControllerClient client, final Deployment deployment) throws DeploymentExecutionException, DeploymentFailureException, IOException {
@@ -169,13 +156,6 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         } finally {
             close();
         }
-    }
-
-    protected final synchronized PackageType getPackageType() {
-        if (packageType == null) {
-            packageType = PackageType.resolve(project);
-        }
-        return packageType;
     }
 
     /**

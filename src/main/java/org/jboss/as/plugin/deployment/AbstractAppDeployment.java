@@ -24,6 +24,8 @@ package org.jboss.as.plugin.deployment;
 
 import java.io.File;
 
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
@@ -56,6 +58,18 @@ abstract class AbstractAppDeployment extends AbstractDeployment {
     @Parameter(alias = "check-packaging", property = "jboss-as.checkPackaging", defaultValue = "true")
     private boolean checkPackaging;
 
+    private PackageType packageType;
+
+    @Override
+    protected void doExecute() throws MojoExecutionException, MojoFailureException {
+        final PackageType packageType = getPackageType();
+        if (checkPackaging && packageType.isIgnored()) {
+            getLog().debug(String.format("Ignoring packaging type %s.", packageType.getPackaging()));
+        } else {
+            super.doExecute();
+        }
+    }
+
     @Override
     protected File file() {
         final PackageType packageType = getPackageType();
@@ -68,8 +82,10 @@ abstract class AbstractAppDeployment extends AbstractDeployment {
         return new File(targetDir, filename);
     }
 
-    @Override
-    protected final boolean checkPackaging() {
-        return checkPackaging;
+    protected final synchronized PackageType getPackageType() {
+        if (packageType == null) {
+            packageType = PackageType.resolve(project);
+        }
+        return packageType;
     }
 }

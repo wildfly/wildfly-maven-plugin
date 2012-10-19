@@ -29,7 +29,6 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
 import org.jboss.as.plugin.common.DeploymentFailureException;
 import org.jboss.as.plugin.deployment.Deployment.Type;
 
@@ -53,9 +52,6 @@ public final class DeployArtifact extends AbstractDeployment {
      */
     @Parameter
     private String artifactId;
-
-    @Parameter(defaultValue = "${project}", readonly = true, required = true)
-    private MavenProject project;
 
     /**
      * Specifies whether force mode should be used or not.
@@ -112,10 +108,5 @@ public final class DeployArtifact extends AbstractDeployment {
     @Override
     public Type getType() {
         return (force ? Type.FORCE_DEPLOY : Type.DEPLOY);
-    }
-
-    @Override
-    protected boolean checkPackaging() {
-        return false;
     }
 }

@@ -111,9 +111,4 @@ public final class UndeployArtifact extends AbstractDeployment {
     public Type getType() {
         return (ignoreMissingDeployment ? Type.UNDEPLOY_IGNORE_MISSING : Type.UNDEPLOY);
     }
-
-    @Override
-    protected boolean checkPackaging() {
-        return false;
-    }
 }
