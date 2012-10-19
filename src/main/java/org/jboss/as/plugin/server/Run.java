@@ -209,6 +209,7 @@ public class Run extends Deploy {
                 throw new DeploymentFailureException("Cannot deploy to a server that is not running.");
             }
             while (server.isRunning()) {
+                TimeUnit.SECONDS.sleep(1L);
             }
         } catch (Exception e) {
             throw new MojoExecutionException("The server failed to start", e);
