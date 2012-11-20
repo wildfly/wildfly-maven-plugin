@@ -26,10 +26,13 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+
 import javax.security.auth.callback.CallbackHandler;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.settings.Server;
+import org.apache.maven.settings.Settings;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.jboss.dmr.ModelNode;
@@ -41,6 +44,14 @@ import org.jboss.dmr.ModelNode;
  * @author Stuart Douglas
  */
 public abstract class AbstractServerConnection extends AbstractMojo implements ConnectionInfo, Closeable {
+
+    public static final String DEBUG_MESSAGE_NO_CREDS = "No username and password in settings.xml file - falling back to CLI entry";
+    public static final String DEBUG_MESSAGE_NO_ID = "No <id> element was found in the POM - Getting credentials from CLI entry";
+    public static final String DEBUG_MESSAGE_NO_SERVER_SECTION = "No <server> section was found for the specified id";
+    public static final String DEBUG_MESSAGE_NO_SETTINGS_FILE = "No settings.xml file was found in this Mojo's execution context";
+    public static final String DEBUG_MESSAGE_POM_HAS_CREDS = "Getting credentials from the POM";
+    public static final String DEBUG_MESSAGE_SETTINGS_HAS_CREDS = "Found username and password in the settings.xml file";
+    public static final String DEBUG_MESSAGE_SETTINGS_HAS_ID = "Found the server's id in the settings.xml file";
 
     protected static final Object CLIENT_LOCK = new Object();
 
@@ -59,6 +70,19 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
      */
     @Parameter(defaultValue = "9999", property = "jboss-as.port")
     private int port;
+
+   /**
+     * Specifies the id of the server if the username and password is to be
+     * retrieved from the settings.xml file
+     */
+    @Parameter(property = "jboss-as.id")
+    private String id;
+
+    /**
+     * Provides a reference to the settings file.
+     */
+    @Parameter(property = "settings", readonly = true, required = true, defaultValue = "${settings}")
+    private Settings settings;
 
     /**
      * Specifies the username to use if prompted to authenticate by the server.
@@ -168,9 +192,38 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     public synchronized final CallbackHandler getCallbackHandler() {
         CallbackHandler result = handler;
         if (result == null) {
+            if(username == null && password == null) {
+                if(id != null) {
+                    getCredentialsFromSettings();
+                } else {
+                    getLog().debug(DEBUG_MESSAGE_NO_ID);
+                }
+            } else {
+                getLog().debug(DEBUG_MESSAGE_POM_HAS_CREDS);
+            }
             result = handler = new ClientCallbackHandler(username, password);
         }
         return result;
+    }
+
+    private void getCredentialsFromSettings() {
+        if(settings != null) {
+            Server server = settings.getServer(id);
+            if(server != null) {
+                getLog().debug(DEBUG_MESSAGE_SETTINGS_HAS_ID);
+                password = server.getPassword();
+                username = server.getUsername();
+                if(username != null && password != null) {
+                    getLog().debug(DEBUG_MESSAGE_SETTINGS_HAS_CREDS);
+                } else {
+                    getLog().debug(DEBUG_MESSAGE_NO_CREDS);
+                }
+            } else {
+                getLog().debug(DEBUG_MESSAGE_NO_SERVER_SECTION);
+            }
+        } else {
+            getLog().debug(DEBUG_MESSAGE_NO_SETTINGS_FILE);
+        }
     }
 
     private boolean isDomainServer(final ModelControllerClient client) {
