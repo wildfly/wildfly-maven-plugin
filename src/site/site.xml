@@ -49,5 +49,7 @@
             <item name="JavaDoc" href="apidocs/index.html"/>
             <item name="JBoss Application Server 7" href="http://www.jboss.org/jbossas/docs/7-x"/>
         </menu>
+
+        <menu ref="reports"/>
     </body>
 </project>
