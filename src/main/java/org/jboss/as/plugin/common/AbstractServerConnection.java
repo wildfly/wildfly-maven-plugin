@@ -183,7 +183,9 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
                 result = ("DOMAIN".equals(Operations.readResultAsString(opResult)));
             }
         } catch (IOException e) {
-            throw new IllegalStateException(String.format("Error could not execute operation '%s'.", op), e);
+            if ( getLog().isDebugEnabled() )
+                getLog().debug(e);
+            throw new IllegalStateException(String.format("I/O Error could not execute operation '%s'", op), e);
         }
         return result;
     }
