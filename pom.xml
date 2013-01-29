@@ -46,6 +46,14 @@
         <url>http://github.com/jbossas/jboss-as-maven-plugin</url>
     </scm>
 
+    <licenses>
+        <license>
+            <name>lgpl</name>
+            <url>http://repository.jboss.org/licenses/lgpl-2.1.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
 
     <properties>
         <version.org.jboss.as>7.1.2.Final</version.org.jboss.as>
