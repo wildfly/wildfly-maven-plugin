@@ -1,0 +1,7 @@
+batch
+#set default transaction timeout
+/subsystem=transactions :write-attribute(name=default-timeout, value=600)
+#...
+# Execute and reload
+run-batch
+:reload

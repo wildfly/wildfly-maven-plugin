@@ -1,0 +1,33 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>testing</groupId>
+	<artifactId>testing</artifactId>
+	<packaging>war</packaging>
+	<version>0.1.0-SNAPSHOT</version>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.jboss.as.plugins</groupId>
+				<artifactId>jboss-as-maven-plugin</artifactId>
+				<executions>
+						<execution>
+							<goals>
+								<goal>deploy</goal>
+							</goals>
+						</execution>
+					</executions>
+				<configuration>
+					<id>testid</id>
+					<port>10099</port>
+					<targetDir>src/test/resources/unit/common/</targetDir>
+					<filename>test.war</filename>
+					<checkPackaging>false</checkPackaging>
+				</configuration>
+
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

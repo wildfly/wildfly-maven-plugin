@@ -55,7 +55,7 @@ public class ExecuteCommands extends AbstractServerConnection {
      * The commands to execute.
      */
     @Parameter(alias = "execute-commands", required = true)
-    private Commands execCommands;
+    private Commands executeCommands;
 
     @Override
     public String goal() {
@@ -68,7 +68,7 @@ public class ExecuteCommands extends AbstractServerConnection {
         synchronized (CLIENT_LOCK) {
             final ModelControllerClient client = getClient();
             try {
-                execCommands.execute(client);
+                executeCommands.execute(client);
             } catch (IOException e) {
                 throw new MojoFailureException("Could not execute commands.", e);
             } finally {

@@ -41,3 +41,46 @@ Execute Commands Examples
 ...
 </project>
 ----------
+
+* Execute commands from CLI scripts
+
+  The example below shows how to execute commands from a CLI script:
+
+----------
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>org.jboss.as.plugins</groupId>
+                <artifactId>jboss-as-maven-plugin</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <execute-commands>
+                        <scripts>
+                            <script>config.cli</command>
+                        </scripts>
+                    </execute-commands>
+                </configuration>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+----------
+
+  Example of a CLI script to set the transaction timeout to 600 seconds.
+  
+----------
+batch
+#set default transaction timeout
+/subsystem=transactions :write-attribute(name=default-timeout, value=600)
+#...
+# Execute and reload
+run-batch
+:reload
+----------

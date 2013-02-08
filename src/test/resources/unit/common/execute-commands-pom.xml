@@ -11,9 +11,15 @@
                 <groupId>org.jboss.as.plugins</groupId>
                 <artifactId>jboss-as-maven-plugin</artifactId>
                 <configuration>
-                    <username>testuserinpom</username>
-                    <password>testpassinpom</password>
+                    <id>testid</id>
+                    <port>10099</port>
+                    <execute-commands>
+                    	<commands>
+							<command>/subsystem=transactions :write-attribute(name=default-timeout, value=600)</command>
+						</commands>
+                    </execute-commands>
                 </configuration>
+                
             </plugin>
         </plugins>
     </build>
