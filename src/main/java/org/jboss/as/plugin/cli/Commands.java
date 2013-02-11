@@ -24,8 +24,10 @@ package org.jboss.as.plugin.cli;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -159,7 +161,7 @@ public class Commands {
         for (File script : getScripts()) {
             BufferedReader reader = null;
             try {
-                reader = new BufferedReader(new FileReader(script));
+                reader = new BufferedReader(new InputStreamReader(new FileInputStream(script), "UTF-8"));
                 String line = reader.readLine();
                 while (ctx.getExitCode() == 0 && !ctx.isTerminated() && line != null) {
 
