@@ -10,7 +10,7 @@
 
     <container qualifier="jbossas-7-managed" default="true">
         <configuration>
-            <property name="jbossHome">${basedir}/target/jboss-as</property>
+            <property name="jbossHome">${jboss.home}</property>
             <property name="javaVmArguments">-Xmx512m -XX:MaxPermSize=128m -Djboss.socket.binding.port-offset=100</property>
             <property name="managementPort">10099</property>
         </configuration>
