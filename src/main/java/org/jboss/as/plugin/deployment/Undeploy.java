@@ -35,7 +35,6 @@ import org.jboss.as.plugin.deployment.Deployment.Type;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 @Mojo(name = "undeploy", requiresDependencyResolution = ResolutionScope.RUNTIME, threadSafe = true)
-@Execute(phase = LifecyclePhase.PACKAGE)
 public class Undeploy extends AbstractAppDeployment {
 
     /**

@@ -41,7 +41,6 @@ import org.jboss.as.plugin.deployment.Deployment.Type;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 @Mojo(name = "undeploy-artifact", requiresDependencyResolution = ResolutionScope.RUNTIME, threadSafe = true)
-@Execute(phase = LifecyclePhase.PACKAGE)
 public final class UndeployArtifact extends AbstractDeployment {
 
     /**
