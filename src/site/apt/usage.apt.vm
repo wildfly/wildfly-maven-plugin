@@ -95,6 +95,28 @@ mvn jboss-as:undeploy
 mvn jboss-as:run
 +-----+
 
+* The <<<jboss-as:start>>> Goal
+
+  The <<<jboss-as:start>>> goal will start a JBoss Application Server. If the <<<jboss-as.home>>> property is not set,
+  the server will be downloaded. The server will be shutdown when the maven process ends unless an explicit shutdown was
+  invoked.
+
+  To execute the start goal type the following on the command line:
+
++-----+
+mvn jboss-as:start
++-----+
+
+* The <<<jboss-as:shutdown>>> Goal
+
+  The <<<jboss-as:shutdown>>> goal will shutdown a running JBoss Application Server.
+
+  To execute the shutdown goal type the following on the command line:
+
++-----+
+mvn jboss-as:shutdown
++-----+
+
 * The <<<jboss-as:execute-commands>>> Goal
 
   The <<<jboss-as:execute-commands>>> goal will execute commands, formatted like CLI commands, on the running server.

@@ -24,6 +24,7 @@ package org.jboss.as.plugin.server;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Security actions to perform possibly privileged operations. No methods in this class are to be made public under any
@@ -32,6 +33,23 @@ import java.security.PrivilegedAction;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 final class SecurityActions {
+
+    static void registerShutdown(final Server server) {
+        final Thread hook = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                server.stop();
+                // Bad hack to get maven to complete it's message output
+                try {
+                    TimeUnit.MILLISECONDS.sleep(500L);
+                } catch (InterruptedException ignore) {
+                    // no-op
+                }
+            }
+        });
+        hook.setDaemon(true);
+        addShutdownHook(hook);
+    }
     static void addShutdownHook(final Thread hook) {
         if (System.getSecurityManager() == null) {
             Runtime.getRuntime().addShutdownHook(hook);

@@ -67,12 +67,7 @@ abstract class Server {
      * @throws IOException the an error occurs creating the process
      */
     public synchronized final void start() throws IOException {
-        SecurityActions.addShutdownHook(new Thread(new Runnable() {
-            @Override
-            public void run() {
-                stop();
-            }
-        }));
+        SecurityActions.registerShutdown(this);
         final List<String> cmd = createLaunchCommand();
         final ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         processBuilder.redirectErrorStream(true);

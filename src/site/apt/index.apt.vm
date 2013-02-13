@@ -48,6 +48,11 @@ ${project.name} (${project.artifactId})
 
   * {{{./run-mojo.html}jboss-as:run}} runs the application server and deploys your application.
 
+  * {{{./start-mojo.html}jboss-as:start}} starts the application server and shuts it down at last when the maven process
+    ends unless an explicit shutdown from a management client or the {{{./shutdown-mojo.html}shutdown goal}} is executed.
+
+  * {{{./shutdown-mojo.html}jboss-as:shutdown}} shuts down a running application server.
+
   * {{{./execute-commands-mojo.html}jboss-as:execute-commands}} executes commands on the running server.
 
 * Usage

@@ -22,7 +22,14 @@
 
 package org.jboss.as.plugin.common;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.Closeable;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Enumeration;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
@@ -31,6 +38,53 @@ import java.util.zip.ZipFile;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 public class Streams {
+
+    /**
+     * Unzips the file to the target directory. If the target directory already exists, it will be deleted first.
+     *
+     * @param zipFile   the zip file
+     * @param targetDir the target directory
+     */
+    public static void unzip(final File zipFile, final File targetDir) {
+
+        final byte buff[] = new byte[1024];
+        if (targetDir.exists()) {
+            targetDir.delete();
+        }
+        ZipFile file = null;
+        try {
+            file = new ZipFile(zipFile);
+            final Enumeration<? extends ZipEntry> entries = file.entries();
+            while (entries.hasMoreElements()) {
+                final ZipEntry entry = entries.nextElement();
+                final File extractTarget = new File(targetDir.getAbsolutePath(), entry.getName());
+                if (entry.isDirectory()) {
+                    extractTarget.mkdirs();
+                } else {
+                    final File parent = new File(extractTarget.getParent());
+                    parent.mkdirs();
+                    final BufferedInputStream in = new BufferedInputStream(file.getInputStream(entry));
+                    try {
+                        final BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(extractTarget));
+                        try {
+                            int read = 0;
+                            while ((read = in.read(buff)) != -1) {
+                                out.write(buff, 0, read);
+                            }
+                        } finally {
+                            safeClose(out);
+                        }
+                    } finally {
+                        safeClose(in);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(String.format("Error extracting '%s'", (file == null ? "null file" : file.getName())), e);
+        } finally {
+            safeClose(file);
+        }
+    }
 
 
     public static void safeClose(final Closeable closeable) {

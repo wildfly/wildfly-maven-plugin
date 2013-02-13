@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2012, Red Hat, Inc., and individual contributors
+ * Copyright 2013, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -24,24 +24,16 @@ package org.jboss.as.plugin.server;
 
 import java.io.File;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.Execute;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.plugin.common.DeploymentFailureException;
-import org.jboss.as.plugin.common.Operations;
+import org.jboss.as.plugin.common.AbstractServerConnection;
 import org.jboss.as.plugin.common.Streams;
-import org.jboss.as.plugin.deployment.Deploy;
-import org.jboss.as.plugin.deployment.Deployment;
-import org.jboss.as.plugin.deployment.standalone.StandaloneDeployment;
 import org.sonatype.aether.RepositorySystem;
 import org.sonatype.aether.RepositorySystemSession;
 import org.sonatype.aether.repository.RemoteRepository;
@@ -51,18 +43,24 @@ import org.sonatype.aether.resolution.ArtifactResult;
 import org.sonatype.aether.util.artifact.DefaultArtifact;
 
 /**
- * Starts a standalone instance of JBoss Application Server 7 and deploys the application to the server.
+ * Starts a standalone instance of JBoss Application Server 7.
  * <p/>
- * This goal will block until cancelled or a shutdown is invoked from a management client.
+ * The purpose of this goal is to start a JBoss Application Server for testing during the maven lifecycle. This can
+ * start a remote server, but the server will be shutdown when the maven process ends.
  *
- * @author Stuart Douglas
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-@Mojo(name = "run", requiresDependencyResolution = ResolutionScope.RUNTIME)
-@Execute(phase = LifecyclePhase.PACKAGE)
-public class Run extends Deploy {
+@Mojo(name = "start", requiresDependencyResolution = ResolutionScope.RUNTIME)
+public class Start extends AbstractServerConnection {
 
     public static final String JBOSS_DIR = "jboss-as-run";
+
+
+    /**
+     * The target directory the application to be deployed is located.
+     */
+    @Parameter(defaultValue = "${project.build.directory}", readonly = true, required = true)
+    private File targetDir;
 
     /**
      * The entry point to Aether, i.e. the component doing all the work.
@@ -131,15 +129,8 @@ public class Run extends Deploy {
     private long startupTimeout;
 
     @Override
-    protected void doExecute() throws MojoExecutionException, MojoFailureException {
+    public void execute() throws MojoExecutionException, MojoFailureException {
         final Log log = getLog();
-        final File deploymentFile = file();
-        final String deploymentName = deploymentFile.getName();
-        final File targetDir = deploymentFile.getParentFile();
-        // The deployment must exist before we do anything
-        if (!deploymentFile.exists()) {
-            throw new MojoExecutionException(String.format("The deployment '%s' could not be found.", deploymentFile.getAbsolutePath()));
-        }
         // Validate the environment
         final File jbossHome = extractIfRequired(targetDir);
         if (!jbossHome.isDirectory()) {
@@ -169,28 +160,9 @@ public class Run extends Deploy {
             // Add the shutdown hook
             SecurityActions.registerShutdown(server);
             // Start the server
-            log.info("Server is starting up. Press CTRL + C to stop the server.");
+            log.info("Server is starting up.");
             server.start();
-            // Deploy the application
             server.checkServerState();
-            if (server.isRunning()) {
-                log.info(String.format("Deploying application '%s'%n", deploymentFile.getName()));
-                final ModelControllerClient client = server.getClient();
-                final Deployment deployment = StandaloneDeployment.create(client, deploymentFile, deploymentName, getType());
-                switch (executeDeployment(client, deployment)) {
-                    case REQUIRES_RESTART: {
-                        client.execute(Operations.createOperation(Operations.RELOAD));
-                        break;
-                    }
-                    case SUCCESS:
-                        break;
-                }
-            } else {
-                throw new DeploymentFailureException("Cannot deploy to a server that is not running.");
-            }
-            while (server.isRunning()) {
-                TimeUnit.SECONDS.sleep(1L);
-            }
         } catch (Exception e) {
             throw new MojoExecutionException("The server failed to start", e);
         }
@@ -222,6 +194,6 @@ public class Run extends Deploy {
 
     @Override
     public String goal() {
-        return "run";
+        return "start";
     }
 }
