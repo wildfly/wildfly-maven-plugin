@@ -33,6 +33,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.jboss.as.plugin.common.AbstractServerConnection;
+import org.jboss.as.plugin.common.PropertyNames;
 import org.jboss.as.plugin.common.Streams;
 import org.sonatype.aether.RepositorySystem;
 import org.sonatype.aether.RepositorySystemSession;
@@ -83,49 +84,49 @@ public class Start extends AbstractServerConnection {
     /**
      * The JBoss Application Server's home directory. If not used, JBoss Application Server will be downloaded.
      */
-    @Parameter(alias = "jboss-home", property = "jboss-as.home")
+    @Parameter(alias = "jboss-home", property = PropertyNames.JBOSS_HOME)
     private String jbossHome;
 
     /**
      * The version of the JBoss Application Server to run.
      */
-    @Parameter(alias = "jboss-as-version", defaultValue = Defaults.JBOSS_AS_TARGET_VERSION, property = "jboss-as.version")
+    @Parameter(alias = "jboss-as-version", defaultValue = Defaults.JBOSS_AS_TARGET_VERSION, property = PropertyNames.JBOSS_VERSION)
     private String version;
 
     /**
      * The modules path to use.
      */
-    @Parameter(alias = "modules-path", property = "jboss-as.modulesPath")
+    @Parameter(alias = "modules-path", property = PropertyNames.MODULES_PATH)
     private String modulesPath;
 
     /**
      * The bundles path to use.
      */
-    @Parameter(alias = "bundles-path", property = "jboss-as.bundlesPath")
+    @Parameter(alias = "bundles-path", property = PropertyNames.BUNDLES_PATH)
     private String bundlesPath;
 
     /**
      * A space delimited list of JVM arguments.
      */
-    @Parameter(alias = "jvm-args", property = "jboss-as.jvmArgs", defaultValue = Defaults.DEFAULT_JVM_ARGS)
+    @Parameter(alias = "jvm-args", property = PropertyNames.JVM_ARGS, defaultValue = Defaults.DEFAULT_JVM_ARGS)
     private String jvmArgs;
 
     /**
      * The {@code JAVA_HOME} to use for launching the server.
      */
-    @Parameter(alias = "java-home", property = "java.home")
+    @Parameter(alias = "java-home", property = PropertyNames.JAVA_HOME)
     private String javaHome;
 
     /**
      * The path to the server configuration to use.
      */
-    @Parameter(alias = "server-config", property = "jboss-as.serverConfig")
+    @Parameter(alias = "server-config", property = PropertyNames.SERVER_CONFIG)
     private String serverConfig;
 
     /**
      * The timeout value to use when starting the server.
      */
-    @Parameter(alias = "startup-timeout", defaultValue = Defaults.TIMEOUT, property = "jboss-as.startupTimeout")
+    @Parameter(alias = "startup-timeout", defaultValue = Defaults.TIMEOUT, property = PropertyNames.STARTUP_TIMEOUT)
     private long startupTimeout;
 
     @Override

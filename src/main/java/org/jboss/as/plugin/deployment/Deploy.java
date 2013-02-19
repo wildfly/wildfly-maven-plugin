@@ -27,6 +27,7 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.jboss.as.plugin.common.PropertyNames;
 import org.jboss.as.plugin.deployment.Deployment.Type;
 
 /**
@@ -51,7 +52,7 @@ public class Deploy extends AbstractAppDeployment {
      * If force mode is disabled, the deploy goal will cause a build failure if the application being deployed already
      * exists.
      */
-    @Parameter(defaultValue = "true", property = "deploy.force")
+    @Parameter(defaultValue = "true", property = PropertyNames.DEPLOY_FORCE)
     private boolean force;
 
     @Override

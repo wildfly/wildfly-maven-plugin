@@ -33,6 +33,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.jboss.as.plugin.common.DeploymentFailureException;
+import org.jboss.as.plugin.common.PropertyNames;
 import org.jboss.as.plugin.deployment.Deployment.Type;
 
 /**
@@ -62,7 +63,7 @@ public final class UndeployArtifact extends AbstractDeployment {
     /**
      * Indicates whether undeploy should ignore the undeploy operation if the deployment does not exist.
      */
-    @Parameter(defaultValue = "true", property = "undeploy.ignoreMissingDeployment")
+    @Parameter(defaultValue = "true", property = PropertyNames.IGNORE_MISSING_DEPLOYMENT)
     private boolean ignoreMissingDeployment;
 
     /**

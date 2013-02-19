@@ -62,20 +62,20 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     /**
      * Specifies the host name of the server where the deployment plan should be executed.
      */
-    @Parameter(defaultValue = "localhost", property = "jboss-as.hostname")
+    @Parameter(defaultValue = "localhost", property = PropertyNames.HOSTNAME)
     private String hostname;
 
     /**
      * Specifies the port number the server is listening on.
      */
-    @Parameter(defaultValue = "9999", property = "jboss-as.port")
+    @Parameter(defaultValue = "9999", property = PropertyNames.PORT)
     private int port;
 
    /**
      * Specifies the id of the server if the username and password is to be
      * retrieved from the settings.xml file
      */
-    @Parameter(property = "jboss-as.id")
+    @Parameter(property = PropertyNames.ID)
     private String id;
 
     /**
@@ -90,7 +90,7 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
      * If no username is specified and the server requests authentication the user
      * will be prompted to supply the username,
      */
-    @Parameter(property = "jboss-as.username")
+    @Parameter(property = PropertyNames.USERNAME)
     private String username;
 
     /**
@@ -99,7 +99,7 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
      * If no password is specified and the server requests authentication the user
      * will be prompted to supply the password,
      */
-    @Parameter(property = "jboss-as.password")
+    @Parameter(property = PropertyNames.PASSWORD)
     private String password;
 
     private ModelControllerClient client;

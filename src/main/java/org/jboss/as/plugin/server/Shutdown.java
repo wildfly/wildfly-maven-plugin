@@ -31,6 +31,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.plugin.common.AbstractServerConnection;
 import org.jboss.as.plugin.common.Operations;
+import org.jboss.as.plugin.common.PropertyNames;
 
 /**
  * Shuts down a running JBoss Application Server.
@@ -45,7 +46,7 @@ public class Shutdown extends AbstractServerConnection {
     /**
      * Set to {@code true} if a {@code reload} operation should be invoked instead of a {@code shutdown}.
      */
-    @Parameter(defaultValue = "false", property = "jboss-as.reload")
+    @Parameter(defaultValue = "false", property = PropertyNames.RELOAD)
     private boolean reload;
 
     @Override

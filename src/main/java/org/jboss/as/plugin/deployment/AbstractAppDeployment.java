@@ -27,6 +27,7 @@ import java.io.File;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.jboss.as.plugin.common.PropertyNames;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
@@ -37,7 +38,7 @@ abstract class AbstractAppDeployment extends AbstractDeployment {
     /**
      * The target directory the application to be deployed is located.
      */
-    @Parameter(defaultValue = "${project.build.directory}/", property = "jboss-as.deployment.targetDir")
+    @Parameter(defaultValue = "${project.build.directory}/", property = PropertyNames.DEPLOYMENT_TARGET_DIR)
     private File targetDir;
 
     /**
@@ -48,14 +49,14 @@ abstract class AbstractAppDeployment extends AbstractDeployment {
      * a file with a {@code .jar} extension rather than an {@code .ejb} extension.
      * </p>
      */
-    @Parameter(property = "jboss-as.deployment.filename")
+    @Parameter(property = PropertyNames.DEPLOYMENT_FILENAME)
     private String filename;
 
     /**
      * By default certain package types are ignored when processing, e.g. {@code maven-project} and {@code pom}. Set
      * this value to {@code false} if this check should be bypassed.
      */
-    @Parameter(alias = "check-packaging", property = "jboss-as.checkPackaging", defaultValue = "true")
+    @Parameter(alias = "check-packaging", property = PropertyNames.CHECK_PACKAGING, defaultValue = "true")
     private boolean checkPackaging;
 
     private PackageType packageType;

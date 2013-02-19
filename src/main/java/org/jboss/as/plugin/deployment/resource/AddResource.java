@@ -34,6 +34,7 @@ import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.plugin.common.AbstractServerConnection;
 import org.jboss.as.plugin.common.Operations;
 import org.jboss.as.plugin.common.Operations.CompositeOperationBuilder;
+import org.jboss.as.plugin.common.PropertyNames;
 import org.jboss.as.plugin.deployment.domain.Domain;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.Property;
@@ -105,7 +106,7 @@ public class AddResource extends AbstractServerConnection {
      * If force mode is disabled, the add-resource goal will
      * cause a build failure if the resource is already present on the server.
      */
-    @Parameter(defaultValue = "true", property = "add-resource.force")
+    @Parameter(defaultValue = "true", property = PropertyNames.ADD_RESOURCE_FORCE)
     private boolean force;
 
     @Override

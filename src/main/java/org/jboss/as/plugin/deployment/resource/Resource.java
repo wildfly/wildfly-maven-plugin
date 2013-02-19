@@ -27,6 +27,7 @@ import java.util.Map;
 
 import org.apache.maven.plugins.annotations.Parameter;
 import org.jboss.as.plugin.cli.Commands;
+import org.jboss.as.plugin.common.PropertyNames;
 
 /**
  * Defines a resource.
@@ -69,7 +70,7 @@ public class Resource {
     /**
      * Flag to start the operation, if necessary.
      */
-    @Parameter(defaultValue = "false", property = "add-resource.enableResource")
+    @Parameter(defaultValue = "false", property = PropertyNames.ENABLE_RESOURCE)
     private boolean enableResource;
 
     /**
