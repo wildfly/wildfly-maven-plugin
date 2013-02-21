@@ -15,12 +15,12 @@ import org.junit.runner.RunWith;
 
 /**
  * Abstract Arquillian integration testcase.
- * 
+ *
  * @author <a href="mailto:heinz.wilming@akquinet.de">Heinz Wilming</a>
- * 
+ *
  */
 @RunWith(Arquillian.class)
-public abstract class AbstractItTestCase extends AbstractMojoTestCase {
+public abstract class AbstractItTestCase extends AbstractJbossMavenPluginMojoTestCase {
 
     @Deployment(managed = false, testable = false)
     public static JavaArchive dummyDeployment() {
@@ -35,22 +35,6 @@ public abstract class AbstractItTestCase extends AbstractMojoTestCase {
     @After
     public final void tearDownMojoTestCase() throws Exception {
         super.tearDown();
-    }
-
-    protected final ModelNode execute(final ModelNode operation) throws Exception {
-        final ModelControllerClient client = createClient();
-
-        try {
-            return client.execute(operation);
-        } finally {
-            client.close();
-        }
-    }
-
-    private ModelControllerClient createClient() throws Exception {
-        // waiting, because server is maybe in reload state
-        Thread.sleep(1000);
-        return ModelControllerClient.Factory.create(InetAddress.getByName("localhost"), 10099);
     }
 
 }

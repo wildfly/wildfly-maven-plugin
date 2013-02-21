@@ -1,56 +1,52 @@
 package org.jboss.as.plugin.cli;
 
 import java.io.File;
+import java.util.Properties;
 
 import org.apache.maven.plugin.Mojo;
+import org.jboss.as.arquillian.api.ContainerResource;
+import org.jboss.as.arquillian.container.ManagementClient;
+import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.as.plugin.AbstractItTestCase;
+import org.jboss.as.plugin.common.Operations;
 import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 
 public class ExecuteCommandsTest extends AbstractItTestCase {
+    @ContainerResource
+    private ManagementClient managementClient;
 
     @Test
     public void testExecuteCommandsFromScript() throws Exception {
 
-        File pom = getTestFile("src/test/resources/unit/common/execute-script-pom.xml");
+        final File pom = getPom("execute-script-pom.xml");
 
-        Mojo executeCommandsMojo = lookupMojo("execute-commands", pom);
+        final Mojo executeCommandsMojo = lookupMojo("execute-commands", pom);
 
         executeCommandsMojo.execute();
 
-        ModelNode operation = new ModelNode();
-        operation.get("operation").set("read-attribute");
-        operation.get("name").set("default-timeout");
-        ModelNode address = operation.get("address");
-        address.add("subsystem", "transactions");
+        // Create the address
+        final ModelNode address = Operations.createAddress("system-property", "org.jboss.maven.plugin");
+        final ModelNode op = Operations.createReadAttributeOperation(address, "value");
 
-        ModelNode result = execute(operation);
-
-        int timeout = result.get("result").asInt();
-
-        assertEquals(600, timeout);
+        final ModelNode result = executeOperation(managementClient.getControllerClient(), op);
+        // The script adds a new system property that's value should be true
+        assertEquals("true", Operations.readResultAsString(result));
 
     }
 
     @Test
     public void testExecuteCommands() throws Exception {
 
-        File pom = getTestFile("src/test/resources/unit/common/execute-commands-pom.xml");
+        final File pom = getPom("execute-commands-pom.xml");
 
-        Mojo executeCommandsMojo = lookupMojo("execute-commands", pom);
+        final Mojo executeCommandsMojo = lookupMojo("execute-commands", pom);
 
         executeCommandsMojo.execute();
 
-        ModelNode operation = new ModelNode();
-        operation.get("operation").set("read-attribute");
-        operation.get("name").set("default-timeout");
-        ModelNode address = operation.get("address");
-        address.add("subsystem", "transactions");
-
-        ModelNode result = execute(operation);
-
-        int timeout = result.get("result").asInt();
-
-        assertEquals(600, timeout);
+        // Read a known attribute
+        final ModelNode op = Operations.createReadAttributeOperation("launch-type");
+        final ModelNode result = executeOperation(managementClient.getControllerClient(), op);
+        assertEquals("STANDALONE", Operations.readResultAsString(result));
     }
 }

@@ -64,7 +64,7 @@
         <version.org.apache.maven.maven-plugin>2.2.1</version.org.apache.maven.maven-plugin>
         <version.org.apache.maven.maven-settings>3.0.4</version.org.apache.maven.maven-settings>
         <version.org.apache.maven.plugin-api>3.0.4</version.org.apache.maven.plugin-api>
-        <version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>2.0-alpha-1
+        <version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>2.1
         </version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>
         <version.org.apache.maven.plugin-tools>3.2</version.org.apache.maven.plugin-tools>
         <version.org.apache.maven.plugins.plugin>3.2</version.org.apache.maven.plugins.plugin>
@@ -152,6 +152,7 @@
                     <systemPropertyVariables>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <jboss.home>${jboss.home}</jboss.home>
+                        <jboss.test.config.dir>${project.build.testOutputDirectory}${file.separator}unit${file.separator}common</jboss.test.config.dir>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -167,6 +168,18 @@
             </plugin>
         </plugins>
     </reporting>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.apache.maven.plugin-testing</groupId>
+                <artifactId>maven-plugin-testing</artifactId>
+                <version>${version.org.apache.maven.plugin-testing.maven-plugin-testing-harness}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -239,6 +252,18 @@
             <version>${version.org.apache.maven.plugin-testing.maven-plugin-testing-harness}</version>
             <scope>test</scope>
         </dependency>
+        <!-- Needed for the maven-plugin-testing-harness -->
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-compat</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-settings-builder</artifactId>

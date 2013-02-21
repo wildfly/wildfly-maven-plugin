@@ -29,6 +29,7 @@ import static org.mockito.Mockito.verify;
 import java.io.File;
 
 import org.apache.maven.plugin.logging.Log;
+import org.jboss.as.plugin.AbstractJbossMavenPluginMojoTestCase;
 import org.jboss.as.plugin.deployment.Deploy;
 import org.junit.After;
 import org.junit.Before;
@@ -67,17 +68,12 @@ public class AbstractServerConnectionTest extends AbstractJbossMavenPluginMojoTe
      * credentials on the CLI.
      */
     @Test
-    public void testIdProvidedInPomButNoSettingsFile() {
-        File pom = getTestFileAndVerify("src/test/resources/unit/common/id-provided-pom.xml");
-        try {
-            Deploy mojo = (Deploy) lookupMojoAndVerify("deploy", pom);
-            mojo.setLog(log);
-            mojo.getCallbackHandler();
-            verify(log).debug(Deploy.DEBUG_MESSAGE_NO_SETTINGS_FILE);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Couldn't find \"deploy\" mojo");
-        }
+    public void testIdProvidedInPomButNoSettingsFile() throws Exception{
+        final  File pom = getPomAndVerify("id-provided-pom.xml");
+        final Deploy mojo = lookupMojoAndVerify("deploy", pom);
+        mojo.setLog(log);
+        mojo.getCallbackHandler();
+        verify(log).debug(Deploy.DEBUG_MESSAGE_NO_SETTINGS_FILE);
     }
 
     /**
@@ -87,18 +83,13 @@ public class AbstractServerConnectionTest extends AbstractJbossMavenPluginMojoTe
      * for credentials on the CLI.
      */
     @Test
-    public void testIdProvidedInPomButNoServerSection() {
-        File pom = getTestFileAndVerify("src/test/resources/unit/common/id-provided-pom.xml");
-        File settings = getTestFileAndVerify("src/test/resources/unit/common/missing-id-settings.xml");
-        try {
-            Deploy mojo = (Deploy) lookupMojoVerifyAndApplySettings("deploy",  pom, settings);
-            mojo.setLog(log);
-            mojo.getCallbackHandler();
-            verify(log).debug(Deploy.DEBUG_MESSAGE_NO_SERVER_SECTION);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Couldn't find \"deploy\" mojo");
-        }
+    public void testIdProvidedInPomButNoServerSection() throws Exception {
+        final File pom = getPomAndVerify("id-provided-pom.xml");
+        final File settings = getSettingsAndVerify("missing-id-settings.xml");
+        final Deploy mojo = lookupMojoVerifyAndApplySettings("deploy",  pom, settings);
+        mojo.setLog(log);
+        mojo.getCallbackHandler();
+        verify(log).debug(Deploy.DEBUG_MESSAGE_NO_SERVER_SECTION);
     }
 
     /**
@@ -109,20 +100,15 @@ public class AbstractServerConnectionTest extends AbstractJbossMavenPluginMojoTe
      * credentials on the CLI.
      */
     @Test
-    public void testIdProvidedInPomButNoCredentials() {
-        File pom = getTestFileAndVerify("src/test/resources/unit/common/id-provided-pom.xml");
-        File settings = getTestFileAndVerify("src/test/resources/unit/common/id-provided-settings.xml");
-        try {
-            Deploy mojo = (Deploy) lookupMojoVerifyAndApplySettings("deploy",  pom, settings);
-            mojo.setLog(log);
-            mojo.getCallbackHandler();
-            InOrder inOrder = inOrder(log);
-            inOrder.verify(log).debug(Deploy.DEBUG_MESSAGE_SETTINGS_HAS_ID);
-            inOrder.verify(log).debug(Deploy.DEBUG_MESSAGE_NO_CREDS);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Couldn't find \"deploy\" mojo");
-        }
+    public void testIdProvidedInPomButNoCredentials() throws Exception {
+        final File pom = getPomAndVerify("id-provided-pom.xml");
+        final File settings = getSettingsAndVerify("id-provided-settings.xml");
+        final Deploy mojo = lookupMojoVerifyAndApplySettings("deploy", pom, settings);
+        mojo.setLog(log);
+        mojo.getCallbackHandler();
+        final InOrder inOrder = inOrder(log);
+        inOrder.verify(log).debug(Deploy.DEBUG_MESSAGE_SETTINGS_HAS_ID);
+        inOrder.verify(log).debug(Deploy.DEBUG_MESSAGE_NO_CREDS);
     }
 
     /**
@@ -130,17 +116,11 @@ public class AbstractServerConnectionTest extends AbstractJbossMavenPluginMojoTe
      * regardless of whether an <id> element is also present.
      */
     @Test
-    public void testCredentialsProvidedInPom() {
-        File pom = getTestFileAndVerify("src/test/resources/unit/common/credentials-provided-pom.xml");
-        try {
-            Deploy mojo = (Deploy) lookupMojoAndVerify("deploy", pom);
-            mojo.setLog(log);
-            mojo.getCallbackHandler();
-            verify(log).debug(Deploy.DEBUG_MESSAGE_POM_HAS_CREDS);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Couldn't find \"deploy\" mojo");
-        }
+    public void testCredentialsProvidedInPom() throws Exception {
+        final File pom = getPomAndVerify("credentials-provided-pom.xml");
+        final Deploy mojo = lookupMojoAndVerify("deploy", pom);
+        mojo.setLog(log);
+        mojo.getCallbackHandler();
     }
 
     /**
@@ -150,20 +130,15 @@ public class AbstractServerConnectionTest extends AbstractJbossMavenPluginMojoTe
      * credentials, then they are used by the plugin.
      */
     @Test
-    public void testCredentialsProvidedInSettings() {
-        File pom = getTestFileAndVerify("src/test/resources/unit/common/id-provided-pom.xml");
-        File settings = getTestFileAndVerify("src/test/resources/unit/common/credentials-provided-settings.xml");
-        try {
-            Deploy mojo = (Deploy) lookupMojoVerifyAndApplySettings("deploy",  pom, settings);
-            mojo.setLog(log);
-            mojo.getCallbackHandler();
-            InOrder inOrder = inOrder(log);
-            inOrder.verify(log).debug(Deploy.DEBUG_MESSAGE_SETTINGS_HAS_ID);
-            inOrder.verify(log).debug(Deploy.DEBUG_MESSAGE_SETTINGS_HAS_CREDS);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Couldn't find \"deploy\" mojo");
-        }
+    public void testCredentialsProvidedInSettings() throws Exception {
+        final File pom = getPomAndVerify("id-provided-pom.xml");
+        final File settings = getSettingsAndVerify("credentials-provided-settings.xml");
+        final Deploy mojo = lookupMojoVerifyAndApplySettings("deploy", pom, settings);
+        mojo.setLog(log);
+        mojo.getCallbackHandler();
+        final InOrder inOrder = inOrder(log);
+        inOrder.verify(log).debug(Deploy.DEBUG_MESSAGE_SETTINGS_HAS_ID);
+        inOrder.verify(log).debug(Deploy.DEBUG_MESSAGE_SETTINGS_HAS_CREDS);
     }
 
     /**
@@ -171,17 +146,12 @@ public class AbstractServerConnectionTest extends AbstractJbossMavenPluginMojoTe
      * file, then it falls back to prompting for them on the CLI.
      */
     @Test
-    public void testNoCredentialsOrIdInPom() {
-        File pom = getTestFileAndVerify("src/test/resources/unit/common/missing-id-pom.xml");
-        try {
-            Deploy mojo = (Deploy) lookupMojoAndVerify("deploy", pom);
-            mojo.setLog(log);
-            mojo.getCallbackHandler();
-            verify(log).debug(Deploy.DEBUG_MESSAGE_NO_ID);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Couldn't find \"deploy\" mojo");
-        }
+    public void testNoCredentialsOrIdInPom() throws Exception {
+        final File pom = getPomAndVerify("missing-id-pom.xml");
+        final Deploy mojo = lookupMojoAndVerify("deploy", pom);
+        mojo.setLog(log);
+        mojo.getCallbackHandler();
+        verify(log).debug(Deploy.DEBUG_MESSAGE_NO_ID);
     }
 
 }
