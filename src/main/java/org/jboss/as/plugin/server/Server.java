@@ -66,7 +66,7 @@ abstract class Server {
      *
      * @throws IOException the an error occurs creating the process
      */
-    public synchronized final void start() throws IOException {
+    public final synchronized void start() throws IOException {
         SecurityActions.registerShutdown(this);
         final List<String> cmd = createLaunchCommand();
         final ProcessBuilder processBuilder = new ProcessBuilder(cmd);
@@ -103,7 +103,7 @@ abstract class Server {
     /**
      * Stops the server.
      */
-    public synchronized final void stop() {
+    public final synchronized void stop() {
         try {
             stopServer();
         } finally {

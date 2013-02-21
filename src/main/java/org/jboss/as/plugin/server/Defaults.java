@@ -30,15 +30,15 @@ interface Defaults {
     /**
      * The default JVM arguments.
      */
-    final String DEFAULT_JVM_ARGS = "-Xms64m -Xmx512m -XX:MaxPermSize=256m -Djava.net.preferIPv4Stack=true -Dorg.jboss.resolver.warning=true -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000";
+    String DEFAULT_JVM_ARGS = "-Xms64m -Xmx512m -XX:MaxPermSize=256m -Djava.net.preferIPv4Stack=true -Dorg.jboss.resolver.warning=true -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000";
 
     /**
      * The default JBoss AS version.
      */
-    final String JBOSS_AS_TARGET_VERSION = "7.1.1.Final";
+    String JBOSS_AS_TARGET_VERSION = "7.1.1.Final";
 
     /**
      * The default startup timeout.
      */
-    final String TIMEOUT = "60";
+    String TIMEOUT = "60";
 }

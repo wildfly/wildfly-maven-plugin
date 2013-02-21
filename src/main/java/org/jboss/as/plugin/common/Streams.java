@@ -47,7 +47,7 @@ public class Streams {
      */
     public static void unzip(final File zipFile, final File targetDir) {
 
-        final byte buff[] = new byte[1024];
+        final byte[] buff = new byte[1024];
         if (targetDir.exists()) {
             targetDir.delete();
         }

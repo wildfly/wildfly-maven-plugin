@@ -175,7 +175,7 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
      * @return the address.
      */
     @Override
-    public synchronized final InetAddress getHostAddress() {
+    public final synchronized InetAddress getHostAddress() {
         InetAddress result = address;
         // Lazy load the address
         if (result == null) {
@@ -189,7 +189,7 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     }
 
     @Override
-    public synchronized final CallbackHandler getCallbackHandler() {
+    public final synchronized CallbackHandler getCallbackHandler() {
         CallbackHandler result = handler;
         if (result == null) {
             if(username == null && password == null) {

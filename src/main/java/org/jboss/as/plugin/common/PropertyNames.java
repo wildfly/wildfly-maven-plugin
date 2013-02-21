@@ -27,46 +27,46 @@ package org.jboss.as.plugin.common;
  */
 public interface PropertyNames {
 
-    final String ADD_RESOURCE_FORCE = "add-resource.force";
+    String ADD_RESOURCE_FORCE = "add-resource.force";
 
-    final String BUNDLES_PATH = "jboss-as.bundlesPath";
+    String BUNDLES_PATH = "jboss-as.bundlesPath";
 
-    final String CHECK_PACKAGING = "jboss-as.checkPackaging";
+    String CHECK_PACKAGING = "jboss-as.checkPackaging";
 
-    final String DEPLOY_FORCE = "deploy.force";
+    String DEPLOY_FORCE = "deploy.force";
 
-    final String DEPLOYMENT_FILENAME = "jboss-as.deployment.filename";
+    String DEPLOYMENT_FILENAME = "jboss-as.deployment.filename";
 
-    final String DEPLOYMENT_TARGET_DIR = "jboss-as.deployment.targetDir";
+    String DEPLOYMENT_TARGET_DIR = "jboss-as.deployment.targetDir";
 
-    final String ENABLE_RESOURCE = "add-resource.enableResource";
+    String ENABLE_RESOURCE = "add-resource.enableResource";
 
-    final String HOSTNAME = "jboss-as.hostname";
+    String HOSTNAME = "jboss-as.hostname";
 
-    final String ID = "jboss-as.id";
+    String ID = "jboss-as.id";
 
-    final String IGNORE_MISSING_DEPLOYMENT = "undeploy.ignoreMissingDeployment";
+    String IGNORE_MISSING_DEPLOYMENT = "undeploy.ignoreMissingDeployment";
 
-    final String JAVA_HOME = "java.home";
+    String JAVA_HOME = "java.home";
 
-    final String JBOSS_HOME = "jboss-as.home";
+    String JBOSS_HOME = "jboss-as.home";
 
-    final String JBOSS_VERSION = "jboss-as.version";
+    String JBOSS_VERSION = "jboss-as.version";
 
-    final String JVM_ARGS = "jboss-as.jvmArgs";
+    String JVM_ARGS = "jboss-as.jvmArgs";
 
-    final String MODULES_PATH = "jboss-as.modulesPath";
+    String MODULES_PATH = "jboss-as.modulesPath";
 
-    final String PASSWORD = "jboss-as.password";
+    String PASSWORD = "jboss-as.password";
 
-    final String PORT = "jboss-as.port";
+    String PORT = "jboss-as.port";
 
-    final String RELOAD = "jboss-as.reload";
+    String RELOAD = "jboss-as.reload";
 
-    final String SERVER_CONFIG = "jboss-as.serverConfig";
+    String SERVER_CONFIG = "jboss-as.serverConfig";
 
-    final String STARTUP_TIMEOUT = "jboss-as.startupTimeout";
+    String STARTUP_TIMEOUT = "jboss-as.startupTimeout";
 
-    final String USERNAME = "jboss-as.username";
+    String USERNAME = "jboss-as.username";
 
 }
