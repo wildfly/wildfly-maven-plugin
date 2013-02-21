@@ -1,6 +1,7 @@
 batch
-# Add a system property
-/system-property=org.jboss.maven.plugin:add(value=true)
+#set default transaction timeout
+/subsystem=transactions :write-attribute(name=default-timeout, value=600)
 #...
-# Execute
+# Execute and reload
 run-batch
+:reload

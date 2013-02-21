@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.as.plugin;
+package org.jboss.as.plugin.common;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,9 +33,6 @@ import org.apache.maven.settings.Settings;
 import org.apache.maven.settings.io.DefaultSettingsReader;
 import org.apache.maven.settings.io.SettingsParseException;
 import org.apache.maven.settings.io.SettingsReader;
-import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.plugin.common.Operations;
-import org.jboss.dmr.ModelNode;
 import org.junit.After;
 import org.junit.Before;
 
@@ -44,7 +41,6 @@ import org.junit.Before;
  * @author swm16 (swm16@psu.edu)
  */
 public abstract class AbstractJbossMavenPluginMojoTestCase extends AbstractMojoTestCase {
-    static final String BASE_CONFIG_DIR = System.getProperty("jboss.test.config.dir");
 
     @Before
     public void setUp() throws Exception {
@@ -78,37 +74,15 @@ public abstract class AbstractJbossMavenPluginMojoTestCase extends AbstractMojoT
         return settings;
     }
 
-    protected File getPom(final String name) {
-        return new File(BASE_CONFIG_DIR, name);
-    }
-
     /**
-     * Locates the POM based on it's name and verifies that it exists.
+     * Creates a File object from the fileName provided and verifies that it
+     * exists.
      *
-     * @param name the name of the pom file
-     *
-     * @return the pom file
+     * @param fileName the path of the test file
+     * @return a verified File object
      */
-    protected File getPomAndVerify(final String name) {
-        File file = getPom(name);
-        assertNotNull(file);
-        assertTrue(file.exists());
-        return file;
-    }
-
-    protected File getSettings(final String name) {
-        return new File(BASE_CONFIG_DIR, name);
-    }
-
-    /**
-     * Locates the settings file based on it's name and verifies that it exists.
-     *
-     * @param name the name of the settings file
-     *
-     * @return the settings file
-     */
-    protected File getSettingsAndVerify(final String name) {
-        File file = getSettings(name);
+    public File getTestFileAndVerify(String fileName) {
+        File file = getTestFile(fileName);
         assertNotNull(file);
         assertTrue(file.exists());
         return file;
@@ -123,9 +97,8 @@ public abstract class AbstractJbossMavenPluginMojoTestCase extends AbstractMojoT
      * @return the Mojo object under test
      * @throws Exception if the mojo can not be found
      */
-    @SuppressWarnings("unchecked")
-    public <T extends Mojo> T lookupMojoAndVerify(String mojoName, File pomFile) throws Exception {
-        T mojo = (T) lookupMojo(mojoName, pomFile);
+    public Mojo lookupMojoAndVerify(String mojoName, File pomFile) throws Exception {
+        Mojo mojo = lookupMojo(mojoName, pomFile);
         assertNotNull(mojo);
         return mojo;
     }
@@ -141,18 +114,11 @@ public abstract class AbstractJbossMavenPluginMojoTestCase extends AbstractMojoT
      * @return the Mojo object under test
      * @throws Exception if the mojo can not be found
      */
-    @SuppressWarnings("unchecked")
-    public <T extends Mojo> T lookupMojoVerifyAndApplySettings(String mojoName, File pomFile, File settingsFile) throws Exception {
-        T mojo = (T) lookupMojo(mojoName, pomFile);
+    public Mojo lookupMojoVerifyAndApplySettings(String mojoName, File pomFile, File settingsFile) throws Exception {
+        Mojo mojo = lookupMojo(mojoName, pomFile);
         assertNotNull(mojo);
         setVariableValueToObject(mojo, "settings", getSettingsFile(settingsFile));
         return mojo;
-    }
-
-    protected ModelNode executeOperation(final ModelControllerClient client, final ModelNode op) throws IOException {
-        final ModelNode result = client.execute(op);
-        assertTrue(Operations.getFailureDescription(result), Operations.isSuccessfulOutcome(result));
-        return result;
     }
 
 }
