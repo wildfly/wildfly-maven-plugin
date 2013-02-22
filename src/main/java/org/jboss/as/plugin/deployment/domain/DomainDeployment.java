@@ -133,7 +133,7 @@ public class DomainDeployment implements Deployment {
             if (groupDeploymentBuilder == null) {
                 throw new DeploymentFailureException("No server groups were defined for the deployment.");
             }
-            return groupDeploymentBuilder.build();
+            return groupDeploymentBuilder.withRollback().build();
         }
         throw new IllegalStateException(String.format("Invalid type '%s' for deployment", type));
     }
