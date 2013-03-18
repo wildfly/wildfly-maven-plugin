@@ -44,5 +44,34 @@
                 </p>
             </answer>
         </faq>
+        <faq id="old-jboss-log-manager">
+            <question>Why do I see "java.lang.IllegalStateException: The LogManager was not properly installed (you must set the "java.util.logging.manager" system property to "org.jboss.logmanager.LogManager")" on older jboss such as 7.0.2?</question>
+            <answer>
+                <p>
+                    JBoss Modules used to require the log manager be passed via the command line but switched to using a service loader approach. The plugin no longer use the old method.
+                </p>
+                <p>
+                    Workaround to this issue is to specify the log manager via the plugin's <code>jvmArgs</code> configuration.
+                </p>
+                <source>
+                    ...
+                    &lt;jvmArgs>
+                        &lt;!-- Below should be your default jboss jvm args -->
+                        -Xms64m -Xmx512m -XX:MaxPermSize=256m -Djava.net.preferIPv4Stack=true
+                        -Dorg.jboss.resolver.warning=true -Dsun.rmi.dgc.client.gcInterval=3600000
+                        -Dsun.rmi.dgc.server.gcInterval=3600000
+                        &lt;!-- From this point on is the workaround -->
+                        &lt;!-- ${downloadedJbossDir} should point to your downloaded jboss -->
+                        &lt;!-- The jar file name should match your jboss version -->
+                        -Djboss.modules.system.pkgs=org.jboss.byteman,org.jboss.logmanager
+                        -Djava.util.logging.manager=org.jboss.logmanager.LogManager
+                        -Xbootclasspath/p:${downloadedJbossDir}/modules/org/jboss/logmanager/main/jboss-logmanager-1.2.0.GA.jar
+                        -Xbootclasspath/p:${downloadedJbossDir}/modules/org/jboss/logmanager/log4j/main/jboss-logmanager-log4j-1.0.0.GA.jar
+                        -Xbootclasspath/p:${downloadedJbossDir}/modules/org/apache/log4j/main/log4j-1.2.16.jar
+                    &lt;/jvmArgs>
+                    ...
+                </source>
+            </answer>
+        </faq>
     </part>
 </faqs>
