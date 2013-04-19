@@ -34,7 +34,7 @@ import org.apache.maven.settings.io.DefaultSettingsReader;
 import org.apache.maven.settings.io.SettingsParseException;
 import org.apache.maven.settings.io.SettingsReader;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.plugin.common.Operations;
+import org.jboss.as.plugin.common.ServerOperations;
 import org.jboss.dmr.ModelNode;
 import org.junit.After;
 import org.junit.Before;
@@ -151,7 +151,7 @@ public abstract class AbstractJbossMavenPluginMojoTestCase extends AbstractMojoT
 
     protected ModelNode executeOperation(final ModelControllerClient client, final ModelNode op) throws IOException {
         final ModelNode result = client.execute(op);
-        assertTrue(Operations.getFailureDescription(result), Operations.isSuccessfulOutcome(result));
+        assertTrue(ServerOperations.getFailureDescriptionAsString(result), ServerOperations.isSuccessfulOutcome(result));
         return result;
     }
 

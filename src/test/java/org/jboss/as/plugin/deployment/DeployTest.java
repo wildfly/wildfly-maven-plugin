@@ -6,7 +6,7 @@ import org.apache.maven.project.MavenProject;
 import org.jboss.as.arquillian.api.ContainerResource;
 import org.jboss.as.arquillian.container.ManagementClient;
 import org.jboss.as.plugin.AbstractItTestCase;
-import org.jboss.as.plugin.common.Operations;
+import org.jboss.as.plugin.common.ServerOperations;
 import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 
@@ -34,11 +34,11 @@ public class DeployTest extends AbstractItTestCase {
         deployMojo.execute();
 
         // /deployment=test.war :read-attribute(name=status)
-        final ModelNode address = Operations.createAddress("deployment", "test.war");
-        final ModelNode op = Operations.createReadAttributeOperation(address, "status");
+        final ModelNode address = ServerOperations.createAddress("deployment", "test.war");
+        final ModelNode op = ServerOperations.createReadAttributeOperation(address, "status");
         final ModelNode result = executeOperation(managementClient.getControllerClient(), op);
 
-        assertEquals("OK", Operations.readResultAsString(result));
+        assertEquals("OK", ServerOperations.readResultAsString(result));
     }
 
 }

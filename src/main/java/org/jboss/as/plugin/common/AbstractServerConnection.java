@@ -229,11 +229,11 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     private boolean isDomainServer(final ModelControllerClient client) {
         boolean result = false;
         // Check this is really a domain server
-        final ModelNode op = Operations.createReadAttributeOperation(Operations.LAUNCH_TYPE);
+        final ModelNode op = ServerOperations.createReadAttributeOperation(ServerOperations.LAUNCH_TYPE);
         try {
             final ModelNode opResult = client.execute(op);
-            if (Operations.successful(opResult)) {
-                result = ("DOMAIN".equals(Operations.readResultAsString(opResult)));
+            if (ServerOperations.isSuccessfulOutcome(opResult)) {
+                result = ("DOMAIN".equals(ServerOperations.readResultAsString(opResult)));
             }
         } catch (IOException e) {
             if ( getLog().isDebugEnabled() )

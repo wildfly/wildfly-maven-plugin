@@ -31,9 +31,9 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.controller.client.helpers.Operations.CompositeOperationBuilder;
 import org.jboss.as.plugin.common.AbstractServerConnection;
-import org.jboss.as.plugin.common.Operations;
-import org.jboss.as.plugin.common.Operations.CompositeOperationBuilder;
+import org.jboss.as.plugin.common.ServerOperations;
 import org.jboss.as.plugin.common.PropertyNames;
 import org.jboss.as.plugin.deployment.domain.Domain;
 import org.jboss.dmr.ModelNode;
@@ -210,7 +210,7 @@ public class AddResource extends AbstractServerConnection {
                 return false;
             }
             if (exists && force) {
-                reportFailure(client.execute(Operations.createRemoveOperation(address, true)));
+                reportFailure(client.execute(ServerOperations.createRemoveOperation(address, true)));
             } else if (exists && !force) {
                 throw new RuntimeException(String.format("Resource %s already exists.", address));
             }
@@ -233,7 +233,7 @@ public class AddResource extends AbstractServerConnection {
             }
         }
         if (resource.isEnableResource()) {
-            compositeOp.addStep(Operations.createOperation(Operations.ENABLE, address));
+            compositeOp.addStep(ServerOperations.createOperation(ServerOperations.ENABLE, address));
         }
         return true;
     }
@@ -247,7 +247,7 @@ public class AddResource extends AbstractServerConnection {
      * @return the operation.
      */
     private ModelNode buildAddOperation(final ModelNode address, final Map<String, String> properties) {
-        final ModelNode op = Operations.createAddOperation(address);
+        final ModelNode op = ServerOperations.createAddOperation(address);
         for (Map.Entry<String, String> prop : properties.entrySet()) {
             final String[] props = prop.getKey().split(",");
             if (props.length == 0) {
@@ -279,14 +279,14 @@ public class AddResource extends AbstractServerConnection {
      * @throws RuntimeException if the operation fails.
      */
     private boolean resourceExists(final ModelNode address, final ModelControllerClient client) throws IOException {
-        final Property childAddress = Operations.getChildAddress(address);
-        final ModelNode parentAddress = Operations.getParentAddress(address);
-        final ModelNode r = client.execute(Operations.createOperation(Operations.READ_RESOURCE, parentAddress, false));
+        final Property childAddress = ServerOperations.getChildAddress(address);
+        final ModelNode parentAddress = ServerOperations.getParentAddress(address);
+        final ModelNode r = client.execute(ServerOperations.createOperation(ServerOperations.READ_RESOURCE, parentAddress, false));
         reportFailure(r);
         boolean found = false;
         final String name = childAddress.getName();
-        if (r.get(Operations.RESULT).get(name).isDefined()) {
-            for (ModelNode dataSource : r.get(Operations.RESULT).get(name).asList()) {
+        if (ServerOperations.isSuccessfulOutcome(r)) {
+            for (ModelNode dataSource : ServerOperations.readResult(r).get(name).asList()) {
                 if (dataSource.asProperty().getName().equals(childAddress.getValue().asString())) {
                     found = true;
                 }
@@ -318,7 +318,7 @@ public class AddResource extends AbstractServerConnection {
     private ModelNode parseAddress(final String profileName, final String inputAddress) {
         final ModelNode result = new ModelNode();
         if (profileName != null) {
-            result.add(Operations.PROFILE, profileName);
+            result.add(ServerOperations.PROFILE, profileName);
         }
         String[] parts = inputAddress.split(",");
         for (String part : parts) {
@@ -332,8 +332,8 @@ public class AddResource extends AbstractServerConnection {
     }
 
     private void reportFailure(final ModelNode result) {
-        if (!Operations.successful(result)) {
-            throw new RuntimeException(Operations.getFailureDescription(result));
+        if (!ServerOperations.isSuccessfulOutcome(result)) {
+            throw new RuntimeException(ServerOperations.getFailureDescriptionAsString(result));
         }
     }
 }

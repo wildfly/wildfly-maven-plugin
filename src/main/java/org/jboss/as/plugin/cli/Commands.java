@@ -36,8 +36,8 @@ import org.jboss.as.cli.CommandContext;
 import org.jboss.as.cli.CommandContextFactory;
 import org.jboss.as.cli.CommandFormatException;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.plugin.common.Operations;
-import org.jboss.as.plugin.common.Operations.CompositeOperationBuilder;
+import org.jboss.as.controller.client.helpers.Operations.CompositeOperationBuilder;
+import org.jboss.as.plugin.common.ServerOperations;
 import org.jboss.as.plugin.common.Streams;
 import org.jboss.dmr.ModelNode;
 
@@ -184,8 +184,8 @@ public class Commands {
             } catch (CommandFormatException e) {
                 throw new IllegalArgumentException(String.format("Command '%s' is invalid", cmd), e);
             }
-            if (!Operations.successful(result)) {
-                throw new IllegalArgumentException(String.format("Command '%s' was unsuccessful. Reason: %s", cmd, Operations.getFailureDescription(result)));
+            if (!ServerOperations.isSuccessfulOutcome(result)) {
+                throw new IllegalArgumentException(String.format("Command '%s' was unsuccessful. Reason: %s", cmd, ServerOperations.getFailureDescriptionAsString(result)));
             }
         }
     }
@@ -200,8 +200,8 @@ public class Commands {
             }
         }
         final ModelNode result = client.execute(builder.build());
-        if (!Operations.successful(result)) {
-            throw new IllegalArgumentException(Operations.getFailureDescription(result));
+        if (!ServerOperations.isSuccessfulOutcome(result)) {
+            throw new IllegalArgumentException(ServerOperations.getFailureDescriptionAsString(result));
         }
     }
 

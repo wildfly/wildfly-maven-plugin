@@ -30,7 +30,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.plugin.common.AbstractServerConnection;
-import org.jboss.as.plugin.common.Operations;
+import org.jboss.as.plugin.common.ServerOperations;
 import org.jboss.as.plugin.common.PropertyNames;
 
 /**
@@ -55,9 +55,9 @@ public class Shutdown extends AbstractServerConnection {
             synchronized (CLIENT_LOCK) {
                 final ModelControllerClient client = getClient();
                 if (reload) {
-                    client.execute(Operations.createOperation(Operations.RELOAD));
+                    client.execute(ServerOperations.createOperation(ServerOperations.RELOAD));
                 } else {
-                    client.execute(Operations.createOperation(Operations.SHUTDOWN));
+                    client.execute(ServerOperations.createOperation(ServerOperations.SHUTDOWN));
                 }
             }
             // Bad hack to get maven to complete it's message output

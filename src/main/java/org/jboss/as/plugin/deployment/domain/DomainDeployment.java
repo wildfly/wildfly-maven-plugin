@@ -24,7 +24,6 @@ package org.jboss.as.plugin.deployment.domain;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -45,7 +44,7 @@ import org.jboss.as.controller.client.helpers.domain.ServerStatus;
 import org.jboss.as.controller.client.helpers.domain.ServerUpdateResult;
 import org.jboss.as.plugin.common.DeploymentExecutionException;
 import org.jboss.as.plugin.common.DeploymentFailureException;
-import org.jboss.as.plugin.common.Operations;
+import org.jboss.as.plugin.common.ServerOperations;
 import org.jboss.as.plugin.deployment.Deployment;
 import org.jboss.dmr.ModelNode;
 
@@ -170,7 +169,7 @@ public class DomainDeployment implements Deployment {
                     ServerStatus currentStatus = statuses.get(serverId);
                     if (currentStatus != ServerStatus.STARTED) {
                         throw new DeploymentFailureException("Status of server group '%s' is '%s', but is required to be '%s'.",
-                                        serverGroup, currentStatus, ServerStatus.STARTED);
+                                serverGroup, currentStatus, ServerStatus.STARTED);
                     }
                     notFound = false;
                     break;
@@ -207,21 +206,21 @@ public class DomainDeployment implements Deployment {
     }
 
     private boolean exists() {
-        final ModelNode op = Operations.createListDeploymentsOperation();
+        final ModelNode op = ServerOperations.createListDeploymentsOperation();
         final ModelNode result;
         try {
             result = client.execute(op);
             final String deploymentName = name;
             // Check to make sure there is an outcome
-            if (Operations.successful(result)) {
-                final List<ModelNode> deployments = (result.hasDefined(Operations.RESULT) ? result.get(Operations.RESULT).asList() : Collections.<ModelNode>emptyList());
+            if (ServerOperations.isSuccessfulOutcome(result)) {
+                final List<ModelNode> deployments = ServerOperations.readResult(result).asList();
                 for (ModelNode n : deployments) {
                     if (n.asString().equals(deploymentName)) {
                         return true;
                     }
                 }
             } else {
-                throw new IllegalStateException(Operations.getFailureDescription(result));
+                throw new IllegalStateException(ServerOperations.getFailureDescriptionAsString(result));
             }
         } catch (IOException e) {
             throw new IllegalStateException(String.format("Could not execute operation '%s'", op), e);

@@ -37,7 +37,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.plugin.common.DeploymentFailureException;
-import org.jboss.as.plugin.common.Operations;
+import org.jboss.as.plugin.common.ServerOperations;
 import org.jboss.as.plugin.common.PropertyNames;
 import org.jboss.as.plugin.common.Streams;
 import org.jboss.as.plugin.deployment.Deploy;
@@ -180,7 +180,7 @@ public class Run extends Deploy {
                 final Deployment deployment = StandaloneDeployment.create(client, deploymentFile, deploymentName, getType());
                 switch (executeDeployment(client, deployment)) {
                     case REQUIRES_RESTART: {
-                        client.execute(Operations.createOperation(Operations.RELOAD));
+                        client.execute(ServerOperations.createOperation(ServerOperations.RELOAD));
                         break;
                     }
                     case SUCCESS:
