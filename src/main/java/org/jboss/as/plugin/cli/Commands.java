@@ -35,8 +35,10 @@ import org.jboss.as.cli.CliInitializationException;
 import org.jboss.as.cli.CommandContext;
 import org.jboss.as.cli.CommandContextFactory;
 import org.jboss.as.cli.CommandFormatException;
+import org.jboss.as.cli.CommandLineException;
+import org.jboss.as.cli.batch.Batch;
+import org.jboss.as.cli.batch.BatchManager;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.controller.client.helpers.Operations.CompositeOperationBuilder;
 import org.jboss.as.plugin.common.ServerOperations;
 import org.jboss.as.plugin.common.Streams;
 import org.jboss.dmr.ModelNode;
@@ -95,26 +97,6 @@ public class Commands {
     }
 
     /**
-     * Returns the set of commands to process.
-     * <p/>
-     * Could be {@code null} if not defined. Use {@link #hasCommands()} to ensure there are commands to execute.
-     *
-     * @return the set of commands to process
-     */
-    public List<String> getCommands() {
-        return commands;
-    }
-
-    /**
-     * Returns the CLI script files to process.
-     *
-     * @return the CLI script files to process.
-     */
-    public List<File> getScripts() {
-        return scripts;
-    }
-
-    /**
      * Checks of there are a CLI script file that should be executed.
      *
      * @return {@code true} if there are a CLI script to be processed, otherwise
@@ -141,11 +123,11 @@ public class Commands {
             try {
 
                 if (isBatch()) {
-                    executeBatch(client, ctx);
+                    executeBatch(ctx);
                 } else {
-                    executeCommands(client, ctx);
+                    executeCommands(ctx);
                 }
-                executeScripts(client, ctx);
+                executeScripts(ctx);
 
             } finally {
                 ctx.terminateSession();
@@ -155,20 +137,26 @@ public class Commands {
 
     }
 
-    private void executeScripts(final ModelControllerClient client, final CommandContext ctx) throws IOException {
+    private void executeScripts(final CommandContext ctx) throws IOException {
 
-        for (File script : getScripts()) {
+        for (File script : scripts) {
             BufferedReader reader = null;
             try {
                 reader = new BufferedReader(new InputStreamReader(new FileInputStream(script), "UTF-8"));
                 String line = reader.readLine();
-                while (ctx.getExitCode() == 0 && !ctx.isTerminated() && line != null) {
+                while (!ctx.isTerminated() && line != null) {
 
-                    ctx.handleSafe(line.trim());
+                    try {
+                        ctx.handle(line.trim());
+                    } catch (CommandFormatException e) {
+                        throw new IllegalArgumentException(String.format("Command '%s' is invalid. %s", line, e.getLocalizedMessage()), e);
+                    } catch (CommandLineException e) {
+                        throw new IllegalArgumentException(String.format("Command execution failed for command '%s'. %s", line, e.getLocalizedMessage()), e);
+                    }
                     line = reader.readLine();
 
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 throw new IllegalStateException("Failed to process file '" + script.getAbsolutePath() + "'", e);
             } finally {
                 Streams.safeClose(reader);
@@ -176,32 +164,33 @@ public class Commands {
         }
     }
 
-    private void executeCommands(final ModelControllerClient client, final CommandContext ctx) throws IOException {
-        for (String cmd : getCommands()) {
-            final ModelNode result;
+    private void executeCommands(final CommandContext ctx) throws IOException {
+        for (String cmd : commands) {
             try {
-                result = client.execute(ctx.buildRequest(cmd));
+                ctx.handle(cmd);
             } catch (CommandFormatException e) {
-                throw new IllegalArgumentException(String.format("Command '%s' is invalid", cmd), e);
-            }
-            if (!ServerOperations.isSuccessfulOutcome(result)) {
-                throw new IllegalArgumentException(String.format("Command '%s' was unsuccessful. Reason: %s", cmd, ServerOperations.getFailureDescriptionAsString(result)));
+                throw new IllegalArgumentException(String.format("Command '%s' is invalid. %s", cmd, e.getLocalizedMessage()), e);
+            } catch (CommandLineException e) {
+                throw new IllegalArgumentException(String.format("Command execution failed for command '%s'. %s", cmd, e.getLocalizedMessage()), e);
             }
         }
     }
 
-    private void executeBatch(final ModelControllerClient client, final CommandContext ctx) throws IOException {
-        final CompositeOperationBuilder builder = CompositeOperationBuilder.create();
-        for (String cmd : getCommands()) {
-            try {
-                builder.addStep(ctx.buildRequest(cmd));
-            } catch (CommandFormatException e) {
-                throw new IllegalArgumentException(String.format("Command '%s' is invalid", cmd), e);
+    private void executeBatch(final CommandContext ctx) throws IOException {
+        final BatchManager batchManager = ctx.getBatchManager();
+        if (batchManager.activateNewBatch()) {
+            final Batch batch = batchManager.getActiveBatch();
+            for (String cmd : commands) {
+                try {
+                    batch.add(ctx.toBatchedCommand(cmd));
+                } catch (CommandFormatException e) {
+                    throw new IllegalArgumentException(String.format("Command '%s' is invalid. %s", cmd, e.getLocalizedMessage()), e);
+                }
             }
-        }
-        final ModelNode result = client.execute(builder.build());
-        if (!ServerOperations.isSuccessfulOutcome(result)) {
-            throw new IllegalArgumentException(ServerOperations.getFailureDescriptionAsString(result));
+            final ModelNode result = ctx.getModelControllerClient().execute(batch.toRequest());
+            if (!ServerOperations.isSuccessfulOutcome(result)) {
+                throw new IllegalArgumentException(ServerOperations.getFailureDescriptionAsString(result));
+            }
         }
     }
 

@@ -15,11 +15,12 @@
                     <port>10099</port>
                     <execute-commands>
                     	<commands>
-							<command>/subsystem=transactions :write-attribute(name=default-timeout, value=600)</command>
+							<command>/system-property=org.jboss.maven.plugin-exec-cmd:add(value=true)</command>
+                            <command>/system-property=property2:add(value="property 2")</command>
 						</commands>
                     </execute-commands>
                 </configuration>
-                
+
             </plugin>
         </plugins>
     </build>

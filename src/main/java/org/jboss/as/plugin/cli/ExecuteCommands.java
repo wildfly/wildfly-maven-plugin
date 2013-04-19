@@ -54,7 +54,7 @@ public class ExecuteCommands extends AbstractServerConnection {
     /**
      * The commands to execute.
      */
-    @Parameter(alias = "execute-commands", required = true)
+    @Parameter(alias = "execute-commands")
     private Commands executeCommands;
 
     @Override
