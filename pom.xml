@@ -57,7 +57,7 @@
 
     <properties>
         <version.junit.junit>4.11</version.junit.junit>
-        <version.org.jboss.as>7.1.2.Final</version.org.jboss.as>
+        <version.org.jboss.as>7.2.0.Final</version.org.jboss.as>
         <!-- JBoss AS 7.1.2 distribution artifact is not deployed to the jboss
             nexus repository -->
         <version.org.jboss.as.dist>7.1.1.Final</version.org.jboss.as.dist>
