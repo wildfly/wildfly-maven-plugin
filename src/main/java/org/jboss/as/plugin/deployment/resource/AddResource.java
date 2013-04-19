@@ -109,6 +109,12 @@ public class AddResource extends AbstractServerConnection {
     @Parameter(defaultValue = "true", property = PropertyNames.ADD_RESOURCE_FORCE)
     private boolean force;
 
+    /**
+     * Set to {@code true} if you want the deployment to be skipped, otherwise {@code false}.
+     */
+    @Parameter(defaultValue = "false")
+    private boolean skip;
+
     @Override
     public String goal() {
         return GOAL;
@@ -116,6 +122,10 @@ public class AddResource extends AbstractServerConnection {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        if (skip) {
+            getLog().debug(String.format("Skipping add-resource with address %s", address));
+            return;
+        }
         try {
             final InetAddress host = getHostAddress();
             getLog().info(String.format("Executing goal %s on server %s (%s) port %s.", goal(), host.getHostName(), host.getHostAddress(), getPort()));
