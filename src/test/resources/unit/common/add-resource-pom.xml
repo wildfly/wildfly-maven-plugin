@@ -1,0 +1,37 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>testing</groupId>
+    <artifactId>testing</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jboss.as.plugins</groupId>
+                <artifactId>jboss-as-maven-plugin</artifactId>
+                <configuration>
+                    <port>10099</port>
+                    <address>subsystem=datasources</address>
+                    <resources>
+                        <resource>
+                            <address>data-source=java:/ds-name1</address>
+                            <enable-resource>true</enable-resource>
+                            <properties>
+                                <jndi-name>java:jboss/ds-name1</jndi-name>
+                                <enabled>true</enabled>
+                                <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</connection-url>
+                                <driver-class>org.h2.Driver</driver-class>
+                                <driver-name>h2</driver-name>
+                                <security.user-name>sa</security.user-name>
+                                <security.password>sa</security.password>
+                                <pool-name>mypool1</pool-name>
+                            </properties>
+                        </resource>
+                    </resources>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

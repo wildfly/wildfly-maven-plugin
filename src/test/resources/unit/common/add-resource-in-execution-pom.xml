@@ -1,0 +1,46 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>testing</groupId>
+    <artifactId>testing</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jboss.as.plugins</groupId>
+                <artifactId>jboss-as-maven-plugin</artifactId>
+                <version>7.3.Final</version>
+                <configuration>
+                    <port>10099</port>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>add-datasource</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                        <configuration>
+                            <address>subsystem=datasources,data-source=java:jboss/myDs</address>
+                            <resource>
+                                <enable-resource>true</enable-resource>
+                                <properties>
+                                    <jndi-name>java:jboss/myDs</jndi-name>
+                                    <enabled>true</enabled>
+                                    <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</connection-url>
+                                    <driver-class>org.h2.Driver</driver-class>
+                                    <driver-name>h2</driver-name>
+                                    <security.user-name>sa</security.user-name>
+                                    <security.password>sa</security.password>
+                                    <pool-name>myExecPool</pool-name>
+                                </properties>
+                            </resource>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
