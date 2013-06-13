@@ -137,6 +137,10 @@ final class StandaloneServer extends Server {
             cmd.add("-server-config");
             cmd.add(serverInfo.getServerConfig());
         }
+        if (serverInfo.getPropertiesFile() != null) {
+            cmd.add("-P");
+            cmd.add(serverInfo.getPropertiesFile());
+        }
         return cmd;
     }
 

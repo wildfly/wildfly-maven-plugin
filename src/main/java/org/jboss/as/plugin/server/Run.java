@@ -126,6 +126,12 @@ public class Run extends Deploy {
     private String serverConfig;
 
     /**
+     * The path to the system properties file to load.
+     */
+    @Parameter(alias = "properties-file", property = PropertyNames.PROPERTIES_FILE)
+    private String propertiesFile;
+
+    /**
      * The timeout value to use when starting the server.
      */
     @Parameter(alias = "startup-timeout", defaultValue = Defaults.TIMEOUT, property = PropertyNames.STARTUP_TIMEOUT)
@@ -154,7 +160,7 @@ public class Run extends Deploy {
         } else {
             javaHome = this.javaHome;
         }
-        final ServerInfo serverInfo = ServerInfo.of(this, javaHome, jbossHome, modulesPath, bundlesPath, jvmArgs, serverConfig, startupTimeout);
+        final ServerInfo serverInfo = ServerInfo.of(this, javaHome, jbossHome, modulesPath, bundlesPath, jvmArgs, serverConfig, propertiesFile, startupTimeout);
         if (!serverInfo.getModulesDir().isDirectory()) {
             throw new MojoExecutionException(String.format("Modules path '%s' is not a valid directory.", modulesPath));
         }

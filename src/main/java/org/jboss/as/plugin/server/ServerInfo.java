@@ -40,9 +40,10 @@ class ServerInfo {
     private final String[] jvmArgs;
     private final String javaHome;
     private final String serverConfig;
+    private final String propertiesFile;
     private final long startupTimeout;
 
-    private ServerInfo(final ConnectionInfo connectionInfo, final String javaHome, final File jbossHome, final String modulesDir, final String bundlesDir, final String[] jvmArgs, final String serverConfig, final long startupTimeout) {
+    private ServerInfo(final ConnectionInfo connectionInfo, final String javaHome, final File jbossHome, final String modulesDir, final String bundlesDir, final String[] jvmArgs, final String serverConfig, final String propertiesFile, final long startupTimeout) {
         this.connectionInfo = connectionInfo;
         this.javaHome = javaHome;
         this.jbossHome = jbossHome;
@@ -50,6 +51,7 @@ class ServerInfo {
         this.bundlesDir = (bundlesDir == null ? Files.createFile(jbossHome, "bundles") : new File(bundlesDir));
         this.jvmArgs = jvmArgs;
         this.serverConfig = serverConfig;
+        this.propertiesFile = propertiesFile;
         this.startupTimeout = startupTimeout;
     }
 
@@ -67,8 +69,8 @@ class ServerInfo {
      *
      * @return the server configuration information
      */
-    public static ServerInfo of(final ConnectionInfo connectionInfo, final String javaHome, final File jbossHome, final String modulesDir, final String bundlesDir, final String[] jvmArgs, final String serverConfig, final long startupTimeout) {
-        return new ServerInfo(connectionInfo, javaHome, jbossHome, modulesDir, bundlesDir, jvmArgs, serverConfig, startupTimeout);
+    public static ServerInfo of(final ConnectionInfo connectionInfo, final String javaHome, final File jbossHome, final String modulesDir, final String bundlesDir, final String[] jvmArgs, final String serverConfig, final String propertiesFile, final long startupTimeout) {
+        return new ServerInfo(connectionInfo, javaHome, jbossHome, modulesDir, bundlesDir, jvmArgs, serverConfig, propertiesFile, startupTimeout);
     }
 
     /**
@@ -132,6 +134,15 @@ class ServerInfo {
      */
     public String getServerConfig() {
         return serverConfig;
+    }
+
+    /**
+     * The path to the system properties file to load.
+     *
+     * @return the path to the properties file or {@code null} if no properties should be loaded.
+     */
+    public String getPropertiesFile() {
+        return propertiesFile;
     }
 
     /**

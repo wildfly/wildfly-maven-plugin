@@ -69,4 +69,6 @@ public interface PropertyNames {
 
     String USERNAME = "jboss-as.username";
 
+    String PROPERTIES_FILE = "jboss-as.propertiesFile";
+
 }
