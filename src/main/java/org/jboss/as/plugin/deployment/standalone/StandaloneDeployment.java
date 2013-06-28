@@ -36,9 +36,9 @@ import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentPlanRes
 import org.jboss.as.controller.client.helpers.standalone.ServerUpdateActionResult;
 import org.jboss.as.plugin.common.DeploymentExecutionException;
 import org.jboss.as.plugin.common.DeploymentFailureException;
-import org.jboss.as.plugin.common.ServerOperations;
+import org.jboss.as.plugin.common.DeploymentInspector;
 import org.jboss.as.plugin.deployment.Deployment;
-import org.jboss.dmr.ModelNode;
+import org.jboss.as.plugin.deployment.MatchPatternStrategy;
 
 /**
  * A deployment for standalone servers.
@@ -51,6 +51,8 @@ public class StandaloneDeployment implements Deployment {
     private final ModelControllerClient client;
     private final String name;
     private final Type type;
+    private final String matchPattern;
+    private final MatchPatternStrategy matchPatternStrategy;
 
     /**
      * Creates a new deployment.
@@ -59,12 +61,17 @@ public class StandaloneDeployment implements Deployment {
      * @param content the content for the deployment.
      * @param name    the name of the deployment, if {@code null} the name of the content file is used.
      * @param type    the deployment type.
+     * @param matchPattern            the pattern for matching multiple artifacts, if {@code null} the name is used.
+     * @param matchPatternStrategy    the strategy for handling multiple artifacts.
      */
-    public StandaloneDeployment(final ModelControllerClient client, final File content, final String name, final Type type) {
+    public StandaloneDeployment(final ModelControllerClient client, final File content, final String name, final Type type,
+                                final String matchPattern, final MatchPatternStrategy matchPatternStrategy) {
         this.content = content;
         this.client = client;
         this.name = (name == null ? content.getName() : name);
         this.type = type;
+        this.matchPattern = matchPattern;
+        this.matchPatternStrategy = matchPatternStrategy;
     }
 
     /**
@@ -74,39 +81,47 @@ public class StandaloneDeployment implements Deployment {
      * @param content the content for the deployment.
      * @param name    the name of the deployment, if {@code null} the name of the content file is used.
      * @param type    the deployment type.
+     * @param matchPattern            the pattern for matching multiple artifacts, if {@code null} the name is used.
+     * @param matchPatternStrategy    the strategy for handling multiple artifacts.
      *
      * @return the new deployment
      */
-    public static StandaloneDeployment create(final ModelControllerClient client, final File content, final String name, final Type type) {
-        return new StandaloneDeployment(client, content, name, type);
+    public static StandaloneDeployment create(final ModelControllerClient client, final File content, final String name, final Type type,
+                                              final String matchPattern, final MatchPatternStrategy matchPatternStrategy) {
+        return new StandaloneDeployment(client, content, name, type, matchPattern, matchPatternStrategy);
     }
 
-    private DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException {
+    private DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException, DeploymentFailureException {
         DeploymentPlanBuilder planBuilder = builder;
+
+        List<String> existingDeployments = DeploymentInspector.getDeployments(client, name, matchPattern);
+        validateExistingDeployments(existingDeployments);
+
         switch (type) {
             case DEPLOY: {
                 planBuilder = builder.add(name, content).andDeploy();
                 break;
             }
+            case FORCE_DEPLOY:
             case REDEPLOY: {
-                planBuilder = builder.replace(name, content).redeploy(name);
-                break;
-            }
-            case UNDEPLOY: {
-                planBuilder = builder.undeploy(name).remove(name);
-                break;
-            }
-            case FORCE_DEPLOY: {
-                if (exists()) {
-                    planBuilder = builder.replace(name, content).redeploy(name);
-                } else {
-                    planBuilder = builder.add(name, content).andDeploy();
+                if(existingDeployments.contains(name)) {
+                    existingDeployments.remove(name);
+                    planBuilder = undeployAndRemove(builder, existingDeployments);
+                    planBuilder = planBuilder.replace(name, content).redeploy(name);
+                }
+                else {
+                    planBuilder = undeployAndRemove(builder, existingDeployments);
+                    planBuilder = planBuilder.add(name, content).andDeploy();
                 }
                 break;
             }
+            case UNDEPLOY: {
+                planBuilder = undeployAndRemove(builder, existingDeployments);
+                break;
+            }
             case UNDEPLOY_IGNORE_MISSING: {
-                if (exists()) {
-                    planBuilder = builder.undeploy(name).remove(name);
+                if (!existingDeployments.isEmpty()) {
+                    planBuilder = undeployAndRemove(builder, existingDeployments);
                 } else {
                     return null;
                 }
@@ -114,6 +129,32 @@ public class StandaloneDeployment implements Deployment {
             }
         }
         return planBuilder.build();
+    }
+
+    private DeploymentPlanBuilder undeployAndRemove(final DeploymentPlanBuilder builder, final List<String> deploymentNames) {
+
+        DeploymentPlanBuilder planBuilder = builder;
+
+        for (String deploymentName : deploymentNames) {
+            planBuilder = planBuilder.undeploy(deploymentName).andRemoveUndeployed();
+
+            if(matchPatternStrategy == MatchPatternStrategy.first) {
+                break;
+            }
+        }
+
+        return planBuilder;
+    }
+
+    private void validateExistingDeployments(List<String> existingDeployments) throws DeploymentFailureException {
+        if(matchPattern == null) {
+            return;
+        }
+
+        if(matchPatternStrategy == MatchPatternStrategy.fail && existingDeployments.size() > 1) {
+            throw new DeploymentFailureException(String.format("Deployment failed, found %d deployed artifacts for pattern '%s' (%s)",
+                                                               existingDeployments.size(), matchPattern, existingDeployments));
+        }
     }
 
     @Override
@@ -157,27 +198,4 @@ public class StandaloneDeployment implements Deployment {
         return type;
     }
 
-    private boolean exists() {
-        // CLI :read-children-names(child-type=deployment)
-        final ModelNode op = ServerOperations.createListDeploymentsOperation();
-        final ModelNode result;
-        try {
-            result = client.execute(op);
-            final String deploymentName = name;
-            // Check to make sure there is an outcome
-            if (ServerOperations.isSuccessfulOutcome(result)) {
-                final List<ModelNode> deployments = ServerOperations.readResult(result).asList();
-                for (ModelNode n : deployments) {
-                    if (n.asString().equals(deploymentName)) {
-                        return true;
-                    }
-                }
-            } else {
-                throw new IllegalStateException(ServerOperations.getFailureDescriptionAsString(result));
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException(String.format("Could not execute operation '%s'", op), e);
-        }
-        return false;
-    }
 }

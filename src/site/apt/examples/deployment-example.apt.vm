@@ -119,6 +119,59 @@ Deploy/Undeploy Examples
 
   The artifact must be already listed as a dependency in the projects pom.xml.
 
+* Undeployments/Redeployments using Regex-Pattern.
+
+  You are allowed to perform Undeployments/Redeployments based on a regex-pattern. This is useful as soon as you use
+  a version identifier within your deployment name. An existing deployment is matched by regex and replaced by
+  the new one. This example below will replace the deployment starting with "postgres-".
+
+----------
+<project>
+  ...
+  <build>
+      ...
+      <plugins>
+          ...
+          <plugin>
+              <groupId>org.jboss.as.plugins</groupId>
+              <artifactId>jboss-as-maven-plugin</artifactId>
+              <version>${project.version}</version>
+              <executions>
+                  <execution>
+                      <phase>install</phase>
+                      <goals>
+                          <goal>redeploy-artifact</goal>
+                      </goals>
+                      <configuration>
+                          <groupId>postgresql</groupId>
+                          <artifactId>postgresql</artifactId>
+                          <version>2.1.0</version>
+                          <type>jar</type>
+                          <name>postgresql-2.1.0.jar</name>
+                          <match-pattern>postgresql-.*</match-pattern>
+                      </configuration>
+                  </execution>
+              </executions>
+          </plugin>
+          ...
+      </plugins>
+      ...
+  </build>
+...
+</project>
+----------
+
+  In case multiple deployments match the specified pattern you can decide, how the plugin should behave. You
+  have following options:
+
+ * first: Default, The first artifact is taken for undeployment/replacement. Other artifacts won't be touched.
+         The list of artifacts is sorted using the default collator.
+
+ * all: All matching artifacts are undeployed. This applies as well for replacing/redeployments
+         (one redeployed artifact can cause the removal of all matching artifacts)
+
+ * fail: Deployment fails.
+
 
 * Deploying your application in domain mode.
 

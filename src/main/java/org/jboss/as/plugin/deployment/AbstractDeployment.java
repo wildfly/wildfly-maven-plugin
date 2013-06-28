@@ -61,7 +61,25 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      * Specifies the name used for the deployment.
      */
     @Parameter
-    private String name;
+    protected String name;
+
+    /**
+     * Specifies the name match pattern for undeploying/replacing artifacts.
+     */
+    @Parameter(alias = "match-pattern")
+    protected String matchPattern;
+
+    /**
+     * Specifies the strategy in case more than one matching artifact is found.
+     * <ul>
+     *     <li>first: The first artifact is taken for undeployment/replacement. Other artifacts won't be touched.
+     *     The list of artifacts is sorted using the default collator.</li>
+     *     <li>all: All matching artifacts are undeployed.</li>
+     *     <li>fail: Deployment fails.</li>
+     * </ul>
+     */
+    @Parameter(alias = "match-pattern-strategy")
+    protected MatchPatternStrategy matchPatternStrategy = MatchPatternStrategy.first;
 
     /**
      * Commands to run before the deployment
@@ -111,14 +129,17 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         doExecute();
     }
 
-    protected final Status executeDeployment(final ModelControllerClient client, final Deployment deployment) throws DeploymentExecutionException, DeploymentFailureException, IOException {
+    protected final Status executeDeployment(final ModelControllerClient client, final Deployment deployment)
+            throws DeploymentExecutionException, DeploymentFailureException, IOException {
         // Execute before deployment commands
-        if (beforeDeployment != null) beforeDeployment.execute(client);
+        if (beforeDeployment != null)
+            beforeDeployment.execute(client);
         // Deploy the deployment
         getLog().debug("Executing deployment");
         final Status status = deployment.execute();
         // Execute after deployment commands
-        if (afterDeployment != null) afterDeployment.execute(client);
+        if (afterDeployment != null)
+            afterDeployment.execute(client);
         return status;
     }
 
@@ -134,9 +155,9 @@ abstract class AbstractDeployment extends AbstractServerConnection {
                 final ModelControllerClient client = getClient();
                 final Deployment deployment;
                 if (isDomainServer()) {
-                    deployment = DomainDeployment.create((DomainClient) client, domain, file(), name, getType());
+                    deployment = DomainDeployment.create((DomainClient) client, domain, file(), name, getType(), matchPattern, matchPatternStrategy);
                 } else {
-                    deployment = StandaloneDeployment.create(client, file(), name, getType());
+                    deployment = StandaloneDeployment.create(client, file(), name, getType(), matchPattern, matchPatternStrategy);
                 }
                 switch (executeDeployment(client, deployment)) {
                     case REQUIRES_RESTART: {
@@ -152,7 +173,8 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         } catch (MojoExecutionException e) {
             throw e;
         } catch (Exception e) {
-            throw new MojoExecutionException(String.format("Could not execute goal %s on %s. Reason: %s", goal(), file(), e.getMessage()), e);
+            throw new MojoExecutionException(String.format("Could not execute goal %s on %s. Reason: %s", goal(), file(),
+                    e.getMessage()), e);
         } finally {
             close();
         }
@@ -166,7 +188,8 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     protected void validate() throws DeploymentFailureException {
         if (isDomainServer()) {
             if (domain == null || domain.getServerGroups().isEmpty()) {
-                throw new DeploymentFailureException("Server is running in domain mode, but no server groups have been defined.");
+                throw new DeploymentFailureException(
+                        "Server is running in domain mode, but no server groups have been defined.");
             }
         } else if (domain != null && !domain.getServerGroups().isEmpty()) {
             throw new DeploymentFailureException("Server is running in standalone mode, but server groups have been defined.");

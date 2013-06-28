@@ -183,7 +183,7 @@ public class Run extends Deploy {
             if (server.isRunning()) {
                 log.info(String.format("Deploying application '%s'%n", deploymentFile.getName()));
                 final ModelControllerClient client = server.getClient();
-                final Deployment deployment = StandaloneDeployment.create(client, deploymentFile, deploymentName, getType());
+                final Deployment deployment = StandaloneDeployment.create(client, deploymentFile, deploymentName, getType(), null, null);
                 switch (executeDeployment(client, deployment)) {
                     case REQUIRES_RESTART: {
                         client.execute(ServerOperations.createOperation(ServerOperations.RELOAD));
