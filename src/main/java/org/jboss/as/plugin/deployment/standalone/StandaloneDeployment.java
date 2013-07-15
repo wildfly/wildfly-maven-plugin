@@ -57,12 +57,12 @@ public class StandaloneDeployment implements Deployment {
     /**
      * Creates a new deployment.
      *
-     * @param client  the client that is connected.
-     * @param content the content for the deployment.
-     * @param name    the name of the deployment, if {@code null} the name of the content file is used.
-     * @param type    the deployment type.
-     * @param matchPattern            the pattern for matching multiple artifacts, if {@code null} the name is used.
-     * @param matchPatternStrategy    the strategy for handling multiple artifacts.
+     * @param client               the client that is connected.
+     * @param content              the content for the deployment.
+     * @param name                 the name of the deployment, if {@code null} the name of the content file is used.
+     * @param type                 the deployment type.
+     * @param matchPattern         the pattern for matching multiple artifacts, if {@code null} the name is used.
+     * @param matchPatternStrategy the strategy for handling multiple artifacts.
      */
     public StandaloneDeployment(final ModelControllerClient client, final File content, final String name, final Type type,
                                 final String matchPattern, final MatchPatternStrategy matchPatternStrategy) {
@@ -77,12 +77,12 @@ public class StandaloneDeployment implements Deployment {
     /**
      * Creates a new deployment.
      *
-     * @param client  the client that is connected.
-     * @param content the content for the deployment.
-     * @param name    the name of the deployment, if {@code null} the name of the content file is used.
-     * @param type    the deployment type.
-     * @param matchPattern            the pattern for matching multiple artifacts, if {@code null} the name is used.
-     * @param matchPatternStrategy    the strategy for handling multiple artifacts.
+     * @param client               the client that is connected.
+     * @param content              the content for the deployment.
+     * @param name                 the name of the deployment, if {@code null} the name of the content file is used.
+     * @param type                 the deployment type.
+     * @param matchPattern         the pattern for matching multiple artifacts, if {@code null} the name is used.
+     * @param matchPatternStrategy the strategy for handling multiple artifacts.
      *
      * @return the new deployment
      */
@@ -95,31 +95,31 @@ public class StandaloneDeployment implements Deployment {
         DeploymentPlanBuilder planBuilder = builder;
 
         List<String> existingDeployments = DeploymentInspector.getDeployments(client, name, matchPattern);
-        validateExistingDeployments(existingDeployments);
 
         switch (type) {
             case DEPLOY: {
                 planBuilder = builder.add(name, content).andDeploy();
                 break;
             }
-            case FORCE_DEPLOY:
             case REDEPLOY: {
-                if(existingDeployments.contains(name)) {
-                    existingDeployments.remove(name);
-                    planBuilder = undeployAndRemove(builder, existingDeployments);
-                    planBuilder = planBuilder.replace(name, content).redeploy(name);
-                }
-                else {
-                    planBuilder = undeployAndRemove(builder, existingDeployments);
-                    planBuilder = planBuilder.add(name, content).andDeploy();
-                }
+                planBuilder = builder.replace(name, content).redeploy(name);
                 break;
             }
             case UNDEPLOY: {
+                validateExistingDeployments(existingDeployments);
                 planBuilder = undeployAndRemove(builder, existingDeployments);
                 break;
             }
+            case FORCE_DEPLOY: {
+                if (existingDeployments.contains(name)) {
+                    planBuilder = builder.replace(name, content).redeploy(name);
+                } else {
+                    planBuilder = builder.add(name, content).andDeploy();
+                }
+                break;
+            }
             case UNDEPLOY_IGNORE_MISSING: {
+                validateExistingDeployments(existingDeployments);
                 if (!existingDeployments.isEmpty()) {
                     planBuilder = undeployAndRemove(builder, existingDeployments);
                 } else {
@@ -138,7 +138,7 @@ public class StandaloneDeployment implements Deployment {
         for (String deploymentName : deploymentNames) {
             planBuilder = planBuilder.undeploy(deploymentName).andRemoveUndeployed();
 
-            if(matchPatternStrategy == MatchPatternStrategy.first) {
+            if (matchPatternStrategy == MatchPatternStrategy.FIRST) {
                 break;
             }
         }
@@ -147,13 +147,13 @@ public class StandaloneDeployment implements Deployment {
     }
 
     private void validateExistingDeployments(List<String> existingDeployments) throws DeploymentFailureException {
-        if(matchPattern == null) {
+        if (matchPattern == null) {
             return;
         }
 
-        if(matchPatternStrategy == MatchPatternStrategy.fail && existingDeployments.size() > 1) {
+        if (matchPatternStrategy == MatchPatternStrategy.FAIL && existingDeployments.size() > 1) {
             throw new DeploymentFailureException(String.format("Deployment failed, found %d deployed artifacts for pattern '%s' (%s)",
-                                                               existingDeployments.size(), matchPattern, existingDeployments));
+                    existingDeployments.size(), matchPattern, existingDeployments));
         }
     }
 

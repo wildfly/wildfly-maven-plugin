@@ -39,7 +39,7 @@ import org.junit.Test;
 
 /**
  * Matcher Undeployment test case.
- * 
+ *
  * @author <a href="mailto:mpaluch@paluch.biz">Mark Paluch</a>
  */
 public class UndeploymentMatchTest extends AbstractItTestCase {
@@ -56,7 +56,7 @@ public class UndeploymentMatchTest extends AbstractItTestCase {
     @Test
     public void undeployAll() throws Exception {
 
-        undeploy(MatchPatternStrategy.all);
+        undeploy(MatchPatternStrategy.ALL);
 
         List<String> deployments = DeploymentInspector.getDeployments(managementClient.getControllerClient(), "", ".*.war");
         assertEquals(0, deployments.size());
@@ -65,7 +65,7 @@ public class UndeploymentMatchTest extends AbstractItTestCase {
     @Test
     public void undeployFirst() throws Exception {
 
-        undeploy(MatchPatternStrategy.first);
+        undeploy(MatchPatternStrategy.FIRST);
 
         List<String> deployments = DeploymentInspector.getDeployments(managementClient.getControllerClient(), "", ".*.war");
         assertEquals(1, deployments.size());
@@ -73,12 +73,12 @@ public class UndeploymentMatchTest extends AbstractItTestCase {
 
     @Test(expected = DeploymentExecutionException.class)
     public void undeployFail() throws Exception {
-        undeploy(MatchPatternStrategy.fail);
+        undeploy(MatchPatternStrategy.FAIL);
     }
 
     @After
     public void after() throws Exception {
-        undeploy(MatchPatternStrategy.all);
+        undeploy(MatchPatternStrategy.ALL);
     }
 
     private void undeploy(MatchPatternStrategy matchPatternStrategy) throws Exception {
@@ -87,10 +87,10 @@ public class UndeploymentMatchTest extends AbstractItTestCase {
 
         final File pom = getPom("undeploy-webarchive-match-pom.xml");
 
-        final AbstractDeployment undeployMojo = lookupMojoAndVerify("undeploy", pom);
+        final Undeploy undeployMojo = lookupMojoAndVerify("undeploy", pom);
 
         undeployMojo.project = mavenProject;
-        undeployMojo.matchPatternStrategy = matchPatternStrategy;
+        undeployMojo.matchPatternStrategy = matchPatternStrategy.toString();
         undeployMojo.execute();
     }
 

@@ -27,5 +27,7 @@ package org.jboss.as.plugin.deployment;
  * @since 27.06.13 08:08
  */
 public enum MatchPatternStrategy {
-    first, all, fail;
+    FIRST,
+    ALL,
+    FAIL
 }

@@ -64,13 +64,13 @@ public class DomainDeployment implements Deployment {
     /**
      * Creates a new deployment.
      *
-     * @param client  the client for the server
-     * @param domain  the domain information
-     * @param content the content for the deployment
-     * @param name    the name of the deployment, if {@code null} the name of the content file is used
-     * @param type    the deployment type
-     * @param matchPattern            the pattern for matching multiple artifacts, if {@code null} the name is used.
-     * @param matchPatternStrategy    the strategy for handling multiple artifacts.
+     * @param client               the client for the server
+     * @param domain               the domain information
+     * @param content              the content for the deployment
+     * @param name                 the name of the deployment, if {@code null} the name of the content file is used
+     * @param type                 the deployment type
+     * @param matchPattern         the pattern for matching multiple artifacts, if {@code null} the name is used.
+     * @param matchPatternStrategy the strategy for handling multiple artifacts.
      */
     public DomainDeployment(final DomainClient client, final Domain domain, final File content, final String name, final Type type,
                             final String matchPattern, final MatchPatternStrategy matchPatternStrategy) {
@@ -86,13 +86,13 @@ public class DomainDeployment implements Deployment {
     /**
      * Creates a new deployment.
      *
-     * @param client  the client for the server
-     * @param domain  the domain information
-     * @param content the content for the deployment
-     * @param name    the name of the deployment, if {@code null} the name of the content file is used
-     * @param type    the deployment type
-     * @param matchPattern            the pattern for matching multiple artifacts, if {@code null} the name is used.
-     * @param matchPatternStrategy    the strategy for handling multiple artifacts.
+     * @param client               the client for the server
+     * @param domain               the domain information
+     * @param content              the content for the deployment
+     * @param name                 the name of the deployment, if {@code null} the name of the content file is used
+     * @param type                 the deployment type
+     * @param matchPattern         the pattern for matching multiple artifacts, if {@code null} the name is used.
+     * @param matchPatternStrategy the strategy for handling multiple artifacts.
      *
      * @return the new deployment
      */
@@ -104,30 +104,32 @@ public class DomainDeployment implements Deployment {
     private DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException, DuplicateDeploymentNameException, DeploymentFailureException {
         DeploymentActionsCompleteBuilder completeBuilder = null;
         List<String> existingDeployments = DeploymentInspector.getDeployments(client, name, matchPattern);
-        validateExistingDeployments(existingDeployments);
         switch (type) {
             case DEPLOY: {
                 completeBuilder = builder.add(name, content).andDeploy();
                 break;
             }
-            case FORCE_DEPLOY:
+            case FORCE_DEPLOY: {
+                if (existingDeployments.contains(name)) {
+                    completeBuilder = builder.replace(name, content);
+                } else {
+                    completeBuilder = builder.add(name, content).andDeploy();
+                }
+                break;
+            }
             case REDEPLOY: {
-                if(existingDeployments.contains(name)) {
-                    existingDeployments.remove(name);
-                    completeBuilder = undeployAndRemoveUndeployed(builder, existingDeployments).replace(name, content);
-                }
-                else {
-                    completeBuilder = undeployAndRemoveUndeployed(builder, existingDeployments).add(name, content).andDeploy();
-                }
+                completeBuilder = builder.replace(name, content);
                 break;
             }
             case UNDEPLOY: {
-                completeBuilder = (DeploymentActionsCompleteBuilder) undeployAndRemoveUndeployed(builder, existingDeployments);
+                validateExistingDeployments(existingDeployments);
+                completeBuilder = undeployAndRemoveUndeployed(builder, existingDeployments);
                 break;
             }
             case UNDEPLOY_IGNORE_MISSING: {
+                validateExistingDeployments(existingDeployments);
                 if (!existingDeployments.isEmpty()) {
-                    completeBuilder = (DeploymentActionsCompleteBuilder) undeployAndRemoveUndeployed(builder, existingDeployments);
+                    completeBuilder = undeployAndRemoveUndeployed(builder, existingDeployments);
                 } else {
                     return null;
                 }
@@ -147,30 +149,30 @@ public class DomainDeployment implements Deployment {
         throw new IllegalStateException(String.format("Invalid type '%s' for deployment", type));
     }
 
-    private DeploymentPlanBuilder undeployAndRemoveUndeployed(
-                final DeploymentPlanBuilder builder, final List<String> deploymentNames) {
+    private DeploymentActionsCompleteBuilder undeployAndRemoveUndeployed(
+            final DeploymentPlanBuilder builder, final List<String> deploymentNames) {
 
-        DeploymentPlanBuilder planBuilder = builder;
+        DeploymentActionsCompleteBuilder completeBuilder = null;
         for (String deploymentName : deploymentNames) {
 
-            planBuilder = planBuilder.undeploy(deploymentName).andRemoveUndeployed();
+            completeBuilder = builder.undeploy(deploymentName).andRemoveUndeployed();
 
-            if(matchPatternStrategy == MatchPatternStrategy.first) {
+            if (matchPatternStrategy == MatchPatternStrategy.FIRST) {
                 break;
             }
         }
 
-        return planBuilder;
+        return completeBuilder;
     }
 
     private void validateExistingDeployments(List<String> existingDeployments) throws DeploymentFailureException {
-        if(matchPattern == null) {
+        if (matchPattern == null) {
             return;
         }
 
-        if(matchPatternStrategy == MatchPatternStrategy.fail && existingDeployments.size() > 1) {
+        if (matchPatternStrategy == MatchPatternStrategy.FAIL && existingDeployments.size() > 1) {
             throw new DeploymentFailureException(String.format("Deployment failed, found %d deployed artifacts for pattern '%s' (%s)",
-                                                                           existingDeployments.size(), matchPattern, existingDeployments));
+                    existingDeployments.size(), matchPattern, existingDeployments));
         }
     }
 

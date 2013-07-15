@@ -64,24 +64,6 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     protected String name;
 
     /**
-     * Specifies the name match pattern for undeploying/replacing artifacts.
-     */
-    @Parameter(alias = "match-pattern")
-    protected String matchPattern;
-
-    /**
-     * Specifies the strategy in case more than one matching artifact is found.
-     * <ul>
-     *     <li>first: The first artifact is taken for undeployment/replacement. Other artifacts won't be touched.
-     *     The list of artifacts is sorted using the default collator.</li>
-     *     <li>all: All matching artifacts are undeployed.</li>
-     *     <li>fail: Deployment fails.</li>
-     * </ul>
-     */
-    @Parameter(alias = "match-pattern-strategy")
-    protected MatchPatternStrategy matchPatternStrategy = MatchPatternStrategy.first;
-
-    /**
      * Commands to run before the deployment
      */
     @Parameter(alias = "before-deployment")
@@ -153,6 +135,8 @@ abstract class AbstractDeployment extends AbstractServerConnection {
             synchronized (CLIENT_LOCK) {
                 validate();
                 final ModelControllerClient client = getClient();
+                final String matchPattern = getMatchPattern();
+                final MatchPatternStrategy matchPatternStrategy = getMatchPatternStrategy();
                 final Deployment deployment;
                 if (isDomainServer()) {
                     deployment = DomainDeployment.create((DomainClient) client, domain, file(), name, getType(), matchPattern, matchPatternStrategy);
@@ -178,6 +162,25 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         } finally {
             close();
         }
+    }
+
+    /**
+     * Returns the matching pattern for undeploy and redeploy goals. By default {@code null} is returned.
+     *
+     * @return the pattern or {@code null}
+     */
+    protected String getMatchPattern() {
+        return null;
+    }
+
+    /**
+     * Returns the matching pattern strategy to use if more than one deployment matches the {@link #getMatchPattern()
+     * pattern} returns more than one instance of a deployment. By default {@code null} is returned.
+     *
+     * @return the matching strategy or {@code null}
+     */
+    protected MatchPatternStrategy getMatchPatternStrategy() {
+        return null;
     }
 
     /**

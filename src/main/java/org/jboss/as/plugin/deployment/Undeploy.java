@@ -37,10 +37,47 @@ import org.jboss.as.plugin.deployment.Deployment.Type;
 public class Undeploy extends AbstractAppDeployment {
 
     /**
+     * Specifies the name match pattern for undeploying/replacing artifacts.
+     */
+    @Parameter(alias = "match-pattern")
+    protected String matchPattern;
+
+    /**
+     * Specifies the strategy in case more than one matching artifact is found.
+     * <ul>
+     *     <li>first: The first artifact is taken for undeployment/replacement. Other artifacts won't be touched.
+     *     The list of artifacts is sorted using the default collator.</li>
+     *     <li>all: All matching artifacts are undeployed.</li>
+     *     <li>fail: Deployment fails.</li>
+     * </ul>
+     */
+    @Parameter(alias = "match-pattern-strategy")
+    protected String matchPatternStrategy = MatchPatternStrategy.FAIL.toString();
+
+    /**
      * Indicates whether undeploy should ignore the undeploy operation if the deployment does not exist.
      */
     @Parameter(defaultValue = "true", property = PropertyNames.IGNORE_MISSING_DEPLOYMENT)
     private boolean ignoreMissingDeployment;
+
+    @Override
+    protected String getMatchPattern() {
+        return matchPattern;
+    }
+
+    @Override
+    protected MatchPatternStrategy getMatchPatternStrategy() {
+        if (MatchPatternStrategy.FAIL.toString().equalsIgnoreCase(matchPatternStrategy)) {
+            return MatchPatternStrategy.FAIL;
+        } else if (MatchPatternStrategy.FIRST.toString().equalsIgnoreCase(matchPatternStrategy)) {
+            return MatchPatternStrategy.FIRST;
+        } else if (MatchPatternStrategy.ALL.toString().equalsIgnoreCase(matchPatternStrategy)) {
+            return MatchPatternStrategy.ALL;
+        }
+        throw new IllegalStateException(
+                String.format("matchPatternStrategy '%s' is not a valid strategy. Valid strategies are %s, %s and %s",
+                        matchPatternStrategy, MatchPatternStrategy.ALL, MatchPatternStrategy.FAIL, MatchPatternStrategy.FIRST));
+    }
 
     @Override
     public String goal() {
