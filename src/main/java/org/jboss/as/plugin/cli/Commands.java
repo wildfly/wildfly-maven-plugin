@@ -39,9 +39,12 @@ import org.jboss.as.cli.CommandLineException;
 import org.jboss.as.cli.batch.Batch;
 import org.jboss.as.cli.batch.BatchManager;
 import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.controller.client.Operation;
+import org.jboss.as.controller.client.OperationMessageHandler;
 import org.jboss.as.plugin.common.ServerOperations;
 import org.jboss.as.plugin.common.Streams;
 import org.jboss.dmr.ModelNode;
+import org.jboss.threads.AsyncFuture;
 
 /**
  * CLI commands to run.
@@ -108,6 +111,8 @@ public class Commands {
 
     /**
      * Execute the commands.
+     * <p/>
+     * Note that the client is not closed during this execution.
      *
      * @param client the client used to execute the commands
      *
@@ -119,7 +124,8 @@ public class Commands {
         final boolean hasScripts = hasScripts();
 
         if (hasCommands || hasScripts) {
-            final CommandContext ctx = create(client);
+            final NonClosingModelControllerClient c = new NonClosingModelControllerClient(client);
+            final CommandContext ctx = create(c);
             try {
 
                 if (isBatch()) {
@@ -214,5 +220,53 @@ public class Commands {
             throw new IllegalStateException("Failed to initialize CLI context", e);
         }
         return commandContext;
+    }
+
+    /**
+     * A client the delegates to the client from the constructor, but does nothing in the {@link #close() close}. The
+     * delegate client will not be closed.
+     */
+    static class NonClosingModelControllerClient implements ModelControllerClient {
+
+        private final ModelControllerClient delegate;
+
+        NonClosingModelControllerClient(final ModelControllerClient delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public ModelNode execute(final ModelNode operation) throws IOException {
+            return delegate.execute(operation);
+        }
+
+        @Override
+        public ModelNode execute(final Operation operation) throws IOException {
+            return delegate.execute(operation);
+        }
+
+        @Override
+        public ModelNode execute(final ModelNode operation, final OperationMessageHandler messageHandler) throws IOException {
+            return delegate.execute(operation, messageHandler);
+        }
+
+        @Override
+        public ModelNode execute(final Operation operation, final OperationMessageHandler messageHandler) throws IOException {
+            return delegate.execute(operation, messageHandler);
+        }
+
+        @Override
+        public AsyncFuture<ModelNode> executeAsync(final ModelNode operation, final OperationMessageHandler messageHandler) {
+            return delegate.executeAsync(operation, messageHandler);
+        }
+
+        @Override
+        public AsyncFuture<ModelNode> executeAsync(final Operation operation, final OperationMessageHandler messageHandler) {
+            return delegate.executeAsync(operation, messageHandler);
+        }
+
+        @Override
+        public void close() throws IOException {
+            // Do nothing
+        }
     }
 }

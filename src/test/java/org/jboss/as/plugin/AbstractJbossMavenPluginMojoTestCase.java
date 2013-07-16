@@ -24,9 +24,12 @@ package org.jboss.as.plugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
+import edu.emory.mathcs.backport.java.util.Arrays;
 import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import org.apache.maven.settings.Settings;
@@ -40,11 +43,12 @@ import org.junit.After;
 import org.junit.Before;
 
 /**
- *
  * @author swm16 (swm16@psu.edu)
  */
 public abstract class AbstractJbossMavenPluginMojoTestCase extends AbstractMojoTestCase {
-    static final String BASE_CONFIG_DIR = System.getProperty("jboss.test.config.dir");
+
+    protected final String DEPLOYMENT_NAME = "test.war";
+    protected final String BASE_CONFIG_DIR = System.getProperty("jboss.test.config.dir");
 
     @Before
     public void setUp() throws Exception {
@@ -61,21 +65,32 @@ public abstract class AbstractJbossMavenPluginMojoTestCase extends AbstractMojoT
      * attached to a pom.xml
      *
      * @param userSettingsFile file object pointing to the candidate settings file
+     *
      * @return the settings object
+     *
      * @throws IOException - if the settings file can't be read
      */
     private Settings getSettingsFile(File userSettingsFile) throws IOException {
-        Map<String, ?> options = Collections.singletonMap( SettingsReader.IS_STRICT, Boolean.TRUE );
+        Map<String, ?> options = Collections.singletonMap(SettingsReader.IS_STRICT, Boolean.TRUE);
         SettingsReader reader = new DefaultSettingsReader();
 
         Settings settings = null;
         try {
             settings = reader.read(userSettingsFile, options);
-        } catch(SettingsParseException e) {
+        } catch (SettingsParseException e) {
 
         }
 
         return settings;
+    }
+
+    /**
+     * Returns the deployment test.war from the test resources.
+     *
+     * @return the deployment
+     */
+    protected File getDeployment() {
+        return new File(BASE_CONFIG_DIR, DEPLOYMENT_NAME);
     }
 
     protected File getPom(final String name) {
@@ -119,8 +134,10 @@ public abstract class AbstractJbossMavenPluginMojoTestCase extends AbstractMojoT
      * references it, then verifying that the lookup was successful.
      *
      * @param mojoName the name of the mojo being tested
-     * @param pomFile the pom.xml file to be used during testing
+     * @param pomFile  the pom.xml file to be used during testing
+     *
      * @return the Mojo object under test
+     *
      * @throws Exception if the mojo can not be found
      */
     @SuppressWarnings("unchecked")
@@ -135,10 +152,12 @@ public abstract class AbstractJbossMavenPluginMojoTestCase extends AbstractMojoT
      * references it and a settings file that configures it, then verifying
      * that the lookup was successful.
      *
-     * @param mojoName the name of the mojo being tested
-     * @param pomFile the pom.xml file to be used during testing
+     * @param mojoName     the name of the mojo being tested
+     * @param pomFile      the pom.xml file to be used during testing
      * @param settingsFile the settings.xml file to be used during testing
+     *
      * @return the Mojo object under test
+     *
      * @throws Exception if the mojo can not be found
      */
     @SuppressWarnings("unchecked")
@@ -153,6 +172,27 @@ public abstract class AbstractJbossMavenPluginMojoTestCase extends AbstractMojoT
         final ModelNode result = client.execute(op);
         assertTrue(ServerOperations.getFailureDescriptionAsString(result), ServerOperations.isSuccessfulOutcome(result));
         return result;
+    }
+
+    protected static ModelNode createAddress(final String... resourceParts) {
+        final ModelNode address = new ModelNode().setEmptyList();
+        @SuppressWarnings("unchecked")
+        final List<String> parts = new ArrayList<String>(Arrays.asList(resourceParts));
+        if (!parts.isEmpty()) {
+            if (parts.size() % 2 != 0) {
+                parts.add("*");
+            }
+            String key = null;
+            for (String value : parts) {
+                if (key == null) {
+                    key = value;
+                } else {
+                    address.add(key, value);
+                    key = null;
+                }
+            }
+        }
+        return address;
     }
 
 }
