@@ -52,6 +52,17 @@ mvn jboss-as:add-resource
 mvn jboss-as:deploy
 +-----+
 
+* The <<<jboss-as:deploy-only>>> Goal
+
+  The <<<jboss-as:deploy-only>>> goal deploys the application to the running JBoss Application Server without executing
+  any other goals by default.
+
+  For example to deploy, or redeploy by default, you type the following on the command line:
+
++-----+
+mvn jboss-as:deploy-only
++-----+
+
 * The <<<jboss-as:deploy-artifact>>> Goal
 
   The <<<jboss-as:deploy-artifact>>> goal deploys an arbitrary artifact to the running JBoss Application Server.
@@ -71,6 +82,17 @@ mvn jboss-as:deploy-artifact
 
 +-----+
 mvn jboss-as:redeploy
++-----+
+
+* The <<<jboss-as:redeploy-only>>> Goal
+
+  The <<<jboss-as:redeploy-only>>> goal will redeploy your application if and only if the application has already been
+  deployed to the application server. By default no other goals are invoked.
+
+  To execute the redeploy goal type the following on the command line:
+
++-----+
+mvn jboss-as:redeploy-only
 +-----+
 
 * The <<<jboss-as:undeploy>>> Goal
