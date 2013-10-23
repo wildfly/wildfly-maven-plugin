@@ -35,7 +35,7 @@ import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.jboss.as.controller.client.helpers.domain.ServerIdentity;
 import org.jboss.as.controller.client.helpers.domain.ServerStatus;
 import org.jboss.as.plugin.common.Files;
-import org.jboss.as.plugin.common.Streams;
+import org.jboss.as.plugin.common.IoUtils;
 import org.jboss.as.plugin.deployment.domain.Domain;
 
 /**
@@ -89,7 +89,7 @@ final class DomainServer extends Server {
                         }
                     }
                 } finally {
-                    Streams.safeClose(client);
+                    IoUtils.safeClose(client);
                     client = null;
                     servers.clear();
                 }

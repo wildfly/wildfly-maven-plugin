@@ -41,8 +41,8 @@ import org.jboss.as.cli.batch.BatchManager;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.Operation;
 import org.jboss.as.controller.client.OperationMessageHandler;
+import org.jboss.as.plugin.common.IoUtils;
 import org.jboss.as.plugin.common.ServerOperations;
-import org.jboss.as.plugin.common.Streams;
 import org.jboss.dmr.ModelNode;
 import org.jboss.threads.AsyncFuture;
 
@@ -165,7 +165,7 @@ public class Commands {
             } catch (Exception e) {
                 throw new IllegalStateException("Failed to process file '" + script.getAbsolutePath() + "'", e);
             } finally {
-                Streams.safeClose(reader);
+                IoUtils.safeClose(reader);
             }
         }
     }

@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2013, Red Hat, Inc., and individual contributors
+ * Copyright 2012, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -20,40 +20,23 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.as.plugin.server;
+package org.jboss.as.plugin.common;
+
+import java.io.Closeable;
 
 /**
+ * Utilities for handling streams.
+ *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-interface Defaults {
+public class IoUtils {
 
-    /**
-     * The default JVM arguments.
-     */
-    String DEFAULT_JVM_ARGS = "-Xms64m -Xmx512m -XX:MaxPermSize=256m -Djava.net.preferIPv4Stack=true -Dorg.jboss.resolver.warning=true -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000";
 
-    /**
-     * The default group id
-     */
-    String JBOSS_AS_GROUP_ID = "org.jboss.as";
-
-    /**
-     * The default artifact id
-     */
-    String JBOSS_AS_ARTIFACT_ID = "jboss-as-dist";
-
-    /*
-     * The default packaging type
-     */
-    String JBOSS_AS_PACKAGING = "zip";
-
-    /**
-     * The default JBoss AS version.
-     */
-    String JBOSS_AS_TARGET_VERSION = "7.1.1.Final";
-
-    /**
-     * The default startup timeout.
-     */
-    String TIMEOUT = "60";
+    public static void safeClose(final Closeable closeable) {
+        if (closeable != null) try {
+            closeable.close();
+        } catch (Exception e) {
+            // no-op
+        }
+    }
 }

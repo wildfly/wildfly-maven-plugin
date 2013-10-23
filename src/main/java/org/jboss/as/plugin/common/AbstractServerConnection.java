@@ -164,7 +164,7 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     @Override
     public final void close() {
         synchronized (CLIENT_LOCK) {
-            Streams.safeClose(client);
+            IoUtils.safeClose(client);
             client = null;
         }
     }

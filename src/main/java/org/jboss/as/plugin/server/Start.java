@@ -23,6 +23,7 @@
 package org.jboss.as.plugin.server;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -33,8 +34,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.jboss.as.plugin.common.AbstractServerConnection;
+import org.jboss.as.plugin.common.Files;
 import org.jboss.as.plugin.common.PropertyNames;
-import org.jboss.as.plugin.common.Streams;
 import org.sonatype.aether.RepositorySystem;
 import org.sonatype.aether.RepositorySystemSession;
 import org.sonatype.aether.repository.RemoteRepository;
@@ -86,6 +87,37 @@ public class Start extends AbstractServerConnection {
      */
     @Parameter(alias = "jboss-home", property = PropertyNames.JBOSS_HOME)
     private String jbossHome;
+
+    /**
+     * A string of the form groupId:artifactId:version[:packaging][:classifier]. Any missing portion of the artifact
+     * will be replaced with the
+     */
+    @Parameter(property = PropertyNames.JBOSS_ARTIFACT)
+    private String artifact;
+
+    /**
+     * The groupId of the artifact to download. Ignored if {@link #artifact} is used.
+     */
+    @Parameter(defaultValue = Defaults.JBOSS_AS_GROUP_ID, property = PropertyNames.JBOSS_GROUP_ID)
+    private String groupId;
+
+    /**
+     * The artifactId of the artifact to download. Ignored if {@link #artifact} is used.
+     */
+    @Parameter(defaultValue = Defaults.JBOSS_AS_ARTIFACT_ID, property = PropertyNames.JBOSS_ARTIFACT_ID)
+    private String artifactId;
+
+    /**
+     * The classifier of the artifact to download. Ignored if {@link #artifact} is used.
+     */
+    @Parameter(property = PropertyNames.JBOSS_CLASSIFIER)
+    private String classifier;
+
+    /**
+     * The packaging of the artifact to download. Ignored if {@link #artifact} is used.
+     */
+    @Parameter(property = PropertyNames.JBOSS_PACKAGING, defaultValue = Defaults.JBOSS_AS_PACKAGING)
+    private String packaging;
 
     /**
      * The version of the JBoss Application Server to run.
@@ -155,9 +187,6 @@ public class Start extends AbstractServerConnection {
         if (!serverInfo.getModulesDir().isDirectory()) {
             throw new MojoExecutionException(String.format("Modules path '%s' is not a valid directory.", modulesPath));
         }
-        if (!serverInfo.getBundlesDir().isDirectory()) {
-            throw new MojoExecutionException(String.format("Bundles path '%s' is not a valid directory.", bundlesPath));
-        }
         // Print some server information
         log.info(String.format("JAVA_HOME=%s", javaHome));
         log.info(String.format("JBOSS_HOME=%s%n", jbossHome));
@@ -182,10 +211,10 @@ public class Start extends AbstractServerConnection {
             return new File(jbossHome);
         }
         final ArtifactRequest request = new ArtifactRequest();
-        final String jbossAsArtifact = String.format("org.jboss.as:jboss-as-dist:zip:%s", version);
-        request.setArtifact(new DefaultArtifact(jbossAsArtifact));
+        final DefaultArtifact defaultArtifact = createArtifact();
+        request.setArtifact(defaultArtifact);
         request.setRepositories(remoteRepos);
-        getLog().info(String.format("Resolving artifact %s from %s", jbossAsArtifact, remoteRepos));
+        getLog().info(String.format("Resolving artifact %s from %s", defaultArtifact, remoteRepos));
         final ArtifactResult result;
         try {
             result = repoSystem.resolveArtifact(repoSession, request);
@@ -194,13 +223,70 @@ public class Start extends AbstractServerConnection {
         }
 
         final File target = new File(buildDir, JBOSS_DIR);
-        Streams.unzip(result.getArtifact().getFile(), target);
-
-        return new File(target.getAbsoluteFile(), String.format("jboss-as-%s", version));
+        // Delete the target if it exists
+        if (target.exists()) {
+            Files.deleteRecursively(target);
+        }
+        target.mkdirs();
+        try {
+            Files.unzip(result.getArtifact().getFile(), target);
+        } catch (IOException e) {
+            throw new MojoFailureException("Artifact was not successfully extracted: " + result.getArtifact().getFile(), e);
+        }
+        final File[] files = target.listFiles();
+        if (files == null || files.length != 1) {
+            throw new MojoFailureException("Artifact was not successfully extracted: " + result.getArtifact().getFile());
+        }
+        // Assume the first
+        return files[0];
     }
 
     @Override
     public String goal() {
         return "start";
+    }
+
+    private DefaultArtifact createArtifact() throws MojoFailureException {
+        String groupId = this.groupId;
+        String artifactId1 = this.artifactId;
+        String classifier = this.classifier;
+        String packaging = this.packaging;
+        String version = this.version;
+        // groupId:artifactId:version[:packaging][:classifier].
+        if (artifact != null) {
+            final String[] artifactParts = artifact.split(":");
+            if (artifactParts.length == 0) {
+                throw new MojoFailureException(String.format("Invalid artifact pattern: %s", artifact));
+            }
+            String value;
+            switch (artifactParts.length) {
+                case 5:
+                    value = artifactParts[4];
+                    if (!value.isEmpty()) {
+                        classifier = value;
+                    }
+                case 4:
+                    value = artifactParts[3];
+                    if (!value.isEmpty()) {
+                        packaging = value;
+                    }
+                case 3:
+                    value = artifactParts[2];
+                    if (!value.isEmpty()) {
+                        version = value;
+                    }
+                case 2:
+                    value = artifactParts[1];
+                    if (!value.isEmpty()) {
+                        artifactId1 = value;
+                    }
+                case 1:
+                    value = artifactParts[0];
+                    if (!value.isEmpty()) {
+                        groupId = value;
+                    }
+            }
+        }
+        return new DefaultArtifact(groupId, artifactId1, classifier, packaging, version);
     }
 }

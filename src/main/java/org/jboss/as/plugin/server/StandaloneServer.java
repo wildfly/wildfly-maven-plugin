@@ -30,8 +30,8 @@ import java.util.List;
 
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.plugin.common.Files;
+import org.jboss.as.plugin.common.IoUtils;
 import org.jboss.as.plugin.common.ServerOperations;
-import org.jboss.as.plugin.common.Streams;
 import org.jboss.dmr.ModelNode;
 
 /**
@@ -74,7 +74,7 @@ final class StandaloneServer extends Server {
                 } catch (IOException e) {
                     // no-op
                 } finally {
-                    Streams.safeClose(client);
+                    IoUtils.safeClose(client);
                     client = null;
                 }
                 try {

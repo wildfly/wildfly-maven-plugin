@@ -49,7 +49,17 @@ public interface PropertyNames {
 
     String JAVA_HOME = "java.home";
 
+    String JBOSS_ARTIFACT = "jboss-as.artifact";
+
+    String JBOSS_ARTIFACT_ID = "jboss-as.artifactId";
+
+    String JBOSS_CLASSIFIER = "jboss-as.classifier";
+
+    String JBOSS_GROUP_ID = "jboss-as.groupId";
+
     String JBOSS_HOME = "jboss-as.home";
+
+    String JBOSS_PACKAGING = "jboss-as.packaging";
 
     String JBOSS_VERSION = "jboss-as.version";
 
