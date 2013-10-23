@@ -79,7 +79,7 @@ public class Start extends AbstractServerConnection {
     /**
      * The project's remote repositories
      */
-    @Parameter(defaultValue = "${project.remotePluginRepositories}", readonly = true)
+    @Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true)
     private List<RemoteRepository> remoteRepos;
 
     /**
