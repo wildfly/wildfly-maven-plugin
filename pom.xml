@@ -195,6 +195,7 @@
     </reporting>
 
     <dependencies>
+
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
@@ -211,9 +212,21 @@
             <version>${version.org.apache.maven.maven-plugin}</version>
         </dependency>
         <dependency>
-            <groupId>org.sonatype.aether</groupId>
-            <artifactId>aether-api</artifactId>
-            <version>${version.org.sonatype.aether}</version>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-settings</artifactId>
+            <version>${version.org.apache.maven.maven-settings}</version>
+        </dependency>
+        <!-- dependencies to annotations -->
+        <dependency>
+            <groupId>org.apache.maven.plugin-tools</groupId>
+            <artifactId>maven-plugin-annotations</artifactId>
+            <version>${version.org.apache.maven.plugin-tools}</version>
+        </dependency>
+        <!-- generated help mojo has a dependency to plexus-utils -->
+        <dependency>
+            <groupId>org.codehaus.plexus</groupId>
+            <artifactId>plexus-utils</artifactId>
+            <version>${version.org.codehaus.plexus.plexus-utils}</version>
         </dependency>
         <dependency>
             <groupId>org.sonatype.aether</groupId>
@@ -239,19 +252,13 @@
             <artifactId>jboss-remoting</artifactId>
             <version>${version.org.jboss.remoting3}</version>
         </dependency>
+        <dependency>
+            <groupId>org.sonatype.aether</groupId>
+            <artifactId>aether-api</artifactId>
+            <version>${version.org.sonatype.aether}</version>
+        </dependency>
 
-        <!-- dependencies to annotations -->
-        <dependency>
-            <groupId>org.apache.maven.plugin-tools</groupId>
-            <artifactId>maven-plugin-annotations</artifactId>
-            <version>${version.org.apache.maven.plugin-tools}</version>
-        </dependency>
-        <!-- generated help mojo has a dependency to plexus-utils -->
-        <dependency>
-            <groupId>org.codehaus.plexus</groupId>
-            <artifactId>plexus-utils</artifactId>
-            <version>${version.org.codehaus.plexus.plexus-utils}</version>
-        </dependency>
+        <!-- Test dependencies -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -260,9 +267,9 @@
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
-            <artifactId>maven-settings</artifactId>
+            <artifactId>maven-settings-builder</artifactId>
             <version>${version.org.apache.maven.maven-settings}</version>
-            <scope>compile</scope>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.maven.plugin-testing</groupId>
@@ -270,31 +277,22 @@
             <version>${version.org.apache.maven.plugin-testing.maven-plugin-testing-harness}</version>
             <scope>test</scope>
         </dependency>
-
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-settings-builder</artifactId>
-            <version>${version.org.apache.maven.maven-settings}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>${version.org.mockito.mockito-all}</version>
-            <scope>test</scope>
-        </dependency>
-
         <dependency>
             <groupId>org.jboss.arquillian.junit</groupId>
             <artifactId>arquillian-junit-container</artifactId>
             <version>${version.org.jboss.arquillian}</version>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.jboss.as</groupId>
             <artifactId>jboss-as-arquillian-container-managed</artifactId>
             <version>${version.org.jboss.as}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>${version.org.mockito.mockito-all}</version>
             <scope>test</scope>
         </dependency>
 
