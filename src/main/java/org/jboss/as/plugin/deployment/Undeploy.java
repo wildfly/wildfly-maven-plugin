@@ -24,7 +24,6 @@ package org.jboss.as.plugin.deployment;
 
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.jboss.as.plugin.common.PropertyNames;
 import org.jboss.as.plugin.deployment.Deployment.Type;
 
@@ -33,7 +32,7 @@ import org.jboss.as.plugin.deployment.Deployment.Type;
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-@Mojo(name = "undeploy", requiresDependencyResolution = ResolutionScope.RUNTIME, threadSafe = true)
+@Mojo(name = "undeploy", threadSafe = true)
 public class Undeploy extends AbstractAppDeployment {
 
     /**

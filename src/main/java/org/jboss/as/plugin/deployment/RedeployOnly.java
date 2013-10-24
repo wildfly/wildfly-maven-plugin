@@ -23,7 +23,6 @@
 package org.jboss.as.plugin.deployment;
 
 import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.jboss.as.plugin.deployment.Deployment.Type;
 
 /**
@@ -31,7 +30,7 @@ import org.jboss.as.plugin.deployment.Deployment.Type;
  * the execution of the lifecycle phase 'package' prior to executing itself.
  *
  */
-@Mojo(name = "redeploy-only", requiresDependencyResolution = ResolutionScope.RUNTIME, threadSafe = true)
+@Mojo(name = "redeploy-only", threadSafe = true)
 public final class RedeployOnly extends AbstractAppDeployment {
 
     @Override

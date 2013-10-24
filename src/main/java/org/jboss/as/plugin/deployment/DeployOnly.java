@@ -3,7 +3,6 @@ package org.jboss.as.plugin.deployment;
 
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.jboss.as.plugin.common.PropertyNames;
 
 /**
@@ -18,7 +17,7 @@ import org.jboss.as.plugin.common.PropertyNames;
  * will occur and the deployment will fail.
  *
  */
-@Mojo(name = "deploy-only", requiresDependencyResolution = ResolutionScope.RUNTIME, threadSafe = true)
+@Mojo(name = "deploy-only", threadSafe = true)
 public class DeployOnly extends AbstractAppDeployment {
 
     /**
