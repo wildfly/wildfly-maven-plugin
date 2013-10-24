@@ -73,37 +73,39 @@ public class Start extends AbstractServerConnection {
 
     /**
      * A string of the form groupId:artifactId:version[:packaging][:classifier]. Any missing portion of the artifact
-     * will be replaced with the
+     * will be replaced with the it's appropriate default property value
      */
     @Parameter(property = PropertyNames.JBOSS_ARTIFACT)
     private String artifact;
 
     /**
-     * The groupId of the artifact to download. Ignored if {@link #artifact} is used.
+     * The {@code groupId} of the artifact to download. Ignored if {@link #artifact} {@code groupId} portion is used.
      */
     @Parameter(defaultValue = Defaults.JBOSS_AS_GROUP_ID, property = PropertyNames.JBOSS_GROUP_ID)
     private String groupId;
 
     /**
-     * The artifactId of the artifact to download. Ignored if {@link #artifact} is used.
+     * The {@code artifactId} of the artifact to download. Ignored if {@link #artifact} {@code artifactId} portion is
+     * used.
      */
     @Parameter(defaultValue = Defaults.JBOSS_AS_ARTIFACT_ID, property = PropertyNames.JBOSS_ARTIFACT_ID)
     private String artifactId;
 
     /**
-     * The classifier of the artifact to download. Ignored if {@link #artifact} is used.
+     * The {@code classifier} of the artifact to download. Ignored if {@link #artifact} {@code classifier} portion is
+     * used.
      */
     @Parameter(property = PropertyNames.JBOSS_CLASSIFIER)
     private String classifier;
 
     /**
-     * The packaging of the artifact to download. Ignored if {@link #artifact} is used.
+     * The {@code packaging} of the artifact to download. Ignored if {@link #artifact} {@code packing} portion is used.
      */
     @Parameter(property = PropertyNames.JBOSS_PACKAGING, defaultValue = Defaults.JBOSS_AS_PACKAGING)
     private String packaging;
 
     /**
-     * The version of the JBoss Application Server to run.
+     * The {@code version} of the artifact to download. Ignored if {@link #artifact} {@code version} portion is used.
      */
     @Parameter(alias = "jboss-as-version", defaultValue = Defaults.JBOSS_AS_TARGET_VERSION, property = PropertyNames.JBOSS_VERSION)
     private String version;
