@@ -63,8 +63,7 @@
         <version.org.jboss.as.dist>7.1.1.Final</version.org.jboss.as.dist>
         <version.org.apache.commons.compress>1.5</version.org.apache.commons.compress>
         <version.org.apache.maven.maven-plugin>2.2.1</version.org.apache.maven.maven-plugin>
-        <version.org.apache.maven.maven-settings>3.0.4</version.org.apache.maven.maven-settings>
-        <version.org.apache.maven.plugin-api>3.0.4</version.org.apache.maven.plugin-api>
+        <version.org.apache.maven.maven-core>3.0.5</version.org.apache.maven.maven-core>
         <version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>2.0-alpha-1
         </version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>
         <version.org.apache.maven.plugin-tools>3.2</version.org.apache.maven.plugin-tools>
@@ -73,6 +72,8 @@
         <version.org.apache.maven.plugins.maven-dependency-plugin>2.6
         </version.org.apache.maven.plugins.maven-dependency-plugin>
         <version.org.codehaus.plexus.plexus-utils>3.0.10</version.org.codehaus.plexus.plexus-utils>
+        <version.org.codehaus.plexus.plexus-component-metadata>1.5.5</version.org.codehaus.plexus.plexus-component-metadata>
+        <version.org.eclipse.aether>0.9.0.M3</version.org.eclipse.aether>
         <version.org.jboss.remoting3>3.2.12.GA</version.org.jboss.remoting3>
         <version.org.mockito.mockito-all>1.9.0</version.org.mockito.mockito-all>
         <version.org.sonatype.aether>1.13.1</version.org.sonatype.aether>
@@ -177,9 +178,23 @@
                     <systemPropertyVariables>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <jboss.home>${jboss.home}</jboss.home>
-                        <jboss.test.config.dir>${project.build.testOutputDirectory}${file.separator}unit${file.separator}common</jboss.test.config.dir>
+                        <jboss.test.config.dir>
+                            ${project.build.testOutputDirectory}${file.separator}unit${file.separator}common
+                        </jboss.test.config.dir>
                     </systemPropertyVariables>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-component-metadata</artifactId>
+                <version>${version.org.codehaus.plexus.plexus-component-metadata}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate-metadata</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -203,8 +218,13 @@
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
+            <artifactId>maven-core</artifactId>
+            <version>${version.org.apache.maven.maven-core}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
-            <version>${version.org.apache.maven.plugin-api}</version>
+            <version>${version.org.apache.maven.maven-core}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
@@ -214,7 +234,7 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-settings</artifactId>
-            <version>${version.org.apache.maven.maven-settings}</version>
+            <version>${version.org.apache.maven.maven-core}</version>
         </dependency>
         <!-- dependencies to annotations -->
         <dependency>
@@ -229,9 +249,20 @@
             <version>${version.org.codehaus.plexus.plexus-utils}</version>
         </dependency>
         <dependency>
+            <groupId>org.eclipse.aether</groupId>
+            <artifactId>aether-api</artifactId>
+            <version>${version.org.eclipse.aether}</version>
+            <scope>provided</scope>
+            <!-- Used in maven 3.1.x -->
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>org.sonatype.aether</groupId>
             <artifactId>aether-util</artifactId>
             <version>${version.org.sonatype.aether}</version>
+            <scope>provided</scope>
+            <!-- Used in maven 3.0.x -->
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.jboss.as</groupId>
@@ -268,7 +299,7 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-settings-builder</artifactId>
-            <version>${version.org.apache.maven.maven-settings}</version>
+            <version>${version.org.apache.maven.maven-core}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

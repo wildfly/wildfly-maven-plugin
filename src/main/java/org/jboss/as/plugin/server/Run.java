@@ -24,7 +24,6 @@ package org.jboss.as.plugin.server;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -44,13 +43,6 @@ import org.jboss.as.plugin.common.ServerOperations;
 import org.jboss.as.plugin.deployment.Deploy;
 import org.jboss.as.plugin.deployment.Deployment;
 import org.jboss.as.plugin.deployment.standalone.StandaloneDeployment;
-import org.sonatype.aether.RepositorySystem;
-import org.sonatype.aether.RepositorySystemSession;
-import org.sonatype.aether.repository.RemoteRepository;
-import org.sonatype.aether.resolution.ArtifactRequest;
-import org.sonatype.aether.resolution.ArtifactResolutionException;
-import org.sonatype.aether.resolution.ArtifactResult;
-import org.sonatype.aether.util.artifact.DefaultArtifact;
 
 /**
  * Starts a standalone instance of JBoss Application Server 7 and deploys the application to the server.
@@ -66,23 +58,8 @@ public class Run extends Deploy {
 
     public static final String JBOSS_DIR = "jboss-as-run";
 
-    /**
-     * The entry point to Aether, i.e. the component doing all the work.
-     */
     @Component
-    private RepositorySystem repoSystem;
-
-    /**
-     * The current repository/network configuration of Maven.
-     */
-    @Parameter(defaultValue = "${repositorySystemSession}", readonly = true)
-    private RepositorySystemSession repoSession;
-
-    /**
-     * The project's remote repositories
-     */
-    @Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true)
-    private List<RemoteRepository> remoteRepos;
+    private ArtifactResolver artifactResolver;
 
     /**
      * The JBoss Application Server's home directory. If not used, JBoss Application Server will be downloaded.
@@ -239,18 +216,7 @@ public class Run extends Deploy {
             //we do not need to download JBoss
             return new File(jbossHome);
         }
-        final ArtifactRequest request = new ArtifactRequest();
-        final DefaultArtifact defaultArtifact = createArtifact();
-        request.setArtifact(defaultArtifact);
-        request.setRepositories(remoteRepos);
-        getLog().info(String.format("Resolving artifact %s from %s", defaultArtifact, remoteRepos));
-        final ArtifactResult result;
-        try {
-            result = repoSystem.resolveArtifact(repoSession, request);
-        } catch (ArtifactResolutionException e) {
-            throw new MojoExecutionException(e.getMessage(), e);
-        }
-
+        final File result = artifactResolver.resolve(project, createArtifact());
         final File target = new File(buildDir, JBOSS_DIR);
         // Delete the target if it exists
         if (target.exists()) {
@@ -258,13 +224,13 @@ public class Run extends Deploy {
         }
         target.mkdirs();
         try {
-            Files.unzip(result.getArtifact().getFile(), target);
+            Files.unzip(result, target);
         } catch (IOException e) {
-            throw new MojoFailureException("Artifact was not successfully extracted: " + result.getArtifact().getFile(), e);
+            throw new MojoFailureException("Artifact was not successfully extracted: " + result, e);
         }
         final File[] files = target.listFiles();
         if (files == null || files.length != 1) {
-            throw new MojoFailureException("Artifact was not successfully extracted: " + result.getArtifact().getFile());
+            throw new MojoFailureException("Artifact was not successfully extracted: " + result);
         }
         // Assume the first
         return files[0];
@@ -275,9 +241,9 @@ public class Run extends Deploy {
         return "run";
     }
 
-    private DefaultArtifact createArtifact() throws MojoFailureException {
+    private String createArtifact() throws MojoFailureException {
         String groupId = this.groupId;
-        String artifactId1 = this.artifactId;
+        String artifactId = this.artifactId;
         String classifier = this.classifier;
         String packaging = this.packaging;
         String version = this.version;
@@ -290,32 +256,50 @@ public class Run extends Deploy {
             String value;
             switch (artifactParts.length) {
                 case 5:
-                    value = artifactParts[4];
+                    value = artifactParts[4].trim();
                     if (!value.isEmpty()) {
                         classifier = value;
                     }
                 case 4:
-                    value = artifactParts[3];
+                    value = artifactParts[3].trim();
                     if (!value.isEmpty()) {
                         packaging = value;
                     }
                 case 3:
-                    value = artifactParts[2];
+                    value = artifactParts[2].trim();
                     if (!value.isEmpty()) {
                         version = value;
                     }
                 case 2:
-                    value = artifactParts[1];
+                    value = artifactParts[1].trim();
                     if (!value.isEmpty()) {
-                        artifactId1 = value;
+                        artifactId = value;
                     }
                 case 1:
-                    value = artifactParts[0];
+                    value = artifactParts[0].trim();
                     if (!value.isEmpty()) {
                         groupId = value;
                     }
             }
         }
-        return new DefaultArtifact(groupId, artifactId1, classifier, packaging, version);
+        // Validate the groupId, artifactId and version are not null
+        if (groupId == null || artifactId == null || version == null) {
+            throw new IllegalStateException("The groupId, artifactId and version parameters are required");
+        }
+        final StringBuilder result = new StringBuilder();
+        result.append(groupId)
+                .append(':')
+                .append(artifactId)
+                .append(':')
+                .append(version)
+                .append(':');
+        if (packaging != null) {
+            result.append(packaging);
+        }
+        result.append(':');
+        if (classifier != null) {
+            result.append(classifier);
+        }
+        return result.toString();
     }
 }
