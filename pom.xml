@@ -68,7 +68,8 @@
         </version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>
         <version.org.apache.maven.plugin-tools>3.2</version.org.apache.maven.plugin-tools>
         <version.org.codehaus.plexus.plexus-utils>3.0.10</version.org.codehaus.plexus.plexus-utils>
-        <version.org.codehaus.plexus.plexus-component-metadata>1.5.5</version.org.codehaus.plexus.plexus-component-metadata>
+        <version.org.codehaus.plexus.plexus-component-metadata>1.5.5
+        </version.org.codehaus.plexus.plexus-component-metadata>
         <version.org.eclipse.aether>0.9.0.M3</version.org.eclipse.aether>
         <version.org.jboss.remoting3>3.2.12.GA</version.org.jboss.remoting3>
         <version.org.mockito.mockito-all>1.9.0</version.org.mockito.mockito-all>
@@ -334,4 +335,30 @@
         </dependency>
 
     </dependencies>
+
+    <profiles>
+        <profile>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <id>eap</id>
+            <properties>
+                <eap.url>http://maven.repository.redhat.com/earlyaccess/all/</eap.url>
+                <version.eap>6.1</version.eap>
+                <jboss.home>${project.build.directory}${file.separator}jboss-eap-${version.eap}</jboss.home>
+            </properties>
+            <repositories>
+                <repository>
+                    <id>jboss-eap-repository</id>
+                    <url>${eap.url}</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
 </project>
