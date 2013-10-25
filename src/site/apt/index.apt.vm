@@ -36,35 +36,35 @@ ${project.name} (${project.artifactId})
 
   General information about the goals.
 
-  * {{{./add-resource-mojo.html}jboss-as:add-resource}} adds a resource.
+  * {{{./add-resource-mojo.html}${pluginPrefix}:add-resource}} adds a resource.
 
-  * {{{./deploy-mojo.html}jboss-as:deploy}} deploys the application to the application server.
+  * {{{./deploy-mojo.html}${pluginPrefix}:deploy}} deploys the application to the application server.
 
-  * {{{./deploy-only-mojo.html}jboss-as:deploy-only}} deploys the application to application server invoking no other goals by default.
+  * {{{./deploy-only-mojo.html}${pluginPrefix}:deploy-only}} deploys the application to application server invoking no other goals by default.
 
-  * {{{./deploy-artifact-mojo.html}jboss-as:deploy-artifact}} deploys an arbitrary artifact to the server.
+  * {{{./deploy-artifact-mojo.html}${pluginPrefix}:deploy-artifact}} deploys an arbitrary artifact to the server.
 
-  * {{{./redeploy-mojo.html}jboss-as:redeploy}} redeploys the application.
+  * {{{./redeploy-mojo.html}${pluginPrefix}:redeploy}} redeploys the application.
 
-  * {{{./redeploy-only-mojo.html}jboss-as:redeploy-only}} redeploys the application invoking no other goals by default.
+  * {{{./redeploy-only-mojo.html}${pluginPrefix}:redeploy-only}} redeploys the application invoking no other goals by default.
 
-  * {{{./undeploy-mojo.html}jboss-as:undeploy}} undeploys the application.
+  * {{{./undeploy-mojo.html}${pluginPrefix}:undeploy}} undeploys the application.
 
-  * {{{./run-mojo.html}jboss-as:run}} runs the application server and deploys your application.
+  * {{{./run-mojo.html}${pluginPrefix}:run}} runs the application server and deploys your application.
 
-  * {{{./start-mojo.html}jboss-as:start}} starts the application server and shuts it down at last when the maven process
+  * {{{./start-mojo.html}${pluginPrefix}:start}} starts the application server and shuts it down at last when the maven process
     ends unless an explicit shutdown from a management client or the {{{./shutdown-mojo.html}shutdown goal}} is executed.
 
-  * {{{./shutdown-mojo.html}jboss-as:shutdown}} shuts down a running application server.
+  * {{{./shutdown-mojo.html}${pluginPrefix}:shutdown}} shuts down a running application server.
 
-  * {{{./execute-commands-mojo.html}jboss-as:execute-commands}} executes commands on the running server.
+  * {{{./execute-commands-mojo.html}${pluginPrefix}:execute-commands}} executes commands on the running server.
 
 * Usage
 
   General instructions on how to use the ${project.name} can be found on the {{{./usage.html}usage page}}. Some more
   specific use cases are described in the examples given below. Last but not least, users occasionally contribute
   additional examples, tips or errata to the
-  {{{http://community.jboss.org/en/jbossas}JBoss Application Server wiki page}}.
+  {{{http://community.jboss.org/en/wildfly}${appServerName} wiki page}}.
 
   In case you still have questions regarding the plugin's usage, please have a look at the {{{./faq.html}FAQ}} and feel
   free to contact the {{{./mail-lists.html}user mailing list}}. The posts to the mailing list are archived and could

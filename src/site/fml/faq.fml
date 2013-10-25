@@ -3,7 +3,7 @@
 
 <!--
   ~ JBoss, Home of Professional Open Source.
-  ~ Copyright 2011, Red Hat, Inc., and individual contributors
+  ~ Copyright 2013, Red Hat, Inc., and individual contributors
   ~ as indicated by the @author tags. See the copyright.txt file in the
   ~ distribution for a full listing of individual contributors.
   ~
@@ -28,49 +28,10 @@
       xsi:schemaLocation="http://maven.apache.org/FML/1.0.1 http://maven.apache.org/xsd/fml-1.0.1.xsd"
       id="FAQ" title="Frequently Asked Questions">
     <part id="General">
-        <faq id="xnio">
-            <question>I'm getting an XNIO error on occasion. Was my deployment goal successful?</question>
+        <faq id="maven31">
+            <question>What versions of maven will the plugin work with?</question>
             <answer>
-                <p>Yes, your application deployed without errors. We are working on fixing this erroneous error in
-                    XNIO.
-                </p>
-            </answer>
-        </faq>
-        <faq id="jboss-home">
-            <question>Why do I see "WARN: can't load the config file because JBOSS_HOME environment variable is not set." when executing a command?</question>
-            <answer>
-                <p>
-                    This is the command-line public API looking for the JBOSS_HOME directory. This error can be ignored.
-                </p>
-            </answer>
-        </faq>
-        <faq id="old-jboss-log-manager">
-            <question>Why do I see "java.lang.IllegalStateException: The LogManager was not properly installed (you must set the "java.util.logging.manager" system property to "org.jboss.logmanager.LogManager")" on older jboss such as 7.0.2?</question>
-            <answer>
-                <p>
-                    JBoss Modules used to require the log manager be passed via the command line but switched to using a service loader approach. The plugin no longer use the old method.
-                </p>
-                <p>
-                    Workaround to this issue is to specify the log manager via the plugin's <code>jvmArgs</code> configuration.
-                </p>
-                <source>
-                    ...
-                    &lt;jvmArgs>
-                        &lt;!-- Below should be your default jboss jvm args -->
-                        -Xms64m -Xmx512m -XX:MaxPermSize=256m -Djava.net.preferIPv4Stack=true
-                        -Dorg.jboss.resolver.warning=true -Dsun.rmi.dgc.client.gcInterval=3600000
-                        -Dsun.rmi.dgc.server.gcInterval=3600000
-                        &lt;!-- From this point on is the workaround -->
-                        &lt;!-- ${downloadedJbossDir} should point to your downloaded jboss -->
-                        &lt;!-- The jar file name should match your jboss version -->
-                        -Djboss.modules.system.pkgs=org.jboss.byteman,org.jboss.logmanager
-                        -Djava.util.logging.manager=org.jboss.logmanager.LogManager
-                        -Xbootclasspath/p:${downloadedJbossDir}/modules/org/jboss/logmanager/main/jboss-logmanager-1.2.0.GA.jar
-                        -Xbootclasspath/p:${downloadedJbossDir}/modules/org/jboss/logmanager/log4j/main/jboss-logmanager-log4j-1.0.0.GA.jar
-                        -Xbootclasspath/p:${downloadedJbossDir}/modules/org/apache/log4j/main/log4j-1.2.16.jar
-                    &lt;/jvmArgs>
-                    ...
-                </source>
+                <p>You can use maven 3.0.x or maven 3.1.x.</p>
             </answer>
         </faq>
     </part>

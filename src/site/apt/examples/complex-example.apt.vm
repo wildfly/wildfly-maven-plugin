@@ -24,8 +24,8 @@ Complex Deployment and Resource Examples
         <plugins>
             ...
             <plugin>
-                <groupId>org.jboss.as.plugins</groupId>
-                <artifactId>jboss-as-maven-plugin</artifactId>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
                 <version>${project.version}</version>
                 <executions>
                     <!-- Undeploy the application on clean -->
@@ -174,8 +174,8 @@ Complex Deployment and Resource Examples
         <plugins>
             ...
             <plugin>
-                <groupId>org.jboss.as.plugins</groupId>
-                <artifactId>jboss-as-maven-plugin</artifactId>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
                 <version>${project.version}</version>
                 <configuration>
                     <domain>

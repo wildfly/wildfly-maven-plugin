@@ -12,7 +12,7 @@ Deploy/Undeploy Examples
 
   The plugin goals {{{../deploy-mojo.html}deploy}}, {{{../undeploy-mojo.html}undeploy}},
   and {{{../redeploy-mojo.html}redeploy}} can be used to deploy, redeploy and undeploy applications
-  to a JBoss Application Server. The first step is to add the appropriate configuration
+  to a ${appServerName}. The first step is to add the appropriate configuration
   to your plugin configuration in the POM.
 
 ----------
@@ -23,8 +23,8 @@ Deploy/Undeploy Examples
         <plugins>
             ...
             <plugin>
-                <groupId>org.jboss.as.plugins</groupId>
-                <artifactId>jboss-as-maven-plugin</artifactId>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
                 <version>${project.version}</version>
             </plugin>
             ...
@@ -39,14 +39,14 @@ Deploy/Undeploy Examples
   server using the <<<{{{../deploy-mojo.html}deploy}}>>> goal.
 
 +---------
-  mvn jboss-as:deploy
+  mvn ${pluginPrefix}:deploy
 +---------
 
   The file can later be redeployed or undeployed using the appropriate goals.
 
 +---------
-  mvn jboss-as:redeploy
-  mvn jboss-as:undeploy
+  mvn ${pluginPrefix}:redeploy
+  mvn ${pluginPrefix}:undeploy
 +---------
 
   You can also set the deployment operation to execute at a specific phase, for example the <<<install>>> phase.
@@ -59,8 +59,8 @@ Deploy/Undeploy Examples
         <plugins>
             ...
             <plugin>
-                <groupId>org.jboss.as.plugins</groupId>
-                <artifactId>jboss-as-maven-plugin</artifactId>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
                 <version>${project.version}</version>
                 <executions>
                     <execution>
@@ -92,8 +92,8 @@ Deploy/Undeploy Examples
         <plugins>
             ...
             <plugin>
-                <groupId>org.jboss.as.plugins</groupId>
-                <artifactId>jboss-as-maven-plugin</artifactId>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
                 <version>${project.version}</version>
                 <executions>
                     <execution>
@@ -133,8 +133,8 @@ Deploy/Undeploy Examples
       <plugins>
           ...
           <plugin>
-              <groupId>org.jboss.as.plugins</groupId>
-              <artifactId>jboss-as-maven-plugin</artifactId>
+              <groupId>${project.groupId}</groupId>
+              <artifactId>${project.artifactId}</artifactId>
               <version>${project.version}</version>
               <executions>
                   <execution>
@@ -185,8 +185,8 @@ Deploy/Undeploy Examples
         <plugins>
             ...
             <plugin>
-                <groupId>org.jboss.as.plugins</groupId>
-                <artifactId>jboss-as-maven-plugin</artifactId>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
                 <version>${project.version}</version>
                 <configuration>
                     <domain>

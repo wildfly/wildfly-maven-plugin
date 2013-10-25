@@ -1,6 +1,6 @@
 batch
 # Add a system property
-/system-property=org.jboss.maven.plugin:add(value=true)
+/system-property=org.wildfly.maven.plugin:add(value=true)
 #...
 # Execute
 run-batch

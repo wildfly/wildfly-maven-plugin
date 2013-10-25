@@ -1,7 +1,7 @@
-JBoss Application Server Maven Plugin
+WildFly Application Server Maven Plugin
 =====================================
 
-A Maven plug-in for JBoss Application Server 7. This plugin allows you to:
+A Maven plug-in for WildFly Application Server. This plugin allows you to:
 
   * Deploy, redeploy or undeploy your application
   * Add resources
@@ -9,7 +9,7 @@ A Maven plug-in for JBoss Application Server 7. This plugin allows you to:
   * Execute CLI commands
   * Run a standalone server within Maven
 
-Plugin documentation is at https://docs.jboss.org/jbossas/7/plugins/maven/latest/
+Plugin documentation is at https://docs.jboss.org/wildfly/plugins/maven/latest/
 
 License
 -------

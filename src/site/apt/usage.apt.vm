@@ -28,123 +28,123 @@
 
 Usage
 
-  The ${project.name} is generally used to deploy applications or application artifacts to a running JBoss Application
+  The ${project.name} is generally used to deploy applications or application artifacts to a running ${appServerName} Application
   Server. Each goal can be explicitly executed from the command line or specified in the execution portion of the plugin
   in the POM file.
 
-* The <<<jboss-as:add-resource>>> Goal
+* The <<<${pluginPrefix}:add-resource>>> Goal
 
-  The <<<jboss-as:add-resource>>> goal adds a resource to the running JBoss Application Server.
+  The <<<${pluginPrefix}:add-resource>>> goal adds a resource to the running ${appServerName} Application Server.
 
   For example to add a resource you type the following on the command line:
 
 +-----+
-mvn jboss-as:add-resource
+mvn ${pluginPrefix}:add-resource
 +-----+
 
-* The <<<jboss-as:deploy>>> Goal
+* The <<<${pluginPrefix}:deploy>>> Goal
 
-  The <<<jboss-as:deploy>>> goal deploys the application to the running JBoss Application Server.
+  The <<<${pluginPrefix}:deploy>>> goal deploys the application to the running ${appServerName} Application Server.
 
   For example to deploy, or redeploy by default, you type the following on the command line:
 
 +-----+
-mvn jboss-as:deploy
+mvn ${pluginPrefix}:deploy
 +-----+
 
-* The <<<jboss-as:deploy-only>>> Goal
+* The <<<${pluginPrefix}:deploy-only>>> Goal
 
-  The <<<jboss-as:deploy-only>>> goal deploys the application to the running JBoss Application Server without executing
+  The <<<${pluginPrefix}:deploy-only>>> goal deploys the application to the running ${appServerName}  without executing
   any other goals by default.
 
   For example to deploy, or redeploy by default, you type the following on the command line:
 
 +-----+
-mvn jboss-as:deploy-only
+mvn ${pluginPrefix}:deploy-only
 +-----+
 
-* The <<<jboss-as:deploy-artifact>>> Goal
+* The <<<${pluginPrefix}:deploy-artifact>>> Goal
 
-  The <<<jboss-as:deploy-artifact>>> goal deploys an arbitrary artifact to the running JBoss Application Server.
+  The <<<${pluginPrefix}:deploy-artifact>>> goal deploys an arbitrary artifact to the running ${appServerName}.
 
   For example to deploy the arbitrary artifact specified in you POM, you type the following on the command line:
 
 +-----+
-mvn jboss-as:deploy-artifact
+mvn ${pluginPrefix}:deploy-artifact
 +-----+
 
-* The <<<jboss-as:redeploy>>> Goal
+* The <<<${pluginPrefix}:redeploy>>> Goal
 
-  The <<<jboss-as:redeploy>>> goal will redeploy your application if and only if the application has already been
+  The <<<${pluginPrefix}:redeploy>>> goal will redeploy your application if and only if the application has already been
   deployed to the application server.
 
   To execute the redeploy goal type the following on the command line:
 
 +-----+
-mvn jboss-as:redeploy
+mvn ${pluginPrefix}:redeploy
 +-----+
 
-* The <<<jboss-as:redeploy-only>>> Goal
+* The <<<${pluginPrefix}:redeploy-only>>> Goal
 
-  The <<<jboss-as:redeploy-only>>> goal will redeploy your application if and only if the application has already been
+  The <<<${pluginPrefix}:redeploy-only>>> goal will redeploy your application if and only if the application has already been
   deployed to the application server. By default no other goals are invoked.
 
   To execute the redeploy goal type the following on the command line:
 
 +-----+
-mvn jboss-as:redeploy-only
+mvn ${pluginPrefix}:redeploy-only
 +-----+
 
-* The <<<jboss-as:undeploy>>> Goal
+* The <<<${pluginPrefix}:undeploy>>> Goal
 
-  The <<<jboss-as:undeploy>>> goal will undeploy your application from the from the running application server if the
+  The <<<${pluginPrefix}:undeploy>>> goal will undeploy your application from the from the running application server if the
   application has already been deployed.
 
   To execute the undeploy goal type the following on the command line:
 
 +-----+
-mvn jboss-as:undeploy
+mvn ${pluginPrefix}:undeploy
 +-----+
 
-* The <<<jboss-as:run>>> Goal
+* The <<<${pluginPrefix}:run>>> Goal
 
-  The <<<jboss-as:run>>> goal will run JBoss Application Server and deploy your application. If the <<<jboss-as.home>>>
+  The <<<${pluginPrefix}:run>>> goal will run ${appServerName}  and deploy your application. If the <<<${pluginPrefix}.home>>>
   property is not set, the server will be downloaded.
 
   To execute the run goal type the following on the command line:
 
 +-----+
-mvn jboss-as:run
+mvn ${pluginPrefix}:run
 +-----+
 
-* The <<<jboss-as:start>>> Goal
+* The <<<${pluginPrefix}:start>>> Goal
 
-  The <<<jboss-as:start>>> goal will start a JBoss Application Server. If the <<<jboss-as.home>>> property is not set,
+  The <<<${pluginPrefix}:start>>> goal will start a ${appServerName}. If the <<<${pluginPrefix}.home>>> property is not set,
   the server will be downloaded. The server will be shutdown when the maven process ends unless an explicit shutdown was
   invoked.
 
   To execute the start goal type the following on the command line:
 
 +-----+
-mvn jboss-as:start
+mvn ${pluginPrefix}:start
 +-----+
 
-* The <<<jboss-as:shutdown>>> Goal
+* The <<<${pluginPrefix}:shutdown>>> Goal
 
-  The <<<jboss-as:shutdown>>> goal will shutdown a running JBoss Application Server.
+  The <<<${pluginPrefix}:shutdown>>> goal will shutdown a running ${appServerName}.
 
   To execute the shutdown goal type the following on the command line:
 
 +-----+
-mvn jboss-as:shutdown
+mvn ${pluginPrefix}:shutdown
 +-----+
 
-* The <<<jboss-as:execute-commands>>> Goal
+* The <<<${pluginPrefix}:execute-commands>>> Goal
 
-  The <<<jboss-as:execute-commands>>> goal will execute commands, formatted like CLI commands, on the running server.
+  The <<<${pluginPrefix}:execute-commands>>> goal will execute commands, formatted like CLI commands, on the running server.
 
   To execute the execute-commands goal type the following on the command line:
 
 +-----+
-mvn jboss-as:execute-commands
+mvn ${pluginPrefix}:execute-commands
 +-----+

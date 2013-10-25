@@ -8,7 +8,7 @@
 
 Execute Commands Examples
 
-  The execute-commands goal allows you to execute commands, in the CLI format, on the running JBoss Application Server.
+  The execute-commands goal allows you to execute commands, in the CLI format, on the running ${appServerName}.
 
 * Execute commands
 
@@ -22,8 +22,8 @@ Execute Commands Examples
         <plugins>
             ...
             <plugin>
-                <groupId>org.jboss.as.plugins</groupId>
-                <artifactId>jboss-as-maven-plugin</artifactId>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
                 <version>${project.version}</version>
                 <configuration>
                     <execute-commands>
@@ -54,8 +54,8 @@ Execute Commands Examples
         <plugins>
             ...
             <plugin>
-                <groupId>org.jboss.as.plugins</groupId>
-                <artifactId>jboss-as-maven-plugin</artifactId>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
                 <version>${project.version}</version>
                 <configuration>
                     <execute-commands>
@@ -74,10 +74,10 @@ Execute Commands Examples
 ----------
 
   Example of a CLI script to set the transaction timeout to 600 seconds.
-  
+
 ----------
 batch
-#set default transaction timeout
+# set default transaction timeout
 /subsystem=transactions :write-attribute(name=default-timeout, value=600)
 #...
 # Execute and reload

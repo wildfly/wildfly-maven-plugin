@@ -30,15 +30,15 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.jboss.as.plugins</groupId>
-                <artifactId>jboss-as-maven-plugin</artifactId>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
                     <id>testid</id>
                     <port>10099</port>
                     <execute-commands>
                         <batch>true</batch>
                     	<commands>
-							<command>/system-property=org.jboss.maven.plugin-batch:add(value=true)</command>
+							<command>/system-property=org.wildfly.maven.plugin-batch:add(value=true)</command>
 						</commands>
                     </execute-commands>
                 </configuration>
