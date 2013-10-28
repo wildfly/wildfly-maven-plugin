@@ -64,7 +64,7 @@
         <!-- maven dependencies -->
         <version.org.apache.maven.maven-plugin>2.2.1</version.org.apache.maven.maven-plugin>
         <version.org.apache.maven.maven-core>3.0.5</version.org.apache.maven.maven-core>
-        <version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>2.0-alpha-1
+        <version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>2.1
         </version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>
         <version.org.apache.maven.plugin-tools>3.2</version.org.apache.maven.plugin-tools>
         <version.org.codehaus.plexus.plexus-utils>3.0.10</version.org.codehaus.plexus.plexus-utils>
@@ -226,16 +226,6 @@
             <artifactId>maven-plugin-api</artifactId>
             <version>${version.org.apache.maven.maven-core}</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-project</artifactId>
-            <version>${version.org.apache.maven.maven-plugin}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-settings</artifactId>
-            <version>${version.org.apache.maven.maven-core}</version>
-        </dependency>
         <!-- dependencies to annotations -->
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
@@ -305,6 +295,12 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${version.junit.junit}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-compat</artifactId>
+            <version>${version.org.apache.maven.maven-core}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
