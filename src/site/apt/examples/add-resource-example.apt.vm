@@ -36,19 +36,20 @@ Adding Resources Examples
                         </goals>
                         <configuration>
                             <address>subsystem=datasources,data-source=java:jboss/myDs</address>
-                            <resource>
-                                <enable-resource>true</enable-resource>
-                                <properties>
-                                    <jndi-name>java:jboss/myDs</jndi-name>
-                                    <enabled>true</enabled>
-                                    <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</connection-url>
-                                    <driver-class>org.h2.Driver</driver-class>
-                                    <driver-name>h2</driver-name>
-                                    <security.user-name>sa</security.user-name>
-                                    <security.password>sa</security.password>
-                                    <pool-name>mypool</pool-name>
-                                </properties>
-                            </resource>
+                            <resources>
+                                <resource>
+                                    <enable-resource>true</enable-resource>
+                                    <properties>
+                                        <jndi-name>java:jboss/myDs</jndi-name>
+                                        <enabled>true</enabled>
+                                        <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</connection-url>
+                                        <driver-class>org.h2.Driver</driver-class>
+                                        <driver-name>h2</driver-name>
+                                        <user-name>sa</user-name>
+                                        <password>sa</password>
+                                    </properties>
+                                </resource>
+                            </resources>
                         </configuration>
                     </execution>
                 </executions>
@@ -104,7 +105,6 @@ Adding Resources Examples
                                         <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
                                         <jndi-name>java:jboss/datasources/postgresDS</jndi-name>
                                         <enabled>true</enabled>
-                                        <pool-name>myPool</pool-name>
                                         <driver-name>postgresql.jar</driver-name>
                                     </properties>
                                 </resource>
@@ -175,13 +175,15 @@ Adding Resources Examples
                             <goal>add-resource</goal>
                         </goals>
                         <configuration>
-                            <resource>
-                                <address>subsystem=messaging,hornetq-server=default,jms-queue=myJmsQueue</address>
-                                <properties>
-                                    <durable>true</durable>
-                                    <entries>!!["java:jboss/myJmsQueue", "java:jboss/myJmsQueueAlias"]</entries>
-                                </properties>
-                            </resource>
+                            <resources>
+                                <resource>
+                                    <address>subsystem=messaging,hornetq-server=default,jms-queue=myJmsQueue</address>
+                                    <properties>
+                                        <durable>true</durable>
+                                        <entries>!!["java:jboss/myJmsQueue", "java:jboss/myJmsQueueAlias"]</entries>
+                                    </properties>
+                                </resource>
+                            </resources>
                         </configuration>
                     </execution>
                 </executions>
@@ -225,19 +227,20 @@ Adding Resources Examples
                                 </profiles>
                             </domain>
                             <address>subsystem=datasources,data-source=java:jboss/myDs</address>
-                            <resource>
-                                <enable-resource>true</enable-resource>
-                                <properties>
-                                    <jndi-name>java:jboss/myDs</jndi-name>
-                                    <enabled>true</enabled>
-                                    <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</connection-url>
-                                    <driver-class>org.h2.Driver</driver-class>
-                                    <driver-name>h2</driver-name>
-                                    <security.user-name>sa</security.user-name>
-                                    <security.password>sa</security.password>
-                                    <pool-name>mypool</pool-name>
-                                </properties>
-                            </resource>
+                             <resources>
+                                <resource>
+                                    <enable-resource>true</enable-resource>
+                                    <properties>
+                                        <jndi-name>java:jboss/myDs</jndi-name>
+                                        <enabled>true</enabled>
+                                        <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</connection-url>
+                                        <driver-class>org.h2.Driver</driver-class>
+                                        <driver-name>h2</driver-name>
+                                        <user-name>sa</user-name>
+                                        <password>sa</password>
+                                    </properties>
+                                </resource>
+                             </resources>
                         </configuration>
                     </execution>
                 </executions>

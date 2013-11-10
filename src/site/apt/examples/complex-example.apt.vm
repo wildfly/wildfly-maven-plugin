@@ -60,20 +60,21 @@ Complex Deployment and Resource Examples
                         <phase>install</phase>
                         <configuration>
                             <address>subsystem=datasources,data-source=myDatasource</address>
-                            <resource>
-                                <enableResource>true</enableResource>
-                                <properties>
-                                    <connection-url>jdbc:postgresql://localhost/myDatabase</connection-url>
-                                    <jndi-name>java:jboss/myDatasource</jndi-name>
-                                    <enabled>true</enabled>
-                                    <enable>true</enable>
-                                    <pool-name>myPool</pool-name>
-                                    <user-name>dbuser</user-name>
-                                    <password>supersecret</password>
-                                    <driver-name>postgresql.jar</driver-name>
-                                    <use-ccm>false</use-ccm>
-                                </properties>
-                            </resource>
+                            <resources>
+                                <resource>
+                                    <enableResource>true</enableResource>
+                                    <properties>
+                                        <connection-url>jdbc:postgresql://localhost/myDatabase</connection-url>
+                                        <jndi-name>java:jboss/myDatasource</jndi-name>
+                                        <enabled>true</enabled>
+                                        <enable>true</enable>
+                                        <user-name>dbuser</user-name>
+                                        <password>supersecret</password>
+                                        <driver-name>postgresql.jar</driver-name>
+                                        <use-ccm>false</use-ccm>
+                                    </properties>
+                                </resource>
+                            </resources>
                         </configuration>
                         <goals>
                             <goal>add-resource</goal>
@@ -94,7 +95,6 @@ Complex Deployment and Resource Examples
                                         <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
                                         <jndi-name>java:jboss/datasources/postgresDS</jndi-name>
                                         <enabled>true</enabled>
-                                        <pool-name>myPool</pool-name>
                                         <driver-name>postgresql.jar</driver-name>
                                     </properties>
                                     <!-- Add the XA data source properties. The nested addresses will prepended the address above. -->
@@ -222,20 +222,21 @@ Complex Deployment and Resource Examples
                         <phase>install</phase>
                         <configuration>
                             <address>subsystem=datasources,data-source=myDatasource</address>
-                            <resource>
-                                <enableResource>true</enableResource>
-                                <properties>
-                                    <connection-url>jdbc:postgresql://localhost/myDatabase</connection-url>
-                                    <jndi-name>java:jboss/myDatasource</jndi-name>
-                                    <enabled>true</enabled>
-                                    <enable>true</enable>
-                                    <pool-name>myPool</pool-name>
-                                    <user-name>dbuser</user-name>
-                                    <password>supersecret</password>
-                                    <driver-name>postgresql.jar</driver-name>
-                                    <use-ccm>false</use-ccm>
-                                </properties>
-                            </resource>
+                            <resources>
+                                <resource>
+                                    <enableResource>true</enableResource>
+                                    <properties>
+                                        <connection-url>jdbc:postgresql://localhost/myDatabase</connection-url>
+                                        <jndi-name>java:jboss/myDatasource</jndi-name>
+                                        <enabled>true</enabled>
+                                        <enable>true</enable>
+                                        <user-name>dbuser</user-name>
+                                        <password>supersecret</password>
+                                        <driver-name>postgresql.jar</driver-name>
+                                        <use-ccm>false</use-ccm>
+                                    </properties>
+                                </resource>
+                            </resources>
                         </configuration>
                         <goals>
                             <goal>add-resource</goal>
@@ -256,7 +257,6 @@ Complex Deployment and Resource Examples
                                         <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
                                         <jndi-name>java:jboss/datasources/postgresDS</jndi-name>
                                         <enabled>true</enabled>
-                                        <pool-name>myPool</pool-name>
                                         <driver-name>postgresql.jar</driver-name>
                                     </properties>
                                     <!-- Add the XA data source properties. The nested addresses will prepended the address above. -->

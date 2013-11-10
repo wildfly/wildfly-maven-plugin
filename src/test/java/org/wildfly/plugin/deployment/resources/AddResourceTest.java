@@ -39,7 +39,7 @@ import org.junit.Test;
  *
  * @author <a href="mailto:dave.himself@gmail.com">Dave Heath</a>
  */
-@Ignore("Something is wrong with these test or the AddResourceMojo. Failing with the DS already defined, when it definitely does not")
+@Ignore("Composite operations don't seem to be working with datasources")
 public class AddResourceTest extends AbstractItTestCase {
 
     @ContainerResource

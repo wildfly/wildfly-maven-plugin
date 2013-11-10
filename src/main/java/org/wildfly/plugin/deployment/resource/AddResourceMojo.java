@@ -32,12 +32,12 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.Operations.CompositeOperationBuilder;
-import org.wildfly.plugin.common.AbstractServerConnection;
-import org.wildfly.plugin.common.ServerOperations;
-import org.wildfly.plugin.common.PropertyNames;
-import org.wildfly.plugin.deployment.domain.Domain;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.Property;
+import org.wildfly.plugin.common.AbstractServerConnection;
+import org.wildfly.plugin.common.PropertyNames;
+import org.wildfly.plugin.common.ServerOperations;
+import org.wildfly.plugin.deployment.domain.Domain;
 
 /**
  * Adds a resource
@@ -70,29 +70,6 @@ public class AddResourceMojo extends AbstractServerConnection {
      */
     @Parameter
     private String address;
-
-    /**
-     * The operation properties.
-     *
-     * @deprecated prefer the {@code resources} or {@code resource} configuration.
-     */
-    @Parameter
-    @Deprecated
-    private Map<String, String> properties;
-
-    /**
-     * The resource to add.
-     * <p/>
-     * A resource could consist of;
-     * <ul>
-     * <li>An address, which may be appended to this address if defined {@literal <address/>}.
-     * </li>
-     * <li>A mapping of properties to be set on the resource {@literal <properties/>}.</li>
-     * <li>A flag to indicate whether or not the resource should be enabled {@literal <enableResource/>}</li>
-     * </ul>
-     */
-    @Parameter
-    private Resource resource;
 
     /**
      * A collection of resources to add.
@@ -131,15 +108,10 @@ public class AddResourceMojo extends AbstractServerConnection {
             getLog().info(String.format("Executing goal %s on server %s (%s) port %s.", goal(), host.getHostName(), host.getHostAddress(), getPort()));
             synchronized (CLIENT_LOCK) {
                 final ModelControllerClient client = getClient();
-                if (resources == null) {
-                    final Resource resource = (this.resource == null ? new Resource(address, properties, false) : this.resource);
-                    processResources(client, resource);
+                if (resources != null && resources.length > 0) {
+                    processResources(client, resources);
                 } else {
-                    if (resources.length > 0) {
-                        processResources(client, resources);
-                    } else {
-                        getLog().warn("No resources were provided.");
-                    }
+                    getLog().warn("No resources were provided.");
                 }
             }
         } catch (Exception e) {

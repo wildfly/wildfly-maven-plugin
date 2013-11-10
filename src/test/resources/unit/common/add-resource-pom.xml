@@ -45,9 +45,8 @@
                                 <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</connection-url>
                                 <driver-class>org.h2.Driver</driver-class>
                                 <driver-name>h2</driver-name>
-                                <security.user-name>sa</security.user-name>
-                                <security.password>sa</security.password>
-                                <pool-name>mypool1</pool-name>
+                                <user-name>sa</user-name>
+                                <password>sa</password>
                             </properties>
                         </resource>
                     </resources>
