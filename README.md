@@ -9,6 +9,8 @@ A Maven plug-in for WildFly Application Server. This plugin allows you to:
   * Execute CLI commands
   * Run a standalone server within Maven
 
+Plugin documentation is at https://docs.jboss.org/wildfly/plugins/maven/latest/
+
 License
 -------
 * [GNU Lesser General Public License Version 2.1](http://www.gnu.org/licenses/lgpl-2.1-standalone.html)
