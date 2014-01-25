@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.codehaus.plexus.util.StringUtils;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.common.Files;
 import org.wildfly.plugin.common.IoUtils;
@@ -125,8 +126,15 @@ final class StandaloneServer extends Server {
         cmd.add("-Dlogging.configuration=file:" + jbossHome + CONFIG_PATH + "logging.properties");
         cmd.add("-jar");
         cmd.add(modulesJar.getAbsolutePath());
+
+        List<String> modulePaths = new ArrayList<String>();
+        for (File eachModuleDir : serverInfo.getModulesDir()) {
+            modulePaths.add(eachModuleDir.getAbsolutePath());
+        }
+        String modulePathsArg = StringUtils.join(modulePaths.iterator(), File.pathSeparator);
         cmd.add("-mp");
-        cmd.add(serverInfo.getModulesDir().getAbsolutePath());
+        cmd.add(modulePathsArg);
+
         cmd.add("org.jboss.as.standalone");
         cmd.add("-Djboss.home.dir=" + jbossHome);
         if (serverInfo.getServerConfig() != null) {

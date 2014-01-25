@@ -23,6 +23,8 @@
 package org.wildfly.plugin.server;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.wildfly.plugin.common.ConnectionInfo;
 import org.wildfly.plugin.common.Files;
@@ -35,7 +37,7 @@ import org.wildfly.plugin.common.Files;
 class ServerInfo {
     private final ConnectionInfo connectionInfo;
     private final File jbossHome;
-    private final File modulesDir;
+    private final File[] modulesDir;
     private final String[] jvmArgs;
     private final String javaHome;
     private final String serverConfig;
@@ -46,7 +48,19 @@ class ServerInfo {
         this.connectionInfo = connectionInfo;
         this.javaHome = javaHome;
         this.jbossHome = jbossHome;
-        this.modulesDir = (modulesDir == null ? Files.createFile(jbossHome, "modules") : new File(modulesDir));
+
+        if (modulesDir == null) {
+            this.modulesDir = new File[]{Files.createFile(jbossHome, "modules")};
+        } else {
+            String[] modulePaths = modulesDir.split(";");
+            List<File> pathCollection = new ArrayList<>();
+            for (String each : modulePaths) {
+                pathCollection.add(new File(each));
+            }
+            this.modulesDir = pathCollection.toArray(new File[pathCollection.size()]);
+        }
+
+
         this.jvmArgs = jvmArgs;
         this.serverConfig = serverConfig;
         this.propertiesFile = propertiesFile;
@@ -89,11 +103,11 @@ class ServerInfo {
     }
 
     /**
-     * The directory for all the modules.
+     * The directories for all the modules.
      *
-     * @return the modules directory
+     * @return the modules directories
      */
-    public File getModulesDir() {
+    public File[] getModulesDir() {
         return modulesDir;
     }
 

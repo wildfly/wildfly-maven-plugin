@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.codehaus.plexus.util.StringUtils;
 import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.jboss.as.controller.client.helpers.domain.ServerIdentity;
 import org.jboss.as.controller.client.helpers.domain.ServerStatus;
@@ -159,8 +160,15 @@ final class DomainServer extends Server {
         // cmd.add("-Djboss.host.default.config=" + config.getHostConfig());
         cmd.add("-jar");
         cmd.add(modulesJar.getAbsolutePath());
+
+        List<String> modulePaths = new ArrayList<String>();
+        for (File eachModuleDir : serverInfo.getModulesDir()) {
+            modulePaths.add(eachModuleDir.getAbsolutePath());
+        }
+        String modulePathsArg = StringUtils.join(modulePaths.iterator(), File.pathSeparator);
         cmd.add("-mp");
-        cmd.add(serverInfo.getModulesDir().getAbsolutePath());
+        cmd.add(modulePathsArg);
+
         cmd.add("org.jboss.as.process-controller");
         cmd.add("-jboss-home");
         cmd.add(jbossHome.getAbsolutePath());
