@@ -204,9 +204,6 @@ public class AddResourceMojo extends AbstractServerConnection {
                 addCompositeResource(profileName, client, r, addr, compositeOp, false);
             }
         }
-        if (resource.isEnableResource()) {
-            compositeOp.addStep(ServerOperations.createOperation(ServerOperations.ENABLE, address));
-        }
         return true;
     }
 

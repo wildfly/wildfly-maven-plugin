@@ -38,7 +38,6 @@
                     <resources>
                         <resource>
                             <address>data-source=java:/ds-name2</address>
-                            <enable-resource>true</enable-resource>
                             <properties>
                                 <jndi-name>java:jboss/ds-name2</jndi-name>
                                 <enabled>true</enabled>
@@ -52,7 +51,6 @@
 
                         <resource>
                             <address>data-source=java:/ds-name3</address>
-                            <enable-resource>true</enable-resource>
                             <properties>
                                 <jndi-name>java:jboss/ds-name3</jndi-name>
                                 <enabled>true</enabled>

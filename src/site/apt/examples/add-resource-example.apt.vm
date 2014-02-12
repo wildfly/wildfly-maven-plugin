@@ -38,7 +38,6 @@ Adding Resources Examples
                             <address>subsystem=datasources,data-source=java:jboss/myDs</address>
                             <resources>
                                 <resource>
-                                    <enable-resource>true</enable-resource>
                                     <properties>
                                         <jndi-name>java:jboss/myDs</jndi-name>
                                         <enabled>true</enabled>
@@ -100,7 +99,6 @@ Adding Resources Examples
                             <resources>
                                 <resource>
                                     <address>xa-data-source=java:jboss/datasources/postgresDS</address>
-                                    <enable-resource>true</enable-resource>
                                     <properties>
                                         <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
                                         <jndi-name>java:jboss/datasources/postgresDS</jndi-name>
@@ -229,7 +227,6 @@ Adding Resources Examples
                             <address>subsystem=datasources,data-source=java:jboss/myDs</address>
                              <resources>
                                 <resource>
-                                    <enable-resource>true</enable-resource>
                                     <properties>
                                         <jndi-name>java:jboss/myDs</jndi-name>
                                         <enabled>true</enabled>

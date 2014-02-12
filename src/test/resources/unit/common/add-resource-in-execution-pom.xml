@@ -46,7 +46,6 @@
                             <address>subsystem=datasources,data-source=java:jboss/myDs</address>
                             <resources>
                                 <resource>
-                                    <enable-resource>true</enable-resource>
                                     <properties>
                                         <jndi-name>java:jboss/myDs</jndi-name>
                                         <enabled>true</enabled>

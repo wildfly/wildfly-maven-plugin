@@ -27,7 +27,6 @@ import java.util.Map;
 
 import org.apache.maven.plugins.annotations.Parameter;
 import org.wildfly.plugin.cli.Commands;
-import org.wildfly.plugin.common.PropertyNames;
 
 /**
  * Defines a resource.
@@ -68,12 +67,6 @@ public class Resource {
     private Commands afterAdd;
 
     /**
-     * Flag to start the operation, if necessary.
-     */
-    @Parameter(defaultValue = "false", property = PropertyNames.ENABLE_RESOURCE)
-    private boolean enableResource;
-
-    /**
      * An array of resources that rely on this resource.
      * <p/>
      * Note all resources will be ignored if the {@code <addIfAbsent/>} is defined and his resource is already defined.
@@ -86,20 +79,6 @@ public class Resource {
      */
     public Resource() {
 
-    }
-
-    /**
-     * Creates a new resource.
-     *
-     * @param address        the optional address for the resource.
-     * @param properties     the properties for the resource.
-     * @param enableResource {@code true} if the resource needs to be enabled after it is added.
-     */
-    Resource(final String address, final Map<String, String> properties, final boolean enableResource) {
-        this.address = address;
-        this.properties = properties;
-        this.enableResource = enableResource;
-        this.addIfAbsent = false;
     }
 
     /**
@@ -130,15 +109,6 @@ public class Resource {
             return Collections.emptyMap();
         }
         return properties;
-    }
-
-    /**
-     * Whether or not the enable operation should be performed.
-     *
-     * @return {@code true} if the enable operation should be performed, otherwise {@code false}.
-     */
-    public boolean isEnableResource() {
-        return enableResource;
     }
 
     /**
