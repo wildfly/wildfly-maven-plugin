@@ -111,7 +111,7 @@ public class StartMojo extends AbstractServerConnection {
     private String version;
 
     /**
-     * The modules path to use.
+     * The modules path to use. If you have multiple module paths, separate them with semi-colon (;)
      */
     @Parameter(alias = "modules-path", property = PropertyNames.MODULES_PATH)
     private String modulesPath;
@@ -163,8 +163,10 @@ public class StartMojo extends AbstractServerConnection {
             javaHome = this.javaHome;
         }
         final ServerInfo serverInfo = ServerInfo.of(this, javaHome, jbossHome, modulesPath, jvmArgs, serverConfig, propertiesFile, startupTimeout);
-        if (!serverInfo.getModulesDir().isDirectory()) {
-            throw new MojoExecutionException(String.format("Modules path '%s' is not a valid directory.", modulesPath));
+        for (File eachModuleDir : serverInfo.getModulesDir()) {
+            if (!eachModuleDir.isDirectory()) {
+                throw new MojoExecutionException(String.format("Modules path '%s' is not a valid directory.", eachModuleDir));
+            }
         }
         // Print some server information
         log.info(String.format("JAVA_HOME=%s", javaHome));
