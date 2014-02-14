@@ -1,0 +1,71 @@
+ ------
+ Run Example
+ ------
+ James R. Perkins
+ ------
+ 2014-02-13
+ ------
+
+Run Examples
+
+  The run goal allows you to run a local instance of ${appServerName}.
+
+* Run Example
+
+  The example below shows how to run a server with multiple module paths:
+
+----------
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <modules-path>
+                        <paths>
+                            <path>/opt/${appServerName}/modules</path>
+                            <path>/opt/my-modules</path>
+                        </paths>
+                    </modules-path>
+                </configuration>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+----------
+
+* Run with different port
+
+   The example below shows how to run a server with the management port running a different port.
+
+----------
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <jboss-home>/opt/${appServerName}</jboss-home>
+                    <modules-path>/opt/${appServerName}/modules</modules-path>
+                    <port>9999</port>
+                </configuration>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>

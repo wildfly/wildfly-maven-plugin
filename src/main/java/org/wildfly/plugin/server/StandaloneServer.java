@@ -126,7 +126,7 @@ final class StandaloneServer extends Server {
         cmd.add("-jar");
         cmd.add(modulesJar.getAbsolutePath());
         cmd.add("-mp");
-        cmd.add(serverInfo.getModulesDir().getAbsolutePath());
+        cmd.add(serverInfo.getModulesDir());
         cmd.add("org.jboss.as.standalone");
         cmd.add("-Djboss.home.dir=" + jbossHome);
         if (serverInfo.getServerConfig() != null) {

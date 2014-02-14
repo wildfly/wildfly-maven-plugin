@@ -35,7 +35,7 @@ import org.wildfly.plugin.common.Files;
 class ServerInfo {
     private final ConnectionInfo connectionInfo;
     private final File jbossHome;
-    private final File modulesDir;
+    private final String modulesDir;
     private final String[] jvmArgs;
     private final String javaHome;
     private final String serverConfig;
@@ -46,7 +46,7 @@ class ServerInfo {
         this.connectionInfo = connectionInfo;
         this.javaHome = javaHome;
         this.jbossHome = jbossHome;
-        this.modulesDir = (modulesDir == null ? Files.createFile(jbossHome, "modules") : new File(modulesDir));
+        this.modulesDir = (modulesDir == null ? Files.createPath(jbossHome.getAbsolutePath(), "modules") : modulesDir);
         this.jvmArgs = jvmArgs;
         this.serverConfig = serverConfig;
         this.propertiesFile = propertiesFile;
@@ -93,7 +93,7 @@ class ServerInfo {
      *
      * @return the modules directory
      */
-    public File getModulesDir() {
+    public String getModulesDir() {
         return modulesDir;
     }
 

@@ -160,7 +160,7 @@ final class DomainServer extends Server {
         cmd.add("-jar");
         cmd.add(modulesJar.getAbsolutePath());
         cmd.add("-mp");
-        cmd.add(serverInfo.getModulesDir().getAbsolutePath());
+        cmd.add(serverInfo.getModulesDir());
         cmd.add("org.jboss.as.process-controller");
         cmd.add("-jboss-home");
         cmd.add(jbossHome.getAbsolutePath());

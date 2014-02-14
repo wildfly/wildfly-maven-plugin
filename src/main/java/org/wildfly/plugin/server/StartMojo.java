@@ -24,6 +24,7 @@ package org.wildfly.plugin.server;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -111,10 +112,11 @@ public class StartMojo extends AbstractServerConnection {
     private String version;
 
     /**
-     * The modules path to use.
+     * The modules path or paths to use. A single path can be used or multiple paths by enclosing them in a paths
+     * element.
      */
     @Parameter(alias = "modules-path", property = PropertyNames.MODULES_PATH)
-    private String modulesPath;
+    private ModulesPath modulesPath;
 
     /**
      * A space delimited list of JVM arguments.
@@ -162,10 +164,11 @@ public class StartMojo extends AbstractServerConnection {
         } else {
             javaHome = this.javaHome;
         }
-        final ServerInfo serverInfo = ServerInfo.of(this, javaHome, jbossHome, modulesPath, jvmArgs, serverConfig, propertiesFile, startupTimeout);
-        if (!serverInfo.getModulesDir().isDirectory()) {
-            throw new MojoExecutionException(String.format("Modules path '%s' is not a valid directory.", modulesPath));
+        final List<String> invalidPaths = modulesPath.validate();
+        if (!invalidPaths.isEmpty()) {
+            throw new MojoExecutionException("Invalid module path(s). " + invalidPaths);
         }
+        final ServerInfo serverInfo = ServerInfo.of(this, javaHome, jbossHome, modulesPath.get(), jvmArgs, serverConfig, propertiesFile, startupTimeout);
         // Print some server information
         log.info(String.format("JAVA_HOME=%s", javaHome));
         log.info(String.format("JBOSS_HOME=%s%n", jbossHome));
