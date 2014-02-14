@@ -29,8 +29,6 @@ public interface PropertyNames {
 
     String ADD_RESOURCE_FORCE = "add-resource.force";
 
-    String BUNDLES_PATH = "wildfly.bundlesPath";
-
     String CHECK_PACKAGING = "wildfly.checkPackaging";
 
     String DEPLOY_FORCE = "deploy.force";
@@ -38,8 +36,6 @@ public interface PropertyNames {
     String DEPLOYMENT_FILENAME = "wildfly.deployment.filename";
 
     String DEPLOYMENT_TARGET_DIR = "wildfly.deployment.targetDir";
-
-    String ENABLE_RESOURCE = "add-resource.enableResource";
 
     String HOSTNAME = "wildfly.hostname";
 
@@ -70,6 +66,8 @@ public interface PropertyNames {
     String PASSWORD = "wildfly.password";
 
     String PORT = "wildfly.port";
+
+    String PROTOCOL = "wildfly.protocol";
 
     String RELOAD = "wildfly.reload";
 

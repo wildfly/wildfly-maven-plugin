@@ -31,24 +31,32 @@ import javax.security.auth.callback.CallbackHandler;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 public interface ConnectionInfo {
+
     /**
-     * The port number of the server to deploy to. The default is 9999.
+     * The protocol used to connect to the server for management operations.
      *
-     * @return the port number to deploy to.
+     * @return the protocol or {@code null} for the default
+     */
+    String getProtocol();
+
+    /**
+     * The port number of the server to deploy to.
+     *
+     * @return the port number to deploy to
      */
     int getPort();
 
     /**
      * Creates gets the address to the host name.
      *
-     * @return the address.
+     * @return the address
      */
     InetAddress getHostAddress();
 
     /**
      * The callback handler for authentication.
      *
-     * @return the callback handler.
+     * @return the callback handler
      */
     CallbackHandler getCallbackHandler();
 }
