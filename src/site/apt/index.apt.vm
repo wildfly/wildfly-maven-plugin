@@ -91,3 +91,5 @@ ${project.name} (${project.artifactId})
   * {{{./examples/complex-example.html}Complex Examples}}
 
   * {{{./execute-commands-mojo.html}Execute Commands Example}}
+
+  * {{{./run-mojo.html}Run Example}}
