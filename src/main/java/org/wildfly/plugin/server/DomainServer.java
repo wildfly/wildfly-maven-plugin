@@ -69,7 +69,7 @@ final class DomainServer extends Server {
 
     @Override
     protected void init() throws IOException {
-        client = DomainClient.Factory.create(serverInfo.getConnectionInfo().getHostAddress(), serverInfo.getConnectionInfo().getPort(), serverInfo.getConnectionInfo().getCallbackHandler());
+        client = DomainClient.Factory.create(serverInfo.getConnectionInfo().getProtocol(), serverInfo.getConnectionInfo().getHostAddress(), serverInfo.getConnectionInfo().getPort(), serverInfo.getConnectionInfo().getCallbackHandler());
     }
 
     @Override

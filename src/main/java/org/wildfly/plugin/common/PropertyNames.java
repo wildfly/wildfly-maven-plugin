@@ -67,6 +67,8 @@ public interface PropertyNames {
 
     String PORT = "wildfly.port";
 
+    String PROTOCOL = "wildfly.protocol";
+
     String RELOAD = "wildfly.reload";
 
     String SERVER_CONFIG = "wildfly.serverConfig";

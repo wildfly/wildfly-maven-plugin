@@ -60,6 +60,12 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     private volatile CallbackHandler handler;
 
     /**
+     * The protocol used to connect to the server for management.
+     */
+    @Parameter(property = PropertyNames.PROTOCOL)
+    private String protocol;
+
+    /**
      * Specifies the host name of the server where the deployment plan should be executed.
      */
     @Parameter(defaultValue = "localhost", property = PropertyNames.HOSTNAME)
@@ -152,7 +158,7 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
         synchronized (CLIENT_LOCK) {
             ModelControllerClient result = client;
             if (result == null) {
-                result = client = ModelControllerClient.Factory.create(getHostAddress(), getPort(), getCallbackHandler());
+                result = client = ModelControllerClient.Factory.create(getProtocol(), getHostAddress(), getPort(), getCallbackHandler());
                 if (isDomainServer(result)) {
                     result = client = DomainClient.Factory.create(result);
                 }
@@ -167,6 +173,11 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
             IoUtils.safeClose(client);
             client = null;
         }
+    }
+
+    @Override
+    public final String getProtocol() {
+        return protocol;
     }
 
     /**

@@ -62,7 +62,7 @@ final class StandaloneServer extends Server {
 
     @Override
     protected void init() throws IOException {
-        client = ModelControllerClient.Factory.create(serverInfo.getConnectionInfo().getHostAddress(), serverInfo.getConnectionInfo().getPort(), serverInfo.getConnectionInfo().getCallbackHandler());
+        client = ModelControllerClient.Factory.create(serverInfo.getConnectionInfo().getProtocol(), serverInfo.getConnectionInfo().getHostAddress(), serverInfo.getConnectionInfo().getPort(), serverInfo.getConnectionInfo().getCallbackHandler());
     }
 
     @Override
