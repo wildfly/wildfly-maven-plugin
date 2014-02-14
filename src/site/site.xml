@@ -43,6 +43,7 @@
             <item name="Deploy Application Example" href="examples/deployment-example.html"/>
             <item name="Complex Example" href="examples/complex-example.html"/>
             <item name="Execute Commands Example" href="examples/execute-commands-example.html"/>
+            <item name="Run Example" href="examples/run-example.html"/>
         </menu>
 
         <menu name="Project Documentation">
