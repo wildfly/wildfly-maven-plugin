@@ -38,7 +38,7 @@ import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.jboss.dmr.ModelNode;
 
 /**
- * The default implementation for connecting to a running AS7 instance
+ * The default implementation for connecting to a running WildFly instance
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  * @author Stuart Douglas
