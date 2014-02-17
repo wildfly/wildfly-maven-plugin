@@ -50,7 +50,7 @@ interface Defaults {
     /**
      * The default WildFly version.
      */
-    String WILDFLY_TARGET_VERSION = "8.0.0.Beta1";
+    String WILDFLY_TARGET_VERSION = "8.0.0.Final";
 
     /**
      * The default startup timeout.
