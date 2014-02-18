@@ -176,9 +176,10 @@ public class RunMojo extends DeployMojo {
         // Print some server information
         log.info(String.format("JAVA_HOME=%s", javaHome));
         log.info(String.format("JBOSS_HOME=%s%n", jbossHome));
+        Server server = null;
         try {
             // Create the server
-            final Server server = new StandaloneServer(serverInfo);
+            server = new StandaloneServer(serverInfo);
             // Add the shutdown hook
             SecurityActions.registerShutdown(server);
             // Start the server
@@ -204,9 +205,10 @@ public class RunMojo extends DeployMojo {
             while (server.isRunning()) {
                 TimeUnit.SECONDS.sleep(1L);
             }
-            server.stop();
         } catch (Exception e) {
             throw new MojoExecutionException("The server failed to start", e);
+        } finally {
+            if (server != null) server.stop();
         }
 
     }
