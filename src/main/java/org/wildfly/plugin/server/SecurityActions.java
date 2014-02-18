@@ -22,9 +22,12 @@
 
 package org.wildfly.plugin.server;
 
+import java.net.URLClassLoader;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.concurrent.TimeUnit;
+
+import org.codehaus.plexus.classworlds.realm.ClassRealm;
 
 /**
  * Security actions to perform possibly privileged operations. No methods in this class are to be made public under any
@@ -34,10 +37,24 @@ import java.util.concurrent.TimeUnit;
  */
 final class SecurityActions {
 
+    /**
+     * Bad hack and needs to be removed. Taken from https://github.com/jbossas/jboss-as-maven-plugin/pull/65
+     */
+    private static void respawnCurrentClassLoader() {
+        final ClassLoader tccl = getCurrentClassLoader();
+        if (tccl instanceof ClassRealm) {
+            final ClassRealm classRealm = (ClassRealm) tccl;
+            final ClassLoader newParent = createNewClassLoader(classRealm);
+            classRealm.setParentClassLoader(newParent);
+        }
+        // There's nothing we can do, just let it fail if need be.
+    }
+
     static void registerShutdown(final Server server) {
         final Thread hook = new Thread(new Runnable() {
             @Override
             public void run() {
+                respawnCurrentClassLoader();
                 server.stop();
                 // Bad hack to get maven to complete it's message output
                 try {
@@ -73,5 +90,45 @@ final class SecurityActions {
                 return System.getenv(key);
             }
         });
+    }
+
+    static ClassLoader getCurrentClassLoader() {
+        if (System.getSecurityManager() == null) {
+            return Thread.currentThread().getContextClassLoader();
+        }
+        return AccessController.doPrivileged(new PrivilegedAction<ClassLoader>() {
+            @Override
+            public ClassLoader run() {
+                return Thread.currentThread().getContextClassLoader();
+            }
+        });
+    }
+
+    // TODO (jrp) remove when the hack above is removed
+    private static ClassLoader createNewClassLoader(final ClassRealm classRealm) {
+        final ClassLoader result;
+        if (System.getSecurityManager() == null) {
+            result = new URLClassLoader(classRealm.getURLs(), classRealm.getParentClassLoader()) {
+                @Override
+                protected Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
+                    final Class<?> c = classRealm.loadClassFromSelf(name);
+                    return c != null ? c : super.loadClass(name, resolve);
+                }
+            };
+        } else {
+            result = AccessController.doPrivileged(new PrivilegedAction<ClassLoader>() {
+                @Override
+                public ClassLoader run() {
+                    return new URLClassLoader(classRealm.getURLs(), classRealm.getParentClassLoader()) {
+                        @Override
+                        protected Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
+                            final Class<?> c = classRealm.loadClassFromSelf(name);
+                            return c != null ? c : super.loadClass(name, resolve);
+                        }
+                    };
+                }
+            });
+        }
+        return result;
     }
 }
