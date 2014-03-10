@@ -28,6 +28,7 @@ import java.util.Set;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.wildfly.plugin.common.DeploymentFailureException;
 import org.wildfly.plugin.common.PropertyNames;
@@ -38,7 +39,7 @@ import org.wildfly.plugin.deployment.Deployment.Type;
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-@Mojo(name = "undeploy-artifact", threadSafe = true)
+@Mojo(name = "undeploy-artifact", requiresDependencyResolution = ResolutionScope.RUNTIME, threadSafe = true)
 public final class UndeployArtifactMojo extends AbstractDeployment {
 
     /**
@@ -78,7 +79,6 @@ public final class UndeployArtifactMojo extends AbstractDeployment {
         if (groupId == null) {
             throw new DeploymentFailureException("undeploy-artifact must specify the groupId");
         }
-        @SuppressWarnings("unchecked")
         final Set<Artifact> dependencies = project.getArtifacts();
         Artifact artifact = null;
         for (final Artifact a : dependencies) {
@@ -89,7 +89,7 @@ public final class UndeployArtifactMojo extends AbstractDeployment {
             }
         }
         if (artifact == null) {
-            throw new DeploymentFailureException("Could not resolve artifact to deploy %s:%s", groupId, artifactId);
+            throw new DeploymentFailureException("Could not resolve artifact to deploy %s:%s", new Object[] { groupId, artifactId });
         }
         file = artifact.getFile();
     }
