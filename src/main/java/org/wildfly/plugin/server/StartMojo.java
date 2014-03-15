@@ -107,8 +107,9 @@ public class StartMojo extends AbstractServerConnection {
 
     /**
      * The {@code version} of the artifact to download. Ignored if {@link #artifact} {@code version} portion is used.
+     * The default version is resolved if left blank.
      */
-    @Parameter(defaultValue = Defaults.WILDFLY_TARGET_VERSION, property = PropertyNames.WILDFLY_VERSION)
+    @Parameter(property = PropertyNames.WILDFLY_VERSION)
     private String version;
 
     /**
@@ -147,6 +148,8 @@ public class StartMojo extends AbstractServerConnection {
      */
     @Parameter(alias = "startup-timeout", defaultValue = Defaults.TIMEOUT, property = PropertyNames.STARTUP_TIMEOUT)
     private long startupTimeout;
+
+    private final RuntimeVersions runtimeVersions = new RuntimeVersions();
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -222,7 +225,7 @@ public class StartMojo extends AbstractServerConnection {
         String artifactId = this.artifactId;
         String classifier = this.classifier;
         String packaging = this.packaging;
-        String version = this.version;
+        String version = this.version == null ? runtimeVersions.getLatestFinal(groupId, artifactId) : this.version;
         // groupId:artifactId:version[:packaging][:classifier].
         if (artifact != null) {
             final String[] artifactParts = artifact.split(":");
