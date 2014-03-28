@@ -79,7 +79,7 @@ public final class UndeployArtifactMojo extends AbstractDeployment {
         if (groupId == null) {
             throw new DeploymentFailureException("undeploy-artifact must specify the groupId");
         }
-        final Set<Artifact> dependencies = project.getArtifacts();
+        final Set<Artifact> dependencies = project.getDependencyArtifacts();
         Artifact artifact = null;
         for (final Artifact a : dependencies) {
             if (a.getArtifactId().equals(artifactId) &&
