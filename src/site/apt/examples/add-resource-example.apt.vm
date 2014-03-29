@@ -105,30 +105,40 @@ Adding Resources Examples
                                         <enabled>true</enabled>
                                         <driver-name>postgresql.jar</driver-name>
                                     </properties>
-                                </resource>
-                                <resource>
-                                    <address>xa-data-source=java:jboss/datasources/postgresDS,xa-datasource-properties=DatabaseName</address>
-                                    <properties>
-                                        <value>myDatabase</value>
-                                    </properties>
-                                </resource>
-                                <resource>
-                                    <address>xa-data-source=java:jboss/datasources/postgresDS,xa-datasource-properties=ServerName</address>
-                                    <properties>
-                                        <value>localhost</value>
-                                    </properties>
-                                </resource>
-                                <resource>
-                                    <address>xa-data-source=java:jboss/datasources/postgresDS,xa-datasource-properties=User</address>
-                                    <properties>
-                                        <value>dbuser</value>
-                                    </properties>
-                                </resource>
-                                <resource>
-                                    <address>xa-data-source=java:jboss/datasources/postgresDS,xa-datasource-properties=Password</address>
-                                    <properties>
-                                        <value>supersecret</value>
-                                    </properties>
+                                    <resources>
+                                        <resource>
+                                            <address>
+                                                xa-datasource-properties=DatabaseName
+                                            </address>
+                                            <properties>
+                                                <value>myDatabase</value>
+                                            </properties>
+                                        </resource>
+                                        <resource>
+                                            <address>
+                                                xa-datasource-properties=ServerName
+                                            </address>
+                                            <properties>
+                                                <value>localhost</value>
+                                            </properties>
+                                        </resource>
+                                        <resource>
+                                            <address>
+                                                xa-datasource-properties=User
+                                            </address>
+                                            <properties>
+                                                <value>dbuser</value>
+                                            </properties>
+                                        </resource>
+                                        <resource>
+                                            <address>
+                                                xa-datasource-properties=Password
+                                            </address>
+                                            <properties>
+                                                <value>supersecret</value>
+                                            </properties>
+                                        </resource>
+                                    </resources>
                                 </resource>
                             </resources>
                         </configuration>

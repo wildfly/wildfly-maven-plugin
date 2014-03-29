@@ -255,9 +255,12 @@ public class AddResourceMojo extends AbstractServerConnection {
         boolean found = false;
         final String name = childAddress.getName();
         if (ServerOperations.isSuccessfulOutcome(r)) {
-            for (ModelNode dataSource : ServerOperations.readResult(r).get(name).asList()) {
-                if (dataSource.asProperty().getName().equals(childAddress.getValue().asString())) {
-                    found = true;
+            final ModelNode resources = ServerOperations.readResult(r).get(name);
+            if (resources.isDefined()) {
+                for (ModelNode dataSource : resources.asList()) {
+                    if (dataSource.asProperty().getName().equals(childAddress.getValue().asString())) {
+                        found = true;
+                    }
                 }
             }
         }

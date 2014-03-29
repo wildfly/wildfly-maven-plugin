@@ -87,6 +87,21 @@ public class AddResourceTest extends AbstractItTestCase {
         }
 
     }
+    @Test
+    public void testCanAddXaDataSource() throws Exception {
+        final MavenProject mavenProject = new MavenProject();
+        mavenProject.setPackaging("war");
+
+        final File pom = getPom("add-add-resource-xa-datasource");
+
+        final AddResourceMojo addResourceMojo = lookupMojoAndVerify("add-resource", pom);
+        try {
+            addResourceMojo.execute();
+        } catch (Exception ex) {
+            fail(ex.getMessage());
+        }
+
+    }
 
     @Test
     public void testThrowsExceptionWhenAddingResourceInExecution() throws Exception {
