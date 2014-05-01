@@ -60,7 +60,7 @@ Execute Commands Examples
                 <configuration>
                     <execute-commands>
                         <scripts>
-                            <script>config.cli</command>
+                            <script>config.cli</script>
                         </scripts>
                     </execute-commands>
                 </configuration>
