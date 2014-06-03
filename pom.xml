@@ -35,10 +35,28 @@
     <packaging>maven-plugin</packaging>
     <name>WildFly Maven Plugin</name>
 
+    <description>A maven plugin that allows various management operations to be executed on WildFly Application Server.</description>
+    <url>http://www.wildfly.org</url>
+
     <issueManagement>
-        <system>JIRA</system>
-        <url>https://issues.jboss.org/browse/JBASMP</url>
+        <system>GitHub</system>
+        <url>https://github.com/wildfly/wildfly-maven-plugin/issues</url>
     </issueManagement>
+
+    <mailingLists>
+        <mailingList>
+            <name>JBoss User List</name>
+            <subscribe>https://lists.jboss.org/mailman/listinfo/jboss-user</subscribe>
+            <unsubscribe>https://lists.jboss.org/mailman/listinfo/jboss-user</unsubscribe>
+            <archive>http://lists.jboss.org/pipermail/jboss-user/</archive>
+        </mailingList>
+        <mailingList>
+            <name>WildFly Developer List</name>
+            <subscribe>https://lists.jboss.org/mailman/listinfo/wildfly-dev</subscribe>
+            <unsubscribe>https://lists.jboss.org/mailman/listinfo/wildfly-dev</unsubscribe>
+            <archive>http://lists.jboss.org/pipermail/wildfly-dev/</archive>
+        </mailingList>
+    </mailingLists>
 
     <scm>
         <connection>scm:git://github.com/wildfly/wildfly-maven-plugin.git</connection>
