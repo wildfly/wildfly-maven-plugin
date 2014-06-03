@@ -57,7 +57,7 @@
 
     <properties>
         <!-- WildFly/JBoss dependencies -->
-        <version.org.wildfly>8.0.0.Final</version.org.wildfly>
+        <version.org.wildfly>8.1.0.Final</version.org.wildfly>
         <version.org.wildfly.dist>${version.org.wildfly}</version.org.wildfly.dist>
         <version.org.jboss.arquillian>1.0.3.Final</version.org.jboss.arquillian>
 
