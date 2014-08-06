@@ -31,7 +31,7 @@
     </parent>
     <groupId>org.wildfly.plugins</groupId>
     <artifactId>wildfly-maven-plugin</artifactId>
-    <version>1.0.3.Final-SNAPSHOT</version>
+    <version>1.0.4-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
     <name>WildFly Maven Plugin</name>
 
@@ -89,6 +89,7 @@
         <version.org.eclipse.aether>0.9.0.M4</version.org.eclipse.aether>
         <version.org.jboss.jdf.stacks-client>1.0.2.Final</version.org.jboss.jdf.stacks-client>
         <version.org.sonatype.aether>1.13.1</version.org.sonatype.aether>
+        <version.org.sonatype.plexus>1.4</version.org.sonatype.plexus>
 
         <!-- other dependencies -->
         <version.junit.junit>4.11</version.junit.junit>
@@ -217,6 +218,12 @@
                 </executions>
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
     </build>
 
     <reporting>
@@ -291,6 +298,7 @@
             <artifactId>wildfly-controller-client</artifactId>
             <version>${version.org.wildfly}</version>
         </dependency>
+
         <!-- Seems to be needed as the controller client is transitively bringing it in -->
         <dependency>
             <groupId>org.wildfly</groupId>
@@ -298,6 +306,11 @@
             <version>${version.org.wildfly}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.sonatype.plexus</groupId>
+            <artifactId>plexus-sec-dispatcher</artifactId>
+            <version>${version.org.sonatype.plexus}</version>
+        </dependency>
         <dependency>
             <groupId>org.sonatype.aether</groupId>
             <artifactId>aether-api</artifactId>

@@ -138,6 +138,7 @@ public class AbstractServerConnectionTest extends AbstractWildFlyMavenPluginMojo
         mojo.getCallbackHandler();
         final InOrder inOrder = inOrder(log);
         inOrder.verify(log).debug(DeployMojo.DEBUG_MESSAGE_SETTINGS_HAS_ID);
+        inOrder.verify(log).debug(DeployMojo.DEBUG_MESSAGE_PASSWORD_WAS_NOT_ENCRYPTED);
         inOrder.verify(log).debug(DeployMojo.DEBUG_MESSAGE_SETTINGS_HAS_CREDS);
     }
 
@@ -152,6 +153,22 @@ public class AbstractServerConnectionTest extends AbstractWildFlyMavenPluginMojo
         mojo.setLog(log);
         mojo.getCallbackHandler();
         verify(log).debug(DeployMojo.DEBUG_MESSAGE_NO_ID);
+    }
+
+    /**
+     * Tests that if encrypted credentials are provided in the pom.xml file.
+     */
+    @Test
+    public void testSecureCredentials() throws Exception {
+        final File pom = getPomAndVerify("deploy-webarchive-with-encrypted-password-pom.xml");
+        final File settings = getSettingsAndVerify("encrypted-credentials-provided-settings.xml");
+        final DeployMojo mojo = lookupMojoVerifyAndApplySettings("deploy", pom, settings);
+        mojo.setLog(log);
+        mojo.getCallbackHandler();
+        final InOrder inOrder = inOrder(log);
+        inOrder.verify(log).debug(DeployMojo.DEBUG_MESSAGE_SETTINGS_HAS_ID);
+        inOrder.verify(log).debug(DeployMojo.DEBUG_MESSAGE_PASSWORD_WAS_ENCRYPTED);
+        inOrder.verify(log).debug(DeployMojo.DEBUG_MESSAGE_SETTINGS_HAS_CREDS);
     }
 
 }

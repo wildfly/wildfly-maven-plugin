@@ -30,18 +30,22 @@ import java.net.UnknownHostException;
 import javax.security.auth.callback.CallbackHandler;
 
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.jboss.dmr.ModelNode;
+import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
+import org.sonatype.plexus.components.sec.dispatcher.SecDispatcherException;
 
 /**
  * The default implementation for connecting to a running WildFly instance
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  * @author Stuart Douglas
+ * @author <a href="tobias.lindenmann@1und1.de">Tobias Lindenmann</a>
  */
 public abstract class AbstractServerConnection extends AbstractMojo implements ConnectionInfo, Closeable {
 
@@ -52,6 +56,8 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     public static final String DEBUG_MESSAGE_POM_HAS_CREDS = "Getting credentials from the POM";
     public static final String DEBUG_MESSAGE_SETTINGS_HAS_CREDS = "Found username and password in the settings.xml file";
     public static final String DEBUG_MESSAGE_SETTINGS_HAS_ID = "Found the server's id in the settings.xml file";
+    public static final String DEBUG_MESSAGE_PASSWORD_WAS_ENCRYPTED = "The password was encrypted.";
+    public static final String DEBUG_MESSAGE_PASSWORD_WAS_NOT_ENCRYPTED = "The password was not encrypted.";
 
     protected static final Object CLIENT_LOCK = new Object();
 
@@ -107,6 +113,10 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
      */
     @Parameter(property = PropertyNames.PASSWORD)
     private String password;
+
+
+    @Component(role = org.sonatype.plexus.components.sec.dispatcher.SecDispatcher.class, hint = "default")
+    private SecDispatcher securityDispatcher;
 
     private ModelControllerClient client;
 
@@ -200,12 +210,12 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     }
 
     @Override
-    public final synchronized CallbackHandler getCallbackHandler() {
+    public final synchronized CallbackHandler getCallbackHandler()  {
         CallbackHandler result = handler;
         if (result == null) {
             if(username == null && password == null) {
                 if(id != null) {
-                    getCredentialsFromSettings();
+                    loadCredentialsFromSettings();
                 } else {
                     getLog().debug(DEBUG_MESSAGE_NO_ID);
                 }
@@ -217,12 +227,21 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
         return result;
     }
 
-    private void getCredentialsFromSettings() {
+    private void loadCredentialsFromSettings() {
         if(settings != null) {
             Server server = settings.getServer(id);
             if(server != null) {
                 getLog().debug(DEBUG_MESSAGE_SETTINGS_HAS_ID);
-                password = server.getPassword();
+                try {
+                    password = securityDispatcher.decrypt(server.getPassword());
+                    if (password != null && !password.equals(server.getPassword())) {
+                        getLog().debug(DEBUG_MESSAGE_PASSWORD_WAS_ENCRYPTED);
+                    } else {
+                        getLog().debug(DEBUG_MESSAGE_PASSWORD_WAS_NOT_ENCRYPTED);
+                    }
+                } catch (SecDispatcherException e) {
+                    throw new RuntimeException(e.getMessage(), e);
+                }
                 username = server.getUsername();
                 if(username != null && password != null) {
                     getLog().debug(DEBUG_MESSAGE_SETTINGS_HAS_CREDS);
@@ -252,5 +271,9 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
             throw new IllegalStateException(String.format("I/O Error could not execute operation '%s'", op), e);
         }
         return result;
+    }
+
+    protected void setSecurityDispatcher(SecDispatcher dispatcher) {
+        securityDispatcher = dispatcher;
     }
 }
