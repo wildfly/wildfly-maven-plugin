@@ -272,8 +272,4 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
         }
         return result;
     }
-
-    protected void setSecurityDispatcher(SecDispatcher dispatcher) {
-        securityDispatcher = dispatcher;
-    }
 }
