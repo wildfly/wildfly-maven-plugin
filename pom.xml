@@ -61,7 +61,6 @@
         <connection>scm:git://github.com/wildfly/wildfly-maven-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:wildfly/wildfly-maven-plugin.git</developerConnection>
         <url>http://github.com/wildfly/wildfly-maven-plugin</url>
-      <tag>wildfly-maven-plugin-1.0.4.tl</tag>
   </scm>
 
     <licenses>
