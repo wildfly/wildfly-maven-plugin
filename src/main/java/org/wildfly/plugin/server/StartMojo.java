@@ -173,7 +173,7 @@ public class StartMojo extends AbstractServerConnection {
             throw new MojoExecutionException("Invalid module path(s). " + invalidPaths);
         }
 
-        final ServerInfo serverInfo = new ServerInfoBuilder().withJavaHome(javaHome).withJbossHome(jbossHome)
+        final ServerInfo serverInfo = new ServerInfoBuilder().withConnectionInfo(this).withJavaHome(javaHome).withJbossHome(jbossHome)
                 .withModulesDir(modulesPath.get()).withJvmArgs(jvmArgs).withServerConfig(serverConfig).withPropertiesFile(propertiesFile)
                 .withStartupTimeout(startupTimeout).build();
 
