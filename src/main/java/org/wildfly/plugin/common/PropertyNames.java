@@ -79,4 +79,5 @@ public interface PropertyNames {
 
     String PROPERTIES_FILE = "wildfly.propertiesFile";
 
+    String BIND_ADDRESS = "wildfly.bindAddress";
 }

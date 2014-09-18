@@ -29,10 +29,10 @@ import java.util.Collections;
 import java.util.List;
 
 import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.dmr.ModelNode;
 import org.wildfly.plugin.common.Files;
 import org.wildfly.plugin.common.IoUtils;
 import org.wildfly.plugin.common.ServerOperations;
-import org.jboss.dmr.ModelNode;
 
 /**
  * A standalone server.
@@ -136,6 +136,11 @@ final class StandaloneServer extends Server {
         if (serverInfo.getPropertiesFile() != null) {
             cmd.add("-P");
             cmd.add(serverInfo.getPropertiesFile());
+        }
+        if(serverInfo.getBindAddress() != null) {
+            final String bindAddress = "*".equals(serverInfo.getBindAddress()) ? "0.0.0.0" : serverInfo.getBindAddress();
+            cmd.add("-b");
+            cmd.add(bindAddress);
         }
         return cmd;
     }

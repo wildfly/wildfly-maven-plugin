@@ -41,6 +41,7 @@ class ServerInfo {
     private final String serverConfig;
     private final String propertiesFile;
     private final long startupTimeout;
+    private final String bindAddress;
 
     /**
      * Create a new instance of ServerInfo using the provided ServerInfoBuilder instance.
@@ -55,6 +56,7 @@ class ServerInfo {
         this.serverConfig = builder.serverConfig;
         this.propertiesFile = builder.propertiesFile;
         this.startupTimeout = builder.startupTimeout;
+        this.bindAddress = builder.bindAddress;
     }
 
     /**
@@ -69,6 +71,7 @@ class ServerInfo {
         private String serverConfig;
         private String propertiesFile;
         private long startupTimeout;
+        private String bindAddress;
 
         /**
          * Sets the connection information for the management operations.
@@ -151,12 +154,23 @@ class ServerInfo {
         }
 
         /**
+         * Sets the address the server listens to serve traffic.
+         * @param bindAddress the bind address
+         * @return
+         */
+        public ServerInfoBuilder withBindAddress(String bindAddress) {
+            this.bindAddress = bindAddress;
+            return this;
+        }
+
+        /**
          * Create a new ServerInfo instance.
          * @return ServerInfo instance
          */
         public ServerInfo build() {
             return new ServerInfo(this);
         }
+
     }
 
     /**
@@ -229,5 +243,14 @@ class ServerInfo {
      */
     public long getStartupTimeout() {
         return startupTimeout;
+    }
+
+    /**
+     * The address the server listens to serve traffic.
+     *
+     * @return the bind address
+     */
+    public String getBindAddress() {
+        return bindAddress;
     }
 }
