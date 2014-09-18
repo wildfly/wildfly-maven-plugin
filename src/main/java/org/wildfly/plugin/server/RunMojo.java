@@ -44,6 +44,7 @@ import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.deployment.DeployMojo;
 import org.wildfly.plugin.deployment.Deployment;
 import org.wildfly.plugin.deployment.standalone.StandaloneDeployment;
+import org.wildfly.plugin.server.ServerInfo.ServerInfoBuilder;
 
 /**
  * Starts a standalone instance of WildFly and deploys the application to the server.
@@ -140,6 +141,12 @@ public class RunMojo extends DeployMojo {
     private String propertiesFile;
 
     /**
+     * The address the server listens to serve traffic.
+     */
+    @Parameter(alias = "bind-address", property = PropertyNames.BIND_ADDRESS)
+    private String bindAddress;
+
+    /**
      * The timeout value to use when starting the server.
      */
     @Parameter(alias = "startup-timeout", defaultValue = Defaults.TIMEOUT, property = PropertyNames.STARTUP_TIMEOUT)
@@ -174,7 +181,10 @@ public class RunMojo extends DeployMojo {
         if (!invalidPaths.isEmpty()) {
             throw new MojoExecutionException("Invalid module path(s). " + invalidPaths);
         }
-        final ServerInfo serverInfo = ServerInfo.of(this, javaHome, jbossHome, modulesPath.get(), jvmArgs, serverConfig, propertiesFile, startupTimeout);
+
+        final ServerInfo serverInfo = new ServerInfoBuilder().withConnectionInfo(this).withJavaHome(javaHome).withJbossHome(jbossHome)
+                .withModulesDir(modulesPath.get()).withJvmArgs(jvmArgs).withServerConfig(serverConfig).withPropertiesFile(propertiesFile)
+                .withStartupTimeout(startupTimeout).withBindAddress(bindAddress).build();
 
         // Print some server information
         log.info(String.format("JAVA_HOME=%s", javaHome));
