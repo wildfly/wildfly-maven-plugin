@@ -44,6 +44,7 @@ import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.deployment.DeployMojo;
 import org.wildfly.plugin.deployment.Deployment;
 import org.wildfly.plugin.deployment.standalone.StandaloneDeployment;
+import org.wildfly.plugin.server.ServerInfo.ServerInfoBuilder;
 
 /**
  * Starts a standalone instance of WildFly and deploys the application to the server.
@@ -174,7 +175,10 @@ public class RunMojo extends DeployMojo {
         if (!invalidPaths.isEmpty()) {
             throw new MojoExecutionException("Invalid module path(s). " + invalidPaths);
         }
-        final ServerInfo serverInfo = ServerInfo.of(this, javaHome, jbossHome, modulesPath.get(), jvmArgs, serverConfig, propertiesFile, startupTimeout);
+
+        final ServerInfo serverInfo = new ServerInfoBuilder().withJavaHome(javaHome).withJbossHome(jbossHome)
+                .withModulesDir(modulesPath.get()).withJvmArgs(jvmArgs).withServerConfig(serverConfig).withPropertiesFile(propertiesFile)
+                .withStartupTimeout(startupTimeout).build();
 
         // Print some server information
         log.info(String.format("JAVA_HOME=%s", javaHome));

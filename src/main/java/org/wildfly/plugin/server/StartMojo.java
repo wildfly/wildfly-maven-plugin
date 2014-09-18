@@ -37,6 +37,7 @@ import org.apache.maven.project.MavenProject;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.Files;
 import org.wildfly.plugin.common.PropertyNames;
+import org.wildfly.plugin.server.ServerInfo.ServerInfoBuilder;
 
 /**
  * Starts a standalone instance of WildFly Application Server.
@@ -171,7 +172,11 @@ public class StartMojo extends AbstractServerConnection {
         if (!invalidPaths.isEmpty()) {
             throw new MojoExecutionException("Invalid module path(s). " + invalidPaths);
         }
-        final ServerInfo serverInfo = ServerInfo.of(this, javaHome, jbossHome, modulesPath.get(), jvmArgs, serverConfig, propertiesFile, startupTimeout);
+
+        final ServerInfo serverInfo = new ServerInfoBuilder().withJavaHome(javaHome).withJbossHome(jbossHome)
+                .withModulesDir(modulesPath.get()).withJvmArgs(jvmArgs).withServerConfig(serverConfig).withPropertiesFile(propertiesFile)
+                .withStartupTimeout(startupTimeout).build();
+
         // Print some server information
         log.info(String.format("JAVA_HOME=%s", javaHome));
         log.info(String.format("JBOSS_HOME=%s%n", jbossHome));

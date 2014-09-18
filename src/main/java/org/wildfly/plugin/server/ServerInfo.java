@@ -42,32 +42,121 @@ class ServerInfo {
     private final String propertiesFile;
     private final long startupTimeout;
 
-    private ServerInfo(final ConnectionInfo connectionInfo, final String javaHome, final File jbossHome, final String modulesDir, final String[] jvmArgs, final String serverConfig, final String propertiesFile, final long startupTimeout) {
-        this.connectionInfo = connectionInfo;
-        this.javaHome = javaHome;
-        this.jbossHome = jbossHome;
-        this.modulesDir = (modulesDir == null ? Files.createPath(jbossHome.getAbsolutePath(), "modules") : modulesDir);
-        this.jvmArgs = jvmArgs;
-        this.serverConfig = serverConfig;
-        this.propertiesFile = propertiesFile;
-        this.startupTimeout = startupTimeout;
+    /**
+     * Create a new instance of ServerInfo using the provided ServerInfoBuilder instance.
+     * @param builder ServerInfoBuilder instance
+     */
+    private ServerInfo(ServerInfoBuilder builder) {
+        this.connectionInfo = builder.connectionInfo;
+        this.javaHome = builder.javaHome;
+        this.jbossHome = builder.jbossHome;
+        this.modulesDir = (builder.modulesDir == null ? Files.createPath(jbossHome.getAbsolutePath(), "modules") : builder.modulesDir);
+        this.jvmArgs = builder.jvmArgs;
+        this.serverConfig = builder.serverConfig;
+        this.propertiesFile = builder.propertiesFile;
+        this.startupTimeout = builder.startupTimeout;
     }
 
     /**
-     * Creates the server information.
-     *
-     * @param connectionInfo the connection information for the management client
-     * @param javaHome       the Java home directory
-     * @param jbossHome      the home directory for the JBoss Application Server
-     * @param modulesDir     the directory for the modules to use
-     * @param jvmArgs        the JVM arguments
-     * @param serverConfig   the path to the servers configuration file
-     * @param startupTimeout the startup timeout
-     *
-     * @return the server configuration information
+     * Builder for creating ServerInfo instances.
      */
-    public static ServerInfo of(final ConnectionInfo connectionInfo, final String javaHome, final File jbossHome, final String modulesDir, final String[] jvmArgs, final String serverConfig, final String propertiesFile, final long startupTimeout) {
-        return new ServerInfo(connectionInfo, javaHome, jbossHome, modulesDir, jvmArgs, serverConfig, propertiesFile, startupTimeout);
+    public static class ServerInfoBuilder {
+        private ConnectionInfo connectionInfo;
+        private File jbossHome;
+        private String modulesDir;
+        private String[] jvmArgs;
+        private String javaHome;
+        private String serverConfig;
+        private String propertiesFile;
+        private long startupTimeout;
+
+        /**
+         * Sets the connection information for the management operations.
+         * @param connectionInfo the connection information for the management client
+         * @return this builder instance
+         */
+        public ServerInfoBuilder withConnectionInfo(ConnectionInfo connectionInfo) {
+            this.connectionInfo = connectionInfo;
+            return this;
+        }
+
+        /**
+         * Sets the JBoss Application Server home directory.
+         * @param jbossHome the Java home directory
+         * @return this builder instance
+         */
+        public ServerInfoBuilder withJbossHome(File jbossHome) {
+            this.jbossHome = jbossHome;
+            return this;
+        }
+
+        /**
+         * Sets the directory for all the modules.
+         * @param modulesDir the directory for the modules to use
+         * @return this builder instance
+         */
+        public ServerInfoBuilder withModulesDir(String modulesDir) {
+            this.modulesDir = modulesDir;
+            return this;
+        }
+
+        /**
+         * Sets the optional JVM arguments.
+         * @param jvmArgs the JVM arguments
+         * @return this builder instance
+         */
+        public ServerInfoBuilder withJvmArgs(String[] jvmArgs) {
+            this.jvmArgs = jvmArgs;
+            return this;
+        }
+
+        /**
+         * Sets the Java home directory
+         * @param javaHome the Java home directory
+         * @return this builder instance
+         */
+        public ServerInfoBuilder withJavaHome(String javaHome) {
+            this.javaHome = javaHome;
+            return this;
+        }
+
+        /**
+         * Sets the path to the server configuration file to use.
+         * @param serverConfig the path to the servers configuration file
+         * @return this builder instance
+         */
+        public ServerInfoBuilder withServerConfig(String serverConfig) {
+            this.serverConfig = serverConfig;
+            return this;
+        }
+
+        /**
+         * Sets the path to the system properties file to load.
+         * @param propertiesFile the path to the system properties file to load
+         * @return this builder instance
+         */
+        public ServerInfoBuilder withPropertiesFile(String propertiesFile) {
+            this.propertiesFile = propertiesFile;
+            return this;
+        }
+
+        /**
+         * Sets the timeout to use for the server startup.
+         * @param startupTimeout the startup timeout
+         * @return this builder instance
+         */
+        public ServerInfoBuilder withStartupTimeout(long startupTimeout) {
+            this.startupTimeout = startupTimeout;
+            return this;
+        }
+
+        /**
+         * Create a new ServerInfo instance.
+         * @return ServerInfo instance
+         */
+        public ServerInfo build() {
+            return new ServerInfo(this);
+        }
     }
 
     /**
