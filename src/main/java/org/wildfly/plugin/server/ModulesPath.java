@@ -26,7 +26,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 import org.apache.maven.plugins.annotations.Parameter;
 
@@ -47,52 +46,15 @@ public class ModulesPath {
 
     private File modulePath;
 
-    /**
-     * Returns the path or paths as a string delimited by the {@link File#pathSeparatorChar} if more than one path was
-     * defined.
-     *
-     * @return the modules directory path
-     */
-    public synchronized String get() {
-        if (paths == null && modulePath == null) {
-            return null;
-        }
-        if (paths == null) {
-            return modulePath.getAbsolutePath();
-        }
-        final StringBuilder result = new StringBuilder();
-        if (modulePath != null) {
-            result.append(modulePath.getAbsolutePath()).append(File.pathSeparatorChar);
-        }
-        for (int i = 0; i < paths.length; i++) {
-            result.append(paths[i].getAbsolutePath());
-            if (i + 1 < paths.length) {
-                result.append(File.pathSeparatorChar);
-            }
-        }
-        return result.toString();
-    }
-
-    /**
-     * Returns a list of invalid module paths. If no paths are invalid an empty list is returned.
-     *
-     * @return a list of invalid module paths or an empty list
-     */
-    public synchronized List<String> validate() {
+    public Collection<String> getModulePaths() {
         if (paths == null && modulePath == null) {
             return Collections.emptyList();
         }
-        final Collection<File> files = new ArrayList<>();
-        if (modulePath != null) {
-            files.add(modulePath);
-        }
+        final Collection<String> result = new ArrayList<>();
+        result.add(modulePath.getAbsolutePath());
         if (paths != null) {
-            Collections.addAll(files, paths);
-        }
-        final List<String> result = new ArrayList<>();
-        for (File file : files) {
-            if (!file.exists() || !file.isDirectory()) {
-                result.add(file.getAbsolutePath());
+            for (File path : paths) {
+                result.add(path.getAbsolutePath());
             }
         }
         return result;

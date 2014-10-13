@@ -23,42 +23,88 @@
 package org.wildfly.plugin.server;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
+import java.security.PrivilegedAction;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.controller.client.helpers.domain.DomainClient;
+import org.jboss.as.controller.client.helpers.domain.ServerIdentity;
+import org.jboss.as.controller.client.helpers.domain.ServerStatus;
+import org.wildfly.core.launcher.CommandBuilder;
+import org.wildfly.core.launcher.DomainCommandBuilder;
+import org.wildfly.core.launcher.Launcher;
+import org.wildfly.core.launcher.ProcessHelper;
+import org.wildfly.security.manager.WildFlySecurityManager;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 abstract class Server {
     private final ScheduledExecutorService timerService;
-    private final ServerInfo serverInfo;
+    private final CommandBuilder commandBuilder;
+    private volatile Thread shutdownHook;
     private Process process;
-    private ConsoleConsumer console;
-    private final String shutdownId;
 
-    protected Server(final ServerInfo serverInfo) {
-        this(serverInfo, null);
-    }
-
-    protected Server(final ServerInfo serverInfo, final String shutdownId) {
-        this.serverInfo = serverInfo;
-        this.shutdownId = shutdownId;
+    protected Server(final CommandBuilder commandBuilder) {
+        this.commandBuilder = commandBuilder;
         timerService = Executors.newScheduledThreadPool(1);
     }
 
-    /**
-     * The console that is associated with the server.
-     *
-     * @return the console
-     */
-    protected final ConsoleConsumer getConsole() {
-        return console;
+    static Server create(final CommandBuilder commandBuilder, final ModelControllerClient client) {
+        if (commandBuilder instanceof DomainCommandBuilder) {
+            return new Server(commandBuilder) {
+                final DomainClient domainClient = DomainClient.Factory.create(client);
+                final Map<ServerIdentity, ServerStatus> servers = new HashMap<>();
+                volatile boolean isRunning = false;
+
+                @Override
+                protected void stopServer() {
+                    ServerHelper.shutdownDomain(domainClient, servers);
+                }
+
+                @Override
+                protected boolean waitForStart(final long timeout) throws IOException, InterruptedException {
+                    return ServerHelper.waitForDomain(super.process, domainClient, servers, timeout);
+                }
+
+                @Override
+                public boolean isRunning() {
+                    return isRunning;
+                }
+
+                @Override
+                protected void checkServerState() {
+                    isRunning = ServerHelper.isDomainRunning(domainClient, servers);
+                }
+            };
+        }
+        return new Server(commandBuilder) {
+            volatile boolean isRunning = false;
+
+            @Override
+            protected void stopServer() {
+                ServerHelper.shutdownStandalone(client);
+            }
+
+            @Override
+            protected boolean waitForStart(final long timeout) throws IOException, InterruptedException {
+                return ServerHelper.waitForStandalone(super.process, client, timeout);
+            }
+
+            @Override
+            public boolean isRunning() {
+                return isRunning;
+            }
+
+            @Override
+            protected void checkServerState() {
+                isRunning = ServerHelper.isStandaloneRunning(client);
+            }
+        };
     }
 
     /**
@@ -66,37 +112,25 @@ abstract class Server {
      *
      * @throws IOException the an error occurs creating the process
      */
-    public final synchronized void start() throws IOException {
-        SecurityActions.registerShutdown(this);
-        final List<String> cmd = createLaunchCommand();
-        final ProcessBuilder processBuilder = new ProcessBuilder(cmd);
-        processBuilder.redirectErrorStream(true);
-        process = processBuilder.start();
-        console = startConsoleConsumer(process.getInputStream(), shutdownId);
-        long timeout = serverInfo.getStartupTimeout() * 1000;
-        boolean serverAvailable = false;
-        long sleep = 50;
-        init();
-        while (timeout > 0 && !serverAvailable) {
-            serverAvailable = isRunning();
-            if (!serverAvailable) {
-                if (processHasDied(process))
-                    break;
-                try {
-                    Thread.sleep(sleep);
-                } catch (InterruptedException e) {
-                    serverAvailable = false;
-                    break;
-                }
-                timeout -= sleep;
-                sleep = Math.max(sleep / 2, 100);
+    public final synchronized void start(final long timeout) throws IOException, InterruptedException {
+        process = Launcher.of(commandBuilder)
+                .inherit()
+                .launch();
+        // Running maven in a SM is unlikely, but we'll be safe
+        shutdownHook = WildFlySecurityManager.doUnchecked(new PrivilegedAction<Thread>() {
+            @Override
+            public Thread run() {
+                return ProcessHelper.addShutdownHook(process);
             }
-        }
-        if (serverAvailable) {
+        });
+        if (waitForStart(timeout)) {
             timerService.scheduleWithFixedDelay(new Reaper(), 20, 10, TimeUnit.SECONDS);
         } else {
-            destroyProcess();
-            throw new IllegalStateException(String.format("Managed server was not started within [%d] s", serverInfo.getStartupTimeout()));
+            try {
+                ProcessHelper.destroyProcess(process);
+            } catch (InterruptedException ignore) {
+            }
+            throw new IllegalStateException(String.format("Managed server was not started within [%d] s", timeout));
         }
     }
 
@@ -105,32 +139,39 @@ abstract class Server {
      */
     public final synchronized void stop() {
         try {
+            // Remove the shutdown hook. Running maven in a SM is unlikely, but we'll be safe
+            WildFlySecurityManager.doUnchecked(new PrivilegedAction<Object>() {
+                @Override
+                public Object run() {
+                    try {
+                        Runtime.getRuntime().removeShutdownHook(shutdownHook);
+                    } catch (Exception ignore) {
+                    }
+                    return null;
+                }
+            });
+            // Shutdown the reaper
+            try {
+                timerService.shutdown();
+            } catch (Exception ignore) {
+            }
+            // Stop the servers
             stopServer();
         } finally {
-            if (process != null) {
-                process.destroy();
-                try {
-                    process.waitFor();
-                } catch (InterruptedException ignore) {
-                    // no-op
-                }
+            try {
+                ProcessHelper.destroyProcess(process);
+            } catch (InterruptedException ignore) {
+                // no-op
             }
-            timerService.shutdown();
         }
     }
-
-    /**
-     * Invokes any optional initialization that should take place after the process has been launched. Note the server
-     * may not be completely started when the method is invoked.
-     *
-     * @throws IOException if an IO error occurs
-     */
-    protected abstract void init() throws IOException;
 
     /**
      * Stops the server before the process is destroyed. A no-op override will just destroy the process.
      */
     protected abstract void stopServer();
+
+    protected abstract boolean waitForStart(long timeout) throws IOException, InterruptedException;
 
     /**
      * Checks the status of the server and returns {@code true} if the server is fully started.
@@ -140,53 +181,10 @@ abstract class Server {
     public abstract boolean isRunning();
 
     /**
-     * Returns the client that used to execute management operations on the server.
-     *
-     * @return the client to execute management operations
-     */
-    public abstract ModelControllerClient getClient();
-
-    /**
-     * Creates the command to launch the server for the process.
-     *
-     * @return the commands used to launch the server
-     */
-    protected abstract List<String> createLaunchCommand();
-
-    /**
      * Checks whether the server is running or not. If the server is no longer running the {@link #isRunning()} should
      * return {@code false}.
      */
     protected abstract void checkServerState();
-
-    private int destroyProcess() {
-        if (process == null)
-            return 0;
-        process.destroy();
-        try {
-            return process.waitFor();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static boolean processHasDied(final Process process) {
-        try {
-            process.exitValue();
-            return true;
-        } catch (IllegalThreadStateException e) {
-            // good
-            return false;
-        }
-    }
-
-    private ConsoleConsumer startConsoleConsumer(final InputStream stream, final String shutdownId) {
-        final ConsoleConsumer result = new ConsoleConsumer(stream, shutdownId);
-        final Thread t = new Thread(result);
-        t.setDaemon(true);
-        t.start();
-        return result;
-    }
 
     private class Reaper implements Runnable {
 
@@ -197,48 +195,5 @@ abstract class Server {
                 stop();
             }
         }
-    }
-
-    /**
-     * Runnable that consumes the output of the process.
-     *
-     * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
-     */
-    class ConsoleConsumer implements Runnable {
-
-        private final InputStream in;
-        private final String shutdownId;
-        private final CountDownLatch latch;
-
-        protected ConsoleConsumer(final InputStream in, final String shutdownId) {
-            this.in = in;
-            latch = new CountDownLatch(1);
-            this.shutdownId = shutdownId;
-        }
-
-        @Override
-        public void run() {
-
-            try {
-                byte[] buf = new byte[512];
-                int num;
-                while ((num = in.read(buf)) != -1) {
-                    System.out.write(buf, 0, num);
-                    if (shutdownId != null && new String(buf).contains(shutdownId)) {
-                        latch.countDown();
-                        if (isRunning()) {
-                            stop();
-                        }
-                    }
-                }
-            } catch (IOException ignore) {
-            }
-        }
-
-        void awaitShutdown(final long seconds) throws InterruptedException {
-            if (shutdownId == null) latch.countDown();
-            latch.await(seconds, TimeUnit.SECONDS);
-        }
-
     }
 }

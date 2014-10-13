@@ -24,7 +24,6 @@ package org.wildfly.plugin.server;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -34,6 +33,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.Files;
 import org.wildfly.plugin.common.PropertyNames;
@@ -149,8 +149,6 @@ public class StartMojo extends AbstractServerConnection {
     @Parameter(alias = "startup-timeout", defaultValue = Defaults.TIMEOUT, property = PropertyNames.STARTUP_TIMEOUT)
     private long startupTimeout;
 
-    private final RuntimeVersions runtimeVersions = new RuntimeVersions();
-
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         final Log log = getLog();
@@ -159,30 +157,31 @@ public class StartMojo extends AbstractServerConnection {
         if (!jbossHome.isDirectory()) {
             throw new MojoExecutionException(String.format("JBOSS_HOME '%s' is not a valid directory.", jbossHome));
         }
+        final StandaloneCommandBuilder commandBuilder = StandaloneCommandBuilder.of(jbossHome.toPath())
+                .setJavaHome(javaHome)
+                .addModuleDirs(modulesPath.getModulePaths());
+
         // JVM arguments should be space delimited
-        final String[] jvmArgs = (this.jvmArgs == null ? null : this.jvmArgs.split("\\s+"));
-        final String javaHome;
-        if (this.javaHome == null) {
-            javaHome = SecurityActions.getEnvironmentVariable("JAVA_HOME");
-        } else {
-            javaHome = this.javaHome;
+        if (jvmArgs != null) {
+            commandBuilder.addJavaOptions(jvmArgs.split("\\s+"));
         }
-        final List<String> invalidPaths = modulesPath.validate();
-        if (!invalidPaths.isEmpty()) {
-            throw new MojoExecutionException("Invalid module path(s). " + invalidPaths);
+
+        if (serverConfig != null) {
+            commandBuilder.setServerConfiguration(serverConfig);
         }
-        final ServerInfo serverInfo = ServerInfo.of(this, javaHome, jbossHome, modulesPath.get(), jvmArgs, serverConfig, propertiesFile, startupTimeout);
+
+        if (propertiesFile != null) {
+            commandBuilder.setPropertiesFile(propertiesFile);
+        }
         // Print some server information
-        log.info(String.format("JAVA_HOME=%s", javaHome));
-        log.info(String.format("JBOSS_HOME=%s%n", jbossHome));
+        log.info(String.format("JAVA_HOME=%s", commandBuilder.getJavaHome()));
+        log.info(String.format("JBOSS_HOME=%s%n", commandBuilder.getWildFlyHome()));
         try {
             // Create the server
-            final Server server = new StandaloneServer(serverInfo);
-            // Add the shutdown hook
-            SecurityActions.registerShutdown(server);
+            final Server server = Server.create(commandBuilder, getClient());
             // Start the server
             log.info("Server is starting up.");
-            server.start();
+            server.start(startupTimeout);
             server.checkServerState();
         } catch (Exception e) {
             throw new MojoExecutionException("The server failed to start", e);
@@ -225,7 +224,7 @@ public class StartMojo extends AbstractServerConnection {
         String artifactId = this.artifactId;
         String classifier = this.classifier;
         String packaging = this.packaging;
-        String version = this.version == null ? runtimeVersions.getLatestFinal(groupId, artifactId) : this.version;
+        String version = this.version == null ? RuntimeVersions.getLatestFinal(groupId, artifactId) : this.version;
         // groupId:artifactId:version[:packaging][:classifier].
         if (artifact != null) {
             final String[] artifactParts = artifact.split(":");

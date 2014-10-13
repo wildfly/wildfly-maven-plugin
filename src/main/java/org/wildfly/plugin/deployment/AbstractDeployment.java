@@ -139,7 +139,8 @@ abstract class AbstractDeployment extends AbstractServerConnection {
                 final MatchPatternStrategy matchPatternStrategy = getMatchPatternStrategy();
                 final Deployment deployment;
                 if (isDomainServer()) {
-                    deployment = DomainDeployment.create((DomainClient) client, domain, file(), name, getType(), matchPattern, matchPatternStrategy);
+                    final DomainClient domainClient = DomainClient.Factory.create(client);
+                    deployment = DomainDeployment.create(domainClient, domain, file(), name, getType(), matchPattern, matchPatternStrategy);
                 } else {
                     deployment = StandaloneDeployment.create(client, file(), name, getType(), matchPattern, matchPatternStrategy);
                 }

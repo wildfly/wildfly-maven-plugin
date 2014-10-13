@@ -26,7 +26,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-
 import javax.security.auth.callback.CallbackHandler;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -34,7 +33,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.jboss.dmr.ModelNode;
 
 /**
@@ -77,7 +75,7 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     @Parameter(defaultValue = "9990", property = PropertyNames.PORT)
     private int port;
 
-   /**
+    /**
      * Specifies the id of the server if the username and password is to be
      * retrieved from the settings.xml file
      */
@@ -149,8 +147,6 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
 
     /**
      * Gets or creates a new connection to the server and returns the client.
-     * <p/>
-     * For a domain server a {@link DomainClient} will be returned.
      *
      * @return the client
      */
@@ -159,9 +155,6 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
             ModelControllerClient result = client;
             if (result == null) {
                 result = client = ModelControllerClient.Factory.create(getProtocol(), getHostAddress(), getPort(), getCallbackHandler());
-                if (isDomainServer(result)) {
-                    result = client = DomainClient.Factory.create(result);
-                }
             }
             return result;
         }
@@ -203,8 +196,8 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     public final synchronized CallbackHandler getCallbackHandler() {
         CallbackHandler result = handler;
         if (result == null) {
-            if(username == null && password == null) {
-                if(id != null) {
+            if (username == null && password == null) {
+                if (id != null) {
                     getCredentialsFromSettings();
                 } else {
                     getLog().debug(DEBUG_MESSAGE_NO_ID);
@@ -218,13 +211,13 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     }
 
     private void getCredentialsFromSettings() {
-        if(settings != null) {
+        if (settings != null) {
             Server server = settings.getServer(id);
-            if(server != null) {
+            if (server != null) {
                 getLog().debug(DEBUG_MESSAGE_SETTINGS_HAS_ID);
                 password = server.getPassword();
                 username = server.getUsername();
-                if(username != null && password != null) {
+                if (username != null && password != null) {
                     getLog().debug(DEBUG_MESSAGE_SETTINGS_HAS_CREDS);
                 } else {
                     getLog().debug(DEBUG_MESSAGE_NO_CREDS);
@@ -247,7 +240,7 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
                 result = ("DOMAIN".equals(ServerOperations.readResultAsString(opResult)));
             }
         } catch (IOException e) {
-            if ( getLog().isDebugEnabled() )
+            if (getLog().isDebugEnabled())
                 getLog().debug(e);
             throw new IllegalStateException(String.format("I/O Error could not execute operation '%s'", op), e);
         }

@@ -292,6 +292,11 @@
             <artifactId>wildfly-controller-client</artifactId>
             <version>${version.org.wildfly.core}</version>
         </dependency>
+        <dependency>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-launcher</artifactId>
+            <version>${version.org.wildfly.core}</version>
+        </dependency>
         <!-- Seems to be needed as the controller client is transitively bringing it in -->
         <dependency>
             <groupId>org.wildfly.core</groupId>

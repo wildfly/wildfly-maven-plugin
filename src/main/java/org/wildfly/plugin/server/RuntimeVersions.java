@@ -22,7 +22,9 @@
 
 package org.wildfly.plugin.server;
 
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
 import java.util.NavigableSet;
 import java.util.TreeSet;
@@ -38,12 +40,16 @@ import org.jboss.jdf.stacks.model.Stacks;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 class RuntimeVersions {
+    private final List<Runtime> availableRuntimes;
 
-    private final StacksClient client;
-    private volatile Stacks stacks;
+    private RuntimeVersions() {
+        StacksClient client = new StacksClient();
+        final Stacks stacks = client.getStacks();
+        availableRuntimes = Collections.synchronizedList(stacks.getAvailableRuntimes());
+    }
 
-    public RuntimeVersions() {
-        client = new StacksClient();
+    private static class Holder {
+        static final RuntimeVersions INSTANCE = new RuntimeVersions();
     }
 
     /**
@@ -57,14 +63,14 @@ class RuntimeVersions {
      * @return the latest version or {@link org.wildfly.plugin.server.Defaults#WILDFLY_TARGET_VERSION} if the runtime
      * could not be found with the {@code groupId} and {@code artifactId}
      */
-    public String getLatest(final String groupId, final String artifactId) {
+    public static String getLatest(final String groupId, final String artifactId) {
         if (groupId == null) {
             throw new IllegalArgumentException("groupId cannot be null");
         }
         if (artifactId == null) {
             throw new IllegalArgumentException("artifactId cannot be null");
         }
-        final NavigableSet<String> versions = getVersions(groupId, artifactId);
+        final NavigableSet<String> versions = Holder.INSTANCE.getVersions(groupId, artifactId);
         return (versions.isEmpty() ? Defaults.WILDFLY_TARGET_VERSION : versions.last());
     }
 
@@ -77,14 +83,14 @@ class RuntimeVersions {
      * @return the latest version or {@link org.wildfly.plugin.server.Defaults#WILDFLY_TARGET_VERSION} if the runtime
      * could not be found with the {@code groupId} and {@code artifactId}
      */
-    public String getLatestFinal(final String groupId, final String artifactId) {
+    public static String getLatestFinal(final String groupId, final String artifactId) {
         if (groupId == null) {
             throw new IllegalArgumentException("groupId cannot be null");
         }
         if (artifactId == null) {
             throw new IllegalArgumentException("artifactId cannot be null");
         }
-        final NavigableSet<String> versions = getVersions(groupId, artifactId);
+        final NavigableSet<String> versions = Holder.INSTANCE.getVersions(groupId, artifactId);
         for (final String version : versions.descendingSet()) {
             final String l = version.toLowerCase(Locale.ENGLISH);
             if (l.endsWith("final") || l.endsWith("ga")) {
@@ -96,17 +102,12 @@ class RuntimeVersions {
     }
 
     private NavigableSet<String> getVersions(final String groupId, final String artifactId) {
-        if (stacks == null) {
-            synchronized (this) {
-                if (stacks == null) {
-                    stacks = client.getStacks();
-                }
-            }
-        }
         final NavigableSet<String> versions = new TreeSet<>(new VersionComparator());
-        for (Runtime runtime : stacks.getAvailableRuntimes()) {
-            if (groupId.equalsIgnoreCase(runtime.getGroupId()) && artifactId.equalsIgnoreCase(runtime.getArtifactId())) {
-                versions.add(runtime.getVersion());
+        synchronized (availableRuntimes) {
+            for (Runtime runtime : availableRuntimes) {
+                if (groupId.equalsIgnoreCase(runtime.getGroupId()) && artifactId.equalsIgnoreCase(runtime.getArtifactId())) {
+                    versions.add(runtime.getVersion());
+                }
             }
         }
         return versions;
