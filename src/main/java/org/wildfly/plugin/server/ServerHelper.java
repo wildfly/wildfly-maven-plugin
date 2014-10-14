@@ -52,22 +52,20 @@ class ServerHelper {
 
     public static boolean waitForDomain(final Process process, final DomainClient client, final Map<ServerIdentity, ServerStatus> servers, final long startupTimeout) throws InterruptedException, IOException {
         long timeout = startupTimeout * 1000;
-        boolean serverAvailable = false;
-        long sleep = 1000;
-        while (timeout > 0 && !serverAvailable) {
+        final long sleep = 100;
+        while (timeout > 0) {
             long before = System.currentTimeMillis();
-            serverAvailable = isDomainRunning(client, servers);
-            timeout -= (System.currentTimeMillis() - before);
-            if (!serverAvailable) {
-                if (ProcessHelper.processHasDied(process)) {
-                    return false;
-                }
-                Thread.sleep(sleep);
-                timeout -= sleep;
-                sleep = Math.max(sleep / 2, 100);
+            if (isDomainRunning(client, servers)) {
+                return true;
             }
+            timeout -= (System.currentTimeMillis() - before);
+            if (ProcessHelper.processHasDied(process)) {
+                return false;
+            }
+            TimeUnit.MILLISECONDS.sleep(sleep);
+            timeout -= sleep;
         }
-        return serverAvailable;
+        return false;
     }
 
     public static boolean isDomainRunning(final DomainClient client, final Map<ServerIdentity, ServerStatus> servers) {
@@ -80,8 +78,6 @@ class ServerHelper {
             // First shutdown the servers
             ModelNode op = Operations.createOperation("stop-servers");
             ModelNode response = client.execute(op);
-            // Wait for a moment so they servers can shut down
-            TimeUnit.SECONDS.sleep(3L);
             if (Operations.isSuccessfulOutcome(response)) {
                 op = Operations.createOperation("shutdown", address);
                 response = client.execute(op);
@@ -104,29 +100,26 @@ class ServerHelper {
             } else {
                 LOGGER.debugf("Failed to execute %s: %s", op, Operations.getFailureDescription(response));
             }
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             LOGGER.debug("Error shutting down domain", e);
         }
     }
 
     public static boolean waitForStandalone(final Process process, final ModelControllerClient client, final long startupTimeout) throws InterruptedException, IOException {
         long timeout = startupTimeout * 1000;
-        boolean serverAvailable = false;
-        long sleep = 1000;
-        while (timeout > 0 && !serverAvailable) {
+        final long sleep = 100L;
+        while (timeout > 0) {
             long before = System.currentTimeMillis();
-            serverAvailable = isStandaloneRunning(client);
+            if (isStandaloneRunning(client))
+                return true;
             timeout -= (System.currentTimeMillis() - before);
-            if (!serverAvailable) {
-                if (ProcessHelper.processHasDied(process)) {
-                    return false;
-                }
-                Thread.sleep(sleep);
-                timeout -= sleep;
-                sleep = Math.max(sleep / 2, 100);
+            if (ProcessHelper.processHasDied(process)) {
+                return false;
             }
+            TimeUnit.MILLISECONDS.sleep(sleep);
+            timeout -= sleep;
         }
-        return serverAvailable;
+        return false;
     }
 
     public static boolean isStandaloneRunning(final ModelControllerClient client) {
