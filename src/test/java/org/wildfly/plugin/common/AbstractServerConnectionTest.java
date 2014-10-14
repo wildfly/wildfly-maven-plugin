@@ -29,18 +29,17 @@ import static org.mockito.Mockito.verify;
 import java.io.File;
 
 import org.apache.maven.plugin.logging.Log;
-import org.wildfly.plugin.AbstractWildFlyMavenPluginMojoTestCase;
-import org.wildfly.plugin.deployment.DeployMojo;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
+import org.wildfly.plugin.AbstractWildFlyMojoTest;
+import org.wildfly.plugin.deployment.DeployMojo;
 
 /**
  * @author stevemoyer
- *
+ * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-public class AbstractServerConnectionTest extends AbstractWildFlyMavenPluginMojoTestCase {
+public class AbstractServerConnectionTest extends AbstractWildFlyMojoTest {
 
     Log log;
 
@@ -49,16 +48,7 @@ public class AbstractServerConnectionTest extends AbstractWildFlyMavenPluginMojo
      */
     @Before
     public void setUp() throws Exception {
-        super.setUp();
         log = mock(Log.class);
-    }
-
-    /**
-     * @throws java.lang.Exception
-     */
-    @After
-    public void tearDown() throws Exception {
-        super.tearDown();
     }
 
     /**
@@ -68,8 +58,8 @@ public class AbstractServerConnectionTest extends AbstractWildFlyMavenPluginMojo
      * credentials on the CLI.
      */
     @Test
-    public void testIdProvidedInPomButNoSettingsFile() throws Exception{
-        final  File pom = getPomAndVerify("id-provided-pom.xml");
+    public void testIdProvidedInPomButNoSettingsFile() throws Exception {
+        final File pom = getPomAndVerify("id-provided-pom.xml");
         final DeployMojo mojo = lookupMojoAndVerify("deploy", pom);
         mojo.setLog(log);
         mojo.getCallbackHandler();
@@ -86,7 +76,7 @@ public class AbstractServerConnectionTest extends AbstractWildFlyMavenPluginMojo
     public void testIdProvidedInPomButNoServerSection() throws Exception {
         final File pom = getPomAndVerify("id-provided-pom.xml");
         final File settings = getSettingsAndVerify("missing-id-settings.xml");
-        final DeployMojo mojo = lookupMojoVerifyAndApplySettings("deploy",  pom, settings);
+        final DeployMojo mojo = lookupMojoVerifyAndApplySettings("deploy", pom, settings);
         mojo.setLog(log);
         mojo.getCallbackHandler();
         verify(log).debug(DeployMojo.DEBUG_MESSAGE_NO_SERVER_SECTION);

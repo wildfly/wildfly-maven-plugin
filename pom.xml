@@ -75,12 +75,12 @@
 
     <properties>
         <!-- WildFly/JBoss dependencies -->
-        <version.org.wildfly.arquillian>1.0.0.Alpha2</version.org.wildfly.arquillian>
+        <version.org.jboss.logmanager>1.5.3.Final</version.org.jboss.logmanager>
         <version.org.wildfly.core>1.0.0.Alpha9</version.org.wildfly.core>
         <version.org.wildfly.dist>8.1.0.Final</version.org.wildfly.dist>
-        <version.org.jboss.arquillian>1.0.3.Final</version.org.jboss.arquillian>
 
         <!-- maven dependencies -->
+        <version.javax.inject.javax.inject>1</version.javax.inject.javax.inject>
         <version.org.apache.maven.maven-plugin>2.2.1</version.org.apache.maven.maven-plugin>
         <version.org.apache.maven.maven-core>3.0.5</version.org.apache.maven.maven-core>
         <version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>3.0.0
@@ -199,6 +199,7 @@
                     <systemPropertyVariables>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <jboss.home>${jboss.home}</jboss.home>
+                        <wildfly.management.port>10099</wildfly.management.port>
                         <wildfly.test.config.dir>
                             ${project.build.testOutputDirectory}${file.separator}unit${file.separator}common
                         </wildfly.test.config.dir>
@@ -323,6 +324,12 @@
 
         <!-- Test dependencies -->
         <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>${version.javax.inject.javax.inject}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${version.junit.junit}</version>
@@ -347,15 +354,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.jboss.arquillian.junit</groupId>
-            <artifactId>arquillian-junit-container</artifactId>
-            <version>${version.org.jboss.arquillian}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.wildfly.arquillian</groupId>
-            <artifactId>wildfly-arquillian-container-managed</artifactId>
-            <version>${version.org.wildfly.arquillian}</version>
+            <groupId>org.jboss.logmanager</groupId>
+            <artifactId>jboss-logmanager</artifactId>
+            <version>${version.org.jboss.logmanager}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

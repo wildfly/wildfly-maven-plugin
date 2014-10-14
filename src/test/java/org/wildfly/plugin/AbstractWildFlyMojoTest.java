@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2013, Red Hat, Inc., and individual contributors
+ * Copyright 2014, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -22,43 +22,39 @@
 
 package org.wildfly.plugin;
 
+import static org.junit.Assert.*;
+
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
-import java.util.Arrays;
 import org.apache.maven.plugin.Mojo;
-import org.apache.maven.plugin.testing.AbstractMojoTestCase;
+import org.apache.maven.plugin.testing.MojoRule;
 import org.apache.maven.settings.Settings;
 import org.apache.maven.settings.io.DefaultSettingsReader;
 import org.apache.maven.settings.io.SettingsParseException;
 import org.apache.maven.settings.io.SettingsReader;
-import org.jboss.as.controller.client.ModelControllerClient;
-import org.wildfly.plugin.common.ServerOperations;
-import org.jboss.dmr.ModelNode;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.Rule;
 
 /**
- * @author swm16 (swm16@psu.edu)
+ * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-public abstract class AbstractWildFlyMavenPluginMojoTestCase extends AbstractMojoTestCase {
+public abstract class AbstractWildFlyMojoTest {
 
     protected final String DEPLOYMENT_NAME = "test.war";
     protected final String BASE_CONFIG_DIR = System.getProperty("wildfly.test.config.dir");
 
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-    }
+    @Rule
+    public MojoRule rule = new MojoRule() {
+        @Override
+        protected void before() throws Throwable {
+        }
 
-    @After
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
+        @Override
+        protected void after() {
+        }
+    };
 
     /**
      * Gets a settings.xml file from the input File and prepares it to be
@@ -68,7 +64,7 @@ public abstract class AbstractWildFlyMavenPluginMojoTestCase extends AbstractMoj
      *
      * @return the settings object
      *
-     * @throws IOException - if the settings file can't be read
+     * @throws java.io.IOException - if the settings file can't be read
      */
     private Settings getSettingsFile(File userSettingsFile) throws IOException {
         Map<String, ?> options = Collections.singletonMap(SettingsReader.IS_STRICT, Boolean.TRUE);
@@ -142,7 +138,7 @@ public abstract class AbstractWildFlyMavenPluginMojoTestCase extends AbstractMoj
      */
     @SuppressWarnings("unchecked")
     public <T extends Mojo> T lookupMojoAndVerify(String mojoName, File pomFile) throws Exception {
-        T mojo = (T) lookupMojo(mojoName, pomFile);
+        T mojo = (T) rule.lookupMojo(mojoName, pomFile);
         assertNotNull(mojo);
         return mojo;
     }
@@ -162,37 +158,10 @@ public abstract class AbstractWildFlyMavenPluginMojoTestCase extends AbstractMoj
      */
     @SuppressWarnings("unchecked")
     public <T extends Mojo> T lookupMojoVerifyAndApplySettings(String mojoName, File pomFile, File settingsFile) throws Exception {
-        T mojo = (T) lookupMojo(mojoName, pomFile);
+        T mojo = (T) rule.lookupMojo(mojoName, pomFile);
         assertNotNull(mojo);
-        setVariableValueToObject(mojo, "settings", getSettingsFile(settingsFile));
+        rule.setVariableValueToObject(mojo, "settings", getSettingsFile(settingsFile));
         return mojo;
-    }
-
-    protected ModelNode executeOperation(final ModelControllerClient client, final ModelNode op) throws IOException {
-        final ModelNode result = client.execute(op);
-        assertTrue(ServerOperations.getFailureDescriptionAsString(result), ServerOperations.isSuccessfulOutcome(result));
-        return result;
-    }
-
-    protected static ModelNode createAddress(final String... resourceParts) {
-        final ModelNode address = new ModelNode().setEmptyList();
-        @SuppressWarnings("unchecked")
-        final List<String> parts = new ArrayList<String>(Arrays.asList(resourceParts));
-        if (!parts.isEmpty()) {
-            if (parts.size() % 2 != 0) {
-                parts.add("*");
-            }
-            String key = null;
-            for (String value : parts) {
-                if (key == null) {
-                    key = value;
-                } else {
-                    address.add(key, value);
-                    key = null;
-                }
-            }
-        }
-        return address;
     }
 
 }

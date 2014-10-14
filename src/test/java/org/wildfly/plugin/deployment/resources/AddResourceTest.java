@@ -22,38 +22,22 @@
 
 package org.wildfly.plugin.deployment.resources;
 
+import static org.junit.Assert.*;
+
 import java.io.File;
 
 import org.apache.maven.project.MavenProject;
-import org.jboss.as.arquillian.api.ContainerResource;
-import org.jboss.as.arquillian.container.ManagementClient;
-import org.junit.Ignore;
-import org.wildfly.plugin.AbstractItTestCase;
-import org.wildfly.plugin.deployment.resource.AddResourceMojo;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
+import org.wildfly.plugin.AbstractWildFlyServerMojoTest;
+import org.wildfly.plugin.deployment.resource.AddResourceMojo;
 
 /**
  * AddResource test case
  *
  * @author <a href="mailto:dave.himself@gmail.com">Dave Heath</a>
  */
-@Ignore("Composite operations don't seem to be working with datasources")
-public class AddResourceTest extends AbstractItTestCase {
-
-    @ContainerResource
-    private ManagementClient managementClient;
-
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
+// @Ignore("Composite operations don't seem to be working with datasources")
+public class AddResourceTest extends AbstractWildFlyServerMojoTest {
 
 
     @Test
@@ -87,12 +71,13 @@ public class AddResourceTest extends AbstractItTestCase {
         }
 
     }
+
     @Test
     public void testCanAddXaDataSource() throws Exception {
         final MavenProject mavenProject = new MavenProject();
         mavenProject.setPackaging("war");
 
-        final File pom = getPom("add-add-resource-xa-datasource");
+        final File pom = getPom("add-resource-xa-datasource.xml");
 
         final AddResourceMojo addResourceMojo = lookupMojoAndVerify("add-resource", pom);
         try {

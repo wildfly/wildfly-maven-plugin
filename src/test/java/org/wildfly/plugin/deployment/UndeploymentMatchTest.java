@@ -22,30 +22,27 @@
 
 package org.wildfly.plugin.deployment;
 
+import static org.junit.Assert.*;
+
 import java.io.File;
 import java.util.List;
 
 import org.apache.maven.project.MavenProject;
-import org.jboss.as.arquillian.api.ContainerResource;
-import org.jboss.as.arquillian.container.ManagementClient;
-import org.wildfly.plugin.AbstractItTestCase;
-import org.wildfly.plugin.common.DeploymentExecutionException;
-import org.wildfly.plugin.common.DeploymentInspector;
-import org.wildfly.plugin.common.ServerOperations;
 import org.jboss.dmr.ModelNode;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.wildfly.plugin.AbstractWildFlyServerMojoTest;
+import org.wildfly.plugin.common.DeploymentExecutionException;
+import org.wildfly.plugin.common.DeploymentInspector;
+import org.wildfly.plugin.common.ServerOperations;
 
 /**
  * Matcher Undeployment test case.
  *
  * @author <a href="mailto:mpaluch@paluch.biz">Mark Paluch</a>
  */
-public class UndeploymentMatchTest extends AbstractItTestCase {
-
-    @ContainerResource
-    private ManagementClient managementClient;
+public class UndeploymentMatchTest extends AbstractWildFlyServerMojoTest {
 
     @Before
     public void before() throws Exception {
@@ -58,7 +55,7 @@ public class UndeploymentMatchTest extends AbstractItTestCase {
 
         undeploy(MatchPatternStrategy.ALL);
 
-        List<String> deployments = DeploymentInspector.getDeployments(managementClient.getControllerClient(), "", ".*.war");
+        List<String> deployments = DeploymentInspector.getDeployments(client, "", ".*.war");
         assertEquals(0, deployments.size());
     }
 
@@ -67,7 +64,7 @@ public class UndeploymentMatchTest extends AbstractItTestCase {
 
         undeploy(MatchPatternStrategy.FIRST);
 
-        List<String> deployments = DeploymentInspector.getDeployments(managementClient.getControllerClient(), "", ".*.war");
+        List<String> deployments = DeploymentInspector.getDeployments(client, "", ".*.war");
         assertEquals(1, deployments.size());
     }
 
@@ -109,7 +106,7 @@ public class UndeploymentMatchTest extends AbstractItTestCase {
         // /deployment=test.war :read-attribute(name=status)
         final ModelNode address = ServerOperations.createAddress("deployment", deploymentName);
         final ModelNode op = ServerOperations.createReadAttributeOperation(address, "status");
-        final ModelNode result = executeOperation(managementClient.getControllerClient(), op);
+        final ModelNode result = executeOperation(op);
 
         assertEquals("OK", ServerOperations.readResultAsString(result));
     }
