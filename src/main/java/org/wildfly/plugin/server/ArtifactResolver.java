@@ -44,4 +44,132 @@ public interface ArtifactResolver {
      * @return the file associated with the artifact
      */
     File resolve(MavenProject project, String artifact);
+
+    static class ArtifactNameSplitter {
+
+        private final String artifact;
+        private String groupId;
+        private String artifactId;
+        private String classifier;
+        private String packaging;
+        private String version;
+
+        public ArtifactNameSplitter(final String artifact) {
+            this.artifact = artifact;
+        }
+
+        public static ArtifactNameSplitter of(final String artifact) {
+            return new ArtifactNameSplitter(artifact);
+        }
+
+        public String getGroupId() {
+            return groupId;
+        }
+
+        public ArtifactNameSplitter setGroupId(final String groupId) {
+            this.groupId = groupId;
+            return this;
+        }
+
+        public String getArtifactId() {
+            return artifactId;
+        }
+
+        public ArtifactNameSplitter setArtifactId(final String artifactId) {
+            this.artifactId = artifactId;
+            return this;
+        }
+
+        public String getClassifier() {
+            return classifier;
+        }
+
+        public ArtifactNameSplitter setClassifier(final String classifier) {
+            this.classifier = classifier;
+            return this;
+        }
+
+        public String getPackaging() {
+            return packaging;
+        }
+
+        public ArtifactNameSplitter setPackaging(final String packaging) {
+            this.packaging = packaging;
+            return this;
+        }
+
+        public String getVersion() {
+            return version;
+        }
+
+        public ArtifactNameSplitter setVersion(final String version) {
+            this.version = version;
+            return this;
+        }
+
+        public ArtifactNameSplitter split() {
+            if (artifact != null) {
+                final String[] artifactSegments = artifact.split(":");
+                if (artifactSegments.length == 0) {
+                    throw new IllegalArgumentException(String.format("Invalid artifact pattern: %s", artifact));
+                }
+                // groupId:artifactId:version[:packaging][:classifier].
+                String value;
+                switch (artifactSegments.length) {
+                    case 5:
+                        value = artifactSegments[4].trim();
+                        if (!value.isEmpty()) {
+                            classifier = value;
+                        }
+                    case 4:
+                        value = artifactSegments[3].trim();
+                        if (!value.isEmpty()) {
+                            packaging = value;
+                        }
+                    case 3:
+                        value = artifactSegments[2].trim();
+                        if (!value.isEmpty()) {
+                            version = value;
+                        }
+                    case 2:
+                        value = artifactSegments[1].trim();
+                        if (!value.isEmpty()) {
+                            artifactId = value;
+                        }
+                    case 1:
+                        value = artifactSegments[0].trim();
+                        if (!value.isEmpty()) {
+                            groupId = value;
+                        }
+                }
+            }
+            return this;
+        }
+
+        public String asString() {
+            split();
+            if (version == null) {
+                version = RuntimeVersions.getLatestFinal(groupId, artifactId);
+            }
+            // Validate the groupId, artifactId and version are not null
+            if (groupId == null || artifactId == null || version == null) {
+                throw new IllegalStateException("The groupId, artifactId and version parameters are required");
+            }
+            final StringBuilder result = new StringBuilder();
+            result.append(groupId)
+                    .append(':')
+                    .append(artifactId)
+                    .append(':')
+                    .append(version)
+                    .append(':');
+            if (packaging != null) {
+                result.append(packaging);
+            }
+            result.append(':');
+            if (classifier != null) {
+                result.append(classifier);
+            }
+            return result.toString();
+        }
+    }
 }

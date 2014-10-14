@@ -33,47 +33,8 @@ abstract class AbstractArtifactResolver<T> implements ArtifactResolver {
     protected abstract T constructArtifact(final String groupId, final String artifactId, final String classifier, final String packaging, final String version);
 
     protected T createArtifact(final String artifact) {
-        String groupId = null;
-        String artifactId = null;
-        String classifier = null;
-        String packaging = null;
-        String version = null;
-        // groupId:artifactId:version[:packaging][:classifier].
-        if (artifact != null) {
-            final String[] artifactParts = artifact.split(":");
-            if (artifactParts.length == 0) {
-                throw new IllegalArgumentException(String.format("Invalid artifact pattern: %s", artifact));
-            }
-            String value;
-            switch (artifactParts.length) {
-                case 5:
-                    value = artifactParts[4].trim();
-                    if (!value.isEmpty()) {
-                        classifier = value;
-                    }
-                case 4:
-                    value = artifactParts[3].trim();
-                    if (!value.isEmpty()) {
-                        packaging = value;
-                    }
-                case 3:
-                    value = artifactParts[2].trim();
-                    if (!value.isEmpty()) {
-                        version = value;
-                    }
-                case 2:
-                    value = artifactParts[1].trim();
-                    if (!value.isEmpty()) {
-                        artifactId = value;
-                    }
-                case 1:
-                    value = artifactParts[0].trim();
-                    if (!value.isEmpty()) {
-                        groupId = value;
-                    }
-            }
-        }
-        return constructArtifact(groupId, artifactId, classifier, packaging, version);
+        final ArtifactNameSplitter splitter = ArtifactNameSplitter.of(artifact).split();
+        return constructArtifact(splitter.getGroupId(), splitter.getArtifactId(), splitter.getClassifier(), splitter.getPackaging(), splitter.getVersion());
     }
 
     static <T> T invoke(final Object object, final String method, final Class<T> result) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {

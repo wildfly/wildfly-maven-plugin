@@ -24,6 +24,10 @@ package org.wildfly.plugin.server;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -38,12 +42,12 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.common.DeploymentFailureException;
-import org.wildfly.plugin.common.Files;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.deployment.DeployMojo;
 import org.wildfly.plugin.deployment.Deployment;
 import org.wildfly.plugin.deployment.standalone.StandaloneDeployment;
+import org.wildfly.plugin.server.ArtifactResolver.ArtifactNameSplitter;
 
 /**
  * Starts a standalone instance of WildFly and deploys the application to the server.
@@ -150,17 +154,16 @@ public class RunMojo extends DeployMojo {
         final Log log = getLog();
         final File deploymentFile = file();
         final String deploymentName = deploymentFile.getName();
-        final File targetDir = deploymentFile.getParentFile();
         // The deployment must exist before we do anything
         if (!deploymentFile.exists()) {
             throw new MojoExecutionException(String.format("The deployment '%s' could not be found.", deploymentFile.getAbsolutePath()));
         }
         // Validate the environment
-        final File jbossHome = extractIfRequired(targetDir);
-        if (!jbossHome.isDirectory()) {
+        final Path jbossHome = extractIfRequired(deploymentFile.getParentFile().toPath());
+        if (!Files.isDirectory(jbossHome)) {
             throw new MojoExecutionException(String.format("JBOSS_HOME '%s' is not a valid directory.", jbossHome));
         }
-        final StandaloneCommandBuilder commandBuilder = StandaloneCommandBuilder.of(jbossHome.toPath())
+        final StandaloneCommandBuilder commandBuilder = StandaloneCommandBuilder.of(jbossHome)
                 .setJavaHome(javaHome)
                 .addModuleDirs(modulesPath.getModulePaths());
 
@@ -215,95 +218,40 @@ public class RunMojo extends DeployMojo {
 
     }
 
-    private File extractIfRequired(final File buildDir) throws MojoFailureException, MojoExecutionException {
+    private Path extractIfRequired(final Path buildDir) throws MojoFailureException, MojoExecutionException {
         if (jbossHome != null) {
             //we do not need to download WildFly
-            return new File(jbossHome);
+            return Paths.get(jbossHome);
         }
-        final File result = artifactResolver.resolve(project, createArtifact());
-        final File target = new File(buildDir, WILDFLY_DIR);
+        final String artifact = ArtifactNameSplitter.of(this.artifact)
+                .setArtifactId(artifactId)
+                .setClassifier(classifier)
+                .setGroupId(groupId)
+                .setPackaging(packaging)
+                .setVersion(version)
+                .asString();
+        final Path result = artifactResolver.resolve(project, artifact).toPath();
+        final Path target = buildDir.resolve(WILDFLY_DIR);
         // Delete the target if it exists
-        if (target.exists()) {
-            Files.deleteRecursively(target);
+        if (Files.exists(target)) {
+            try {
+                Archives.deleteDirectory(target);
+            } catch (IOException e) {
+                throw new MojoFailureException("Could not delete target directory: " + target, e);
+            }
         }
-        target.mkdirs();
         try {
-            Files.unzip(result, target);
+            Archives.unzip(result, target);
+            final Iterator<Path> iterator = Files.newDirectoryStream(target).iterator();
+            if (iterator.hasNext()) return iterator.next();
         } catch (IOException e) {
             throw new MojoFailureException("Artifact was not successfully extracted: " + result, e);
         }
-        final File[] files = target.listFiles();
-        if (files == null || files.length != 1) {
-            throw new MojoFailureException("Artifact was not successfully extracted: " + result);
-        }
-        // Assume the first
-        return files[0];
+        throw new MojoFailureException("Artifact was not successfully extracted: " + result);
     }
 
     @Override
     public String goal() {
         return "run";
-    }
-
-    private String createArtifact() throws MojoFailureException {
-        String groupId = this.groupId;
-        String artifactId = this.artifactId;
-        String classifier = this.classifier;
-        String packaging = this.packaging;
-        String version = this.version == null ? RuntimeVersions.getLatestFinal(groupId, artifactId) : this.version;
-        // groupId:artifactId:version[:packaging][:classifier].
-        if (artifact != null) {
-            final String[] artifactParts = artifact.split(":");
-            if (artifactParts.length == 0) {
-                throw new MojoFailureException(String.format("Invalid artifact pattern: %s", artifact));
-            }
-            String value;
-            switch (artifactParts.length) {
-                case 5:
-                    value = artifactParts[4].trim();
-                    if (!value.isEmpty()) {
-                        classifier = value;
-                    }
-                case 4:
-                    value = artifactParts[3].trim();
-                    if (!value.isEmpty()) {
-                        packaging = value;
-                    }
-                case 3:
-                    value = artifactParts[2].trim();
-                    if (!value.isEmpty()) {
-                        version = value;
-                    }
-                case 2:
-                    value = artifactParts[1].trim();
-                    if (!value.isEmpty()) {
-                        artifactId = value;
-                    }
-                case 1:
-                    value = artifactParts[0].trim();
-                    if (!value.isEmpty()) {
-                        groupId = value;
-                    }
-            }
-        }
-        // Validate the groupId, artifactId and version are not null
-        if (groupId == null || artifactId == null || version == null) {
-            throw new IllegalStateException("The groupId, artifactId and version parameters are required");
-        }
-        final StringBuilder result = new StringBuilder();
-        result.append(groupId)
-                .append(':')
-                .append(artifactId)
-                .append(':')
-                .append(version)
-                .append(':');
-        if (packaging != null) {
-            result.append(packaging);
-        }
-        result.append(':');
-        if (classifier != null) {
-            result.append(classifier);
-        }
-        return result.toString();
     }
 }

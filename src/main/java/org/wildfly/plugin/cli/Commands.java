@@ -24,9 +24,9 @@ package org.wildfly.plugin.cli;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,10 +41,9 @@ import org.jboss.as.cli.batch.BatchManager;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.Operation;
 import org.jboss.as.controller.client.OperationMessageHandler;
-import org.wildfly.plugin.common.IoUtils;
-import org.wildfly.plugin.common.ServerOperations;
 import org.jboss.dmr.ModelNode;
 import org.jboss.threads.AsyncFuture;
+import org.wildfly.plugin.common.ServerOperations;
 
 /**
  * CLI commands to run.
@@ -84,7 +83,7 @@ public class Commands {
      * Indicates whether or not commands should be executed in a batch.
      *
      * @return {@code true} if commands should be executed in a batch, otherwise
-     *         {@code false}
+     * {@code false}
      */
     public boolean isBatch() {
         return batch;
@@ -103,7 +102,7 @@ public class Commands {
      * Checks of there are a CLI script file that should be executed.
      *
      * @return {@code true} if there are a CLI script to be processed, otherwise
-     *         {@code false}
+     * {@code false}
      */
     public boolean hasScripts() {
         return scripts != null && !scripts.isEmpty();
@@ -146,9 +145,7 @@ public class Commands {
     private void executeScripts(final CommandContext ctx) throws IOException {
 
         for (File script : scripts) {
-            BufferedReader reader = null;
-            try {
-                reader = new BufferedReader(new InputStreamReader(new FileInputStream(script), "UTF-8"));
+            try (BufferedReader reader = Files.newBufferedReader(script.toPath(), StandardCharsets.UTF_8)) {
                 String line = reader.readLine();
                 while (!ctx.isTerminated() && line != null) {
 
@@ -164,8 +161,6 @@ public class Commands {
                 }
             } catch (Exception e) {
                 throw new IllegalStateException("Failed to process file '" + script.getAbsolutePath() + "'", e);
-            } finally {
-                IoUtils.safeClose(reader);
             }
         }
     }
