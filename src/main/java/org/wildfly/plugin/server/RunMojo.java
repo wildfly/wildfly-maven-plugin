@@ -186,7 +186,7 @@ public class RunMojo extends DeployMojo {
         if (javaOpts != null) {
             commandBuilder.setJavaOptions(javaOpts);
         } else if (jvmArgs != null) {
-            commandBuilder.addJavaOptions(jvmArgs.split("\\s+"));
+            commandBuilder.setJavaOptions(jvmArgs.split("\\s+"));
         }
 
         if (serverConfig != null) {

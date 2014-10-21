@@ -184,7 +184,7 @@ public class StartMojo extends AbstractServerConnection {
         if (javaOpts != null) {
             commandBuilder.setJavaOptions(javaOpts);
         } else if (jvmArgs != null) {
-            commandBuilder.addJavaOptions(jvmArgs.split("\\s+"));
+            commandBuilder.setJavaOptions(jvmArgs.split("\\s+"));
         }
 
         if (serverConfig != null) {
