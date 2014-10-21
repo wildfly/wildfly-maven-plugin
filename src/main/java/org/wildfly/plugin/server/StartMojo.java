@@ -153,6 +153,12 @@ public class StartMojo extends AbstractServerConnection {
     @Parameter(alias = "startup-timeout", defaultValue = Defaults.TIMEOUT, property = PropertyNames.STARTUP_TIMEOUT)
     private long startupTimeout;
 
+    /**
+     * The arguments to be passed to the server.
+     */
+    @Parameter(alias = "server-args", property = PropertyNames.SERVER_ARGS)
+    private String[] serverArgs;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         final Log log = getLog();
@@ -177,6 +183,11 @@ public class StartMojo extends AbstractServerConnection {
         if (propertiesFile != null) {
             commandBuilder.setPropertiesFile(propertiesFile);
         }
+
+        if (serverArgs != null) {
+            commandBuilder.addServerArguments(serverArgs);
+        }
+
         // Print some server information
         log.info(String.format("JAVA_HOME=%s", commandBuilder.getJavaHome()));
         log.info(String.format("JBOSS_HOME=%s%n", commandBuilder.getWildFlyHome()));

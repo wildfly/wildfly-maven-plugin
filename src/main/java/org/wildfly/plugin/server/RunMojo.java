@@ -149,6 +149,12 @@ public class RunMojo extends DeployMojo {
     @Parameter(alias = "startup-timeout", defaultValue = Defaults.TIMEOUT, property = PropertyNames.STARTUP_TIMEOUT)
     private long startupTimeout;
 
+    /**
+     * The arguments to be passed to the server.
+     */
+    @Parameter(alias = "server-args", property = PropertyNames.SERVER_ARGS)
+    private String[] serverArgs;
+
     @Override
     protected void doExecute() throws MojoExecutionException, MojoFailureException {
         final Log log = getLog();
@@ -178,6 +184,10 @@ public class RunMojo extends DeployMojo {
 
         if (propertiesFile != null) {
             commandBuilder.setPropertiesFile(propertiesFile);
+        }
+
+        if (serverArgs != null) {
+            commandBuilder.addServerArguments(serverArgs);
         }
 
         // Print some server information
