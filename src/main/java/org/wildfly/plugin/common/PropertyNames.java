@@ -61,6 +61,8 @@ public interface PropertyNames {
 
     String JVM_ARGS = "wildfly.jvmArgs";
 
+    String JAVA_OPTS = "wildfly.javaOpts";
+
     String MODULES_PATH = "wildfly.modulesPath";
 
     String PASSWORD = "wildfly.password";

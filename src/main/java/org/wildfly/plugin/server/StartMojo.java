@@ -125,9 +125,18 @@ public class StartMojo extends AbstractServerConnection {
 
     /**
      * A space delimited list of JVM arguments.
+     *
+     * @deprecated use {@link #javaOpts}
      */
-    @Parameter(alias = "jvm-args", property = PropertyNames.JVM_ARGS, defaultValue = Defaults.DEFAULT_JVM_ARGS)
+    @Parameter(alias = "jvm-args", property = PropertyNames.JVM_ARGS)
+    @Deprecated
     private String jvmArgs;
+
+    /**
+     * The JVM options to use.
+     */
+    @Parameter(alias = "java-opts", property = PropertyNames.JAVA_OPTS)
+    private String[] javaOpts;
 
     /**
      * The {@code JAVA_HOME} to use for launching the server.
@@ -171,8 +180,10 @@ public class StartMojo extends AbstractServerConnection {
                 .setJavaHome(javaHome)
                 .addModuleDirs(modulesPath.getModulePaths());
 
-        // JVM arguments should be space delimited
-        if (jvmArgs != null) {
+        // Set the JVM options
+        if (javaOpts != null) {
+            commandBuilder.setJavaOptions(javaOpts);
+        } else if (jvmArgs != null) {
             commandBuilder.addJavaOptions(jvmArgs.split("\\s+"));
         }
 

@@ -28,11 +28,6 @@ package org.wildfly.plugin.server;
 interface Defaults {
 
     /**
-     * The default JVM arguments.
-     */
-    String DEFAULT_JVM_ARGS = "-Xms64m -Xmx512m -XX:MaxPermSize=256m -Djava.net.preferIPv4Stack=true";
-
-    /**
      * The default group id
      */
     String WILDFLY_GROUP_ID = "org.wildfly";
