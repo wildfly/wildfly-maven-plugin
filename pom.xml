@@ -30,12 +30,14 @@
         <version>14</version>
     </parent>
     <groupId>org.wildfly.plugins</groupId>
-    <artifactId>wildfly-maven-plugin</artifactId>
+    <artifactId>wildfly-maven-plugin-parent</artifactId>
     <version>1.1.0.Final-SNAPSHOT</version>
-    <packaging>maven-plugin</packaging>
-    <name>WildFly Maven Plugin</name>
+    <packaging>pom</packaging>
+    <name>WildFly Maven Plugin - Parent</name>
 
-    <description>A maven plugin that allows various management operations to be executed on WildFly Application Server.</description>
+    <description>A maven plugin that allows various management operations to be executed on WildFly Application
+        Server.
+    </description>
     <url>http://www.wildfly.org</url>
 
     <issueManagement>
@@ -75,28 +77,24 @@
 
     <properties>
         <!-- WildFly/JBoss dependencies -->
+        <version.org.jboss.jdf.stacks-client>1.0.2.Final</version.org.jboss.jdf.stacks-client>
         <version.org.jboss.logmanager>1.5.4.Final</version.org.jboss.logmanager>
         <version.org.wildfly.core>1.0.0.Alpha13</version.org.wildfly.core>
         <version.org.wildfly.dist>8.2.0.Final</version.org.wildfly.dist>
 
         <!-- maven dependencies -->
         <version.javax.inject.javax.inject>1</version.javax.inject.javax.inject>
-        <version.org.apache.maven.maven-plugin>2.2.1</version.org.apache.maven.maven-plugin>
-        <version.org.apache.maven.maven-core>3.0.5</version.org.apache.maven.maven-core>
-        <version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>3.0.0
+        <version.org.apache.maven.maven-core>3.1.1</version.org.apache.maven.maven-core>
+        <version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>3.1.0
         </version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>
-        <version.org.apache.maven.plugin-tools>3.2</version.org.apache.maven.plugin-tools>
-        <version.org.codehaus.plexus.plexus-utils>3.0.10</version.org.codehaus.plexus.plexus-utils>
-        <version.org.eclipse.aether>0.9.0.M4</version.org.eclipse.aether>
-        <version.org.jboss.jdf.stacks-client>1.0.2.Final</version.org.jboss.jdf.stacks-client>
-        <version.org.sonatype.aether>1.13.1</version.org.sonatype.aether>
+        <version.org.apache.maven.plugin-tools>3.3</version.org.apache.maven.plugin-tools>
+        <version.org.codehaus.plexus.plexus-utils>3.0.21</version.org.codehaus.plexus.plexus-utils>
+        <version.org.eclipse.aether>1.0.1.v20141111</version.org.eclipse.aether>
 
         <!-- other dependencies -->
         <version.junit.junit>4.11</version.junit.junit>
         <version.org.apache.commons.compress>1.5</version.org.apache.commons.compress>
         <version.org.mockito.mockito-all>1.9.0</version.org.mockito.mockito-all>
-
-        <jboss.home>${project.build.directory}${file.separator}wildfly-${version.org.wildfly.dist}</jboss.home>
 
         <!-- plugin versions -->
         <version.dependency.plugin>2.8</version.dependency.plugin>
@@ -114,69 +112,13 @@
         <pluginPrefix>wildfly</pluginPrefix>
     </properties>
 
+    <modules>
+        <module>plugin</module>
+        <module>tests</module>
+    </modules>
+
     <build>
         <plugins>
-            <plugin>
-                <artifactId>maven-site-plugin</artifactId>
-                <configuration>
-                    <relativizeDecorationLinks>false</relativizeDecorationLinks>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-project-info-reports-plugin</artifactId>
-                <version>${version.pir.plugin}</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-plugin-plugin</artifactId>
-                <configuration>
-                    <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>mojo-descriptor</id>
-                        <goals>
-                            <goal>descriptor</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>help-goal</id>
-                        <goals>
-                            <goal>helpmojo</goal>
-                        </goals>
-                        <configuration>
-                            <helpPackageName>org.wildfly.plugin.generated</helpPackageName>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>unpack-wildfly</id>
-                        <phase>generate-test-resources</phase>
-                        <goals>
-                            <goal>unpack</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.wildfly</groupId>
-                                    <artifactId>wildfly-dist</artifactId>
-                                    <version>${version.org.wildfly.dist}</version>
-                                    <type>zip</type>
-                                    <!-- overwrite to clean any previous deployments -->
-                                    <overWrite>true</overWrite>
-                                    <outputDirectory>${project.build.directory}</outputDirectory>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
             <plugin>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <configuration>
@@ -195,180 +137,118 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
-                    <systemPropertyVariables>
-                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                        <jboss.home>${jboss.home}</jboss.home>
-                        <wildfly.management.port>10099</wildfly.management.port>
-                        <wildfly.test.config.dir>
-                            ${project.build.testOutputDirectory}${file.separator}unit${file.separator}common
-                        </wildfly.test.config.dir>
-                    </systemPropertyVariables>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.plexus</groupId>
-                <artifactId>plexus-component-metadata</artifactId>
-                <version>${version.org.codehaus.plexus.plexus-component-metadata}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate-metadata</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-plugin-plugin</artifactId>
-                <version>${version.plugin.plugin}</version>
-            </plugin>
-        </plugins>
-    </reporting>
+    <dependencyManagement>
+        <dependencies>
 
-    <dependencies>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${version.org.apache.commons.compress}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-core</artifactId>
+                <version>${version.org.apache.maven.maven-core}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-plugin-api</artifactId>
+                <version>${version.org.apache.maven.maven-core}</version>
+            </dependency>
+            <!-- dependencies to annotations -->
+            <dependency>
+                <groupId>org.apache.maven.plugin-tools</groupId>
+                <artifactId>maven-plugin-annotations</artifactId>
+                <version>${version.org.apache.maven.plugin-tools}</version>
+            </dependency>
+            <!-- generated help mojo has a dependency to plexus-utils -->
+            <dependency>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-utils</artifactId>
+                <version>${version.org.codehaus.plexus.plexus-utils}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.aether</groupId>
+                <artifactId>aether-api</artifactId>
+                <version>${version.org.eclipse.aether}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.jdf</groupId>
+                <artifactId>stacks-client</artifactId>
+                <version>${version.org.jboss.jdf.stacks-client}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wildfly.core</groupId>
+                <artifactId>wildfly-cli</artifactId>
+                <version>${version.org.wildfly.core}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.jboss.logging</groupId>
+                        <artifactId>jboss-logging-processor</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.jboss.logmanager</groupId>
+                        <artifactId>jboss-logmanager</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.wildfly.core</groupId>
+                <artifactId>wildfly-controller-client</artifactId>
+                <version>${version.org.wildfly.core}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wildfly.core</groupId>
+                <artifactId>wildfly-launcher</artifactId>
+                <version>${version.org.wildfly.core}</version>
+            </dependency>
+            <!-- Seems to be needed as the controller client is transitively bringing it in -->
+            <dependency>
+                <groupId>org.wildfly.core</groupId>
+                <artifactId>wildfly-protocol</artifactId>
+                <version>${version.org.wildfly.core}</version>
+            </dependency>
 
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-            <version>${version.org.apache.commons.compress}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-core</artifactId>
-            <version>${version.org.apache.maven.maven-core}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-plugin-api</artifactId>
-            <version>${version.org.apache.maven.maven-core}</version>
-        </dependency>
-        <!-- dependencies to annotations -->
-        <dependency>
-            <groupId>org.apache.maven.plugin-tools</groupId>
-            <artifactId>maven-plugin-annotations</artifactId>
-            <version>${version.org.apache.maven.plugin-tools}</version>
-        </dependency>
-        <!-- generated help mojo has a dependency to plexus-utils -->
-        <dependency>
-            <groupId>org.codehaus.plexus</groupId>
-            <artifactId>plexus-utils</artifactId>
-            <version>${version.org.codehaus.plexus.plexus-utils}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.aether</groupId>
-            <artifactId>aether-api</artifactId>
-            <version>${version.org.eclipse.aether}</version>
-            <scope>provided</scope>
-            <!-- Used in maven 3.1.x -->
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.jdf</groupId>
-            <artifactId>stacks-client</artifactId>
-            <version>${version.org.jboss.jdf.stacks-client}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.wildfly.core</groupId>
-            <artifactId>wildfly-cli</artifactId>
-            <version>${version.org.wildfly.core}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.jboss.logging</groupId>
-                    <artifactId>jboss-logging-processor</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.jboss.logmanager</groupId>
-                    <artifactId>jboss-logmanager</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.wildfly.core</groupId>
-            <artifactId>wildfly-controller-client</artifactId>
-            <version>${version.org.wildfly.core}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.wildfly.core</groupId>
-            <artifactId>wildfly-launcher</artifactId>
-            <version>${version.org.wildfly.core}</version>
-        </dependency>
-        <!-- Seems to be needed as the controller client is transitively bringing it in -->
-        <dependency>
-            <groupId>org.wildfly.core</groupId>
-            <artifactId>wildfly-protocol</artifactId>
-            <version>${version.org.wildfly.core}</version>
-        </dependency>
+            <!-- Test dependencies -->
+            <dependency>
+                <groupId>javax.inject</groupId>
+                <artifactId>javax.inject</artifactId>
+                <version>${version.javax.inject.javax.inject}</version>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${version.junit.junit}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-compat</artifactId>
+                <version>${version.org.apache.maven.maven-core}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-settings-builder</artifactId>
+                <version>${version.org.apache.maven.maven-core}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven.plugin-testing</groupId>
+                <artifactId>maven-plugin-testing-harness</artifactId>
+                <version>${version.org.apache.maven.plugin-testing.maven-plugin-testing-harness}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.logmanager</groupId>
+                <artifactId>jboss-logmanager</artifactId>
+                <version>${version.org.jboss.logmanager}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-all</artifactId>
+                <version>${version.org.mockito.mockito-all}</version>
+            </dependency>
 
-        <dependency>
-            <groupId>org.sonatype.aether</groupId>
-            <artifactId>aether-api</artifactId>
-            <version>${version.org.sonatype.aether}</version>
-            <scope>provided</scope>
-            <!-- Used in maven 3.0.x -->
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.sonatype.aether</groupId>
-            <artifactId>aether-util</artifactId>
-            <version>${version.org.sonatype.aether}</version>
-            <scope>provided</scope>
-            <!-- Used in maven 3.0.x -->
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Test dependencies -->
-        <dependency>
-            <groupId>javax.inject</groupId>
-            <artifactId>javax.inject</artifactId>
-            <version>${version.javax.inject.javax.inject}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${version.junit.junit}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-compat</artifactId>
-            <version>${version.org.apache.maven.maven-core}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-settings-builder</artifactId>
-            <version>${version.org.apache.maven.maven-core}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven.plugin-testing</groupId>
-            <artifactId>maven-plugin-testing-harness</artifactId>
-            <version>${version.org.apache.maven.plugin-testing.maven-plugin-testing-harness}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.logmanager</groupId>
-            <artifactId>jboss-logmanager</artifactId>
-            <version>${version.org.jboss.logmanager}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>${version.org.mockito.mockito-all}</version>
-            <scope>test</scope>
-        </dependency>
-
-    </dependencies>
+        </dependencies>
+    </dependencyManagement>
 </project>
