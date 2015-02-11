@@ -168,9 +168,19 @@ public class StartMojo extends AbstractServerConnection {
     @Parameter(alias = "server-args", property = PropertyNames.SERVER_ARGS)
     private String[] serverArgs;
 
+    /**
+     * Set to {@code true} if you want to skip server start, otherwise {@code false}.
+     */
+    @Parameter(defaultValue = "false")
+    private boolean skip;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         final Log log = getLog();
+        if (skip) {
+            log.debug("Skipping server start");
+            return;
+        }
         // Validate the environment
         final Path jbossHome = extractIfRequired(targetDir.toPath());
         if (!Files.isDirectory(jbossHome)) {
