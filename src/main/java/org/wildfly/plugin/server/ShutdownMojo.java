@@ -49,8 +49,18 @@ public class ShutdownMojo extends AbstractServerConnection {
     @Parameter(defaultValue = "false", property = PropertyNames.RELOAD)
     private boolean reload;
 
+    /**
+     * Set to {@code true} if you want to skip server shutdown, otherwise {@code false}.
+     */
+    @Parameter(defaultValue = "false")
+    private boolean skip;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        if (skip) {
+            getLog().debug("Skipping server shutdown");
+            return;
+        }
         try {
             synchronized (CLIENT_LOCK) {
                 final ModelControllerClient client = getClient();
