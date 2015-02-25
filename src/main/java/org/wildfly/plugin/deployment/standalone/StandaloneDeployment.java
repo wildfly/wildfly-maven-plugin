@@ -22,21 +22,38 @@
 
 package org.wildfly.plugin.deployment.standalone;
 
+import static org.jboss.as.controller.client.helpers.ClientConstants.CONTENT;
+import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT;
+import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_FULL_REPLACE_OPERATION;
+import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_REDEPLOY_OPERATION;
+import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_UNDEPLOY_OPERATION;
+import static org.jboss.as.controller.client.helpers.ClientConstants.NAME;
+import static org.jboss.as.controller.client.helpers.ClientConstants.RUNTIME_NAME;
+import static org.jboss.as.controller.client.helpers.Operations.createAddOperation;
+import static org.jboss.as.controller.client.helpers.Operations.createOperation;
+import static org.wildfly.plugin.common.ServerOperations.BYTES;
+import static org.wildfly.plugin.common.ServerOperations.ENABLE;
+import static org.wildfly.plugin.common.ServerOperations.PERSISTENT;
+import static org.wildfly.plugin.common.ServerOperations.createAddress;
+import static org.wildfly.plugin.common.ServerOperations.createRemoveOperation;
+
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.controller.client.helpers.standalone.DeploymentAction;
-import org.jboss.as.controller.client.helpers.standalone.DeploymentPlan;
-import org.jboss.as.controller.client.helpers.standalone.DeploymentPlanBuilder;
-import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentActionResult;
-import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentManager;
-import org.jboss.as.controller.client.helpers.standalone.ServerDeploymentPlanResult;
-import org.jboss.as.controller.client.helpers.standalone.ServerUpdateActionResult;
+import org.jboss.as.controller.client.Operation;
+import org.jboss.as.controller.client.OperationBuilder;
+import org.jboss.as.controller.client.helpers.ClientConstants;
+import org.jboss.as.controller.client.helpers.Operations.CompositeOperationBuilder;
+import org.jboss.dmr.ModelNode;
 import org.wildfly.plugin.common.DeploymentExecutionException;
 import org.wildfly.plugin.common.DeploymentFailureException;
 import org.wildfly.plugin.common.DeploymentInspector;
+import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.deployment.Deployment;
 import org.wildfly.plugin.deployment.MatchPatternStrategy;
 
@@ -91,61 +108,6 @@ public class StandaloneDeployment implements Deployment {
         return new StandaloneDeployment(client, content, name, type, matchPattern, matchPatternStrategy);
     }
 
-    private DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException, DeploymentFailureException {
-        DeploymentPlanBuilder planBuilder = builder;
-
-        List<String> existingDeployments = DeploymentInspector.getDeployments(client, name, matchPattern);
-
-        switch (type) {
-            case DEPLOY: {
-                planBuilder = builder.add(name, content).andDeploy();
-                break;
-            }
-            case REDEPLOY: {
-                planBuilder = builder.replace(name, content).redeploy(name);
-                break;
-            }
-            case UNDEPLOY: {
-                validateExistingDeployments(existingDeployments);
-                planBuilder = undeployAndRemove(builder, existingDeployments);
-                break;
-            }
-            case FORCE_DEPLOY: {
-                if (existingDeployments.contains(name)) {
-                    planBuilder = builder.replace(name, content).redeploy(name);
-                } else {
-                    planBuilder = builder.add(name, content).andDeploy();
-                }
-                break;
-            }
-            case UNDEPLOY_IGNORE_MISSING: {
-                validateExistingDeployments(existingDeployments);
-                if (!existingDeployments.isEmpty()) {
-                    planBuilder = undeployAndRemove(builder, existingDeployments);
-                } else {
-                    return null;
-                }
-                break;
-            }
-        }
-        return planBuilder.build();
-    }
-
-    private DeploymentPlanBuilder undeployAndRemove(final DeploymentPlanBuilder builder, final List<String> deploymentNames) {
-
-        DeploymentPlanBuilder planBuilder = builder;
-
-        for (String deploymentName : deploymentNames) {
-            planBuilder = planBuilder.undeploy(deploymentName).andRemoveUndeployed();
-
-            if (matchPatternStrategy == MatchPatternStrategy.FIRST) {
-                break;
-            }
-        }
-
-        return planBuilder;
-    }
-
     private void validateExistingDeployments(List<String> existingDeployments) throws DeploymentFailureException {
         if (matchPattern == null) {
             return;
@@ -159,43 +121,122 @@ public class StandaloneDeployment implements Deployment {
 
     @Override
     public Status execute() throws DeploymentExecutionException, DeploymentFailureException {
-        Status resultStatus = Status.SUCCESS;
         try {
-            final ServerDeploymentManager manager = ServerDeploymentManager.Factory.create(client);
-            final DeploymentPlanBuilder builder = manager.newDeploymentPlan();
-            final DeploymentPlan plan = createPlan(builder);
-            if (plan != null) {
-                if (plan.getDeploymentActions().size() > 0) {
-                    final ServerDeploymentPlanResult planResult = manager.execute(plan).get();
-                    // Check the results
-                    for (DeploymentAction action : plan.getDeploymentActions()) {
-                        final ServerDeploymentActionResult actionResult = planResult.getDeploymentActionResult(action.getId());
-                        final ServerUpdateActionResult.Result result = actionResult.getResult();
-                        switch (result) {
-                            case FAILED:
-                                throw new DeploymentExecutionException("Deployment failed.", actionResult.getDeploymentException());
-                            case NOT_EXECUTED:
-                                throw new DeploymentExecutionException("Deployment not executed.", actionResult.getDeploymentException());
-                            case ROLLED_BACK:
-                                throw new DeploymentExecutionException("Deployment failed and was rolled back.", actionResult.getDeploymentException());
-                            case CONFIGURATION_MODIFIED_REQUIRES_RESTART:
-                                resultStatus = Status.REQUIRES_RESTART;
-                                break;
-                        }
-                    }
+            final List<String> existingDeployments = DeploymentInspector.getDeployments(client, name, matchPattern);
+            final Operation operation;
+            switch (type) {
+                case DEPLOY: {
+                    operation = createDeployOperation(content.toPath(), name, null);
+                    break;
                 }
+                case FORCE_DEPLOY: {
+                    if (existingDeployments.contains(name)) {
+                        operation = createReplaceOperation(content.toPath(), name, null);
+                    } else {
+                        operation = createDeployOperation(content.toPath(), name, null);
+                    }
+                    break;
+                }
+                case REDEPLOY: {
+                    if (!existingDeployments.contains(name)) {
+                        throw new DeploymentFailureException("Deployment '%s' not found, cannot redeploy", name);
+                    }
+                    operation = createRedeployOperation(name);
+                    break;
+                }
+                case UNDEPLOY: {
+                    validateExistingDeployments(existingDeployments);
+                    operation = createUndeployOperation(matchPatternStrategy, existingDeployments);
+                    break;
+                }
+                case UNDEPLOY_IGNORE_MISSING: {
+                    // TODO (jrp) validateExistingDeployments(), but we don't want a failure
+                    validateExistingDeployments(existingDeployments);
+                    if (existingDeployments.isEmpty()) {
+                        operation = null;
+                    } else {
+                        operation = createUndeployOperation(matchPatternStrategy, existingDeployments);
+                    }
+                    break;
+                }
+                default:
+                    throw new IllegalArgumentException("Invalid type: " + type);
             }
+            final ModelNode result = client.execute(operation);
+            if (ServerOperations.isSuccessfulOutcome(result)) {
+                return Status.SUCCESS;
+            }
+            throw new DeploymentExecutionException("Deployment failed: %s", ServerOperations.getFailureDescriptionAsString(result));
         } catch (DeploymentExecutionException e) {
             throw e;
         } catch (Exception e) {
             throw new DeploymentExecutionException(e, "Error executing %s", type);
         }
-        return resultStatus;
     }
 
     @Override
     public Type getType() {
         return type;
+    }
+
+    private static void addContent(final Path deployment, final ModelNode op) throws IOException {
+        final ModelNode contentNode = op.get(CONTENT);
+        final ModelNode contentItem = contentNode.get(0);
+        contentItem.get(BYTES).set(Files.readAllBytes(deployment));
+        /*if (Files.isRegularFile(deployment)) {
+            try {
+                contentItem.get("url").set(deployment.toUri().toURL().toString());
+            } catch (MalformedURLException ignore) {
+            }
+        }
+        if (!contentItem.hasDefined("url")) {
+            contentItem.get(ARCHIVE).set(Files.isRegularFile(deployment));
+            contentItem.get(PATH).set(deployment.toString());
+        }*/
+    }
+
+    private static Operation createDeployOperation(final Path deployment, final String name, final String runtimeName) throws IOException {
+        final ModelNode address = createAddress(DEPLOYMENT, name);
+        final ModelNode addOperation = createAddOperation(address);
+        if (runtimeName != null) {
+            addOperation.get(RUNTIME_NAME).set(runtimeName);
+        }
+        addOperation.get(PERSISTENT).set(true);
+        addContent(deployment, addOperation);
+        return CompositeOperationBuilder.create()
+                .addStep(addOperation)
+                .addStep(createOperation(ClientConstants.DEPLOYMENT_DEPLOY_OPERATION, address))
+                .build();
+    }
+
+    private static Operation createReplaceOperation(final Path deployment, final String name, final String runtimeName) throws IOException {
+        final ModelNode op = createOperation(DEPLOYMENT_FULL_REPLACE_OPERATION);
+        op.get(NAME).set(name);
+        if (runtimeName != null) {
+            op.get(RUNTIME_NAME).set(runtimeName);
+        }
+        op.get(PERSISTENT).set(true);
+        addContent(deployment, op);
+        op.get(ENABLE).set(true);
+        return OperationBuilder.create(op).build();
+    }
+
+    private static Operation createRedeployOperation(final String name) throws IOException {
+        return OperationBuilder.create(createOperation(DEPLOYMENT_REDEPLOY_OPERATION, createAddress(DEPLOYMENT, name))).build();
+    }
+
+    private static Operation createUndeployOperation(final MatchPatternStrategy matchPatternStrategy, final Collection<String> names) throws IOException {
+        final CompositeOperationBuilder builder = CompositeOperationBuilder.create();
+        for (String name : names) {
+            final ModelNode address = createAddress(DEPLOYMENT, name);
+            builder.addStep(createOperation(DEPLOYMENT_UNDEPLOY_OPERATION, address))
+                    .addStep(createRemoveOperation(address));
+
+            if (matchPatternStrategy == MatchPatternStrategy.FIRST) {
+                break;
+            }
+        }
+        return builder.build();
     }
 
 }

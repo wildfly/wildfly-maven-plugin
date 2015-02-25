@@ -75,9 +75,9 @@
 
     <properties>
         <!-- WildFly/JBoss dependencies -->
-        <version.org.jboss.logmanager>1.5.3.Final</version.org.jboss.logmanager>
-        <version.org.wildfly.core>1.0.0.Alpha9</version.org.wildfly.core>
-        <version.org.wildfly.dist>8.1.0.Final</version.org.wildfly.dist>
+        <version.org.jboss.logmanager>1.5.4.Final</version.org.jboss.logmanager>
+        <version.org.wildfly.core>1.0.0.Alpha13</version.org.wildfly.core>
+        <version.org.wildfly.dist>8.2.0.Final</version.org.wildfly.dist>
 
         <!-- maven dependencies -->
         <version.javax.inject.javax.inject>1</version.javax.inject.javax.inject>

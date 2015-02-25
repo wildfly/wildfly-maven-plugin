@@ -41,6 +41,7 @@ import org.jboss.as.cli.batch.BatchManager;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.Operation;
 import org.jboss.as.controller.client.OperationMessageHandler;
+import org.jboss.as.controller.client.OperationResponse;
 import org.jboss.dmr.ModelNode;
 import org.jboss.threads.AsyncFuture;
 import org.wildfly.plugin.common.ServerOperations;
@@ -250,6 +251,11 @@ public class Commands {
         }
 
         @Override
+        public OperationResponse executeOperation(final Operation operation, final OperationMessageHandler messageHandler) throws IOException {
+            return delegate.executeOperation(operation, messageHandler);
+        }
+
+        @Override
         public AsyncFuture<ModelNode> executeAsync(final ModelNode operation, final OperationMessageHandler messageHandler) {
             return delegate.executeAsync(operation, messageHandler);
         }
@@ -257,6 +263,11 @@ public class Commands {
         @Override
         public AsyncFuture<ModelNode> executeAsync(final Operation operation, final OperationMessageHandler messageHandler) {
             return delegate.executeAsync(operation, messageHandler);
+        }
+
+        @Override
+        public AsyncFuture<OperationResponse> executeOperationAsync(final Operation operation, final OperationMessageHandler messageHandler) {
+            return delegate.executeOperationAsync(operation, messageHandler);
         }
 
         @Override
