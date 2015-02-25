@@ -52,6 +52,12 @@ import org.wildfly.plugin.common.AbstractServerConnection;
 public class ExecuteCommandsMojo extends AbstractServerConnection {
 
     /**
+     * {@code true} if commands execution should be skipped.
+     */
+    @Parameter(defaultValue = "false")
+    private boolean skip;
+
+    /**
      * The commands to execute.
      */
     @Parameter(alias = "execute-commands")
@@ -64,6 +70,10 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        if (skip) {
+            getLog().debug("Skipping commands execution");
+            return;
+        }
         getLog().debug("Executing commands");
         synchronized (CLIENT_LOCK) {
             final ModelControllerClient client = getClient();
