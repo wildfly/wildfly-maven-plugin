@@ -28,12 +28,13 @@ import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_
 import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_REDEPLOY_OPERATION;
 import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_UNDEPLOY_OPERATION;
 import static org.jboss.as.controller.client.helpers.ClientConstants.NAME;
+import static org.jboss.as.controller.client.helpers.ClientConstants.PATH;
 import static org.jboss.as.controller.client.helpers.ClientConstants.RUNTIME_NAME;
 import static org.jboss.as.controller.client.helpers.Operations.createAddOperation;
 import static org.jboss.as.controller.client.helpers.Operations.createOperation;
+import static org.wildfly.plugin.common.ServerOperations.ARCHIVE;
 import static org.wildfly.plugin.common.ServerOperations.BYTES;
 import static org.wildfly.plugin.common.ServerOperations.ENABLE;
-import static org.wildfly.plugin.common.ServerOperations.PERSISTENT;
 import static org.wildfly.plugin.common.ServerOperations.createAddress;
 import static org.wildfly.plugin.common.ServerOperations.createRemoveOperation;
 
@@ -181,20 +182,15 @@ public class StandaloneDeployment implements Deployment {
         return type;
     }
 
-    private static void addContent(final Path deployment, final ModelNode op) throws IOException {
+    private static void addContent(final Path deployment, final ModelNode op, final boolean unmanaged) throws IOException {
         final ModelNode contentNode = op.get(CONTENT);
         final ModelNode contentItem = contentNode.get(0);
-        contentItem.get(BYTES).set(Files.readAllBytes(deployment));
-        /*if (Files.isRegularFile(deployment)) {
-            try {
-                contentItem.get("url").set(deployment.toUri().toURL().toString());
-            } catch (MalformedURLException ignore) {
-            }
-        }
-        if (!contentItem.hasDefined("url")) {
-            contentItem.get(ARCHIVE).set(Files.isRegularFile(deployment));
+        if (unmanaged) {
             contentItem.get(PATH).set(deployment.toString());
-        }*/
+            contentItem.get(ARCHIVE).set(!Files.isDirectory(deployment));
+        } else {
+            contentItem.get(BYTES).set(Files.readAllBytes(deployment));
+        }
     }
 
     private static Operation createDeployOperation(final Path deployment, final String name, final String runtimeName) throws IOException {
@@ -203,8 +199,7 @@ public class StandaloneDeployment implements Deployment {
         if (runtimeName != null) {
             addOperation.get(RUNTIME_NAME).set(runtimeName);
         }
-        addOperation.get(PERSISTENT).set(true);
-        addContent(deployment, addOperation);
+        addContent(deployment, addOperation, false);
         return CompositeOperationBuilder.create()
                 .addStep(addOperation)
                 .addStep(createOperation(ClientConstants.DEPLOYMENT_DEPLOY_OPERATION, address))
@@ -217,8 +212,7 @@ public class StandaloneDeployment implements Deployment {
         if (runtimeName != null) {
             op.get(RUNTIME_NAME).set(runtimeName);
         }
-        op.get(PERSISTENT).set(true);
-        addContent(deployment, op);
+        addContent(deployment, op, false);
         op.get(ENABLE).set(true);
         return OperationBuilder.create(op).build();
     }
