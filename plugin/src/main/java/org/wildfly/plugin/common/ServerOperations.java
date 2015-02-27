@@ -46,7 +46,6 @@ public class ServerOperations extends Operations {
     public static final String BYTES = "bytes";
     public static final String ENABLE = "enable";
     public static final String LAUNCH_TYPE = "launch-type";
-    public static final String PERSISTENT = "persistent";
     public static final String PROFILE = "profile";
     public static final String READ_CHILDREN_NAMES = "read-children-names";
     public static final String READ_RESOURCE = "read-resource";
