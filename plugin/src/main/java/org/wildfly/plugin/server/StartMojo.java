@@ -37,6 +37,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
@@ -212,9 +213,9 @@ public class StartMojo extends AbstractServerConnection {
         // Print some server information
         log.info(String.format("JAVA_HOME=%s", commandBuilder.getJavaHome()));
         log.info(String.format("JBOSS_HOME=%s%n", commandBuilder.getWildFlyHome()));
-        try {
+        try (ModelControllerClient client = getClient()) {
             // Create the server
-            final Server server = Server.create(commandBuilder, getClient());
+            final Server server = Server.create(commandBuilder, client);
             // Start the server
             log.info("Server is starting up.");
             server.start(startupTimeout);
