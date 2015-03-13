@@ -30,6 +30,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.common.DeploymentFailureException;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.deployment.Deployment.Type;
@@ -71,8 +72,8 @@ public final class UndeployArtifactMojo extends AbstractDeployment {
 
 
     @Override
-    public void validate() throws DeploymentFailureException {
-        super.validate();
+    public void validate(final ModelControllerClient client) throws DeploymentFailureException {
+        super.validate(client);
         if (artifactId == null) {
             throw new DeploymentFailureException("undeploy-artifact must specify the artifactId");
         }

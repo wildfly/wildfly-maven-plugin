@@ -131,27 +131,24 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      * @see #execute()
      */
     protected void doExecute() throws MojoExecutionException, MojoFailureException {
-        try {
-            synchronized (CLIENT_LOCK) {
-                validate();
-                final ModelControllerClient client = getClient();
-                final String matchPattern = getMatchPattern();
-                final MatchPatternStrategy matchPatternStrategy = getMatchPatternStrategy();
-                final Deployment deployment;
-                if (isDomainServer()) {
-                    final DomainClient domainClient = DomainClient.Factory.create(client);
-                    deployment = DomainDeployment.create(domainClient, domain, file(), name, getType(), matchPattern, matchPatternStrategy);
-                } else {
-                    deployment = StandaloneDeployment.create(client, file(), name, getType(), matchPattern, matchPatternStrategy);
+        try (final ModelControllerClient client = createClient()) {
+            validate(client);
+            final String matchPattern = getMatchPattern();
+            final MatchPatternStrategy matchPatternStrategy = getMatchPatternStrategy();
+            final Deployment deployment;
+            if (client instanceof DomainClient) {
+                final DomainClient domainClient = (DomainClient) client;
+                deployment = DomainDeployment.create(domainClient, domain, file(), name, getType(), matchPattern, matchPatternStrategy);
+            } else {
+                deployment = StandaloneDeployment.create(client, file(), name, getType(), matchPattern, matchPatternStrategy);
+            }
+            switch (executeDeployment(client, deployment)) {
+                case REQUIRES_RESTART: {
+                    getLog().info("Server requires a restart");
+                    break;
                 }
-                switch (executeDeployment(client, deployment)) {
-                    case REQUIRES_RESTART: {
-                        getLog().info("Server requires a restart");
-                        break;
-                    }
-                    case SUCCESS:
-                        break;
-                }
+                case SUCCESS:
+                    break;
             }
         } catch (MojoFailureException e) {
             throw e;
@@ -160,8 +157,6 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         } catch (Exception e) {
             throw new MojoExecutionException(String.format("Could not execute goal %s on %s. Reason: %s", goal(), file(),
                     e.getMessage()), e);
-        } finally {
-            close();
         }
     }
 
@@ -188,9 +183,10 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      * Validates the deployment.
      *
      * @throws DeploymentFailureException if the deployment is invalid.
+     * @param client
      */
-    protected void validate() throws DeploymentFailureException {
-        if (isDomainServer()) {
+    protected void validate(final ModelControllerClient client) throws DeploymentFailureException {
+        if (client instanceof DomainClient) {
             if (domain == null || domain.getServerGroups().isEmpty()) {
                 throw new DeploymentFailureException(
                         "Server is running in domain mode, but no server groups have been defined.");

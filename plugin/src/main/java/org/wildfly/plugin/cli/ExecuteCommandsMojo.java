@@ -75,15 +75,10 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             return;
         }
         getLog().debug("Executing commands");
-        synchronized (CLIENT_LOCK) {
-            final ModelControllerClient client = getClient();
-            try {
-                executeCommands.execute(client);
-            } catch (IOException e) {
-                throw new MojoFailureException("Could not execute commands.", e);
-            } finally {
-                close();
-            }
+        try (final ModelControllerClient client = createClient()) {
+            executeCommands.execute(client);
+        } catch (IOException e) {
+            throw new MojoFailureException("Could not execute commands.", e);
         }
     }
 }

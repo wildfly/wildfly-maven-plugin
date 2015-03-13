@@ -103,27 +103,22 @@ public class AddResourceMojo extends AbstractServerConnection {
             getLog().debug(String.format("Skipping add-resource with address %s", address));
             return;
         }
-        try {
+        try (final ModelControllerClient client = createClient()) {
             final InetAddress host = getHostAddress();
             getLog().info(String.format("Executing goal %s on server %s (%s) port %s.", goal(), host.getHostName(), host.getHostAddress(), getPort()));
-            synchronized (CLIENT_LOCK) {
-                final ModelControllerClient client = getClient();
-                if (resources != null && resources.length > 0) {
-                    processResources(client, resources);
-                } else {
-                    getLog().warn("No resources were provided.");
-                }
+            if (resources != null && resources.length > 0) {
+                processResources(client, resources);
+            } else {
+                getLog().warn("No resources were provided.");
             }
         } catch (Exception e) {
             throw new MojoExecutionException(String.format("Could not execute goal %s. Reason: %s", goal(), e.getMessage()), e);
-        } finally {
-            close();
         }
     }
 
     private void processResources(final ModelControllerClient client, final Resource... resources) throws IOException {
         for (Resource resource : resources) {
-            if (isDomainServer()) {
+            if (domain != null) {
                 // Profiles are required when adding resources in domain mode
                 final List<String> profiles = domain.getProfiles();
                 if (profiles.isEmpty()) {
