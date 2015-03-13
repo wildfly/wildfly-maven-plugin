@@ -29,9 +29,14 @@ import java.net.UnknownHostException;
 import javax.security.auth.callback.CallbackHandler;
 
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
+import org.apache.maven.settings.crypto.DefaultSettingsDecrypter;
+import org.apache.maven.settings.crypto.DefaultSettingsDecryptionRequest;
+import org.apache.maven.settings.crypto.SettingsDecrypter;
+import org.apache.maven.settings.crypto.SettingsDecryptionResult;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.dmr.ModelNode;
 
@@ -105,6 +110,9 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
      */
     @Parameter(property = PropertyNames.PASSWORD)
     private String password;
+
+    @Component(role = SettingsDecrypter.class)
+    private DefaultSettingsDecrypter settingsDecrypter;
 
     private ModelControllerClient client;
 
@@ -219,7 +227,7 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
             Server server = settings.getServer(id);
             if (server != null) {
                 getLog().debug(DEBUG_MESSAGE_SETTINGS_HAS_ID);
-                password = server.getPassword();
+                password = decrypt(server);
                 username = server.getUsername();
                 if (username != null && password != null) {
                     getLog().debug(DEBUG_MESSAGE_SETTINGS_HAS_CREDS);
@@ -249,5 +257,10 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
             throw new IllegalStateException(String.format("I/O Error could not execute operation '%s'", op), e);
         }
         return result;
+    }
+
+    private String decrypt(final Server server) {
+        SettingsDecryptionResult decrypt = settingsDecrypter.decrypt(new DefaultSettingsDecryptionRequest(server));
+        return decrypt.getServer().getPassword();
     }
 }
