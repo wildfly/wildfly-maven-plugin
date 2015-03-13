@@ -22,8 +22,6 @@
 
 package org.wildfly.plugin.common;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import javax.security.auth.callback.CallbackHandler;
@@ -38,7 +36,8 @@ import org.apache.maven.settings.crypto.DefaultSettingsDecryptionRequest;
 import org.apache.maven.settings.crypto.SettingsDecrypter;
 import org.apache.maven.settings.crypto.SettingsDecryptionResult;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.dmr.ModelNode;
+import org.jboss.as.controller.client.helpers.domain.DomainClient;
+import org.wildfly.plugin.server.ServerHelper;
 
 /**
  * The default implementation for connecting to a running WildFly instance
@@ -46,7 +45,7 @@ import org.jboss.dmr.ModelNode;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  * @author Stuart Douglas
  */
-public abstract class AbstractServerConnection extends AbstractMojo implements ConnectionInfo, Closeable {
+public abstract class AbstractServerConnection extends AbstractMojo implements ConnectionInfo {
 
     public static final String DEBUG_MESSAGE_NO_CREDS = "No username and password in settings.xml file - falling back to CLI entry";
     public static final String DEBUG_MESSAGE_NO_ID = "No <id> element was found in the POM - Getting credentials from CLI entry";
@@ -55,8 +54,6 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     public static final String DEBUG_MESSAGE_POM_HAS_CREDS = "Getting credentials from the POM";
     public static final String DEBUG_MESSAGE_SETTINGS_HAS_CREDS = "Found username and password in the settings.xml file";
     public static final String DEBUG_MESSAGE_SETTINGS_HAS_ID = "Found the server's id in the settings.xml file";
-
-    protected static final Object CLIENT_LOCK = new Object();
 
     private volatile InetAddress address = null;
 
@@ -114,8 +111,6 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     @Component(role = SettingsDecrypter.class)
     private DefaultSettingsDecrypter settingsDecrypter;
 
-    private ModelControllerClient client;
-
     /**
      * The hostname to deploy the archive to. The default is localhost.
      *
@@ -136,49 +131,11 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     }
 
     /**
-     * Returns {@code true} if the connection is for a domain server, otherwise {@code false}.
-     *
-     * @return {@code true} if the connection is for a domain server, otherwise {@code false}
-     */
-    public final boolean isDomainServer() {
-        synchronized (CLIENT_LOCK) {
-            return isDomainServer(getClient());
-        }
-    }
-
-    /**
      * The goal of the deployment.
      *
      * @return the goal of the deployment.
      */
     public abstract String goal();
-
-    /**
-     * Gets or creates a new connection to the server and returns the client.
-     *
-     * @return the client
-     */
-    public final ModelControllerClient getClient() {
-        synchronized (CLIENT_LOCK) {
-            ModelControllerClient result = client;
-            if (result == null) {
-                result = client = ModelControllerClient.Factory.create(getProtocol(), getHostAddress(), getPort(), getCallbackHandler());
-            }
-            return result;
-        }
-    }
-
-    @Override
-    public final void close() {
-        synchronized (CLIENT_LOCK) {
-            if (client != null) try {
-                client.close();
-            } catch (Exception ignore) {
-            } finally {
-                client = null;
-            }
-        }
-    }
 
     @Override
     public final String getProtocol() {
@@ -222,6 +179,43 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
         return result;
     }
 
+    /**
+     * Creates a new client. If the target runtime is domain a {@link org.jboss.as.controller.client.helpers.domain.DomainClient
+     * DomainClient} is returned.
+     *
+     * @return the client
+     */
+    protected final ModelControllerClient createClient() {
+        return createClient(true);
+    }
+
+    /**
+     * Creates a new client.
+     *
+     * <p>
+     * If the server is a domain server and the {@code autoWrapDomain} is set to {@code true} the returned value will
+     * be a {@link org.jboss.as.controller.client.helpers.domain.DomainClient DomainClient}. If the {@code
+     * autoWrapDomain} value is set to {@code false} no check for the server type will be done.
+     * </p>
+     *
+     * <p>
+     * A {@code false} value for is useful if the server has not yet been started
+     * </p>
+     *
+     * @param autoWrapDomain if {@code true} to wrap the client in a {@link org.jboss.as.controller.client.helpers.domain.DomainClient
+     *                       DomainClient} for domain servers, {@code false} to return the default {@linkplain
+     *                       org.jboss.as.controller.client.ModelControllerClient client}
+     *
+     * @return the client
+     */
+    protected final ModelControllerClient createClient(final boolean autoWrapDomain) {
+        final ModelControllerClient client = ModelControllerClient.Factory.create(getProtocol(), getHostAddress(), getPort(), getCallbackHandler());
+        if (autoWrapDomain && ServerHelper.isDomainServer(client)) {
+            return DomainClient.Factory.create(client);
+        }
+        return client;
+    }
+
     private void getCredentialsFromSettings() {
         if (settings != null) {
             Server server = settings.getServer(id);
@@ -240,23 +234,6 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
         } else {
             getLog().debug(DEBUG_MESSAGE_NO_SETTINGS_FILE);
         }
-    }
-
-    private boolean isDomainServer(final ModelControllerClient client) {
-        boolean result = false;
-        // Check this is really a domain server
-        final ModelNode op = ServerOperations.createReadAttributeOperation(ServerOperations.LAUNCH_TYPE);
-        try {
-            final ModelNode opResult = client.execute(op);
-            if (ServerOperations.isSuccessfulOutcome(opResult)) {
-                result = ("DOMAIN".equals(ServerOperations.readResultAsString(opResult)));
-            }
-        } catch (IOException e) {
-            if (getLog().isDebugEnabled())
-                getLog().debug(e);
-            throw new IllegalStateException(String.format("I/O Error could not execute operation '%s'", op), e);
-        }
-        return result;
     }
 
     private String decrypt(final Server server) {

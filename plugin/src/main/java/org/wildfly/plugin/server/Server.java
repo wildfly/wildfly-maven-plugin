@@ -64,6 +64,10 @@ abstract class Server {
                 @Override
                 protected void stopServer() {
                     ServerHelper.shutdownDomain(domainClient, servers);
+                    if (domainClient != null) try {
+                        domainClient.close();
+                    } catch (Exception ignore) {
+                    }
                 }
 
                 @Override
@@ -88,6 +92,10 @@ abstract class Server {
             @Override
             protected void stopServer() {
                 ServerHelper.shutdownStandalone(client);
+                if (client != null) try {
+                    client.close();
+                } catch (Exception ignore) {
+                }
             }
 
             @Override

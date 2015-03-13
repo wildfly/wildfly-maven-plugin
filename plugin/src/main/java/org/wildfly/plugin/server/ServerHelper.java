@@ -37,11 +37,12 @@ import org.jboss.as.controller.client.helpers.domain.ServerStatus;
 import org.jboss.dmr.ModelNode;
 import org.jboss.logging.Logger;
 import org.wildfly.core.launcher.ProcessHelper;
+import org.wildfly.plugin.common.ServerOperations;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-class ServerHelper {
+public class ServerHelper {
     public static final ModelNode EMPTY_ADDRESS = new ModelNode().setEmptyList();
     private static final Logger LOGGER = Logger.getLogger(ServerHelper.class);
 
@@ -49,8 +50,23 @@ class ServerHelper {
         EMPTY_ADDRESS.protect();
     }
 
+    public static boolean isDomainServer(final ModelControllerClient client) {
+        boolean result = false;
+        // Check this is really a domain server
+        final ModelNode op = ServerOperations.createReadAttributeOperation(ServerOperations.LAUNCH_TYPE);
+        try {
+            final ModelNode opResult = client.execute(op);
+            if (ServerOperations.isSuccessfulOutcome(opResult)) {
+                result = ("DOMAIN".equals(ServerOperations.readResultAsString(opResult)));
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(String.format("I/O Error could not execute operation '%s'", op), e);
+        }
+        return result;
+    }
 
-    public static boolean waitForDomain(final Process process, final DomainClient client, final Map<ServerIdentity, ServerStatus> servers, final long startupTimeout) throws InterruptedException, IOException {
+
+    static boolean waitForDomain(final Process process, final DomainClient client, final Map<ServerIdentity, ServerStatus> servers, final long startupTimeout) throws InterruptedException, IOException {
         long timeout = startupTimeout * 1000;
         final long sleep = 100;
         while (timeout > 0) {
@@ -68,11 +84,11 @@ class ServerHelper {
         return false;
     }
 
-    public static boolean isDomainRunning(final DomainClient client, final Map<ServerIdentity, ServerStatus> servers) {
+    static boolean isDomainRunning(final DomainClient client, final Map<ServerIdentity, ServerStatus> servers) {
         return isDomainRunning(client, servers, false);
     }
 
-    public static void shutdownDomain(final DomainClient client, final Map<ServerIdentity, ServerStatus> servers) {
+    static void shutdownDomain(final DomainClient client, final Map<ServerIdentity, ServerStatus> servers) {
         final ModelNode address = new ModelNode().setEmptyList().add("host", "master");
         try {
             // First shutdown the servers
@@ -105,7 +121,7 @@ class ServerHelper {
         }
     }
 
-    public static boolean waitForStandalone(final Process process, final ModelControllerClient client, final long startupTimeout) throws InterruptedException, IOException {
+    static boolean waitForStandalone(final Process process, final ModelControllerClient client, final long startupTimeout) throws InterruptedException, IOException {
         long timeout = startupTimeout * 1000;
         final long sleep = 100L;
         while (timeout > 0) {
@@ -122,7 +138,7 @@ class ServerHelper {
         return false;
     }
 
-    public static boolean isStandaloneRunning(final ModelControllerClient client) {
+    static boolean isStandaloneRunning(final ModelControllerClient client) {
         try {
             final ModelNode response = client.execute(Operations.createReadAttributeOperation(EMPTY_ADDRESS, "server-state"));
             if (Operations.isSuccessfulOutcome(response)) {
@@ -136,7 +152,7 @@ class ServerHelper {
         return false;
     }
 
-    public static void shutdownStandalone(final ModelControllerClient client) {
+    static void shutdownStandalone(final ModelControllerClient client) {
         try {
             final ModelNode op = Operations.createOperation("shutdown");
             final ModelNode response = client.execute(op);

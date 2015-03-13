@@ -213,8 +213,8 @@ public class StartMojo extends AbstractServerConnection {
         log.info(String.format("JAVA_HOME=%s", commandBuilder.getJavaHome()));
         log.info(String.format("JBOSS_HOME=%s%n", commandBuilder.getWildFlyHome()));
         try {
-            // Create the server
-            final Server server = Server.create(commandBuilder, getClient());
+            // Create the server, note the client should be shutdown when the server is stopped
+            final Server server = Server.create(commandBuilder, createClient(false));
             // Start the server
             log.info("Server is starting up.");
             server.start(startupTimeout);

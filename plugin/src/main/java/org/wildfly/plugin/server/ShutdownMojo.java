@@ -61,14 +61,11 @@ public class ShutdownMojo extends AbstractServerConnection {
             getLog().debug("Skipping server shutdown");
             return;
         }
-        try {
-            synchronized (CLIENT_LOCK) {
-                final ModelControllerClient client = getClient();
-                if (reload) {
-                    client.execute(ServerOperations.createOperation(ServerOperations.RELOAD));
-                } else {
-                    client.execute(ServerOperations.createOperation(ServerOperations.SHUTDOWN));
-                }
+        try (final ModelControllerClient client = createClient(false)) {
+            if (reload) {
+                client.execute(ServerOperations.createOperation(ServerOperations.RELOAD));
+            } else {
+                client.execute(ServerOperations.createOperation(ServerOperations.SHUTDOWN));
             }
             // Bad hack to get maven to complete it's message output
             try {
@@ -79,8 +76,6 @@ public class ShutdownMojo extends AbstractServerConnection {
             }
         } catch (Exception e) {
             throw new MojoExecutionException(String.format("Could not execute goal %s. Reason: %s", goal(), e.getMessage()), e);
-        } finally {
-            close();
         }
     }
 
