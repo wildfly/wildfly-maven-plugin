@@ -33,15 +33,7 @@
             <plugin>
                 <groupId>org.wildfly.plugins</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>deploy</goal>
-                        </goals>
-                    </execution>
-                </executions>
                 <configuration>
-                    <port>10099</port>
                     <before-deployment>
                         <commands>
                             <command>/profile=full/subsystem=logging/logger=org.jboss.as.logging:add(level=ALL)

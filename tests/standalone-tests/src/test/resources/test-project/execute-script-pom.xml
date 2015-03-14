@@ -33,8 +33,6 @@
                 <groupId>org.wildfly.plugins</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
-                    <id>testid</id>
-                    <port>10099</port>
                     <execute-commands>
                         <scripts>
                             <script>test.cli</script>

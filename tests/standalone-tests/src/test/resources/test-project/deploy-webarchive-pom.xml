@@ -33,16 +33,7 @@
             <plugin>
                 <groupId>org.wildfly.plugins</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>deploy</goal>
-                        </goals>
-                    </execution>
-                </executions>
                 <configuration>
-                    <id>testid</id>
-                    <port>10099</port>
                     <filename>test.war</filename>
                     <checkPackaging>false</checkPackaging>
                 </configuration>
