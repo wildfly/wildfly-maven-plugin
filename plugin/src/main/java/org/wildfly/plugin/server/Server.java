@@ -23,6 +23,8 @@
 package org.wildfly.plugin.server;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,17 +48,23 @@ import org.wildfly.security.manager.WildFlySecurityManager;
 abstract class Server {
     private final ScheduledExecutorService timerService;
     private final CommandBuilder commandBuilder;
+    private final OutputStream stdout;
     private volatile Thread shutdownHook;
     private Process process;
 
-    protected Server(final CommandBuilder commandBuilder) {
+    protected Server(final CommandBuilder commandBuilder, final OutputStream stdout) {
         this.commandBuilder = commandBuilder;
         timerService = Executors.newScheduledThreadPool(1);
+        this.stdout = stdout;
     }
 
     static Server create(final CommandBuilder commandBuilder, final ModelControllerClient client) {
+        return create(commandBuilder, client, null);
+    }
+
+    static Server create(final CommandBuilder commandBuilder, final ModelControllerClient client, final OutputStream stdout) {
         if (commandBuilder instanceof DomainCommandBuilder) {
-            return new Server(commandBuilder) {
+            return new Server(commandBuilder, stdout) {
                 final DomainClient domainClient = DomainClient.Factory.create(client);
                 final Map<ServerIdentity, ServerStatus> servers = new HashMap<>();
                 volatile boolean isRunning = false;
@@ -86,7 +94,7 @@ abstract class Server {
                 }
             };
         }
-        return new Server(commandBuilder) {
+        return new Server(commandBuilder, stdout) {
             volatile boolean isRunning = false;
 
             @Override
@@ -121,9 +129,17 @@ abstract class Server {
      * @throws IOException the an error occurs creating the process
      */
     public final synchronized void start(final long timeout) throws IOException, InterruptedException {
-        process = Launcher.of(commandBuilder)
-                .inherit()
-                .launch();
+        final Launcher launcher = Launcher.of(commandBuilder);
+        // Determine if we should consume stdout
+        if (stdout == null) {
+            launcher.inherit();
+        } else {
+            launcher.setRedirectErrorStream(true);
+        }
+        process = launcher.launch();
+        if (stdout != null) {
+            new Thread(new ConsoleConsumer(process.getInputStream(), stdout)).start();
+        }
         // Running maven in a SM is unlikely, but we'll be safe
         shutdownHook = WildFlySecurityManager.doUnchecked(new PrivilegedAction<Thread>() {
             @Override
@@ -201,6 +217,29 @@ abstract class Server {
             checkServerState();
             if (!isRunning()) {
                 stop();
+            }
+        }
+    }
+
+    static class ConsoleConsumer implements Runnable {
+        private final InputStream in;
+        private final OutputStream out;
+
+        ConsoleConsumer(final InputStream in, final OutputStream out) {
+            this.in = in;
+            this.out = out;
+        }
+
+
+        @Override
+        public void run() {
+            byte[] buffer = new byte[64];
+            try {
+                int len;
+                while ((len = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, len);
+                }
+            } catch (IOException ignore) {
             }
         }
     }

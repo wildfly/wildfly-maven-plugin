@@ -1,6 +1,6 @@
 <!--
   ~ JBoss, Home of Professional Open Source.
-  ~ Copyright 2013, Red Hat, Inc., and individual contributors
+  ~ Copyright 2015, Red Hat, Inc., and individual contributors
   ~ as indicated by the @author tags. See the copyright.txt file in the
   ~ distribution for a full listing of individual contributors.
   ~
@@ -25,6 +25,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>testing</groupId>
     <artifactId>testing</artifactId>
+    <packaging>war</packaging>
     <version>0.1.0-SNAPSHOT</version>
 
     <build>
@@ -33,33 +34,8 @@
                 <groupId>org.wildfly.plugins</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
-                    <port>10099</port>
+                    <stdout>System.out</stdout>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>add-datasource</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>add-resource</goal>
-                        </goals>
-                        <configuration>
-                            <address>subsystem=datasources,data-source=java:jboss/myDs</address>
-                            <resources>
-                                <resource>
-                                    <properties>
-                                        <jndi-name>java:jboss/myDs</jndi-name>
-                                        <enabled>true</enabled>
-                                        <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</connection-url>
-                                        <driver-class>org.h2.Driver</driver-class>
-                                        <driver-name>h2</driver-name>
-                                        <user-name>sa</user-name>
-                                        <password>sa</password>
-                                    </properties>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

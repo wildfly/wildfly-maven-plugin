@@ -73,16 +73,4 @@ public class AddResourceTest extends AbstractWildFlyServerMojoTest {
 
     }
 
-    @Test
-    public void testThrowsExceptionWhenAddingResourceInExecution() throws Exception {
-
-        final AddResourceMojo addResourceMojo = lookupMojoAndVerify("add-resource", "add-resource-in-execution-pom.xml");
-        try {
-            addResourceMojo.execute();
-        } catch (Exception expectedToBeThrown) {
-            assertNotNull(expectedToBeThrown);
-        }
-
-    }
-
 }
