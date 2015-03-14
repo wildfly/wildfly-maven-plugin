@@ -22,12 +22,15 @@
 
 package org.wildfly.plugin.server;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.Locale;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -174,6 +177,25 @@ public class StartMojo extends AbstractServerConnection {
     @Parameter(defaultValue = "false")
     private boolean skip;
 
+    /**
+     * Indicates how {@code stdout} and {@code stderr} should be handled for the spawned server process. Note that
+     * {@code stderr} will be redirected to {@code stdout} if the value is defined unless the value is {@code none}.
+     *
+     * <div>
+     * By default {@code stdout} and {@code stderr} are inherited from the current process. You can change the setting
+     * to one of the follow:
+     * <ul>
+     * <li>{@code none} indicates the {@code stdout} and {@code stderr} stream should not be consumed</li>
+     * <li>{@code System.out} or {@code System.err} to redirect to the current processes <em>(use this option if you
+     * see odd behavior from maven with the default value)</em></li>
+     * <li>Any other value is assumed to be the path to a file and the {@code stdout} and {@code stderr} will be
+     * written there</li>
+     * </ul>
+     * </div>
+     */
+    @Parameter(property = PropertyNames.STDOUT)
+    private String stdout;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         final Log log = getLog();
@@ -213,8 +235,28 @@ public class StartMojo extends AbstractServerConnection {
         log.info(String.format("JAVA_HOME=%s", commandBuilder.getJavaHome()));
         log.info(String.format("JBOSS_HOME=%s%n", commandBuilder.getWildFlyHome()));
         try {
+            // Determine how stdout should be consumed
+            OutputStream out = null;
+            if (stdout != null) {
+                final String value = stdout.trim().toLowerCase(Locale.ENGLISH);
+                if ("system.out".equals(value)) {
+                    out = System.out;
+                } else if ("system.err".equals(value)) {
+                    out = System.err;
+                } else if ("none".equals(value)) {
+                    out = null;
+                } else {
+                    // Attempt to create a file
+                    final Path path = Paths.get(value);
+                    if (Files.notExists(path)) {
+                        Files.createDirectories(path);
+                        Files.createFile(path);
+                    }
+                    out = new BufferedOutputStream(Files.newOutputStream(path));
+                }
+            }
             // Create the server, note the client should be shutdown when the server is stopped
-            final Server server = Server.create(commandBuilder, createClient(false));
+            final Server server = Server.create(commandBuilder, createClient(false), out);
             // Start the server
             log.info("Server is starting up.");
             server.start(startupTimeout);
