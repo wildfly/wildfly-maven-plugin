@@ -199,7 +199,7 @@ public class StandaloneDeployment implements Deployment {
         if (runtimeName != null) {
             addOperation.get(RUNTIME_NAME).set(runtimeName);
         }
-        addContent(deployment, addOperation, false);
+        addContent(deployment, addOperation, Files.isDirectory(deployment));
         return CompositeOperationBuilder.create()
                 .addStep(addOperation)
                 .addStep(createOperation(ClientConstants.DEPLOYMENT_DEPLOY_OPERATION, address))
@@ -212,7 +212,7 @@ public class StandaloneDeployment implements Deployment {
         if (runtimeName != null) {
             op.get(RUNTIME_NAME).set(runtimeName);
         }
-        addContent(deployment, op, false);
+        addContent(deployment, op, Files.isDirectory(deployment));
         op.get(ENABLE).set(true);
         return OperationBuilder.create(op).build();
     }
