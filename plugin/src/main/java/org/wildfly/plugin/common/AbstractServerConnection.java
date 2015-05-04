@@ -24,9 +24,11 @@ package org.wildfly.plugin.common;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+
 import javax.security.auth.callback.CallbackHandler;
 
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.settings.Server;
@@ -108,6 +110,13 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     @Parameter(property = PropertyNames.PASSWORD)
     private String password;
 
+    /**
+     * Specifies how many milliseconds to wait for a given command to return. The value
+     * provided must be a positive integer. Defaults to 5000 milliseconds when not provided.
+     */
+    @Parameter(defaultValue = "5000", property = PropertyNames.TIMEOUT)
+    private int timeout;
+
     @Component(role = SettingsDecrypter.class)
     private DefaultSettingsDecrypter settingsDecrypter;
 
@@ -184,8 +193,9 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
      * DomainClient} is returned.
      *
      * @return the client
+     * @throws MojoFailureException 
      */
-    protected final ModelControllerClient createClient() {
+    protected final ModelControllerClient createClient() throws MojoFailureException {
         return createClient(true);
     }
 
@@ -207,13 +217,18 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
      *                       org.jboss.as.controller.client.ModelControllerClient client}
      *
      * @return the client
+     * @throws MojoFailureException 
      */
-    protected final ModelControllerClient createClient(final boolean autoWrapDomain) {
-        final ModelControllerClient client = ModelControllerClient.Factory.create(getProtocol(), getHostAddress(), getPort(), getCallbackHandler());
-        if (autoWrapDomain && ServerHelper.isDomainServer(client)) {
-            return DomainClient.Factory.create(client);
-        }
-        return client;
+    protected final ModelControllerClient createClient(final boolean autoWrapDomain) throws MojoFailureException {
+		try {
+			ModelControllerClient client = ModelControllerClient.Factory.create(getProtocol(), getHostAddress().getHostAddress(), getPort(), getCallbackHandler(), null, timeout);
+			if (autoWrapDomain && ServerHelper.isDomainServer(client)) {
+				return DomainClient.Factory.create(client);
+			}
+			return client;
+		} catch (UnknownHostException e) {
+			throw new MojoFailureException("Can't create client", e);
+		}
     }
 
     private void getCredentialsFromSettings() {
