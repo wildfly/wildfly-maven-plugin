@@ -77,6 +77,8 @@ public interface PropertyNames {
 
     String STARTUP_TIMEOUT = "wildfly.startupTimeout";
 
+    String TIMEOUT = "wildfly.timeout";
+
     String STDOUT = "wildfly.stdout";
 
     String USERNAME = "wildfly.username";
