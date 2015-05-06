@@ -193,7 +193,7 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
      * DomainClient} is returned.
      *
      * @return the client
-     * @throws MojoFailureException 
+     * @throws MojoFailureException
      */
     protected final ModelControllerClient createClient() throws MojoFailureException {
         return createClient(true);
@@ -217,18 +217,18 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
      *                       org.jboss.as.controller.client.ModelControllerClient client}
      *
      * @return the client
-     * @throws MojoFailureException 
+     * @throws MojoFailureException
      */
     protected final ModelControllerClient createClient(final boolean autoWrapDomain) throws MojoFailureException {
-		try {
-			ModelControllerClient client = ModelControllerClient.Factory.create(getProtocol(), getHostAddress().getHostAddress(), getPort(), getCallbackHandler(), null, timeout);
-			if (autoWrapDomain && ServerHelper.isDomainServer(client)) {
-				return DomainClient.Factory.create(client);
-			}
-			return client;
-		} catch (UnknownHostException e) {
-			throw new MojoFailureException("Can't create client", e);
-		}
+        try {
+            ModelControllerClient client = ModelControllerClient.Factory.create(getProtocol(), getHostAddress().getHostAddress(), getPort(), getCallbackHandler(), null, timeout);
+            if (autoWrapDomain && ServerHelper.isDomainServer(client)) {
+                return DomainClient.Factory.create(client);
+            }
+            return client;
+        } catch (UnknownHostException e) {
+            throw new MojoFailureException("Can't create client", e);
+        }
     }
 
     private void getCredentialsFromSettings() {
