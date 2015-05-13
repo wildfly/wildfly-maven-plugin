@@ -12,7 +12,10 @@ Execute Commands Examples
 
 * Execute commands
 
-  The example below shows how to add a debug logger with a debug log file:
+  The example below shows how to add a debug logger with a debug log file.
+  The ignoreFailures parameter means that if a command fails, the build will continue,
+  eg. you can run these 'add' commands idempotently without failing due to already
+  existing resources.
 
 ----------
 <project>
@@ -27,6 +30,7 @@ Execute Commands Examples
                 <version>${project.version}</version>
                 <configuration>
                     <execute-commands>
+                        <ignoreFailures>true</ignoreFailures>
                         <commands>
                             <command>/subsystem=logging/file-handler=debug:add(level=DEBUG,autoflush=true,file={"relative-to"=>"jboss.server.log.dir", "path"=>"debug.log"})</command>
                             <command>/subsystem=logging/logger=org.jboss.as:add(level=DEBUG,handlers=[debug])</command>
