@@ -81,6 +81,12 @@ public class Commands {
     private List<File> scripts = new ArrayList<File>();
 
     /**
+     * If a command fails, go on anyway.
+     */
+    @Parameter
+    private boolean ignoreFailures = false;
+
+    /**
      * Indicates whether or not commands should be executed in a batch.
      *
      * @return {@code true} if commands should be executed in a batch, otherwise
@@ -155,7 +161,8 @@ public class Commands {
                     } catch (CommandFormatException e) {
                         throw new IllegalArgumentException(String.format("Command '%s' is invalid. %s", line, e.getLocalizedMessage()), e);
                     } catch (CommandLineException e) {
-                        throw new IllegalArgumentException(String.format("Command execution failed for command '%s'. %s", line, e.getLocalizedMessage()), e);
+                        if(!ignoreFailures)
+                            throw new IllegalArgumentException(String.format("Command execution failed for command '%s'. %s", line, e.getLocalizedMessage()), e);
                     }
                     line = reader.readLine();
 
@@ -173,7 +180,8 @@ public class Commands {
             } catch (CommandFormatException e) {
                 throw new IllegalArgumentException(String.format("Command '%s' is invalid. %s", cmd, e.getLocalizedMessage()), e);
             } catch (CommandLineException e) {
-                throw new IllegalArgumentException(String.format("Command execution failed for command '%s'. %s", cmd, e.getLocalizedMessage()), e);
+                if(!ignoreFailures)
+                    throw new IllegalArgumentException(String.format("Command execution failed for command '%s'. %s", cmd, e.getLocalizedMessage()), e);
             }
         }
     }
@@ -190,7 +198,7 @@ public class Commands {
                 }
             }
             final ModelNode result = ctx.getModelControllerClient().execute(batch.toRequest());
-            if (!ServerOperations.isSuccessfulOutcome(result)) {
+            if (!ignoreFailures && !ServerOperations.isSuccessfulOutcome(result)) {
                 throw new IllegalArgumentException(ServerOperations.getFailureDescriptionAsString(result));
             }
         }
