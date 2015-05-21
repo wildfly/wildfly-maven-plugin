@@ -79,7 +79,7 @@
         <!-- WildFly/JBoss dependencies -->
         <version.org.jboss.jdf.stacks-client>1.0.2.Final</version.org.jboss.jdf.stacks-client>
         <version.org.jboss.logmanager>1.5.4.Final</version.org.jboss.logmanager>
-        <version.org.wildfly.core>1.0.0.Beta3</version.org.wildfly.core>
+        <version.org.wildfly.core>1.0.0.CR4</version.org.wildfly.core>
         <version.org.wildfly.dist>8.2.0.Final</version.org.wildfly.dist>
 
         <!-- maven dependencies -->
