@@ -25,6 +25,7 @@ package org.wildfly.plugin.server;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +41,6 @@ import org.wildfly.core.launcher.CommandBuilder;
 import org.wildfly.core.launcher.DomainCommandBuilder;
 import org.wildfly.core.launcher.Launcher;
 import org.wildfly.core.launcher.ProcessHelper;
-import org.wildfly.security.manager.WildFlySecurityManager;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
@@ -141,7 +141,7 @@ abstract class Server {
             new Thread(new ConsoleConsumer(process.getInputStream(), stdout)).start();
         }
         // Running maven in a SM is unlikely, but we'll be safe
-        shutdownHook = WildFlySecurityManager.doUnchecked(new PrivilegedAction<Thread>() {
+        shutdownHook = AccessController.doPrivileged(new PrivilegedAction<Thread>() {
             @Override
             public Thread run() {
                 return ProcessHelper.addShutdownHook(process);
@@ -164,7 +164,7 @@ abstract class Server {
     public final synchronized void stop() {
         try {
             // Remove the shutdown hook. Running maven in a SM is unlikely, but we'll be safe
-            WildFlySecurityManager.doUnchecked(new PrivilegedAction<Object>() {
+            AccessController.doPrivileged(new PrivilegedAction<Object>() {
                 @Override
                 public Object run() {
                     try {
