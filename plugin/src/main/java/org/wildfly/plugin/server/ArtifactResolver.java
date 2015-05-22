@@ -45,7 +45,7 @@ public interface ArtifactResolver {
      */
     File resolve(MavenProject project, String artifact);
 
-    static class ArtifactNameSplitter {
+    class ArtifactNameSplitter {
 
         private final String artifact;
         private String groupId;

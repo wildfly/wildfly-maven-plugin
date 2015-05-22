@@ -52,7 +52,7 @@ abstract class Server {
     private volatile Thread shutdownHook;
     private Process process;
 
-    protected Server(final CommandBuilder commandBuilder, final OutputStream stdout) {
+    private Server(final CommandBuilder commandBuilder, final OutputStream stdout) {
         this.commandBuilder = commandBuilder;
         timerService = Executors.newScheduledThreadPool(1);
         this.stdout = stdout;

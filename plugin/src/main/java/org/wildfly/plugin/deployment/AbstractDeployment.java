@@ -150,9 +150,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
                 case SUCCESS:
                     break;
             }
-        } catch (MojoFailureException e) {
-            throw e;
-        } catch (MojoExecutionException e) {
+        } catch (MojoFailureException | MojoExecutionException e) {
             throw e;
         } catch (Exception e) {
             throw new MojoExecutionException(String.format("Could not execute goal %s on %s. Reason: %s", goal(), file(),
@@ -183,7 +181,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      * Validates the deployment.
      *
      * @throws DeploymentFailureException if the deployment is invalid.
-     * @param client
+     * @param client the client used for validation
      */
     protected void validate(final ModelControllerClient client) throws DeploymentFailureException {
         if (client instanceof DomainClient) {

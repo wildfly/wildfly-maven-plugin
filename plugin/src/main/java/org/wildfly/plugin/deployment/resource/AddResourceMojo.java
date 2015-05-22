@@ -176,7 +176,7 @@ public class AddResourceMojo extends AbstractServerConnection {
             }
             if (exists && force) {
                 reportFailure(client.execute(ServerOperations.createRemoveOperation(address, true)));
-            } else if (exists && !force) {
+            } else if (exists) {
                 throw new RuntimeException(String.format("Resource %s already exists.", address));
             }
         }

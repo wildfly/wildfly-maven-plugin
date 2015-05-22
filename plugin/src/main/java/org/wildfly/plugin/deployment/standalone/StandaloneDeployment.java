@@ -42,7 +42,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.List;
 
 import org.jboss.as.controller.client.ModelControllerClient;
@@ -221,7 +220,7 @@ public class StandaloneDeployment implements Deployment {
         return OperationBuilder.create(createOperation(DEPLOYMENT_REDEPLOY_OPERATION, createAddress(DEPLOYMENT, name))).build();
     }
 
-    private static Operation createUndeployOperation(final MatchPatternStrategy matchPatternStrategy, final Collection<String> names) throws IOException {
+    private static Operation createUndeployOperation(final MatchPatternStrategy matchPatternStrategy, final Iterable<String> names) throws IOException {
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create();
         for (String name : names) {
             final ModelNode address = createAddress(DEPLOYMENT, name);

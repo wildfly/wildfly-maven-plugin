@@ -84,7 +84,7 @@ class ClientCallbackHandler implements CallbackHandler {
     }
 
     private void prompt(final String realm) {
-        if (promptShown == false) {
+        if (!promptShown) {
             promptShown = true;
             System.out.println("Authenticating against security realm: " + realm);
         }

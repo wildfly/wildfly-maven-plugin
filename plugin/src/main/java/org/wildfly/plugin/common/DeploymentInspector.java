@@ -50,13 +50,13 @@ public class DeploymentInspector {
      * deploymentNamePattern
      * must be set.
      *
-     * @param client
+     * @param client              the client used to execute operations
      * @param exactComparisonName Name for exact matching.
      * @param matchPattern        Regex-Pattern for deployment matching.
      *
      * @return the name of the deployment or null.
      */
-    public static List<String> getDeployments(ModelControllerClient client, String exactComparisonName, String matchPattern) {
+    public static List<String> getDeployments(final ModelControllerClient client, final String exactComparisonName, final String matchPattern) {
 
         if (exactComparisonName == null && matchPattern == null) {
             throw new IllegalArgumentException("exactComparisonName and matchPattern are null. One of them must "
@@ -66,7 +66,7 @@ public class DeploymentInspector {
         // CLI :read-children-names(child-type=deployment)
         final ModelNode op = ServerOperations.createListDeploymentsOperation();
         final ModelNode listDeploymentsResult;
-        final List<String> result = new ArrayList<String>();
+        final List<String> result = new ArrayList<>();
         try {
             listDeploymentsResult = client.execute(op);
             // Check to make sure there is an outcome
@@ -92,7 +92,7 @@ public class DeploymentInspector {
 
     }
 
-    private static boolean matches(String deploymentName, String exactComparisonName, String matchPattern) {
+    private static boolean matches(final String deploymentName, final String exactComparisonName, final String matchPattern) {
 
         if (matchPattern != null) {
             return deploymentName.matches(matchPattern);

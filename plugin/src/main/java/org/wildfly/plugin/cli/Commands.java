@@ -72,13 +72,13 @@ public class Commands {
      * The CLI commands to execute.
      */
     @Parameter
-    private List<String> commands = new ArrayList<String>();
+    private List<String> commands = new ArrayList<>();
 
     /**
      * The CLI script files to execute.
      */
     @Parameter
-    private List<File> scripts = new ArrayList<File>();
+    private List<File> scripts = new ArrayList<>();
 
     /**
      * Indicates whether or not commands should be executed in a batch.

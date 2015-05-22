@@ -50,9 +50,7 @@ public class ServerOperations extends Operations {
     public static final String READ_CHILDREN_NAMES = "read-children-names";
     public static final String READ_RESOURCE = "read-resource";
     public static final String RELOAD = "reload";
-    public static final String SERVER_STATE = "server-state";
     public static final String SHUTDOWN = "shutdown";
-    public static final String URL = "URL";
 
     /**
      * Parses the result and returns the failure description. If the result was successful, an empty string is
