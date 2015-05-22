@@ -27,6 +27,7 @@ import java.net.UnknownHostException;
 import javax.security.auth.callback.CallbackHandler;
 
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.settings.Server;
@@ -165,16 +166,17 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     public final synchronized CallbackHandler getCallbackHandler() {
         CallbackHandler result = handler;
         if (result == null) {
+            final Log log = getLog();
             if (username == null && password == null) {
                 if (id != null) {
                     getCredentialsFromSettings();
                 } else {
-                    getLog().debug(DEBUG_MESSAGE_NO_ID);
+                    log.debug(DEBUG_MESSAGE_NO_ID);
                 }
             } else {
-                getLog().debug(DEBUG_MESSAGE_POM_HAS_CREDS);
+                log.debug(DEBUG_MESSAGE_POM_HAS_CREDS);
             }
-            result = handler = new ClientCallbackHandler(username, password);
+            result = handler = new ClientCallbackHandler(username, password, log);
         }
         return result;
     }
