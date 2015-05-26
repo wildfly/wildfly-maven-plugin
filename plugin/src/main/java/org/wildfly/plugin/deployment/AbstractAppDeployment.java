@@ -83,7 +83,7 @@ abstract class AbstractAppDeployment extends AbstractDeployment {
         return new File(targetDir, filename);
     }
 
-    protected final synchronized PackageType getPackageType() {
+    private synchronized PackageType getPackageType() {
         if (packageType == null) {
             packageType = PackageType.resolve(project);
         }

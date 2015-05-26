@@ -30,6 +30,7 @@ import org.apache.maven.project.ProjectBuildingRequest;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
@@ -53,7 +54,7 @@ class EclipseAetherArtifactResolver implements ArtifactResolver {
 
             final ArtifactRequest request = new ArtifactRequest();
             final ArtifactNameSplitter splitter = ArtifactNameSplitter.of(artifact).split();
-            final DefaultArtifact defaultArtifact = new DefaultArtifact(splitter.getGroupId(), splitter.getArtifactId(), splitter.getClassifier(), splitter.getPackaging(), splitter.getVersion());
+            final Artifact defaultArtifact = new DefaultArtifact(splitter.getGroupId(), splitter.getArtifactId(), splitter.getClassifier(), splitter.getPackaging(), splitter.getVersion());
             request.setArtifact(defaultArtifact);
             final List<RemoteRepository> repos = project.getRemoteProjectRepositories();
             request.setRepositories(repos);

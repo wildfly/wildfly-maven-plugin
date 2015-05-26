@@ -73,13 +73,13 @@ public abstract class AbstractWildFlyMojoTest {
      *
      * @throws java.lang.AssertionError if the MOJO was not found
      */
-    @SuppressWarnings("unchecked")
     public <T extends Mojo> T lookupMojoAndVerify(final String goal, final String fileName) throws Exception {
         final Path baseDir = Paths.get(BASE_CONFIG_DIR);
         assertTrue("Not a directory: " + BASE_CONFIG_DIR, Files.exists(baseDir));
         final Path pom = Paths.get(BASE_CONFIG_DIR, fileName);
         assertTrue(Files.exists(pom));
         Files.copy(pom, baseDir.resolve("pom.xml"), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+        @SuppressWarnings("unchecked")
         T mojo = (T) rule.lookupConfiguredMojo(baseDir.toFile(), goal);
         assertNotNull(mojo);
         setDefaultEnvironment(mojo);

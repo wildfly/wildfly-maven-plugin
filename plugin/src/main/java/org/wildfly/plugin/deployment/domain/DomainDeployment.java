@@ -150,7 +150,7 @@ public class DomainDeployment implements Deployment {
     }
 
     private DeploymentActionsCompleteBuilder undeployAndRemoveUndeployed(
-            final DeploymentPlanBuilder builder, final List<String> deploymentNames) {
+            final DeploymentPlanBuilder builder, final Iterable<String> deploymentNames) {
 
         DeploymentActionsCompleteBuilder completeBuilder = null;
         for (String deploymentName : deploymentNames) {
@@ -187,9 +187,7 @@ public class DomainDeployment implements Deployment {
             if (plan != null) {
                 executePlan(manager, plan);
             }
-        } catch (DeploymentFailureException e) {
-            throw e;
-        } catch (DeploymentExecutionException e) {
+        } catch (DeploymentFailureException | DeploymentExecutionException e) {
             throw e;
         } catch (Exception e) {
             throw new DeploymentExecutionException(e, "Error executing %s", type);
@@ -227,7 +225,7 @@ public class DomainDeployment implements Deployment {
     }
 
     private void executePlan(final DomainDeploymentManager manager, final DeploymentPlan plan) throws DeploymentExecutionException, ExecutionException, InterruptedException {
-        if (plan.getDeploymentActions().size() > 0) {
+        if (!plan.getDeploymentActions().isEmpty()) {
             final DeploymentPlanResult planResult = manager.execute(plan).get();
             final Map<UUID, DeploymentActionResult> actionResults = planResult.getDeploymentActionResults();
             for (UUID uuid : actionResults.keySet()) {

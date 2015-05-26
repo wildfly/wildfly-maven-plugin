@@ -30,7 +30,7 @@ import org.wildfly.plugin.common.DeploymentFailureException;
  */
 public interface Deployment {
 
-    public enum Type {
+    enum Type {
         DEPLOY,
         FORCE_DEPLOY,
         UNDEPLOY,
@@ -38,7 +38,7 @@ public interface Deployment {
         REDEPLOY,
     }
 
-    public enum Status {
+    enum Status {
         SUCCESS,
         REQUIRES_RESTART
     }

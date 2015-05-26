@@ -71,7 +71,6 @@ public final class DeployArtifactMojo extends AbstractDeployment {
 
 
     @Override
-    @SuppressWarnings("unchecked")
     public void validate(final ModelControllerClient client) throws DeploymentFailureException {
         super.validate(client);
         if (artifactId == null) {

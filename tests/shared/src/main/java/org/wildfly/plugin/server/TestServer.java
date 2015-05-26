@@ -39,7 +39,7 @@ public interface TestServer {
 
     ModelControllerClient getClient();
 
-    static class ConsoleConsumer implements Runnable {
+    class ConsoleConsumer implements Runnable {
         private final InputStream in;
         private final PrintStream out;
 

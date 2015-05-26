@@ -21,6 +21,7 @@
  */
 package org.wildfly.plugin.common;
 
+import java.io.Console;
 import java.io.IOException;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
@@ -29,6 +30,8 @@ import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.sasl.RealmCallback;
 import javax.security.sasl.RealmChoiceCallback;
+
+import org.apache.maven.plugin.logging.Log;
 
 /**
  * A CallbackHandler implementation to supply the username and password if required when
@@ -39,11 +42,15 @@ import javax.security.sasl.RealmChoiceCallback;
  */
 class ClientCallbackHandler implements CallbackHandler {
 
+    private final Console console;
+    private final Log log;
     private boolean promptShown = false;
     private String username;
     private char[] password;
 
-    ClientCallbackHandler(final String username, final String password) {
+    ClientCallbackHandler(final String username, final String password, final Log log) {
+        this.log = log;
+        console = System.console();
         this.username = username;
         if (password != null) {
             this.password = password.toCharArray();
@@ -60,16 +67,16 @@ class ClientCallbackHandler implements CallbackHandler {
 
         for (Callback current : callbacks) {
             if (current instanceof RealmCallback) {
-                RealmCallback rcb = (RealmCallback) current;
-                String defaultText = rcb.getDefaultText();
+                final RealmCallback rcb = (RealmCallback) current;
+                final String defaultText = rcb.getDefaultText();
                 rcb.setText(defaultText); // For now just use the realm suggested.
 
                 prompt(defaultText);
             } else if (current instanceof RealmChoiceCallback) {
                 throw new UnsupportedCallbackException(current, "Realm choice not currently supported.");
             } else if (current instanceof NameCallback) {
-                NameCallback ncb = (NameCallback) current;
-                String userName = obtainUsername("Username:");
+                final NameCallback ncb = (NameCallback) current;
+                final String userName = obtainUsername("Username:");
 
                 ncb.setName(userName);
             } else if (current instanceof PasswordCallback) {
@@ -84,25 +91,33 @@ class ClientCallbackHandler implements CallbackHandler {
     }
 
     private void prompt(final String realm) {
-        if (promptShown == false) {
+        if (!promptShown) {
             promptShown = true;
-            System.out.println("Authenticating against security realm: " + realm);
+            log.info("Authenticating against security realm: " + realm);
         }
     }
 
     private String obtainUsername(final String prompt) {
         if (username == null) {
-            username = System.console().readLine(prompt);
+            checkConsole();
+            username = console.readLine(prompt);
         }
         return username;
     }
 
     private char[] obtainPassword(final String prompt) {
         if (password == null) {
-            password = System.console().readPassword(prompt);
+            checkConsole();
+            password = console.readPassword(prompt);
         }
 
         return password;
+    }
+
+    private void checkConsole() {
+        if (console == null) {
+            throw new IllegalStateException("The environment does not have a usable console. Cannot prompt for user name and password");
+        }
     }
 
 }

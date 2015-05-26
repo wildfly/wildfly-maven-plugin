@@ -51,7 +51,7 @@ public class Domain {
      * @return the profiles or an empty list.
      */
     public List<String> getProfiles() {
-        return profiles == null ? Collections.<String>emptyList() : new ArrayList<String>(profiles);
+        return profiles == null ? Collections.<String>emptyList() : new ArrayList<>(profiles);
     }
 
     /**
@@ -60,6 +60,6 @@ public class Domain {
      * @return the server groups or an empty list.
      */
     public List<String> getServerGroups() {
-        return serverGroups == null ? Collections.<String>emptyList() : new ArrayList<String>(serverGroups);
+        return serverGroups == null ? Collections.<String>emptyList() : new ArrayList<>(serverGroups);
     }
 }

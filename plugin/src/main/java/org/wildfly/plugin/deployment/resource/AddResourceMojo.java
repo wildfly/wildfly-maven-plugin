@@ -45,8 +45,6 @@ import org.wildfly.plugin.deployment.domain.Domain;
  * If {@code force} is set to {@code false} and the resource has already been deployed to the server, an error will
  * occur and the operation will fail.
  * <p/>
- * <b>Note:</b> this currently only works with adding resources to subsystems when your server is running in domain
- * mode.
  *
  * @author Stuart Douglas
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
@@ -178,7 +176,7 @@ public class AddResourceMojo extends AbstractServerConnection {
             }
             if (exists && force) {
                 reportFailure(client.execute(ServerOperations.createRemoveOperation(address, true)));
-            } else if (exists && !force) {
+            } else if (exists) {
                 throw new RuntimeException(String.format("Resource %s already exists.", address));
             }
         }
