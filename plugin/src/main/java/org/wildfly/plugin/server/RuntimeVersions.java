@@ -23,12 +23,10 @@
 package org.wildfly.plugin.server;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.NavigableSet;
 import java.util.TreeSet;
-import java.util.regex.Pattern;
 
 import org.jboss.jdf.stacks.client.StacksClient;
 import org.jboss.jdf.stacks.model.Runtime;
@@ -111,32 +109,5 @@ class RuntimeVersions {
             }
         }
         return versions;
-    }
-
-    public static class VersionComparator implements Comparator<String> {
-        private static final Pattern PATTERN = Pattern.compile(".", Pattern.LITERAL);
-
-        @Override
-        public int compare(final String o1, final String o2) {
-            final String[] vs1 = PATTERN.split(o1);
-            final String[] vs2 = PATTERN.split(o2);
-            int result = 0;
-            // TODO (jrp) probably not the best comparison, but should work well enough
-            for (int i = 0; i < Math.min(vs1.length, vs2.length); i++) {
-                final String s1 = vs1[i];
-                final String s2 = vs2[i];
-                try {
-                    final Integer i1 = Integer.parseInt(s1);
-                    final Integer i2 = Integer.parseInt(s2);
-                    result = i1.compareTo(i2);
-                } catch (Exception e) {
-                    result = s1.compareTo(s2);
-                }
-                if (result != 0) {
-                    break;
-                }
-            }
-            return result;
-        }
     }
 }
