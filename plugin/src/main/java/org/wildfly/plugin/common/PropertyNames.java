@@ -85,4 +85,5 @@ public interface PropertyNames {
 
     String SERVER_ARGS = "wildfly.serverArgs";
 
+    String ADD_USER = "wildfly.addUser";
 }

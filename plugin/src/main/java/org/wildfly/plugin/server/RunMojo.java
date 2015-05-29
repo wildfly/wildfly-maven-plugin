@@ -22,14 +22,6 @@
 
 package org.wildfly.plugin.server;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Iterator;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
@@ -40,6 +32,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.sasl.util.UsernamePasswordHashUtil;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.common.DeploymentFailureException;
 import org.wildfly.plugin.common.PropertyNames;
@@ -48,6 +41,20 @@ import org.wildfly.plugin.deployment.DeployMojo;
 import org.wildfly.plugin.deployment.Deployment;
 import org.wildfly.plugin.deployment.standalone.StandaloneDeployment;
 import org.wildfly.plugin.server.ArtifactResolver.ArtifactNameSplitter;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.NoSuchAlgorithmException;
+import java.util.Iterator;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Starts a standalone instance of WildFly and deploys the application to the server.
@@ -164,6 +171,12 @@ public class RunMojo extends DeployMojo {
     @Parameter(alias = "server-args", property = PropertyNames.SERVER_ARGS)
     private String[] serverArgs;
 
+    /**
+     * Add management user
+     */
+    @Parameter(alias = "add-user", property = PropertyNames.ADD_USER)
+    private AddUser addUser;
+
     @Override
     protected void doExecute() throws MojoExecutionException, MojoFailureException {
         final Log log = getLog();
@@ -207,6 +220,8 @@ public class RunMojo extends DeployMojo {
         try (final ModelControllerClient client = createClient(false)) {
             // Create the server
             server = Server.create(commandBuilder, client);
+            // Add management user if requested
+            addUser(commandBuilder);
             // Start the server
             log.info("Server is starting up. Press CTRL + C to stop the server.");
             server.start(startupTimeout);
@@ -235,6 +250,28 @@ public class RunMojo extends DeployMojo {
             if (server != null) server.stop();
         }
 
+    }
+
+    private void addUser(StandaloneCommandBuilder commandBuilder) throws IOException, NoSuchAlgorithmException {
+        if (addUser.user != null) {
+            if (addUser.password == null) {
+                throw new IllegalArgumentException("No password supplied for user '" + addUser.user + "'");
+            }
+            String mgmtFilename = org.jboss.as.domain.management.security.adduser.AddUser.MGMT_USERS_PROPERTIES;
+            File mgmtFile = commandBuilder.getConfigurationDirectory().resolve(mgmtFilename).toFile();
+            Properties properties = new Properties();
+            try (Reader in = new FileReader(mgmtFile)) {
+                properties.load(in);
+                String password = new UsernamePasswordHashUtil().generateHashedHexURP(
+                        addUser.user,
+                        org.jboss.as.domain.management.security.adduser.AddUser.DEFAULT_MANAGEMENT_REALM,
+                        addUser.password.toCharArray());
+                properties.setProperty(addUser.user, password);
+            }
+            try (Writer out = new FileWriter(mgmtFile)) {
+                properties.store(out, null);
+            }
+        }
     }
 
     private Path extractIfRequired(final Path buildDir) throws MojoFailureException, MojoExecutionException {
