@@ -52,6 +52,7 @@ import org.wildfly.plugin.common.ServerOperations;
  * <pre>
  *      &lt;commands&gt;
  *          &lt;batch&gt;false&lt;/batch&gt;
+ *          &lt;failOnError&gt;true&lt;/failOnError&gt;
  *          &lt;command&gt;/subsystem=logging/console-handler:CONSOLE:write-attribute(name=level,value=TRACE)&lt;/command&gt;
  *      &lt;/commands&gt;
  * </pre>
@@ -67,6 +68,13 @@ public class Commands {
      */
     @Parameter
     private boolean batch;
+
+    /**
+     * {@code true}if further commands should not be executed although a command failed or {@code false} if they
+     * should be executed although an error occurred.
+     */
+    @Parameter(defaultValue="true")
+    private boolean failOnError;
 
     /**
      * The CLI commands to execute.
@@ -88,6 +96,16 @@ public class Commands {
      */
     public boolean isBatch() {
         return batch;
+    }
+
+    /**
+     * Indicates whether or not further commands should be executed although an error occurred.
+     *
+     * @return {@code true} if further commands should not be executed, otherwise
+     * {@code false}
+     */
+    public boolean isFailOnError() {
+        return failOnError;
     }
 
     /**
@@ -151,7 +169,7 @@ public class Commands {
                 while (!ctx.isTerminated() && line != null) {
 
                     try {
-                        ctx.handle(line.trim());
+                        handle(ctx, line);
                     } catch (CommandFormatException e) {
                         throw new IllegalArgumentException(String.format("Command '%s' is invalid. %s", line, e.getLocalizedMessage()), e);
                     } catch (CommandLineException e) {
@@ -169,7 +187,7 @@ public class Commands {
     private void executeCommands(final CommandContext ctx) throws IOException {
         for (String cmd : commands) {
             try {
-                ctx.handle(cmd);
+                handle(ctx, cmd);
             } catch (CommandFormatException e) {
                 throw new IllegalArgumentException(String.format("Command '%s' is invalid. %s", cmd, e.getLocalizedMessage()), e);
             } catch (CommandLineException e) {
@@ -193,6 +211,15 @@ public class Commands {
             if (!ServerOperations.isSuccessfulOutcome(result)) {
                 throw new IllegalArgumentException(ServerOperations.getFailureDescriptionAsString(result));
             }
+        }
+    }
+
+    private void handle(final CommandContext ctx, final String line) throws CommandLineException {
+        String trimmedLine = line.trim();
+        if (isFailOnError()) {
+            ctx.handle(trimmedLine);
+        } else {
+            ctx.handleSafe(trimmedLine);
         }
     }
 
