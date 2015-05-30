@@ -89,7 +89,7 @@ public class FailOnErrorTest extends AbstractWildFlyServerMojoTest {
         final ModelNode address = ServerOperations.createAddress("system-property", "org.wildfly.maven.plugin");
         final ModelNode op = ServerOperations.createReadAttributeOperation(address, "value");
 
-        // The script tries to add a new system property that, but should fail. Hence, property should not exist.
+        // The script tries to add a new system property, but should fail. Hence, property should not exist.
         try {
             executeOperation(op);
             fail("AssertionError expected.");

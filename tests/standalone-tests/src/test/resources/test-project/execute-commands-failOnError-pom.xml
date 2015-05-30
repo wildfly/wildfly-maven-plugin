@@ -41,7 +41,6 @@
                         </commands>
                     </execute-commands>
                 </configuration>
-
             </plugin>
         </plugins>
     </build>

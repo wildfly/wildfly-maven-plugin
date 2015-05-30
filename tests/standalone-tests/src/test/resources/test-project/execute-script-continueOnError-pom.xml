@@ -34,14 +34,13 @@
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
                     <execute-commands>
-						<failOnError>false</failOnError>
+                        <failOnError>false</failOnError>
                         <scripts>
-                        	<script>fail.cli</script>
+                            <script>fail.cli</script>
                             <script>test.cli</script>
                         </scripts>
                     </execute-commands>
                 </configuration>
-
             </plugin>
         </plugins>
     </build>
