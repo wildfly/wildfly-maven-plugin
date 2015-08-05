@@ -69,6 +69,16 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         }
         executeAndVerifyDeploymentExists("deploy", "deploy-webarchive-pom.xml");
     }
+    
+    @Test
+    public void testDeployWithRuntimeName() throws Exception {
+
+        // Make sure the archive is not deployed
+        if (isDeployed(DEPLOYMENT_NAME)) {
+            undeploy(DEPLOYMENT_NAME);
+        }
+        executeAndVerifyDeploymentExists("deploy", "deploy-webarchive-with-runtime-name-pom.xml", RUNTIME_NAME);
+    }
 
     @Test
     public void testDeployOnly() throws Exception {
@@ -229,6 +239,10 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
     }
 
     private void executeAndVerifyDeploymentExists(final String goal, final String fileName) throws Exception {
+    	executeAndVerifyDeploymentExists(goal, fileName, null);
+    }
+    
+    private void executeAndVerifyDeploymentExists(final String goal, final String fileName, final String runtimeName) throws Exception {
 
         final AbstractDeployment deployMojo = lookupMojoAndVerify(goal, fileName);
 
@@ -243,6 +257,12 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         final ModelNode result = executeOperation(op);
 
         assertTrue("Deployment was not enabled", ServerOperations.readResult(result).asBoolean());
+        
+        if (runtimeName != null) {
+        	final ModelNode runtimeNameOp= ServerOperations.createReadAttributeOperation(address, "runtime-name");
+        	final ModelNode runtimeNameResult = executeOperation(runtimeNameOp);
+        	assertEquals("Runtime name does not match", RUNTIME_NAME, ServerOperations.readResultAsString(runtimeNameResult));        	
+        }
     }
 
 }

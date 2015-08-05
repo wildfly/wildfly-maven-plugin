@@ -1,6 +1,6 @@
 <!--
   ~ JBoss, Home of Professional Open Source.
-  ~ Copyright 2013, Red Hat, Inc., and individual contributors
+  ~ Copyright 2014, Red Hat, Inc., and individual contributors
   ~ as indicated by the @author tags. See the copyright.txt file in the
   ~ distribution for a full listing of individual contributors.
   ~
@@ -36,9 +36,12 @@
                 <configuration>
                     <runtimeName>test-runtime.war</runtimeName>
                     <filename>test.war</filename>
-                    <checkPackaging>false</checkPackaging>
+                    <domain>
+                        <server-groups>
+                            <server-group>main-server-group</server-group>
+                        </server-groups>
+                    </domain>
                 </configuration>
-
             </plugin>
         </plugins>
     </build>
