@@ -214,7 +214,7 @@ public class RunMojo extends DeployMojo {
             server.checkServerState();
             if (server.isRunning()) {
                 log.info(String.format("Deploying application '%s'%n", deploymentFile.getName()));
-                final Deployment deployment = StandaloneDeployment.create(client, deploymentFile, name, getType(), null, null);
+                final Deployment deployment = StandaloneDeployment.create(client, deploymentFile, name, runtimeName, getType(), null, null);
                 switch (executeDeployment(client, deployment)) {
                     case REQUIRES_RESTART: {
                         client.execute(ServerOperations.createOperation(ServerOperations.RELOAD));

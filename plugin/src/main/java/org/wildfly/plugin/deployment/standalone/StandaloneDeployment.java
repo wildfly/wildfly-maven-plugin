@@ -67,6 +67,7 @@ public class StandaloneDeployment implements Deployment {
     private final File content;
     private final ModelControllerClient client;
     private final String name;
+    private final String runtimeName;
     private final Type type;
     private final String matchPattern;
     private final MatchPatternStrategy matchPatternStrategy;
@@ -77,15 +78,18 @@ public class StandaloneDeployment implements Deployment {
      * @param client               the client that is connected.
      * @param content              the content for the deployment.
      * @param name                 the name of the deployment, if {@code null} the name of the content file is used.
+     * @param runtimeName          the runtime name of the deployment, if {@code null} name is used.
      * @param type                 the deployment type.
      * @param matchPattern         the pattern for matching multiple artifacts, if {@code null} the name is used.
      * @param matchPatternStrategy the strategy for handling multiple artifacts.
      */
-    public StandaloneDeployment(final ModelControllerClient client, final File content, final String name, final Type type,
-                                final String matchPattern, final MatchPatternStrategy matchPatternStrategy) {
+    public StandaloneDeployment(final ModelControllerClient client, final File content, final String name,
+                                final String runtimeName, final Type type, final String matchPattern,
+                                final MatchPatternStrategy matchPatternStrategy) {
         this.content = content;
         this.client = client;
         this.name = (name == null ? content.getName() : name);
+        this.runtimeName = (runtimeName == null ? this.name : runtimeName);
         this.type = type;
         this.matchPattern = matchPattern;
         this.matchPatternStrategy = matchPatternStrategy;
@@ -103,9 +107,10 @@ public class StandaloneDeployment implements Deployment {
      *
      * @return the new deployment
      */
-    public static StandaloneDeployment create(final ModelControllerClient client, final File content, final String name, final Type type,
+    public static StandaloneDeployment create(final ModelControllerClient client, final File content, final String name,
+                                              final String runtimeName, final Type type,
                                               final String matchPattern, final MatchPatternStrategy matchPatternStrategy) {
-        return new StandaloneDeployment(client, content, name, type, matchPattern, matchPatternStrategy);
+        return new StandaloneDeployment(client, content, name, runtimeName, type, matchPattern, matchPatternStrategy);
     }
 
     private void validateExistingDeployments(List<String> existingDeployments) throws DeploymentFailureException {
@@ -126,14 +131,14 @@ public class StandaloneDeployment implements Deployment {
             final Operation operation;
             switch (type) {
                 case DEPLOY: {
-                    operation = createDeployOperation(content.toPath(), name, null);
+                    operation = createDeployOperation(content.toPath(), name, runtimeName);
                     break;
                 }
                 case FORCE_DEPLOY: {
                     if (existingDeployments.contains(name)) {
-                        operation = createReplaceOperation(content.toPath(), name, null);
+                        operation = createReplaceOperation(content.toPath(), name, runtimeName);
                     } else {
-                        operation = createDeployOperation(content.toPath(), name, null);
+                        operation = createDeployOperation(content.toPath(), name, runtimeName);
                     }
                     break;
                 }

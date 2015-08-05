@@ -69,6 +69,29 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
     }
 
     @Test
+    public void testDeployWithRuntimeName() throws Exception {
+
+        // Make sure the archive is not deployed
+        if (isDeployed(DEPLOYMENT_NAME)) {
+            undeploy(DEPLOYMENT_NAME);
+        }
+
+        final AbstractDeployment deployMojo = lookupMojoAndVerify("deploy", "deploy-webarchive-with-runtime-name-pom.xml");
+
+        deployMojo.execute();
+
+        // Verify deployed
+        assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed", isDeployed(DEPLOYMENT_NAME));
+
+        // /deployment=test.war :read-attribute(name=runtime-name)
+        final ModelNode address = ServerOperations.createAddress("deployment", DEPLOYMENT_NAME);
+        final ModelNode op = ServerOperations.createReadAttributeOperation(address, "runtime-name");
+        final ModelNode result = executeOperation(op);
+
+        assertEquals(RUNTIME_NAME, ServerOperations.readResultAsString(result));
+    }
+    
+    @Test
     public void testDeployWithCommands() throws Exception {
 
         // Make sure the archive is not deployed
@@ -157,8 +180,12 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         return false;
     }
 
-    protected void deploy(final String name) throws IOException, DeploymentExecutionException, DeploymentFailureException {
-        final StandaloneDeployment deployment = StandaloneDeployment.create(client, getDeployment(), name, Type.DEPLOY, null, null);
+    protected final void deploy(final String name) throws IOException, DeploymentExecutionException, DeploymentFailureException {
+        deploy(name, null);
+    }
+    
+    protected void deploy(final String name, final String runtimeName) throws IOException, DeploymentExecutionException, DeploymentFailureException {
+        final StandaloneDeployment deployment = StandaloneDeployment.create(client, getDeployment(), name, runtimeName, Type.DEPLOY, null, null);
         assertEquals(Status.SUCCESS, deployment.execute());
 
         // Verify deployed
@@ -172,8 +199,12 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         assertEquals("OK", ServerOperations.readResultAsString(result));
     }
 
-    protected void undeploy(final String name) throws IOException, DeploymentExecutionException, DeploymentFailureException {
-        final StandaloneDeployment deployment = StandaloneDeployment.create(client, null, name, Type.UNDEPLOY, null, null);
+    protected final void undeploy(final String name) throws IOException, DeploymentExecutionException, DeploymentFailureException {
+        undeploy(name, null);
+    }
+    
+    protected void undeploy(final String name, final String runtimeName) throws IOException, DeploymentExecutionException, DeploymentFailureException {
+        final StandaloneDeployment deployment = StandaloneDeployment.create(client, null, name, runtimeName, Type.UNDEPLOY, null, null);
         assertEquals(Status.SUCCESS, deployment.execute());
 
         // Verify not deployed

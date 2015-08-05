@@ -185,14 +185,18 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         return false;
     }
 
-    protected void deploy(final String name) throws IOException, DeploymentExecutionException, DeploymentFailureException {
+    protected final void deploy(final String name) throws IOException, DeploymentExecutionException, DeploymentFailureException {
+    	deploy(name, null);
+    }
+    
+    protected void deploy(final String name, final String runtimeName) throws IOException, DeploymentExecutionException, DeploymentFailureException {
         final DomainClient domainClient;
         if (client instanceof DomainClient) {
             domainClient = (DomainClient) client;
         } else {
             domainClient = DomainClient.Factory.create(client);
         }
-        final DomainDeployment deployment = DomainDeployment.create(domainClient, DOMAIN, getDeployment(), name, Type.DEPLOY, null, null);
+        final DomainDeployment deployment = DomainDeployment.create(domainClient, DOMAIN, getDeployment(), name, runtimeName, Type.DEPLOY, null, null);
         assertEquals(Status.SUCCESS, deployment.execute());
 
         // Verify deployed
@@ -206,14 +210,18 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         assertEquals("OK", ServerOperations.readResultAsString(result));
     }
 
-    protected void undeploy(final String name) throws IOException, DeploymentExecutionException, DeploymentFailureException {
+    protected final void undeploy(final String name) throws IOException, DeploymentExecutionException, DeploymentFailureException {
+    	undeploy(name, null);
+    }
+    
+    protected void undeploy(final String name, final String runtimeName) throws IOException, DeploymentExecutionException, DeploymentFailureException {
         final DomainClient domainClient;
         if (client instanceof DomainClient) {
             domainClient = (DomainClient) client;
         } else {
             domainClient = DomainClient.Factory.create(client);
         }
-        final DomainDeployment deployment = DomainDeployment.create(domainClient, DOMAIN, null, name, Type.UNDEPLOY, null, null);
+        final DomainDeployment deployment = DomainDeployment.create(domainClient, DOMAIN, null, name, runtimeName, Type.UNDEPLOY, null, null);
         assertEquals(Status.SUCCESS, deployment.execute());
 
         // Verify not deployed
