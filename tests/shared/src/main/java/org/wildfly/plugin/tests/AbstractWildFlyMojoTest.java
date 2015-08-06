@@ -41,6 +41,7 @@ import org.junit.Rule;
 public abstract class AbstractWildFlyMojoTest {
 
     protected final String DEPLOYMENT_NAME = System.getProperty("wildfly.test.deployment.name");
+    protected final String RUNTIME_NAME = System.getProperty("wildfly.test.deployment.runtimename");
     protected final String BASE_CONFIG_DIR = System.getProperty("wildfly.test.config.dir");
 
     @Rule

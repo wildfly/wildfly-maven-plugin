@@ -69,6 +69,16 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         }
         executeAndVerifyDeploymentExists("deploy", "deploy-webarchive-pom.xml");
     }
+    
+    @Test
+    public void testDeployWithRuntimeName() throws Exception {
+
+        // Make sure the archive is not deployed
+        if (isDeployed(DEPLOYMENT_NAME)) {
+            undeploy(DEPLOYMENT_NAME);
+        }
+        executeAndVerifyDeploymentExists("deploy", "deploy-webarchive-with-runtime-name-pom.xml", RUNTIME_NAME);
+    }
 
     @Test
     public void testDeployOnly() throws Exception {
@@ -185,14 +195,18 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         return false;
     }
 
-    protected void deploy(final String name) throws IOException, DeploymentExecutionException, DeploymentFailureException {
+    protected final void deploy(final String name) throws IOException, DeploymentExecutionException, DeploymentFailureException {
+    	deploy(name, null);
+    }
+    
+    protected void deploy(final String name, final String runtimeName) throws IOException, DeploymentExecutionException, DeploymentFailureException {
         final DomainClient domainClient;
         if (client instanceof DomainClient) {
             domainClient = (DomainClient) client;
         } else {
             domainClient = DomainClient.Factory.create(client);
         }
-        final DomainDeployment deployment = DomainDeployment.create(domainClient, DOMAIN, getDeployment(), name, Type.DEPLOY, null, null);
+        final DomainDeployment deployment = DomainDeployment.create(domainClient, DOMAIN, getDeployment(), name, runtimeName, Type.DEPLOY, null, null);
         assertEquals(Status.SUCCESS, deployment.execute());
 
         // Verify deployed
@@ -206,14 +220,18 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         assertEquals("OK", ServerOperations.readResultAsString(result));
     }
 
-    protected void undeploy(final String name) throws IOException, DeploymentExecutionException, DeploymentFailureException {
+    protected final void undeploy(final String name) throws IOException, DeploymentExecutionException, DeploymentFailureException {
+    	undeploy(name, null);
+    }
+    
+    protected void undeploy(final String name, final String runtimeName) throws IOException, DeploymentExecutionException, DeploymentFailureException {
         final DomainClient domainClient;
         if (client instanceof DomainClient) {
             domainClient = (DomainClient) client;
         } else {
             domainClient = DomainClient.Factory.create(client);
         }
-        final DomainDeployment deployment = DomainDeployment.create(domainClient, DOMAIN, null, name, Type.UNDEPLOY, null, null);
+        final DomainDeployment deployment = DomainDeployment.create(domainClient, DOMAIN, null, name, runtimeName, Type.UNDEPLOY, null, null);
         assertEquals(Status.SUCCESS, deployment.execute());
 
         // Verify not deployed
@@ -221,6 +239,10 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
     }
 
     private void executeAndVerifyDeploymentExists(final String goal, final String fileName) throws Exception {
+    	executeAndVerifyDeploymentExists(goal, fileName, null);
+    }
+    
+    private void executeAndVerifyDeploymentExists(final String goal, final String fileName, final String runtimeName) throws Exception {
 
         final AbstractDeployment deployMojo = lookupMojoAndVerify(goal, fileName);
 
@@ -235,6 +257,12 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         final ModelNode result = executeOperation(op);
 
         assertTrue("Deployment was not enabled", ServerOperations.readResult(result).asBoolean());
+        
+        if (runtimeName != null) {
+        	final ModelNode runtimeNameOp= ServerOperations.createReadAttributeOperation(address, "runtime-name");
+        	final ModelNode runtimeNameResult = executeOperation(runtimeNameOp);
+        	assertEquals("Runtime name does not match", RUNTIME_NAME, ServerOperations.readResultAsString(runtimeNameResult));        	
+        }
     }
 
 }
