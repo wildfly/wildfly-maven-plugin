@@ -79,8 +79,8 @@
         <!-- WildFly/JBoss dependencies -->
         <version.org.jboss.jdf.stacks-client>1.0.2.Final</version.org.jboss.jdf.stacks-client>
         <version.org.jboss.logmanager>1.5.4.Final</version.org.jboss.logmanager>
-        <version.org.wildfly.core>1.0.0.CR4</version.org.wildfly.core>
-        <version.org.wildfly.dist>8.2.0.Final</version.org.wildfly.dist>
+        <version.org.wildfly.core>1.0.1.Final</version.org.wildfly.core>
+        <version.org.wildfly.dist>9.0.1.Final</version.org.wildfly.dist>
 
         <!-- maven dependencies -->
         <version.javax.inject.javax.inject>1</version.javax.inject.javax.inject>
@@ -89,7 +89,7 @@
         </version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>
         <version.org.apache.maven.plugin-tools>3.3</version.org.apache.maven.plugin-tools>
         <version.org.codehaus.plexus.plexus-utils>3.0.21</version.org.codehaus.plexus.plexus-utils>
-        <version.org.eclipse.aether>1.0.1.v20141111</version.org.eclipse.aether>
+        <version.org.eclipse.aether>1.0.2.v20150114</version.org.eclipse.aether>
 
         <!-- other dependencies -->
         <version.junit.junit>4.11</version.junit.junit>
