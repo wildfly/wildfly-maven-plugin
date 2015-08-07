@@ -22,10 +22,6 @@
 
 package org.wildfly.plugin.common;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import javax.security.auth.callback.CallbackHandler;
-
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Component;
@@ -37,8 +33,7 @@ import org.apache.maven.settings.crypto.DefaultSettingsDecryptionRequest;
 import org.apache.maven.settings.crypto.SettingsDecrypter;
 import org.apache.maven.settings.crypto.SettingsDecryptionResult;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.controller.client.helpers.domain.DomainClient;
-import org.wildfly.plugin.server.ServerHelper;
+import org.jboss.as.controller.client.ModelControllerClientConfiguration;
 
 /**
  * The default implementation for connecting to a running WildFly instance
@@ -46,7 +41,7 @@ import org.wildfly.plugin.server.ServerHelper;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  * @author Stuart Douglas
  */
-public abstract class AbstractServerConnection extends AbstractMojo implements ConnectionInfo {
+public abstract class AbstractServerConnection extends AbstractMojo {
 
     public static final String DEBUG_MESSAGE_NO_CREDS = "No username and password in settings.xml file - falling back to CLI entry";
     public static final String DEBUG_MESSAGE_NO_ID = "No <id> element was found in the POM - Getting credentials from CLI entry";
@@ -55,10 +50,6 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     public static final String DEBUG_MESSAGE_POM_HAS_CREDS = "Getting credentials from the POM";
     public static final String DEBUG_MESSAGE_SETTINGS_HAS_CREDS = "Found username and password in the settings.xml file";
     public static final String DEBUG_MESSAGE_SETTINGS_HAS_ID = "Found the server's id in the settings.xml file";
-
-    private volatile InetAddress address = null;
-
-    private volatile CallbackHandler handler;
 
     /**
      * The protocol used to connect to the server for management.
@@ -113,129 +104,61 @@ public abstract class AbstractServerConnection extends AbstractMojo implements C
     private DefaultSettingsDecrypter settingsDecrypter;
 
     /**
-     * The hostname to deploy the archive to. The default is localhost.
-     *
-     * @return the hostname of the server.
-     */
-    public final String hostname() {
-        return hostname;
-    }
-
-    /**
-     * The port number of the server to deploy to. The default is 9999.
-     *
-     * @return the port number to deploy to.
-     */
-    @Override
-    public final int getPort() {
-        return port;
-    }
-
-    /**
      * The goal of the deployment.
      *
      * @return the goal of the deployment.
      */
     public abstract String goal();
 
-    @Override
-    public final String getProtocol() {
-        return protocol;
-    }
-
     /**
-     * Creates gets the address to the host name.
-     *
-     * @return the address.
-     */
-    @Override
-    public final synchronized InetAddress getHostAddress() {
-        InetAddress result = address;
-        // Lazy load the address
-        if (result == null) {
-            try {
-                result = address = InetAddress.getByName(hostname());
-            } catch (UnknownHostException e) {
-                throw new IllegalArgumentException(String.format("Host name '%s' is invalid.", hostname), e);
-            }
-        }
-        return result;
-    }
-
-    @Override
-    public final synchronized CallbackHandler getCallbackHandler() {
-        CallbackHandler result = handler;
-        if (result == null) {
-            final Log log = getLog();
-            if (username == null && password == null) {
-                if (id != null) {
-                    getCredentialsFromSettings();
-                } else {
-                    log.debug(DEBUG_MESSAGE_NO_ID);
-                }
-            } else {
-                log.debug(DEBUG_MESSAGE_POM_HAS_CREDS);
-            }
-            result = handler = new ClientCallbackHandler(username, password, log);
-        }
-        return result;
-    }
-
-    /**
-     * Creates a new client. If the target runtime is domain a {@link org.jboss.as.controller.client.helpers.domain.DomainClient
-     * DomainClient} is returned.
+     * Creates a new client.
      *
      * @return the client
      */
     protected final ModelControllerClient createClient() {
-        return createClient(true);
+        return ModelControllerClient.Factory.create(getClientConfiguration());
     }
 
     /**
-     * Creates a new client.
+     * Gets a client configuration used to create a new {@link ModelControllerClient}.
      *
-     * <p>
-     * If the server is a domain server and the {@code autoWrapDomain} is set to {@code true} the returned value will
-     * be a {@link org.jboss.as.controller.client.helpers.domain.DomainClient DomainClient}. If the {@code
-     * autoWrapDomain} value is set to {@code false} no check for the server type will be done.
-     * </p>
-     *
-     * <p>
-     * A {@code false} value for is useful if the server has not yet been started
-     * </p>
-     *
-     * @param autoWrapDomain if {@code true} to wrap the client in a {@link org.jboss.as.controller.client.helpers.domain.DomainClient
-     *                       DomainClient} for domain servers, {@code false} to return the default {@linkplain
-     *                       org.jboss.as.controller.client.ModelControllerClient client}
-     *
-     * @return the client
+     * @return the configuration to use
      */
-    protected final ModelControllerClient createClient(final boolean autoWrapDomain) {
-        final ModelControllerClient client = ModelControllerClient.Factory.create(getProtocol(), getHostAddress(), getPort(), getCallbackHandler());
-        if (autoWrapDomain && ServerHelper.isDomainServer(client)) {
-            return DomainClient.Factory.create(client);
-        }
-        return client;
-    }
-
-    private void getCredentialsFromSettings() {
-        if (settings != null) {
-            Server server = settings.getServer(id);
-            if (server != null) {
-                getLog().debug(DEBUG_MESSAGE_SETTINGS_HAS_ID);
-                password = decrypt(server);
-                username = server.getUsername();
-                if (username != null && password != null) {
-                    getLog().debug(DEBUG_MESSAGE_SETTINGS_HAS_CREDS);
+    protected ModelControllerClientConfiguration getClientConfiguration() {
+        final Log log = getLog();
+        String username = this.username;
+        String password = this.password;
+        if (username == null && password == null) {
+            if (id != null) {
+                if (settings != null) {
+                    Server server = settings.getServer(id);
+                    if (server != null) {
+                        log.debug(DEBUG_MESSAGE_SETTINGS_HAS_ID);
+                        password = decrypt(server);
+                        username = server.getUsername();
+                        if (username != null && password != null) {
+                            log.debug(DEBUG_MESSAGE_SETTINGS_HAS_CREDS);
+                        } else {
+                            log.debug(DEBUG_MESSAGE_NO_CREDS);
+                        }
+                    } else {
+                        log.debug(DEBUG_MESSAGE_NO_SERVER_SECTION);
+                    }
                 } else {
-                    getLog().debug(DEBUG_MESSAGE_NO_CREDS);
+                    log.debug(DEBUG_MESSAGE_NO_SETTINGS_FILE);
                 }
             } else {
-                getLog().debug(DEBUG_MESSAGE_NO_SERVER_SECTION);
+                log.debug(DEBUG_MESSAGE_NO_ID);
             }
         } else {
-            getLog().debug(DEBUG_MESSAGE_NO_SETTINGS_FILE);
+            log.debug(DEBUG_MESSAGE_POM_HAS_CREDS);
         }
+        return new ModelControllerClientConfiguration.Builder()
+                .setProtocol(protocol)
+                .setHostName(hostname)
+                .setPort(port)
+                .setHandler(new ClientCallbackHandler(username, password, log))
+                .build();
     }
 
     private String decrypt(final Server server) {

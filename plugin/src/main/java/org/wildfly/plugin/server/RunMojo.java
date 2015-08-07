@@ -204,7 +204,7 @@ public class RunMojo extends DeployMojo {
         log.info(String.format("JAVA_HOME=%s", commandBuilder.getJavaHome()));
         log.info(String.format("JBOSS_HOME=%s%n", commandBuilder.getWildFlyHome()));
         Server server = null;
-        try (final ModelControllerClient client = createClient(false)) {
+        try (final ModelControllerClient client = createClient()) {
             // Create the server
             server = Server.create(commandBuilder, client);
             // Start the server

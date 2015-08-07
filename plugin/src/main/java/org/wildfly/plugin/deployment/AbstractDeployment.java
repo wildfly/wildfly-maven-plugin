@@ -39,6 +39,7 @@ import org.wildfly.plugin.deployment.Deployment.Status;
 import org.wildfly.plugin.deployment.domain.Domain;
 import org.wildfly.plugin.deployment.domain.DomainDeployment;
 import org.wildfly.plugin.deployment.standalone.StandaloneDeployment;
+import org.wildfly.plugin.server.ServerHelper;
 
 /**
  * The default implementation for executing build plans on the server.
@@ -132,13 +133,13 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      */
     protected void doExecute() throws MojoExecutionException, MojoFailureException {
         try (final ModelControllerClient client = createClient()) {
-            validate(client);
+            final boolean isDomain = ServerHelper.isDomainServer(client);
+            validate(client, isDomain);
             final String matchPattern = getMatchPattern();
             final MatchPatternStrategy matchPatternStrategy = getMatchPatternStrategy();
             final Deployment deployment;
-            if (client instanceof DomainClient) {
-                final DomainClient domainClient = (DomainClient) client;
-                deployment = DomainDeployment.create(domainClient, domain, file(), name, getType(), matchPattern, matchPatternStrategy);
+            if (isDomain) {
+                deployment = DomainDeployment.create(DomainClient.Factory.create(client), domain, file(), name, getType(), matchPattern, matchPatternStrategy);
             } else {
                 deployment = StandaloneDeployment.create(client, file(), name, getType(), matchPattern, matchPatternStrategy);
             }
@@ -179,12 +180,13 @@ abstract class AbstractDeployment extends AbstractServerConnection {
 
     /**
      * Validates the deployment.
+     * @param client the client used for validation
+     * @param isDomain {@code true} if this is a domain server, otherwise {@code false}
      *
      * @throws DeploymentFailureException if the deployment is invalid.
-     * @param client the client used for validation
      */
-    protected void validate(final ModelControllerClient client) throws DeploymentFailureException {
-        if (client instanceof DomainClient) {
+    protected void validate(final ModelControllerClient client, final boolean isDomain) throws DeploymentFailureException {
+        if (isDomain) {
             if (domain == null || domain.getServerGroups().isEmpty()) {
                 throw new DeploymentFailureException(
                         "Server is running in domain mode, but no server groups have been defined.");

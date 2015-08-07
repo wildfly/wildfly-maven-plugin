@@ -256,7 +256,7 @@ public class StartMojo extends AbstractServerConnection {
                 }
             }
             // Create the server, note the client should be shutdown when the server is stopped
-            final Server server = Server.create(commandBuilder, createClient(false), out);
+            final Server server = Server.create(commandBuilder, createClient(), out);
             // Start the server
             log.info("Server is starting up.");
             server.start(startupTimeout);
