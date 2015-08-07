@@ -70,7 +70,7 @@ public class AbstractServerConnectionTest extends AbstractWildFlyMojoTest {
     public void testIdProvidedInPomButDefaultSettingsFile() throws Exception {
         final DeployMojo mojo = lookupMojoVerifyAndApplySettings("deploy", "id-provided-pom.xml", "default-settings.xml");
         mojo.setLog(log);
-        mojo.getCallbackHandler();
+        mojo.getClientConfiguration();
         verify(log).debug(DeployMojo.DEBUG_MESSAGE_NO_SERVER_SECTION);
     }
 
@@ -84,7 +84,7 @@ public class AbstractServerConnectionTest extends AbstractWildFlyMojoTest {
     public void testIdProvidedInPomButNoServerSection() throws Exception {
         final DeployMojo mojo = lookupMojoVerifyAndApplySettings("deploy", "id-provided-pom.xml", "missing-id-settings.xml");
         mojo.setLog(log);
-        mojo.getCallbackHandler();
+        mojo.getClientConfiguration();
         verify(log).debug(DeployMojo.DEBUG_MESSAGE_NO_SERVER_SECTION);
     }
 
@@ -99,7 +99,7 @@ public class AbstractServerConnectionTest extends AbstractWildFlyMojoTest {
     public void testIdProvidedInPomButNoCredentials() throws Exception {
         final DeployMojo mojo = lookupMojoVerifyAndApplySettings("deploy", "id-provided-pom.xml", "id-provided-settings.xml");
         mojo.setLog(log);
-        mojo.getCallbackHandler();
+        mojo.getClientConfiguration();
         final InOrder inOrder = inOrder(log);
         inOrder.verify(log).debug(DeployMojo.DEBUG_MESSAGE_SETTINGS_HAS_ID);
         inOrder.verify(log).debug(DeployMojo.DEBUG_MESSAGE_NO_CREDS);
@@ -113,7 +113,7 @@ public class AbstractServerConnectionTest extends AbstractWildFlyMojoTest {
     public void testCredentialsProvidedInPom() throws Exception {
         final DeployMojo mojo = lookupMojoAndVerify("deploy", "credentials-provided-pom.xml");
         mojo.setLog(log);
-        mojo.getCallbackHandler();
+        mojo.getClientConfiguration();
     }
 
     /**
@@ -126,7 +126,7 @@ public class AbstractServerConnectionTest extends AbstractWildFlyMojoTest {
     public void testCredentialsProvidedInSettings() throws Exception {
         final DeployMojo mojo = lookupMojoVerifyAndApplySettings("deploy", "id-provided-pom.xml", "credentials-provided-settings.xml");
         mojo.setLog(log);
-        mojo.getCallbackHandler();
+        mojo.getClientConfiguration();
         final InOrder inOrder = inOrder(log);
         inOrder.verify(log).debug(DeployMojo.DEBUG_MESSAGE_SETTINGS_HAS_ID);
         inOrder.verify(log).debug(DeployMojo.DEBUG_MESSAGE_SETTINGS_HAS_CREDS);
@@ -140,7 +140,7 @@ public class AbstractServerConnectionTest extends AbstractWildFlyMojoTest {
     public void testNoCredentialsOrIdInPom() throws Exception {
         final DeployMojo mojo = lookupMojoAndVerify("deploy", "missing-id-pom.xml");
         mojo.setLog(log);
-        mojo.getCallbackHandler();
+        mojo.getClientConfiguration();
         verify(log).debug(DeployMojo.DEBUG_MESSAGE_NO_ID);
     }
 

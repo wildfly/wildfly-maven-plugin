@@ -72,8 +72,8 @@ public final class UndeployArtifactMojo extends AbstractDeployment {
 
 
     @Override
-    public void validate(final ModelControllerClient client) throws DeploymentFailureException {
-        super.validate(client);
+    public void validate(final ModelControllerClient client, final boolean isDomain) throws DeploymentFailureException {
+        super.validate(client, isDomain);
         if (artifactId == null) {
             throw new DeploymentFailureException("undeploy-artifact must specify the artifactId");
         }

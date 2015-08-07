@@ -22,7 +22,6 @@
 package org.wildfly.plugin.deployment.resource;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
 
@@ -102,8 +101,6 @@ public class AddResourceMojo extends AbstractServerConnection {
             return;
         }
         try (final ModelControllerClient client = createClient()) {
-            final InetAddress host = getHostAddress();
-            getLog().info(String.format("Executing goal %s on server %s (%s) port %s.", goal(), host.getHostName(), host.getHostAddress(), getPort()));
             if (resources != null && resources.length > 0) {
                 processResources(client, resources);
             } else {
