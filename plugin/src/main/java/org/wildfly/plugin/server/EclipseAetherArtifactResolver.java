@@ -25,10 +25,11 @@ package org.wildfly.plugin.server;
 import java.io.File;
 import java.util.List;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuildingRequest;
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -40,10 +41,10 @@ import org.eclipse.aether.resolution.ArtifactResult;
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-@Component(role = ArtifactResolver.class, hint = "eclipse")
+@Named
 class EclipseAetherArtifactResolver implements ArtifactResolver {
 
-    @Requirement
+    @Inject
     private RepositorySystem repoSystem;
 
     @Override

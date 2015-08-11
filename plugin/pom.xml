@@ -76,13 +76,13 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.plexus</groupId>
-                <artifactId>plexus-component-metadata</artifactId>
-                <version>${version.org.codehaus.plexus.plexus-component-metadata}</version>
+                <groupId>org.eclipse.sisu</groupId>
+                <artifactId>sisu-maven-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>generate-index</id>
                         <goals>
-                            <goal>generate-metadata</goal>
+                            <goal>main-index</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -126,11 +126,6 @@
             <!-- Only used at compile-time -->
             <scope>provided</scope>
             <optional>true</optional>
-        </dependency>
-        <!-- generated help mojo has a dependency to plexus-utils -->
-        <dependency>
-            <groupId>org.codehaus.plexus</groupId>
-            <artifactId>plexus-utils</artifactId>
         </dependency>
         <dependency>
             <groupId>org.eclipse.aether</groupId>

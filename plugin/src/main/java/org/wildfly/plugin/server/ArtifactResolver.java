@@ -25,14 +25,12 @@ package org.wildfly.plugin.server;
 import java.io.File;
 
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.component.annotations.Component;
 
 /**
  * Resolves artifacts downloading the artifact if necessary.
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-@Component(role = ArtifactResolver.class)
 public interface ArtifactResolver {
 
     /**

@@ -31,11 +31,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Locale;
+import javax.inject.Inject;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
@@ -71,7 +71,7 @@ public class StartMojo extends AbstractServerConnection {
     @Parameter(defaultValue = "${project.build.directory}", readonly = true, required = true)
     private File targetDir;
 
-    @Component
+    @Inject
     private ArtifactResolver artifactResolver;
 
     /**
