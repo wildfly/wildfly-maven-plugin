@@ -22,13 +22,13 @@
 
 package org.wildfly.plugin.common;
 
+import javax.inject.Inject;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
-import org.apache.maven.settings.crypto.DefaultSettingsDecrypter;
 import org.apache.maven.settings.crypto.DefaultSettingsDecryptionRequest;
 import org.apache.maven.settings.crypto.SettingsDecrypter;
 import org.apache.maven.settings.crypto.SettingsDecryptionResult;
@@ -100,8 +100,8 @@ public abstract class AbstractServerConnection extends AbstractMojo {
     @Parameter(property = PropertyNames.PASSWORD)
     private String password;
 
-    @Component(role = SettingsDecrypter.class)
-    private DefaultSettingsDecrypter settingsDecrypter;
+    @Inject
+    private SettingsDecrypter settingsDecrypter;
 
     private volatile ModelControllerClientConfiguration clientConfiguration;
 

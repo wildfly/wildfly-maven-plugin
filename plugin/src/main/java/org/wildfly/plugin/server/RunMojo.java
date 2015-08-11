@@ -30,10 +30,11 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Inject;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -64,7 +65,7 @@ public class RunMojo extends DeployMojo {
 
     public static final String WILDFLY_DIR = "wildfly-run";
 
-    @Component
+    @Inject
     private ArtifactResolver artifactResolver;
 
     /**
