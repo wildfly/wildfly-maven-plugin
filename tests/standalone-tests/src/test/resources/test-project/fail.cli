@@ -1,0 +1,6 @@
+batch
+# Provoke an error
+unknown command
+#...
+# Execute
+run-batch
