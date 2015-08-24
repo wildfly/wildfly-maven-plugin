@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -33,7 +35,9 @@ import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.Operations.CompositeOperationBuilder;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.Property;
+import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.common.AbstractServerConnection;
+import org.wildfly.plugin.common.ManagementClient;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.deployment.domain.Domain;
@@ -89,6 +93,16 @@ public class AddResourceMojo extends AbstractServerConnection {
     @Parameter(defaultValue = "false")
     private boolean skip;
 
+    /**
+     * The WildFly Application Server's home directory. If defined commands will be sent to a new process launched with
+     * in a modular environment. This can be useful when commands from extensions need to be executed.
+     */
+    @Parameter(alias = "jboss-home", property = PropertyNames.JBOSS_HOME)
+    private String jbossHome;
+
+    @Inject
+    private CommandExecutor commandExecutor;
+
     @Override
     public String goal() {
         return GOAL;
@@ -100,7 +114,7 @@ public class AddResourceMojo extends AbstractServerConnection {
             getLog().debug(String.format("Skipping add-resource with address %s", address));
             return;
         }
-        try (final ModelControllerClient client = createClient()) {
+        try (final ManagementClient client = createClient()) {
             if (resources != null && resources.length > 0) {
                 processResources(client, resources);
             } else {
@@ -111,7 +125,7 @@ public class AddResourceMojo extends AbstractServerConnection {
         }
     }
 
-    private void processResources(final ModelControllerClient client, final Resource... resources) throws IOException {
+    private void processResources(final ManagementClient client, final Resource... resources) throws IOException {
         for (Resource resource : resources) {
             if (domain != null) {
                 // Profiles are required when adding resources in domain mode
@@ -123,13 +137,13 @@ public class AddResourceMojo extends AbstractServerConnection {
                     final CompositeOperationBuilder compositeOperationBuilder = CompositeOperationBuilder.create();
                     if (addCompositeResource(profile, client, resource, address, compositeOperationBuilder, true)) {
                         if (resource.hasBeforeAddCommands()) {
-                            resource.getBeforeAdd().execute(client);
+                            commandExecutor.execute(client, jbossHome, resource.getBeforeAdd());
                         }
                         // Execute the add resource operation
                         reportFailure(client.execute(compositeOperationBuilder.build()));
 
                         if (resource.hasAfterAddCommands()) {
-                            resource.getAfterAdd().execute(client);
+                            commandExecutor.execute(client, jbossHome, resource.getAfterAdd());
                         }
                     }
                 }
@@ -137,13 +151,13 @@ public class AddResourceMojo extends AbstractServerConnection {
                 final CompositeOperationBuilder compositeOperationBuilder = CompositeOperationBuilder.create();
                 if (addCompositeResource(null, client, resource, address, compositeOperationBuilder, true)) {
                     if (resource.hasBeforeAddCommands()) {
-                        resource.getBeforeAdd().execute(client);
+                        commandExecutor.execute(client, jbossHome, resource.getBeforeAdd());
                     }
                     // Execute the add resource operation
                     reportFailure(client.execute(compositeOperationBuilder.build()));
 
                     if (resource.hasAfterAddCommands()) {
-                        resource.getAfterAdd().execute(client);
+                        commandExecutor.execute(client, jbossHome, resource.getAfterAdd());
                     }
                 }
             }

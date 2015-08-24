@@ -24,6 +24,9 @@ package org.wildfly.plugin.deployment;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import javax.inject.Inject;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -31,10 +34,13 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.domain.DomainClient;
+import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.cli.Commands;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.DeploymentExecutionException;
 import org.wildfly.plugin.common.DeploymentFailureException;
+import org.wildfly.plugin.common.ManagementClient;
+import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.deployment.Deployment.Status;
 import org.wildfly.plugin.deployment.domain.Domain;
 import org.wildfly.plugin.deployment.domain.DomainDeployment;
@@ -65,6 +71,13 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     protected String name;
 
     /**
+     * The WildFly Application Server's home directory. If defined commands will be executed in a new process launched
+     * in a modular environment. This can be useful when commands from extensions need to be executed.
+     */
+    @Parameter(alias = "jboss-home", property = PropertyNames.JBOSS_HOME)
+    private String jbossHome;
+
+    /**
      * Commands to run before the deployment
      */
     @Parameter(alias = "before-deployment")
@@ -81,6 +94,9 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      */
     @Parameter(defaultValue = "false")
     private boolean skip;
+
+    @Inject
+    private CommandExecutor commandExecutor;
 
     /**
      * The archive file.
@@ -112,17 +128,17 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         doExecute();
     }
 
-    protected final Status executeDeployment(final ModelControllerClient client, final Deployment deployment)
+    protected final Status executeDeployment(final ManagementClient client, final Deployment deployment, final Path wildflyHome)
             throws DeploymentExecutionException, DeploymentFailureException, IOException {
         // Execute before deployment commands
         if (beforeDeployment != null)
-            beforeDeployment.execute(client);
+            commandExecutor.execute(client, wildflyHome, beforeDeployment);
         // Deploy the deployment
         getLog().debug("Executing deployment");
         final Status status = deployment.execute();
         // Execute after deployment commands
         if (afterDeployment != null)
-            afterDeployment.execute(client);
+            commandExecutor.execute(client, wildflyHome, afterDeployment);
         return status;
     }
 
@@ -132,7 +148,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      * @see #execute()
      */
     protected void doExecute() throws MojoExecutionException, MojoFailureException {
-        try (final ModelControllerClient client = createClient()) {
+        try (final ManagementClient client = createClient()) {
             final boolean isDomain = ServerHelper.isDomainServer(client);
             validate(client, isDomain);
             final String matchPattern = getMatchPattern();
@@ -143,7 +159,8 @@ abstract class AbstractDeployment extends AbstractServerConnection {
             } else {
                 deployment = StandaloneDeployment.create(client, file(), name, getType(), matchPattern, matchPatternStrategy);
             }
-            switch (executeDeployment(client, deployment)) {
+            final Path wildflyHome = jbossHome == null ? null : Paths.get(jbossHome);
+            switch (executeDeployment(client, deployment, wildflyHome)) {
                 case REQUIRES_RESTART: {
                     getLog().info("Server requires a restart");
                     break;
@@ -180,7 +197,8 @@ abstract class AbstractDeployment extends AbstractServerConnection {
 
     /**
      * Validates the deployment.
-     * @param client the client used for validation
+     *
+     * @param client   the client used for validation
      * @param isDomain {@code true} if this is a domain server, otherwise {@code false}
      *
      * @throws DeploymentFailureException if the deployment is invalid.

@@ -40,10 +40,10 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.ModelControllerClientConfiguration;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.common.DeploymentFailureException;
+import org.wildfly.plugin.common.ManagementClient;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.deployment.DeployMojo;
@@ -217,7 +217,7 @@ public class RunMojo extends DeployMojo {
         log.info(String.format("JAVA_HOME=%s", commandBuilder.getJavaHome()));
         log.info(String.format("JBOSS_HOME=%s%n", commandBuilder.getWildFlyHome()));
         Server server = null;
-        try (final ModelControllerClient client = createClient()) {
+        try (final ManagementClient client = createClient()) {
             // Create the server
             server = Server.create(commandBuilder, client);
             // Start the server
@@ -228,7 +228,7 @@ public class RunMojo extends DeployMojo {
             if (server.isRunning()) {
                 log.info(String.format("Deploying application '%s'%n", deploymentFile.getName()));
                 final Deployment deployment = StandaloneDeployment.create(client, deploymentFile, name, getType(), null, null);
-                switch (executeDeployment(client, deployment)) {
+                switch (executeDeployment(client, deployment, jbossHome)) {
                     case REQUIRES_RESTART: {
                         client.execute(ServerOperations.createOperation(ServerOperations.RELOAD));
                         break;

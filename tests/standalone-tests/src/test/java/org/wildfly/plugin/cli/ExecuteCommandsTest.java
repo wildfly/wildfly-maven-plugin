@@ -29,6 +29,7 @@ import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
+import org.wildfly.plugin.tests.Environment;
 
 public class ExecuteCommandsTest extends AbstractWildFlyServerMojoTest {
 
@@ -74,6 +75,34 @@ public class ExecuteCommandsTest extends AbstractWildFlyServerMojoTest {
         op = ServerOperations.createReadAttributeOperation(address, "value");
         result = executeOperation(op);
         assertEquals("property 2", ServerOperations.readResultAsString(result));
+
+        // Clean up the property
+        executeOperation(ServerOperations.createRemoveOperation(address));
+    }
+
+    @Test
+    public void testExecuteLocalCommands() throws Exception {
+
+        final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-commands-local-pom.xml");
+        setValue(executeCommandsMojo, "jbossHome", Environment.WILDFLY_HOME.toString());
+
+        executeCommandsMojo.execute();
+
+        // Read the attribute
+        ModelNode address = ServerOperations.createAddress("system-property", "org.wildfly.maven.plugin-local-cmd");
+        ModelNode op = ServerOperations.createReadAttributeOperation(address, "value");
+        ModelNode result = executeOperation(op);
+        assertEquals("true", ServerOperations.readResultAsString(result));
+
+        // Clean up the property
+        executeOperation(ServerOperations.createRemoveOperation(address));
+
+
+        // Read the attribute
+        address = ServerOperations.createAddress("system-property", "local-command");
+        op = ServerOperations.createReadAttributeOperation(address, "value");
+        result = executeOperation(op);
+        assertEquals("set", ServerOperations.readResultAsString(result));
 
         // Clean up the property
         executeOperation(ServerOperations.createRemoveOperation(address));
