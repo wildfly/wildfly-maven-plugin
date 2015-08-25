@@ -99,6 +99,12 @@ public abstract class AbstractServerConnection extends AbstractMojo {
     @Parameter(property = PropertyNames.PASSWORD)
     private String password;
 
+    /**
+     * The timeout, in seconds, to wait for a management connection.
+     */
+    @Parameter(property = PropertyNames.TIMEOUT, defaultValue = "60")
+    private int timeout;
+
     @Inject
     private SettingsDecrypter settingsDecrypter;
 
@@ -162,6 +168,7 @@ public abstract class AbstractServerConnection extends AbstractMojo {
                             .setProtocol(protocol)
                             .setHostName(hostname)
                             .setPort(port)
+                            .setConnectionTimeout(timeout * 1000)
                             .setHandler(new ClientCallbackHandler(u, p, log))
                             .build()) {
                 @Override
