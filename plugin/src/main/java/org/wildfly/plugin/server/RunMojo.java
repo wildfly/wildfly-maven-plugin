@@ -60,6 +60,7 @@ import org.wildfly.plugin.server.ArtifactResolver.ArtifactNameSplitter;
 @Mojo(name = "run", requiresDependencyResolution = ResolutionScope.RUNTIME)
 @Execute(phase = LifecyclePhase.PACKAGE)
 public class RunMojo extends DeployMojo {
+    private static final String JBOSS_HOME_PROPERTY = "jboss.home.dir";
 
     public static final String WILDFLY_DIR = "wildfly-run";
 
@@ -177,6 +178,7 @@ public class RunMojo extends DeployMojo {
         if (!Files.isDirectory(jbossHome)) {
             throw new MojoExecutionException(String.format("JBOSS_HOME '%s' is not a valid directory.", jbossHome));
         }
+        System.setProperty(JBOSS_HOME_PROPERTY, jbossHome.toString());
         final StandaloneCommandBuilder commandBuilder = StandaloneCommandBuilder.of(jbossHome)
                 .setJavaHome(javaHome)
                 .addModuleDirs(modulesPath.getModulePaths());
