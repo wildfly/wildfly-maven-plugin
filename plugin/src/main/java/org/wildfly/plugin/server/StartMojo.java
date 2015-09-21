@@ -40,7 +40,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-import org.jboss.as.controller.client.ModelControllerClientConfiguration;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
@@ -230,17 +229,6 @@ public class StartMojo extends AbstractServerConnection {
 
         if (serverArgs != null) {
             commandBuilder.addServerArguments(serverArgs);
-        }
-
-        // Check for management overrides
-        final ModelControllerClientConfiguration clientConfiguration = getClientConfiguration();
-        final String host = clientConfiguration.getHost();
-        final int port = clientConfiguration.getPort();
-        if (host != null) {
-            commandBuilder.setBindAddressHint("management", host);
-        }
-        if (port > 0) {
-            commandBuilder.addServerArguments("-Djboss.management.http.port=" + port);
         }
 
         // Print some server information

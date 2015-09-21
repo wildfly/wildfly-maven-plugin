@@ -29,7 +29,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
-
 import javax.inject.Inject;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -40,7 +39,6 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.jboss.as.controller.client.ModelControllerClientConfiguration;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.common.DeploymentFailureException;
 import org.wildfly.plugin.common.ManagementClient;
@@ -200,17 +198,6 @@ public class RunMojo extends DeployMojo {
 
         if (serverArgs != null) {
             commandBuilder.addServerArguments(serverArgs);
-        }
-
-        // Check for management overrides
-        final ModelControllerClientConfiguration clientConfiguration = getClientConfiguration();
-        final String host = clientConfiguration.getHost();
-        final int port = clientConfiguration.getPort();
-        if (host != null) {
-            commandBuilder.setBindAddressHint("management", host);
-        }
-        if (port > 0) {
-            commandBuilder.addServerArguments("-Djboss.management.http.port=" + port);
         }
 
         // Print some server information
