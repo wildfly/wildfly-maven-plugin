@@ -196,6 +196,12 @@ public class StartMojo extends AbstractServerConnection {
     @Parameter(property = PropertyNames.STDOUT)
     private String stdout;
 
+    /**
+     * The users to add to the server.
+     */
+    @Parameter(alias = "add-user", property = "wildfly.add-user")
+    private AddUser addUser;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         final Log log = getLog();
@@ -235,6 +241,10 @@ public class StartMojo extends AbstractServerConnection {
         log.info(String.format("JAVA_HOME=%s", commandBuilder.getJavaHome()));
         log.info(String.format("JBOSS_HOME=%s%n", commandBuilder.getWildFlyHome()));
         try {
+            if (addUser != null && addUser.hasUsers()) {
+                log.info("Adding users: " + addUser);
+                addUser.addUsers(commandBuilder.getWildFlyHome(), commandBuilder.getJavaHome());
+            }
             // Determine how stdout should be consumed
             OutputStream out = null;
             if (stdout != null) {
