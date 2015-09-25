@@ -27,7 +27,7 @@
     <parent>
         <artifactId>jboss-parent</artifactId>
         <groupId>org.jboss</groupId>
-        <version>14</version>
+        <version>19</version>
     </parent>
     <groupId>org.wildfly.plugins</groupId>
     <artifactId>wildfly-maven-plugin-parent</artifactId>
@@ -79,6 +79,7 @@
         <!-- WildFly/JBoss dependencies -->
         <version.org.jboss.jdf.stacks-client>1.0.2.Final</version.org.jboss.jdf.stacks-client>
         <version.org.jboss.logmanager>1.5.4.Final</version.org.jboss.logmanager>
+        <version.org.wildfly.checkstyle-config>1.0.4.Final</version.org.wildfly.checkstyle-config>
         <version.org.wildfly.core>1.0.1.Final</version.org.wildfly.core>
         <version.org.wildfly.dist>9.0.1.Final</version.org.wildfly.dist>
 
@@ -129,11 +130,20 @@
             <plugin>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <configuration>
-                    <configLocation>checkstyle.xml</configLocation>
+                    <configLocation>wildfly-checkstyle/checkstyle.xml</configLocation>
                     <consoleOutput>true</consoleOutput>
+                    <excludes>**/HelpMojo.java</excludes>
                     <failsOnError>true</failsOnError>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
                     <useFile/>
                 </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.wildfly.checkstyle</groupId>
+                        <artifactId>wildfly-checkstyle-config</artifactId>
+                        <version>${version.org.wildfly.checkstyle-config}</version>
+                    </dependency>
+                </dependencies>
                 <executions>
                     <execution>
                         <id>check-style</id>
@@ -206,6 +216,15 @@
                         <artifactId>jboss-logmanager</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.wildfly.checkstyle</groupId>
+                <artifactId>wildfly-checkstyle-config</artifactId>
+                <version>${version.org.wildfly.checkstyle-config}</version>
+                <!-- only needed during compile -->
+                <scope>provided</scope>
+                <optional>true</optional>
             </dependency>
             <dependency>
                 <groupId>org.wildfly.core</groupId>
