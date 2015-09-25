@@ -164,6 +164,12 @@ public class RunMojo extends DeployMojo {
     @Parameter(alias = "server-args", property = PropertyNames.SERVER_ARGS)
     private String[] serverArgs;
 
+    /**
+     * The users to add to the server.
+     */
+    @Parameter(alias = "add-user", property = "wildfly.add-user")
+    private AddUser addUser;
+
     @Override
     protected void doExecute() throws MojoExecutionException, MojoFailureException {
         final Log log = getLog();
@@ -205,6 +211,10 @@ public class RunMojo extends DeployMojo {
         log.info(String.format("JBOSS_HOME=%s%n", commandBuilder.getWildFlyHome()));
         Server server = null;
         try (final ManagementClient client = createClient()) {
+            if (addUser != null && addUser.hasUsers()) {
+                log.info("Adding users: " + addUser);
+                addUser.addUsers(commandBuilder.getWildFlyHome(), commandBuilder.getJavaHome());
+            }
             // Create the server
             server = Server.create(commandBuilder, client);
             // Start the server
