@@ -35,6 +35,8 @@ public interface PropertyNames {
 
     String DEPLOYMENT_FILENAME = "wildfly.deployment.filename";
 
+    String DEPLOYMENT_RUNTIME_NAME = "wildfly.deployment.runtime.name";
+
     String DEPLOYMENT_TARGET_DIR = "wildfly.deployment.targetDir";
 
     String HOSTNAME = "wildfly.hostname";

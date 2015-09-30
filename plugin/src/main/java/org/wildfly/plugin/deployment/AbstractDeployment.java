@@ -33,7 +33,6 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.cli.Commands;
 import org.wildfly.plugin.common.AbstractServerConnection;
@@ -43,8 +42,8 @@ import org.wildfly.plugin.common.ManagementClient;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.deployment.Deployment.Status;
 import org.wildfly.plugin.deployment.domain.Domain;
-import org.wildfly.plugin.deployment.domain.DomainDeployment;
-import org.wildfly.plugin.deployment.standalone.StandaloneDeployment;
+import org.wildfly.plugin.deployment.domain.DomainDeploymentBuilder;
+import org.wildfly.plugin.deployment.standalone.StandaloneDeploymentBuilder;
 import org.wildfly.plugin.server.ServerHelper;
 
 /**
@@ -69,6 +68,17 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      */
     @Parameter
     protected String name;
+
+    /**
+     * The runtime name for the dployment.
+     * <p>
+     * In some cases users may wish to have two deployments with the same {@code runtime-name} (e.g. two versions of
+     * {@code example.war}) both available in the management configuration, in which case the deployments would need to
+     * have distinct {@code name} values but would have the same {@code runtime-name}.
+     * </p>
+     */
+    @Parameter(alias = "runtime-name", property = PropertyNames.DEPLOYMENT_RUNTIME_NAME)
+    protected String runtimeName;
 
     /**
      * The WildFly Application Server's home directory. If defined commands will be executed in a new process launched
@@ -153,14 +163,21 @@ abstract class AbstractDeployment extends AbstractServerConnection {
             validate(client, isDomain);
             final String matchPattern = getMatchPattern();
             final MatchPatternStrategy matchPatternStrategy = getMatchPatternStrategy();
-            final Deployment deployment;
+            final DeploymentBuilder<?> deploymentBuilder;
             if (isDomain) {
-                deployment = DomainDeployment.create(DomainClient.Factory.create(client), domain, file(), name, getType(), matchPattern, matchPatternStrategy);
+                deploymentBuilder = new DomainDeploymentBuilder(client, domain);
             } else {
-                deployment = StandaloneDeployment.create(client, file(), name, getType(), matchPattern, matchPatternStrategy);
+                deploymentBuilder = new StandaloneDeploymentBuilder(client);
             }
+            deploymentBuilder
+                    .setContent(file())
+                    .setName(name)
+                    .setRuntimeName(runtimeName)
+                    .setType(getType())
+                    .setMatchPattern(matchPattern)
+                    .setMatchPatternStrategy(matchPatternStrategy);
             final Path wildflyHome = jbossHome == null ? null : Paths.get(jbossHome);
-            switch (executeDeployment(client, deployment, wildflyHome)) {
+            switch (executeDeployment(client, deploymentBuilder.build(), wildflyHome)) {
                 case REQUIRES_RESTART: {
                     getLog().info("Server requires a restart");
                     break;

@@ -22,7 +22,10 @@
 
 package org.wildfly.plugin.deployment;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.List;
@@ -35,7 +38,7 @@ import org.wildfly.plugin.common.DeploymentFailureException;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.deployment.Deployment.Status;
 import org.wildfly.plugin.deployment.Deployment.Type;
-import org.wildfly.plugin.deployment.standalone.StandaloneDeployment;
+import org.wildfly.plugin.deployment.standalone.StandaloneDeploymentBuilder;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
 
 /**
@@ -66,6 +69,36 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         final ModelNode result = executeOperation(op);
 
         assertEquals("OK", ServerOperations.readResultAsString(result));
+        undeploy(DEPLOYMENT_NAME);
+    }
+
+    @Test
+    public void testDeployWithRuntimeName() throws Exception {
+        // Make sure the archive is not deployed
+        if (isDeployed(DEPLOYMENT_NAME)) {
+            undeploy(DEPLOYMENT_NAME);
+        }
+
+        final AbstractDeployment deployMojo = lookupMojoAndVerify("deploy", "deploy-webarchive-with-runtime-name-pom.xml");
+
+        deployMojo.execute();
+
+        // Verify deployed
+        assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed", isDeployed(DEPLOYMENT_NAME));
+
+        // /deployment=test.war :read-attribute(name=status)
+        final ModelNode address = ServerOperations.createAddress("deployment", DEPLOYMENT_NAME);
+        final ModelNode op = ServerOperations.createReadResourceOperation(address);
+        op.get(ClientConstants.INCLUDE_RUNTIME).set(true);
+        final ModelNode result = executeOperation(op);
+
+        if (!ServerOperations.isSuccessfulOutcome(result)) {
+            fail(ServerOperations.getFailureDescriptionAsString(result));
+        }
+
+        assertEquals("OK", ServerOperations.readResult(result).get("status").asString());
+        assertEquals("test-runtime.war", ServerOperations.readResult(result).get("runtime-name").asString());
+        undeploy(DEPLOYMENT_NAME);
     }
 
     @Test
@@ -101,6 +134,7 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         // Remove the logger to clean-up
         op = ServerOperations.createRemoveOperation(address);
         executeOperation(op);
+        undeploy(DEPLOYMENT_NAME);
     }
 
     @Test
@@ -124,6 +158,7 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         final ModelNode result = executeOperation(op);
 
         assertEquals("OK", ServerOperations.readResultAsString(result));
+        undeploy(DEPLOYMENT_NAME);
     }
 
     @Test
@@ -158,7 +193,11 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
     }
 
     protected void deploy(final String name) throws IOException, DeploymentExecutionException, DeploymentFailureException {
-        final StandaloneDeployment deployment = StandaloneDeployment.create(client, getDeployment(), name, Type.DEPLOY, null, null);
+        final Deployment deployment = new StandaloneDeploymentBuilder(client)
+                .setContent(getDeployment())
+                .setName(name)
+                .setType(Type.DEPLOY)
+                .build();
         assertEquals(Status.SUCCESS, deployment.execute());
 
         // Verify deployed
@@ -173,7 +212,10 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
     }
 
     protected void undeploy(final String name) throws IOException, DeploymentExecutionException, DeploymentFailureException {
-        final StandaloneDeployment deployment = StandaloneDeployment.create(client, null, name, Type.UNDEPLOY, null, null);
+        final Deployment deployment = new StandaloneDeploymentBuilder(client)
+                .setName(name)
+                .setType(Type.UNDEPLOY)
+                .build();
         assertEquals(Status.SUCCESS, deployment.execute());
 
         // Verify not deployed

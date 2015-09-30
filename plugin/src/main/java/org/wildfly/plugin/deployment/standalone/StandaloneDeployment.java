@@ -62,11 +62,12 @@ import org.wildfly.plugin.deployment.MatchPatternStrategy;
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-public class StandaloneDeployment implements Deployment {
+class StandaloneDeployment implements Deployment {
 
     private final File content;
     private final ModelControllerClient client;
     private final String name;
+    private final String runtimeName;
     private final Type type;
     private final String matchPattern;
     private final MatchPatternStrategy matchPatternStrategy;
@@ -77,35 +78,20 @@ public class StandaloneDeployment implements Deployment {
      * @param client               the client that is connected.
      * @param content              the content for the deployment.
      * @param name                 the name of the deployment, if {@code null} the name of the content file is used.
+     * @param runtimeName          he runtime name of the deployment
      * @param type                 the deployment type.
      * @param matchPattern         the pattern for matching multiple artifacts, if {@code null} the name is used.
      * @param matchPatternStrategy the strategy for handling multiple artifacts.
      */
-    public StandaloneDeployment(final ModelControllerClient client, final File content, final String name, final Type type,
+    StandaloneDeployment(final ModelControllerClient client, final File content, final String name, final String runtimeName, final Type type,
                                 final String matchPattern, final MatchPatternStrategy matchPatternStrategy) {
         this.content = content;
         this.client = client;
         this.name = (name == null ? content.getName() : name);
+        this.runtimeName = runtimeName;
         this.type = type;
         this.matchPattern = matchPattern;
         this.matchPatternStrategy = matchPatternStrategy;
-    }
-
-    /**
-     * Creates a new deployment.
-     *
-     * @param client               the client that is connected.
-     * @param content              the content for the deployment.
-     * @param name                 the name of the deployment, if {@code null} the name of the content file is used.
-     * @param type                 the deployment type.
-     * @param matchPattern         the pattern for matching multiple artifacts, if {@code null} the name is used.
-     * @param matchPatternStrategy the strategy for handling multiple artifacts.
-     *
-     * @return the new deployment
-     */
-    public static StandaloneDeployment create(final ModelControllerClient client, final File content, final String name, final Type type,
-                                              final String matchPattern, final MatchPatternStrategy matchPatternStrategy) {
-        return new StandaloneDeployment(client, content, name, type, matchPattern, matchPatternStrategy);
     }
 
     private void validateExistingDeployments(List<String> existingDeployments) throws DeploymentFailureException {
@@ -126,14 +112,14 @@ public class StandaloneDeployment implements Deployment {
             final Operation operation;
             switch (type) {
                 case DEPLOY: {
-                    operation = createDeployOperation(content.toPath(), name, null);
+                    operation = createDeployOperation(content.toPath(), name, runtimeName);
                     break;
                 }
                 case FORCE_DEPLOY: {
                     if (existingDeployments.contains(name)) {
-                        operation = createReplaceOperation(content.toPath(), name, null);
+                        operation = createReplaceOperation(content.toPath(), name, runtimeName);
                     } else {
-                        operation = createDeployOperation(content.toPath(), name, null);
+                        operation = createDeployOperation(content.toPath(), name, runtimeName);
                     }
                     break;
                 }

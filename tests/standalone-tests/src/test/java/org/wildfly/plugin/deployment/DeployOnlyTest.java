@@ -22,7 +22,9 @@
 
 package org.wildfly.plugin.deployment;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.List;
@@ -35,7 +37,7 @@ import org.wildfly.plugin.common.DeploymentFailureException;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.deployment.Deployment.Status;
 import org.wildfly.plugin.deployment.Deployment.Type;
-import org.wildfly.plugin.deployment.standalone.StandaloneDeployment;
+import org.wildfly.plugin.deployment.standalone.StandaloneDeploymentBuilder;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
 
 /**
@@ -158,7 +160,11 @@ public class DeployOnlyTest extends AbstractWildFlyServerMojoTest {
     }
 
     protected void deploy(final String name) throws IOException, DeploymentExecutionException, DeploymentFailureException {
-        final StandaloneDeployment deployment = StandaloneDeployment.create(client, getDeployment(), name, Type.DEPLOY, null, null);
+        final Deployment deployment = new StandaloneDeploymentBuilder(client)
+                .setContent(getDeployment())
+                .setName(name)
+                .setType(Type.DEPLOY)
+                .build();
         assertEquals(Status.SUCCESS, deployment.execute());
 
         // Verify deployed
@@ -173,7 +179,10 @@ public class DeployOnlyTest extends AbstractWildFlyServerMojoTest {
     }
 
     protected void undeploy(final String name) throws IOException, DeploymentExecutionException, DeploymentFailureException {
-        final StandaloneDeployment deployment = StandaloneDeployment.create(client, null, name, Type.UNDEPLOY, null, null);
+        final Deployment deployment = new StandaloneDeploymentBuilder(client)
+                .setName(name)
+                .setType(Type.UNDEPLOY)
+                .build();
         assertEquals(Status.SUCCESS, deployment.execute());
 
         // Verify not deployed

@@ -60,7 +60,7 @@ public abstract class AbstractWildFlyMojoTest {
      * @return the deployment
      */
     protected File getDeployment() {
-        return new File(BASE_CONFIG_DIR, DEPLOYMENT_NAME);
+        return Paths.get(BASE_CONFIG_DIR, "target", DEPLOYMENT_NAME).toFile();
     }
 
     /**
