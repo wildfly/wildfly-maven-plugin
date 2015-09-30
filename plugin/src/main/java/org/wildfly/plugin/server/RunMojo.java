@@ -46,7 +46,7 @@ import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.deployment.DeployMojo;
 import org.wildfly.plugin.deployment.Deployment;
-import org.wildfly.plugin.deployment.standalone.StandaloneDeployment;
+import org.wildfly.plugin.deployment.standalone.StandaloneDeploymentBuilder;
 import org.wildfly.plugin.server.ArtifactResolver.ArtifactNameSplitter;
 
 /**
@@ -224,7 +224,12 @@ public class RunMojo extends DeployMojo {
             server.checkServerState();
             if (server.isRunning()) {
                 log.info(String.format("Deploying application '%s'%n", deploymentFile.getName()));
-                final Deployment deployment = StandaloneDeployment.create(client, deploymentFile, name, getType(), null, null);
+                final Deployment deployment = new StandaloneDeploymentBuilder(client)
+                        .setContent(deploymentFile)
+                        .setName(name)
+                        .setRuntimeName(runtimeName)
+                        .setType(getType())
+                        .build();
                 switch (executeDeployment(client, deployment, jbossHome)) {
                     case REQUIRES_RESTART: {
                         client.execute(ServerOperations.createOperation(ServerOperations.RELOAD));

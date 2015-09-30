@@ -22,8 +22,11 @@
 
 package org.wildfly.plugin.deployment.domain;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -51,15 +54,17 @@ import org.wildfly.plugin.deployment.MatchPatternStrategy;
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-public class DomainDeployment implements Deployment {
+class DomainDeployment implements Deployment {
 
     private final File content;
     private final DomainClient client;
     private final Domain domain;
     private final String name;
+    private final String runtimeName;
     private final Type type;
     private final String matchPattern;
     private final MatchPatternStrategy matchPatternStrategy;
+    private InputStream contentStream;
 
     /**
      * Creates a new deployment.
@@ -68,37 +73,21 @@ public class DomainDeployment implements Deployment {
      * @param domain               the domain information
      * @param content              the content for the deployment
      * @param name                 the name of the deployment, if {@code null} the name of the content file is used
+     * @param runtimeName          the runtime name of the deployment, if {@code null} the name is used
      * @param type                 the deployment type
      * @param matchPattern         the pattern for matching multiple artifacts, if {@code null} the name is used.
      * @param matchPatternStrategy the strategy for handling multiple artifacts.
      */
-    public DomainDeployment(final DomainClient client, final Domain domain, final File content, final String name, final Type type,
+    DomainDeployment(final DomainClient client, final Domain domain, final File content, final String name, final String runtimeName, final Type type,
                             final String matchPattern, final MatchPatternStrategy matchPatternStrategy) {
         this.content = content;
         this.client = client;
         this.domain = domain;
         this.name = (name == null ? content.getName() : name);
+        this.runtimeName = (runtimeName == null ? this.name : runtimeName);
         this.type = type;
         this.matchPattern = matchPattern;
         this.matchPatternStrategy = matchPatternStrategy;
-    }
-
-    /**
-     * Creates a new deployment.
-     *
-     * @param client               the client for the server
-     * @param domain               the domain information
-     * @param content              the content for the deployment
-     * @param name                 the name of the deployment, if {@code null} the name of the content file is used
-     * @param type                 the deployment type
-     * @param matchPattern         the pattern for matching multiple artifacts, if {@code null} the name is used.
-     * @param matchPatternStrategy the strategy for handling multiple artifacts.
-     *
-     * @return the new deployment
-     */
-    public static DomainDeployment create(final DomainClient client, final Domain domain, final File content, final String name, final Type type,
-                                          final String matchPattern, final MatchPatternStrategy matchPatternStrategy) {
-        return new DomainDeployment(client, domain, content, name, type, matchPattern, matchPatternStrategy);
     }
 
     private DeploymentPlan createPlan(final DeploymentPlanBuilder builder) throws IOException, DuplicateDeploymentNameException, DeploymentFailureException {
@@ -106,19 +95,22 @@ public class DomainDeployment implements Deployment {
         List<String> existingDeployments = DeploymentInspector.getDeployments(client, name, matchPattern);
         switch (type) {
             case DEPLOY: {
-                completeBuilder = builder.add(name, content).andDeploy();
+                contentStream = Files.newInputStream(content.toPath());
+                completeBuilder = builder.add(name, runtimeName, contentStream).andDeploy();
                 break;
             }
             case FORCE_DEPLOY: {
+                contentStream = Files.newInputStream(content.toPath());
                 if (existingDeployments.contains(name)) {
-                    completeBuilder = builder.replace(name, content);
+                    completeBuilder = builder.replace(name, runtimeName, contentStream);
                 } else {
-                    completeBuilder = builder.add(name, content).andDeploy();
+                    completeBuilder = builder.add(name, runtimeName, contentStream).andDeploy();
                 }
                 break;
             }
             case REDEPLOY: {
-                completeBuilder = builder.replace(name, content);
+                contentStream = Files.newInputStream(content.toPath());
+                completeBuilder = builder.replace(name, runtimeName, contentStream);
                 break;
             }
             case UNDEPLOY: {
@@ -191,6 +183,8 @@ public class DomainDeployment implements Deployment {
             throw e;
         } catch (Exception e) {
             throw new DeploymentExecutionException(e, "Error executing %s", type);
+        } finally {
+            safeClose(contentStream);
         }
         return Status.SUCCESS;
     }
@@ -241,5 +235,11 @@ public class DomainDeployment implements Deployment {
                 }
             }
         }
+    }
+
+    private static void safeClose(final Closeable closeable){
+        if (closeable != null) try {
+            closeable.close();
+        } catch (IOException ignore){}
     }
 }
