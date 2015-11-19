@@ -34,6 +34,9 @@ import org.wildfly.plugin.common.DeploymentFailureException;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.deployment.Deployment.Type;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Strings;
+
 /**
  * Deploys an arbitrary artifact to the WildFly application server
  *
@@ -42,70 +45,80 @@ import org.wildfly.plugin.deployment.Deployment.Type;
 @Mojo(name = "deploy-artifact", requiresDependencyResolution = ResolutionScope.RUNTIME, threadSafe = true)
 public final class DeployArtifactMojo extends AbstractDeployment {
 
-    /**
-     * The artifact to deploys groupId
-     */
-    @Parameter
-    private String groupId;
+  /**
+   * The artifact to deploys groupId
+   */
+  @Parameter
+  private String groupId;
 
+  /**
+   * The artifact to deploys artifactId
+   */
+  @Parameter
+  private String artifactId;
 
-    /**
-     * The artifact to deploys artifactId
-     */
-    @Parameter
-    private String artifactId;
+  /**
+   * The classifier of the artifact to deploy
+   */
+  @Parameter
+  private String classifier;
 
-    /**
-     * Specifies whether force mode should be used or not.
-     * </p>
-     * If force mode is disabled, the deploy goal will cause a build failure if the application being deployed already
-     * exists.
-     */
-    @Parameter(defaultValue = "true", property = PropertyNames.DEPLOY_FORCE)
-    private boolean force;
+  /**
+   * Specifies whether force mode should be used or not. </p> If force mode is
+   * disabled, the deploy goal will cause a build failure if the application
+   * being deployed already exists.
+   */
+  @Parameter(defaultValue = "true", property = PropertyNames.DEPLOY_FORCE)
+  private boolean force;
 
-    /**
-     * The resolved dependency file
-     */
-    private File file;
+  /**
+   * The resolved dependency file
+   */
+  private File file;
 
-
-    @Override
-    public void validate(final ModelControllerClient client, final boolean isDomain) throws DeploymentFailureException {
-        super.validate(client, isDomain);
-        if (artifactId == null) {
-            throw new DeploymentFailureException("deploy-artifact must specify the artifactId");
-        }
-        if (groupId == null) {
-            throw new DeploymentFailureException("deploy-artifact must specify the groupId");
-        }
-        final Set<Artifact> dependencies = project.getDependencyArtifacts();
-        Artifact artifact = null;
-        for (final Artifact a : dependencies) {
-            if (a.getArtifactId().equals(artifactId) &&
-                    a.getGroupId().equals(groupId)) {
-                artifact = a;
-                break;
-            }
-        }
-        if (artifact == null) {
-            throw new DeploymentFailureException("Could not resolve artifact to deploy " + groupId + ":" + artifactId);
-        }
-        file = artifact.getFile();
+  @Override
+  public void validate(final ModelControllerClient client,
+      final boolean isDomain) throws DeploymentFailureException {
+    super.validate(client, isDomain);
+    if (artifactId == null) {
+      throw new DeploymentFailureException(
+          "deploy-artifact must specify the artifactId");
     }
-
-    @Override
-    protected File file() {
-        return file;
+    if (groupId == null) {
+      throw new DeploymentFailureException(
+          "deploy-artifact must specify the groupId");
     }
+    classifier = Strings.nullToEmpty(classifier);
 
-    @Override
-    public String goal() {
-        return "deploy-artifact";
+    final Set<Artifact> dependencies = project.getDependencyArtifacts();
+    Artifact artifact = null;
+    for (final Artifact a : dependencies) {
+      if (a.getArtifactId().equals(artifactId)
+          && a.getGroupId().equals(groupId)
+          && Objects.equal(classifier, Strings.nullToEmpty(a.getClassifier()))) {
+        artifact = a;
+        break;
+      }
     }
+    if (artifact == null) {
+      throw new DeploymentFailureException(
+          "Could not resolve artifact to deploy " + groupId + ":" + artifactId);
+    }
+    file = artifact.getFile();
+  }
 
-    @Override
-    public Type getType() {
-        return (force ? Type.FORCE_DEPLOY : Type.DEPLOY);
-    }
+  @Override
+  protected File file() {
+    return file;
+  }
+
+  @Override
+  public String goal() {
+    return "deploy-artifact";
+  }
+
+  @Override
+  public Type getType() {
+    return (force ? Type.FORCE_DEPLOY : Type.DEPLOY);
+  }
 }
