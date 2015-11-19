@@ -31,7 +31,7 @@ import org.jboss.as.controller.client.ModelControllerClient;
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-public interface TestServer {
+public interface TestServer extends Deployments {
 
     void start();
 
