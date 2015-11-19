@@ -29,7 +29,6 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.common.DeploymentFailureException;
 import org.wildfly.plugin.common.PropertyNames;
@@ -56,8 +55,11 @@ public final class UndeployArtifactMojo extends AbstractDeployment {
     @Parameter
     private String artifactId;
 
-    @Parameter(defaultValue = "${project}", readonly = true, required = true)
-    private MavenProject project;
+    /**
+     * The artifact to deploys classifier. Note that the classifier must also be set on the dependency being deployed.
+     */
+    @Parameter
+    private String classifier;
 
     /**
      * Indicates whether undeploy should ignore the undeploy operation if the deployment does not exist.
@@ -84,7 +86,8 @@ public final class UndeployArtifactMojo extends AbstractDeployment {
         Artifact artifact = null;
         for (final Artifact a : dependencies) {
             if (a.getArtifactId().equals(artifactId) &&
-                    a.getGroupId().equals(groupId)) {
+                    a.getGroupId().equals(groupId) &&
+                    a.getClassifier().equals(classifier == null ? "" : classifier)) {
                 artifact = a;
                 break;
             }
