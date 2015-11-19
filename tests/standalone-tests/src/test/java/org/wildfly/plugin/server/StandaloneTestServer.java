@@ -22,12 +22,22 @@
 
 package org.wildfly.plugin.server;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.controller.client.helpers.ClientConstants;
+import org.jboss.dmr.ModelNode;
 import org.wildfly.core.launcher.Launcher;
 import org.wildfly.core.launcher.ProcessHelper;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
+import org.wildfly.plugin.common.DeploymentExecutionException;
+import org.wildfly.plugin.common.DeploymentFailureException;
+import org.wildfly.plugin.common.ServerOperations;
+import org.wildfly.plugin.deployment.Deployment;
+import org.wildfly.plugin.deployment.standalone.StandaloneDeploymentBuilder;
 import org.wildfly.plugin.tests.Environment;
 
 /**
@@ -89,6 +99,73 @@ public class StandaloneTestServer implements TestServer {
         return client;
     }
 
+    @Override
+    public boolean isDeployed(final String deploymentName) throws IOException {
+        checkState();
+        final ModelNode address = ServerOperations.createAddress("deployment");
+        final ModelNode op = ServerOperations.createReadResourceOperation(address);
+        final ModelNode result = executeOperation(op);
+        final List<ModelNode> deployments = ServerOperations.readResult(result).asList();
+        for (ModelNode deployment : deployments) {
+            if (deploymentName.equals(ServerOperations.readResult(deployment).get(ClientConstants.NAME).asString())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void deploy(final String deploymentName, final File content) throws IOException, DeploymentExecutionException, DeploymentFailureException {
+        checkState();
+        final Deployment deployment = new StandaloneDeploymentBuilder(client)
+                .setContent(content)
+                .setName(deploymentName)
+                .setType(Deployment.Type.DEPLOY)
+                .build();
+        if (deployment.execute() != Deployment.Status.SUCCESS) {
+            throw createError("Failed to deploy %s. Content: %s", deploymentName, content);
+        }
+
+        // Verify deployed
+        if (!isDeployed(deploymentName)) {
+            throw createError("Deployment %s was not deployed", deploymentName);
+        }
+
+        // Check the status
+        final ModelNode address = ServerOperations.createAddress("deployment", deploymentName);
+        final ModelNode op = ServerOperations.createReadAttributeOperation(address, "status");
+        final ModelNode result = executeOperation(op);
+
+        if (!"OK".equals(ServerOperations.readResultAsString(result))) {
+            throw createError("Deployment is in an invalid state: %s", ServerOperations.readResultAsString(result));
+        }
+    }
+
+    @Override
+    public void undeploy(final String deploymentName) throws IOException, DeploymentExecutionException, DeploymentFailureException {
+        checkState();
+        final Deployment deployment = new StandaloneDeploymentBuilder(client)
+                .setName(deploymentName)
+                .setType(Deployment.Type.UNDEPLOY)
+                .build();
+        if (deployment.execute() != Deployment.Status.SUCCESS) {
+            throw createError("Failed to undeploy %", deploymentName);
+        }
+
+        // Verify not deployed
+        if (isDeployed(deploymentName)) {
+            throw createError("Deployment %s was not undeployed", deploymentName);
+        }
+    }
+
+    private ModelNode executeOperation(final ModelNode op) throws IOException {
+        final ModelNode result = client.execute(op);
+        if (ServerOperations.isSuccessfulOutcome(result)) {
+            return result;
+        }
+        throw new RuntimeException(ServerOperations.getFailureDescriptionAsString(result));
+    }
+
     private void cleanUp() {
         try {
             if (client != null) try {
@@ -106,9 +183,19 @@ public class StandaloneTestServer implements TestServer {
         }
     }
 
+    private void checkState() {
+        if (!STARTED.get()) {
+            throw new IllegalStateException("The server has not been started");
+        }
+    }
+
     private static Thread startConsoleConsumer(final Process process) {
         final Thread result = new Thread(new ConsoleConsumer(process.getInputStream(), System.out));
         result.start();
         return result;
+    }
+
+    private static RuntimeException createError(final String format, final Object... args) {
+        return new RuntimeException(String.format(format, args));
     }
 }
