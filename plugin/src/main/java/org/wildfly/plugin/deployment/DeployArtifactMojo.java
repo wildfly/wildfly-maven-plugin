@@ -56,6 +56,12 @@ public final class DeployArtifactMojo extends AbstractDeployment {
     private String artifactId;
 
     /**
+     * The artifact to deploys classifier. Note that the classifier must also be set on the dependency being deployed.
+     */
+    @Parameter
+    private String classifier;
+
+    /**
      * Specifies whether force mode should be used or not.
      * </p>
      * If force mode is disabled, the deploy goal will cause a build failure if the application being deployed already
@@ -83,7 +89,8 @@ public final class DeployArtifactMojo extends AbstractDeployment {
         Artifact artifact = null;
         for (final Artifact a : dependencies) {
             if (a.getArtifactId().equals(artifactId) &&
-                    a.getGroupId().equals(groupId)) {
+                    a.getGroupId().equals(groupId) &&
+                    a.getClassifier().equals(classifier == null ? "" : classifier)) {
                 artifact = a;
                 break;
             }
