@@ -88,7 +88,7 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
         }
         getLog().debug("Executing commands");
         try (final ManagementClient client = createClient()) {
-            commandExecutor.execute(client, jbossHome, executeCommands);
+            commandExecutor.execute(client, jbossHome, executeCommands.validate(getLog()));
         } catch (IOException e) {
             throw new MojoExecutionException("Could not execute commands.", e);
         }

@@ -139,16 +139,16 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     }
 
     protected final Status executeDeployment(final ManagementClient client, final Deployment deployment, final Path wildflyHome)
-            throws DeploymentExecutionException, DeploymentFailureException, IOException {
+            throws DeploymentExecutionException, MojoFailureException, IOException {
         // Execute before deployment commands
         if (beforeDeployment != null)
-            commandExecutor.execute(client, wildflyHome, beforeDeployment);
+            commandExecutor.execute(client, wildflyHome, beforeDeployment.validate(getLog()));
         // Deploy the deployment
         getLog().debug("Executing deployment");
         final Status status = deployment.execute();
         // Execute after deployment commands
         if (afterDeployment != null)
-            commandExecutor.execute(client, wildflyHome, afterDeployment);
+            commandExecutor.execute(client, wildflyHome, afterDeployment.validate(getLog()));
         return status;
     }
 

@@ -107,7 +107,7 @@ public class CommandExecutor {
                 if (commands.isBatch()) {
                     executeBatch(ctx, commands.getCommands());
                 } else {
-                    executeCommands(ctx, commands.getCommands());
+                    executeCommands(ctx, commands.getCommands(), commands.isFailOnError());
                 }
                 executeScripts(ctx, commands.getScripts());
 
@@ -120,6 +120,7 @@ public class CommandExecutor {
 
     private void executeLocal(final Path wildflyHome, final ManagementClientConfiguration configuration, final Commands commands) throws IOException {
         if (commands.hasCommands()) {
+            final boolean safeExecute = !commands.isFailOnError();
             // Generate a file which can be executed locally
             final Path scriptFile = Files.createTempFile("localCliScript", ".cli");
             try {
@@ -128,7 +129,17 @@ public class CommandExecutor {
                         writer.println("batch");
                     }
                     for (String cmd : commands.getCommands()) {
+                        // Wrap in a try-catch if we want to safely execute the command
+                        if (safeExecute) {
+                            writer.println("try");
+                        }
                         writer.println(cmd);
+                        if (safeExecute) {
+                            writer.println("catch");
+                            // Echo the failing command to CLI if the execution fails
+                            writer.printf("echo The following command failed; see the server log for more details. %s%n", cmd);
+                            writer.println("end-try");
+                        }
                     }
                     if (commands.isBatch()) {
                         writer.println("run-batch");
@@ -200,10 +211,14 @@ public class CommandExecutor {
         }
     }
 
-    private static void executeCommands(final CommandContext ctx, final Iterable<String> commands) throws IOException {
+    private static void executeCommands(final CommandContext ctx, final Iterable<String> commands, final boolean failOnError) throws IOException {
         for (String cmd : commands) {
             try {
-                ctx.handle(cmd);
+                if (failOnError) {
+                    ctx.handle(cmd);
+                } else {
+                    ctx.handleSafe(cmd);
+                }
             } catch (CommandFormatException e) {
                 throw new IllegalArgumentException(String.format("Command '%s' is invalid. %s", cmd, e.getLocalizedMessage()), e);
             } catch (CommandLineException e) {
