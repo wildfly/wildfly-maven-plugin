@@ -25,12 +25,10 @@ package org.wildfly.plugin.cli;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -47,11 +45,6 @@ import org.jboss.as.controller.client.OperationMessageHandler;
 import org.jboss.as.controller.client.OperationResponse;
 import org.jboss.dmr.ModelNode;
 import org.jboss.threads.AsyncFuture;
-import org.wildfly.core.launcher.CliCommandBuilder;
-import org.wildfly.core.launcher.Launcher;
-import org.wildfly.core.launcher.ProcessHelper;
-import org.wildfly.plugin.common.ManagementClient;
-import org.wildfly.plugin.common.ManagementClientConfiguration;
 import org.wildfly.plugin.common.ServerOperations;
 
 /**
@@ -67,14 +60,16 @@ public class CommandExecutor {
      * Executes the commands and scripts provided.
      *
      * @param client      the client use
-     * @param wildflyHome the path to WildFly or {@code null} to use the management client to send commands
+     * @param wildflyHome the path to WildFly for setting the {@code jboss.home.dir} system property or {@code null} if
+     *                    should not be set
      * @param commands    the commands to execute
      *
      * @throws IOException if an error occurs processing the commands
      */
-    public void execute(final ManagementClient client, final Path wildflyHome, final Commands commands) throws IOException {
+    public void execute(final ModelControllerClient client, final Path wildflyHome, final Commands commands) throws IOException {
         if (wildflyHome != null) {
-            executeLocal(wildflyHome, client.getConfiguration(), commands);
+            System.setProperty("jboss.home.dir", wildflyHome.toString());
+            executeCommands(client, commands);
         } else {
             executeCommands(client, commands);
         }
@@ -84,12 +79,13 @@ public class CommandExecutor {
      * Executes the commands and scripts provided.
      *
      * @param client      the client use
-     * @param wildflyHome the path to WildFly or {@code null} to use the management client to send commands
+     * @param wildflyHome the path to WildFly for setting the {@code jboss.home.dir} system property or {@code null} if
+     *                    should not be set
      * @param commands    the commands to execute
      *
      * @throws IOException if an error occurs processing the commands
      */
-    public void execute(final ManagementClient client, final String wildflyHome, final Commands commands) throws IOException {
+    public void execute(final ModelControllerClient client, final String wildflyHome, final Commands commands) throws IOException {
         Path path = null;
         if (wildflyHome != null) {
             path = Paths.get(wildflyHome);
@@ -107,72 +103,13 @@ public class CommandExecutor {
                 if (commands.isBatch()) {
                     executeBatch(ctx, commands.getCommands());
                 } else {
-                    executeCommands(ctx, commands.getCommands());
+                    executeCommands(ctx, commands.getCommands(), commands.isFailOnError());
                 }
                 executeScripts(ctx, commands.getScripts());
 
             } finally {
                 ctx.terminateSession();
                 ctx.bindClient(null);
-            }
-        }
-    }
-
-    private void executeLocal(final Path wildflyHome, final ManagementClientConfiguration configuration, final Commands commands) throws IOException {
-        if (commands.hasCommands()) {
-            // Generate a file which can be executed locally
-            final Path scriptFile = Files.createTempFile("localCliScript", ".cli");
-            try {
-                try (final PrintWriter writer = new PrintWriter(Files.newBufferedWriter(scriptFile, StandardCharsets.UTF_8, StandardOpenOption.CREATE))) {
-                    if (commands.isBatch()) {
-                        writer.println("batch");
-                    }
-                    for (String cmd : commands.getCommands()) {
-                        writer.println(cmd);
-                    }
-                    if (commands.isBatch()) {
-                        writer.println("run-batch");
-                    }
-                }
-                executeLocal(wildflyHome, configuration, scriptFile);
-            } finally {
-                Files.deleteIfExists(scriptFile);
-            }
-        }
-
-        if (commands.hasScripts()) {
-            for (File scriptFile : commands.getScripts()) {
-                executeLocal(wildflyHome, configuration, scriptFile.toPath());
-            }
-        }
-    }
-
-    private void executeLocal(final Path wildflyHome, final ManagementClientConfiguration configuration, final Path scriptFile) throws IOException {
-        // Ensure the file was created
-        if (Files.notExists(scriptFile)) {
-            throw new IllegalArgumentException(String.format("File %s does not exist and cannot.", scriptFile));
-        }
-        // Create the command
-        final CliCommandBuilder cliBuilder = CliCommandBuilder.of(wildflyHome);
-        cliBuilder.setConnection(configuration.getProtocol(), configuration.getHost(), configuration.getPort());
-        cliBuilder.setUser(configuration.getUsername());
-        cliBuilder.setPassword(configuration.getPassword());
-        cliBuilder.addCliArguments("--file=" + scriptFile.toAbsolutePath());
-        final Process process = Launcher.of(cliBuilder)
-                .addEnvironmentVariable("JBOSS_HOME", wildflyHome.toAbsolutePath().toString())
-                .inherit()
-                .launch();
-        try {
-            // Wait for process to complete
-            final int status = process.waitFor();
-            if (status != 0) {
-                throw new IllegalStateException("Process did not end normally: " + status);
-            }
-        } catch (InterruptedException ignore) {
-        } finally {
-            try {
-                ProcessHelper.destroyProcess(process);
-            } catch (InterruptedException ignore) {
             }
         }
     }
@@ -200,10 +137,14 @@ public class CommandExecutor {
         }
     }
 
-    private static void executeCommands(final CommandContext ctx, final Iterable<String> commands) throws IOException {
+    private static void executeCommands(final CommandContext ctx, final Iterable<String> commands, final boolean failOnError) throws IOException {
         for (String cmd : commands) {
             try {
-                ctx.handle(cmd);
+                if (failOnError) {
+                    ctx.handle(cmd);
+                } else {
+                    ctx.handleSafe(cmd);
+                }
             } catch (CommandFormatException e) {
                 throw new IllegalArgumentException(String.format("Command '%s' is invalid. %s", cmd, e.getLocalizedMessage()), e);
             } catch (CommandLineException e) {

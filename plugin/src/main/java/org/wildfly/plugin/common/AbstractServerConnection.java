@@ -32,6 +32,7 @@ import org.apache.maven.settings.Settings;
 import org.apache.maven.settings.crypto.DefaultSettingsDecryptionRequest;
 import org.apache.maven.settings.crypto.SettingsDecrypter;
 import org.apache.maven.settings.crypto.SettingsDecryptionResult;
+import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.ModelControllerClientConfiguration;
 
 /**
@@ -108,7 +109,7 @@ public abstract class AbstractServerConnection extends AbstractMojo {
     @Inject
     private SettingsDecrypter settingsDecrypter;
 
-    private ManagementClientConfiguration clientConfiguration;
+    private ModelControllerClientConfiguration clientConfiguration;
 
     /**
      * The goal of the deployment.
@@ -122,16 +123,16 @@ public abstract class AbstractServerConnection extends AbstractMojo {
      *
      * @return the client
      */
-    protected ManagementClient createClient() {
-        return new ManagementClient(getClientConfiguration());
+    protected ModelControllerClient createClient() {
+        return ModelControllerClient.Factory.create(getClientConfiguration());
     }
 
     /**
-     * Gets a client configuration used to create a new {@link ManagementClient}.
+     * Gets a client configuration used to create a new {@link ModelControllerClient}.
      *
      * @return the configuration to use
      */
-    protected synchronized ManagementClientConfiguration getClientConfiguration() {
+    protected synchronized ModelControllerClientConfiguration getClientConfiguration() {
         if (clientConfiguration == null) {
             final Log log = getLog();
             String username = this.username;
@@ -163,24 +164,13 @@ public abstract class AbstractServerConnection extends AbstractMojo {
             }
             final String u = username;
             final String p = password;
-            clientConfiguration = new ManagementClientConfiguration(
-                    new ModelControllerClientConfiguration.Builder()
+            clientConfiguration = new ModelControllerClientConfiguration.Builder()
                             .setProtocol(protocol)
                             .setHostName(hostname)
                             .setPort(port)
                             .setConnectionTimeout(timeout * 1000)
                             .setHandler(new ClientCallbackHandler(u, p, log))
-                            .build()) {
-                @Override
-                public String getUsername() {
-                    return u;
-                }
-
-                @Override
-                public String getPassword() {
-                    return p;
-                }
-            };
+                    .build();
         }
         return clientConfiguration;
     }

@@ -29,9 +29,9 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.wildfly.plugin.common.AbstractServerConnection;
-import org.wildfly.plugin.common.ManagementClient;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.ServerOperations;
 
@@ -64,7 +64,7 @@ public class ShutdownMojo extends AbstractServerConnection {
             getLog().debug("Skipping server shutdown");
             return;
         }
-        try (final ManagementClient client = createClient()) {
+        try (final ModelControllerClient client = createClient()) {
             if (ServerHelper.isDomainServer(client)) {
                 if (reload) {
                     client.execute(ServerOperations.createOperation("reload-servers"));

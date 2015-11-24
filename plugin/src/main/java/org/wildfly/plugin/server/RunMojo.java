@@ -39,9 +39,9 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.common.DeploymentFailureException;
-import org.wildfly.plugin.common.ManagementClient;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.deployment.DeployMojo;
@@ -210,7 +210,7 @@ public class RunMojo extends DeployMojo {
         log.info(String.format("JAVA_HOME=%s", commandBuilder.getJavaHome()));
         log.info(String.format("JBOSS_HOME=%s%n", commandBuilder.getWildFlyHome()));
         Server server = null;
-        try (final ManagementClient client = createClient()) {
+        try (final ModelControllerClient client = createClient()) {
             if (addUser != null && addUser.hasUsers()) {
                 log.info("Adding users: " + addUser);
                 addUser.addUsers(commandBuilder.getWildFlyHome(), commandBuilder.getJavaHome());
