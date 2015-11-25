@@ -28,6 +28,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
@@ -47,7 +49,7 @@ public class Commands {
 
     /**
      * {@code true} if commands should be executed in a batch or {@code false} if they should be executed one at a
-     * time.
+     * time. Must be {@code false} if {@code failOnError} is set to {@code false}.
      */
     @Parameter
     private boolean batch;
@@ -63,6 +65,19 @@ public class Commands {
      */
     @Parameter
     private List<File> scripts = new ArrayList<>();
+
+    /**
+     * Indicates whether or not subsequent commands should be executed if an error occurs executing a command. A value
+     * of {@code false} will continue processing commands even if a previous command execution results in a failure.
+     * <p>
+     * Must be {@code true} for batch executions.
+     * </p>
+     * <p>
+     * Note that this setting is not used for scripts. Scripts must handle errors on their own.
+     * </p>
+     */
+    @Parameter(alias = "fail-on-error", defaultValue = "true")
+    private boolean failOnError;
 
     /**
      * Indicates whether or not commands should be executed in a batch.
@@ -81,6 +96,25 @@ public class Commands {
      */
     public boolean hasCommands() {
         return commands != null && !commands.isEmpty();
+    }
+
+    /**
+     * Validates the settings for the commands.
+     *
+     * @param log the log used to write messages to
+     *
+     * @return the current commands
+     *
+     * @throws MojoFailureException if a validation error occurs
+     */
+    public Commands validate(final Log log) throws MojoFailureException {
+        if (isBatch() && !isFailOnError()) {
+            throw new MojoFailureException("Cannot safely ignore errors when executing in batch mode.");
+        }
+        if (!isFailOnError() && hasScripts()) {
+            log.warn("The failOnError configuration property will not be used with scripts.");
+        }
+        return this;
     }
 
     /**
@@ -105,6 +139,16 @@ public class Commands {
             return new ArrayList<>(scripts);
         }
         return Collections.emptyList();
+    }
+
+    /**
+     * Checks where or not subsequent commands should be run or not if a failure occurs.
+     *
+     * @return {@code true} if subsequent commands should not be executed if there was a failed command, {@code false}
+     * if subsequent command should continue to run.
+     */
+    protected boolean isFailOnError() {
+        return failOnError;
     }
 
     /**

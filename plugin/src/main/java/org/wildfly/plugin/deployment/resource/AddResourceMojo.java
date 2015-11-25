@@ -125,7 +125,7 @@ public class AddResourceMojo extends AbstractServerConnection {
         }
     }
 
-    private void processResources(final ManagementClient client, final Resource... resources) throws IOException {
+    private void processResources(final ManagementClient client, final Resource... resources) throws IOException, MojoFailureException {
         for (Resource resource : resources) {
             if (domain != null) {
                 // Profiles are required when adding resources in domain mode
@@ -137,13 +137,13 @@ public class AddResourceMojo extends AbstractServerConnection {
                     final CompositeOperationBuilder compositeOperationBuilder = CompositeOperationBuilder.create();
                     if (addCompositeResource(profile, client, resource, address, compositeOperationBuilder, true)) {
                         if (resource.hasBeforeAddCommands()) {
-                            commandExecutor.execute(client, jbossHome, resource.getBeforeAdd());
+                            commandExecutor.execute(client, jbossHome, resource.getBeforeAdd().validate(getLog()));
                         }
                         // Execute the add resource operation
                         reportFailure(client.execute(compositeOperationBuilder.build()));
 
                         if (resource.hasAfterAddCommands()) {
-                            commandExecutor.execute(client, jbossHome, resource.getAfterAdd());
+                            commandExecutor.execute(client, jbossHome, resource.getAfterAdd().validate(getLog()));
                         }
                     }
                 }
@@ -151,13 +151,13 @@ public class AddResourceMojo extends AbstractServerConnection {
                 final CompositeOperationBuilder compositeOperationBuilder = CompositeOperationBuilder.create();
                 if (addCompositeResource(null, client, resource, address, compositeOperationBuilder, true)) {
                     if (resource.hasBeforeAddCommands()) {
-                        commandExecutor.execute(client, jbossHome, resource.getBeforeAdd());
+                        commandExecutor.execute(client, jbossHome, resource.getBeforeAdd().validate(getLog()));
                     }
                     // Execute the add resource operation
                     reportFailure(client.execute(compositeOperationBuilder.build()));
 
                     if (resource.hasAfterAddCommands()) {
-                        commandExecutor.execute(client, jbossHome, resource.getAfterAdd());
+                        commandExecutor.execute(client, jbossHome, resource.getAfterAdd().validate(getLog()));
                     }
                 }
             }
