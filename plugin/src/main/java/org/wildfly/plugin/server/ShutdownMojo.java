@@ -28,6 +28,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.ManagementClient;
 import org.wildfly.plugin.common.PropertyNames;
@@ -44,7 +45,8 @@ import org.wildfly.plugin.common.ServerOperations;
 public class ShutdownMojo extends AbstractServerConnection {
 
     /**
-     * Set to {@code true} if a {@code reload} operation should be invoked instead of a {@code shutdown}.
+     * Set to {@code true} if a {@code reload} operation should be invoked instead of a {@code shutdown}. For domain
+     * servers this executes a {@code reload-servers} operation.
      */
     @Parameter(defaultValue = "false", property = PropertyNames.RELOAD)
     private boolean reload;
@@ -62,10 +64,18 @@ public class ShutdownMojo extends AbstractServerConnection {
             return;
         }
         try (final ManagementClient client = createClient()) {
-            if (reload) {
-                client.execute(ServerOperations.createOperation(ServerOperations.RELOAD));
+            if (ServerHelper.isDomainServer(client)) {
+                if (reload) {
+                    client.execute(ServerOperations.createOperation("reload-servers"));
+                } else {
+                    ServerHelper.shutdownDomain(DomainClient.Factory.create(client));
+                }
             } else {
-                client.execute(ServerOperations.createOperation(ServerOperations.SHUTDOWN));
+                if (reload) {
+                    client.execute(ServerOperations.createOperation(ServerOperations.RELOAD));
+                } else {
+                    ServerHelper.shutdownStandalone(client);
+                }
             }
             // Bad hack to get maven to complete it's message output
             try {

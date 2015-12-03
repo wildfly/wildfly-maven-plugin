@@ -40,6 +40,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.wildfly.core.launcher.CommandBuilder;
+import org.wildfly.core.launcher.DomainCommandBuilder;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
@@ -148,10 +150,22 @@ public class StartMojo extends AbstractServerConnection {
     private String javaHome;
 
     /**
-     * The path to the server configuration to use.
+     * The path to the server configuration to use. This is only used for standalone servers.
      */
     @Parameter(alias = "server-config", property = PropertyNames.SERVER_CONFIG)
     private String serverConfig;
+
+    /**
+     * The name of the domain configuration to use. This is only used for domain servers.
+     */
+    @Parameter(alias = "domain-config", property = PropertyNames.DOMAIN_CONFIG)
+    private String domainConfig;
+
+    /**
+     * The name of the host configuration to use. This is only used for domain servers.
+     */
+    @Parameter(alias = "host-config", property = PropertyNames.HOST_CONFIG)
+    private String hostConfig;
 
     /**
      * The path to the system properties file to load.
@@ -202,6 +216,9 @@ public class StartMojo extends AbstractServerConnection {
     @Parameter(alias = "add-user", property = "wildfly.add-user")
     private AddUser addUser;
 
+    @Parameter(alias = "server-type", property = "wildfly.server.type", defaultValue = "STANDALONE")
+    private ServerType serverType;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         final Log log = getLog();
@@ -214,6 +231,48 @@ public class StartMojo extends AbstractServerConnection {
         if (!Files.isDirectory(jbossHome)) {
             throw new MojoExecutionException(String.format("JBOSS_HOME '%s' is not a valid directory.", jbossHome));
         }
+
+        try {
+            // Determine how stdout should be consumed
+            OutputStream out = null;
+            if (stdout != null) {
+                final String value = stdout.trim().toLowerCase(Locale.ENGLISH);
+                if ("system.out".equals(value)) {
+                    out = System.out;
+                } else if ("system.err".equals(value)) {
+                    out = System.err;
+                } else if ("none".equals(value)) {
+                    out = null;
+                } else {
+                    // Attempt to create a file
+                    final Path path = Paths.get(value);
+                    if (Files.notExists(path)) {
+                        Files.createDirectories(path);
+                        Files.createFile(path);
+                    }
+                    out = new BufferedOutputStream(Files.newOutputStream(path));
+                }
+            }
+            // Create the server, note the client should be shutdown when the server is stopped
+            final Server server = Server.create(createCommandBuilder(jbossHome), createClient(), out);
+            // Start the server
+            log.info(String.format("%s server is starting up.", serverType));
+            server.start(startupTimeout);
+            server.checkServerState();
+        } catch (Exception e) {
+            throw new MojoExecutionException("The server failed to start", e);
+        }
+
+    }
+
+    private CommandBuilder createCommandBuilder(final Path jbossHome) throws MojoExecutionException {
+        if (serverType == ServerType.DOMAIN) {
+            return createDomainCommandBuilder(jbossHome);
+        }
+        return createStandaloneCommandBuilder(jbossHome);
+    }
+
+    private CommandBuilder createStandaloneCommandBuilder(final Path jbossHome) throws MojoExecutionException {
         final StandaloneCommandBuilder commandBuilder = StandaloneCommandBuilder.of(jbossHome)
                 .setJavaHome(javaHome)
                 .addModuleDirs(modulesPath.getModulePaths());
@@ -238,43 +297,58 @@ public class StartMojo extends AbstractServerConnection {
         }
 
         // Print some server information
+        final Log log = getLog();
         log.info(String.format("JAVA_HOME=%s", commandBuilder.getJavaHome()));
         log.info(String.format("JBOSS_HOME=%s%n", commandBuilder.getWildFlyHome()));
         try {
-            if (addUser != null && addUser.hasUsers()) {
-                log.info("Adding users: " + addUser);
-                addUser.addUsers(commandBuilder.getWildFlyHome(), commandBuilder.getJavaHome());
-            }
-            // Determine how stdout should be consumed
-            OutputStream out = null;
-            if (stdout != null) {
-                final String value = stdout.trim().toLowerCase(Locale.ENGLISH);
-                if ("system.out".equals(value)) {
-                    out = System.out;
-                } else if ("system.err".equals(value)) {
-                    out = System.err;
-                } else if ("none".equals(value)) {
-                    out = null;
-                } else {
-                    // Attempt to create a file
-                    final Path path = Paths.get(value);
-                    if (Files.notExists(path)) {
-                        Files.createDirectories(path);
-                        Files.createFile(path);
-                    }
-                    out = new BufferedOutputStream(Files.newOutputStream(path));
-                }
-            }
-            // Create the server, note the client should be shutdown when the server is stopped
-            final Server server = Server.create(commandBuilder, createClient(), out);
-            // Start the server
-            log.info("Server is starting up.");
-            server.start(startupTimeout);
-            server.checkServerState();
-        } catch (Exception e) {
-            throw new MojoExecutionException("The server failed to start", e);
+            addUsers(commandBuilder.getWildFlyHome(), commandBuilder.getJavaHome());
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to add users", e);
+        }
+        return commandBuilder;
+    }
+
+    private CommandBuilder createDomainCommandBuilder(final Path jbossHome) throws MojoExecutionException {
+        final Path javaHome = (this.javaHome == null ? Paths.get(System.getProperty("java.home")) : Paths.get(this.javaHome));
+        final DomainCommandBuilder commandBuilder = DomainCommandBuilder.of(jbossHome, javaHome)
+                .addModuleDirs(modulesPath.getModulePaths());
+
+        // Set the JVM options
+        if (javaOpts != null) {
+            commandBuilder.setProcessControllerJavaOptions(javaOpts)
+                    .setHostControllerJavaOptions(javaOpts);
+        } else if (jvmArgs != null) {
+            final String[] args = jvmArgs.split("\\s+");
+            commandBuilder.setProcessControllerJavaOptions(args)
+                    .setHostControllerJavaOptions(args);
         }
 
+        if (domainConfig != null) {
+            commandBuilder.setDomainConfiguration(domainConfig);
+        }
+
+        if (hostConfig != null) {
+            commandBuilder.setHostConfiguration(hostConfig);
+        }
+
+        if (propertiesFile != null) {
+            commandBuilder.setPropertiesFile(propertiesFile);
+        }
+
+        if (serverArgs != null) {
+            commandBuilder.addServerArguments(serverArgs);
+        }
+
+        // Print some server information
+        final Log log = getLog();
+        log.info(String.format("JAVA_HOME=%s", commandBuilder.getJavaHome()));
+        log.info(String.format("JBOSS_HOME=%s%n", commandBuilder.getWildFlyHome()));
+        try {
+            addUsers(commandBuilder.getWildFlyHome(), commandBuilder.getJavaHome());
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to add users", e);
+        }
+        return commandBuilder;
     }
 
     private Path extractIfRequired(final Path buildDir) throws MojoFailureException, MojoExecutionException {
@@ -307,6 +381,13 @@ public class StartMojo extends AbstractServerConnection {
             throw new MojoFailureException("Artifact was not successfully extracted: " + result, e);
         }
         throw new MojoFailureException("Artifact was not successfully extracted: " + result);
+    }
+
+    private void addUsers(final Path wildflyHome, final Path javaHome) throws IOException {
+        if (addUser != null && addUser.hasUsers()) {
+            getLog().info("Adding users: " + addUser);
+            addUser.addUsers(wildflyHome, javaHome);
+        }
     }
 
     @Override

@@ -26,6 +26,7 @@ import static org.jboss.as.controller.client.helpers.ClientConstants.CONTROLLER_
 import static org.jboss.as.controller.client.helpers.ClientConstants.CONTROLLER_PROCESS_STATE_STOPPING;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -65,7 +66,6 @@ public class ServerHelper {
         return result;
     }
 
-
     static boolean waitForDomain(final Process process, final DomainClient client, final Map<ServerIdentity, ServerStatus> servers, final long startupTimeout) throws InterruptedException, IOException {
         long timeout = startupTimeout * 1000;
         final long sleep = 100;
@@ -84,8 +84,16 @@ public class ServerHelper {
         return false;
     }
 
+    static boolean isDomainRunning(final DomainClient client) {
+        return isDomainRunning(client, new HashMap<ServerIdentity, ServerStatus>(), false);
+    }
+
     static boolean isDomainRunning(final DomainClient client, final Map<ServerIdentity, ServerStatus> servers) {
         return isDomainRunning(client, servers, false);
+    }
+
+    static void shutdownDomain(final DomainClient client) {
+        shutdownDomain(client, new HashMap<ServerIdentity, ServerStatus>());
     }
 
     static void shutdownDomain(final DomainClient client, final Map<ServerIdentity, ServerStatus> servers) {

@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -47,8 +48,18 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
     public void shutdown() throws Exception {
         // Ensure the server is shutdown
         try (final ModelControllerClient client = createClient()) {
+            boolean isDomain;
+            try {
+                isDomain = ServerHelper.isDomainServer(client);
+            } catch (Exception ignore) {
+                isDomain = false;
+            }
             // Ensure we shutdown the server
-            ServerHelper.shutdownStandalone(client);
+            if (isDomain) {
+                ServerHelper.shutdownDomain(DomainClient.Factory.create(client));
+            } else {
+                ServerHelper.shutdownStandalone(client);
+            }
         }
     }
 
@@ -59,6 +70,7 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
         try (final ModelControllerClient client = createClient()) {
             // Verify the server is running
             Assert.assertTrue("The start goal did not start the server.", ServerHelper.isStandaloneRunning(client));
+            Assert.assertFalse("This should be a standalone server, but found a domain server.", ServerHelper.isDomainServer(client));
         }
     }
 
@@ -116,11 +128,45 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
         Assert.assertTrue("User user was not added to the application-roles.properties file", fileContains(appGroups, "user=user,mgmt"));
     }
 
-    private StartMojo getStartMojo() throws Exception {
+    @Test
+    public void testStartDomain() throws Exception {
+        final StartMojo mojo = getStartMojo("start-domain-pom.xml");
+        mojo.execute();
+        try (final DomainClient client = DomainClient.Factory.create(createClient())) {
+            // Verify the server is running
+            Assert.assertTrue("The start goal did not start the server.", ServerHelper.isDomainRunning(client));
+            Assert.assertTrue("This should be a domain server server, but found a standalone server.", ServerHelper.isDomainServer(client));
+        }
+    }
+
+    @Test
+    public void testShutdownDomain() throws Exception {
         // Start up the server and ensure it's running
-        final StartMojo startMojo = lookupMojoAndVerify("start", "start-pom.xml");
+        final StartMojo startMojo = getStartMojo("start-domain-pom.xml");
+        startMojo.execute();
+        try (final DomainClient client = DomainClient.Factory.create(createClient())) {
+            // Verify the server is running
+            Assert.assertTrue("The start goal did not start the server.", ServerHelper.isDomainRunning(client));
+        }
+
+        // Look up the stop mojo and attempt to stop
+        final ShutdownMojo stopMojo = lookupMojoAndVerify("shutdown", "shutdown-pom.xml");
+        stopMojo.execute();
+        try (final DomainClient client = DomainClient.Factory.create(createClient())) {
+            // Verify the server is running
+            Assert.assertFalse("The start goal did not start the server.", ServerHelper.isDomainRunning(client));
+        }
+    }
+
+    private StartMojo getStartMojo() throws Exception {
+        return getStartMojo("start-pom.xml");
+    }
+
+    private StartMojo getStartMojo(final String pomFile) throws Exception {
+        // Start up the server and ensure it's running
+        final StartMojo startMojo = lookupMojoAndVerify("start", pomFile);
         setValue(startMojo, "jbossHome", Environment.WILDFLY_HOME.toString());
-        setValue(startMojo, "serverArgs", new String[] {"-Djboss.management.http.port=" + Integer.toString(Environment.PORT)});
+        setValue(startMojo, "serverArgs", new String[]{"-Djboss.management.http.port=" + Integer.toString(Environment.PORT)});
         return startMojo;
     }
 
