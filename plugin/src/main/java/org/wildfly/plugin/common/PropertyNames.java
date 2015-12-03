@@ -39,6 +39,10 @@ public interface PropertyNames {
 
     String DEPLOYMENT_TARGET_DIR = "wildfly.deployment.targetDir";
 
+    String DOMAIN_CONFIG = "wildfly.domainConfig";
+
+    String HOST_CONFIG = "wildfly.hostConfig";
+
     String HOSTNAME = "wildfly.hostname";
 
     String ID = "wildfly.id";
