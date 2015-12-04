@@ -22,6 +22,7 @@
 
 package org.wildfly.plugin.server;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -84,6 +85,9 @@ public class ShutdownMojo extends AbstractServerConnection {
                 ignore.printStackTrace();
                 // no-op
             }
+        } catch (IOException e) {
+            throw new MojoExecutionException(String.format("Please make sure a server is running before executing goal " +
+                    "%s. Reason: %s", goal(), e.getMessage()), e);
         } catch (Exception e) {
             throw new MojoExecutionException(String.format("Could not execute goal %s. Reason: %s", goal(), e.getMessage()), e);
         }
