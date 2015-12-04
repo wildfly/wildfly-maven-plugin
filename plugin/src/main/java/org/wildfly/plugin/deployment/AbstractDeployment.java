@@ -187,6 +187,9 @@ abstract class AbstractDeployment extends AbstractServerConnection {
             }
         } catch (MojoFailureException | MojoExecutionException e) {
             throw e;
+        } catch (IOException e) {
+            throw new MojoExecutionException(String.format("Please make sure a server is running before executing goal " +
+                    "%s on deployment %s. Reason: %s", goal(), file(), e.getMessage()), e);
         } catch (Exception e) {
             throw new MojoExecutionException(String.format("Could not execute goal %s on %s. Reason: %s", goal(), file(),
                     e.getMessage()), e);

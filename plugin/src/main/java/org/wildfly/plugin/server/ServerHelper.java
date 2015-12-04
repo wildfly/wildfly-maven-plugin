@@ -51,17 +51,13 @@ public class ServerHelper {
         EMPTY_ADDRESS.protect();
     }
 
-    public static boolean isDomainServer(final ModelControllerClient client) {
+    public static boolean isDomainServer(final ModelControllerClient client) throws IOException {
         boolean result = false;
         // Check this is really a domain server
         final ModelNode op = ServerOperations.createReadAttributeOperation(ServerOperations.LAUNCH_TYPE);
-        try {
-            final ModelNode opResult = client.execute(op);
-            if (ServerOperations.isSuccessfulOutcome(opResult)) {
-                result = ("DOMAIN".equals(ServerOperations.readResultAsString(opResult)));
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException(String.format("I/O Error could not execute operation '%s'", op), e);
+        final ModelNode opResult = client.execute(op);
+        if (ServerOperations.isSuccessfulOutcome(opResult)) {
+            result = ("DOMAIN".equals(ServerOperations.readResultAsString(opResult)));
         }
         return result;
     }
