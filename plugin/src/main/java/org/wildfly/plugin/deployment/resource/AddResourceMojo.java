@@ -24,7 +24,6 @@ package org.wildfly.plugin.deployment.resource;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-
 import javax.inject.Inject;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -37,7 +36,6 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.Property;
 import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.common.AbstractServerConnection;
-import org.wildfly.plugin.common.ManagementClient;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.deployment.domain.Domain;
@@ -94,8 +92,8 @@ public class AddResourceMojo extends AbstractServerConnection {
     private boolean skip;
 
     /**
-     * The WildFly Application Server's home directory. If defined commands will be sent to a new process launched with
-     * in a modular environment. This can be useful when commands from extensions need to be executed.
+     * The WildFly Application Server's home directory. This is not required, but should be used for commands such as
+     * {@code module add} as they are executed on the local file system.
      */
     @Parameter(alias = "jboss-home", property = PropertyNames.JBOSS_HOME)
     private String jbossHome;
@@ -114,7 +112,7 @@ public class AddResourceMojo extends AbstractServerConnection {
             getLog().debug(String.format("Skipping add-resource with address %s", address));
             return;
         }
-        try (final ManagementClient client = createClient()) {
+        try (final ModelControllerClient client = createClient()) {
             if (resources != null && resources.length > 0) {
                 processResources(client, resources);
             } else {
@@ -125,7 +123,7 @@ public class AddResourceMojo extends AbstractServerConnection {
         }
     }
 
-    private void processResources(final ManagementClient client, final Resource... resources) throws IOException {
+    private void processResources(final ModelControllerClient client, final Resource... resources) throws IOException {
         for (Resource resource : resources) {
             if (domain != null) {
                 // Profiles are required when adding resources in domain mode

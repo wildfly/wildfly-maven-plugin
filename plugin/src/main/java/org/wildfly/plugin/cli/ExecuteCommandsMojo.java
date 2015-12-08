@@ -29,8 +29,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.common.AbstractServerConnection;
-import org.wildfly.plugin.common.ManagementClient;
 import org.wildfly.plugin.common.PropertyNames;
 
 /**
@@ -60,8 +60,8 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     private boolean skip;
 
     /**
-     * The WildFly Application Server's home directory. If defined commands will be executed in a new process launched
-     * in a modular environment. This can be useful when commands from extensions need to be executed.
+     * The WildFly Application Server's home directory. This is not required, but should be used for commands such as
+     * {@code module add} as they are executed on the local file system.
      */
     @Parameter(alias = "jboss-home", property = PropertyNames.JBOSS_HOME)
     private String jbossHome;
@@ -87,7 +87,7 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             return;
         }
         getLog().debug("Executing commands");
-        try (final ManagementClient client = createClient()) {
+        try (final ModelControllerClient client = createClient()) {
             commandExecutor.execute(client, jbossHome, executeCommands);
         } catch (IOException e) {
             throw new MojoExecutionException("Could not execute commands.", e);

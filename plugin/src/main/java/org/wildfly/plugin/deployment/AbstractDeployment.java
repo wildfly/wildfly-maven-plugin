@@ -38,7 +38,6 @@ import org.wildfly.plugin.cli.Commands;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.DeploymentExecutionException;
 import org.wildfly.plugin.common.DeploymentFailureException;
-import org.wildfly.plugin.common.ManagementClient;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.deployment.Deployment.Status;
 import org.wildfly.plugin.deployment.domain.Domain;
@@ -81,8 +80,8 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     protected String runtimeName;
 
     /**
-     * The WildFly Application Server's home directory. If defined commands will be executed in a new process launched
-     * in a modular environment. This can be useful when commands from extensions need to be executed.
+     * The WildFly Application Server's home directory. This is not required, but should be used for commands such as
+     * {@code module add} as they are executed on the local file system.
      */
     @Parameter(alias = "jboss-home", property = PropertyNames.JBOSS_HOME)
     private String jbossHome;
@@ -138,7 +137,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         doExecute();
     }
 
-    protected final Status executeDeployment(final ManagementClient client, final Deployment deployment, final Path wildflyHome)
+    protected final Status executeDeployment(final ModelControllerClient client, final Deployment deployment, final Path wildflyHome)
             throws DeploymentExecutionException, DeploymentFailureException, IOException {
         // Execute before deployment commands
         if (beforeDeployment != null)
@@ -158,7 +157,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      * @see #execute()
      */
     protected void doExecute() throws MojoExecutionException, MojoFailureException {
-        try (final ManagementClient client = createClient()) {
+        try (final ModelControllerClient client = createClient()) {
             final boolean isDomain = ServerHelper.isDomainServer(client);
             validate(client, isDomain);
             final String matchPattern = getMatchPattern();
