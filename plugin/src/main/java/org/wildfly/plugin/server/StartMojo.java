@@ -247,7 +247,10 @@ public class StartMojo extends AbstractServerConnection {
                     // Attempt to create a file
                     final Path path = Paths.get(value);
                     if (Files.notExists(path)) {
-                        Files.createDirectories(path);
+                        final Path parent = path.getParent();
+                        if (parent != null) {
+                            Files.createDirectories(parent);
+                        }
                         Files.createFile(path);
                     }
                     out = new BufferedOutputStream(Files.newOutputStream(path));
