@@ -47,6 +47,16 @@
         <wildfly.test.deployment.name>test.war</wildfly.test.deployment.name>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.sun</groupId>
+            <artifactId>tools</artifactId>
+            <version>${maven.compiler.target}}</version>
+            <scope>system</scope>
+            <systemPath>${java.home}/../lib/tools.jar</systemPath>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>

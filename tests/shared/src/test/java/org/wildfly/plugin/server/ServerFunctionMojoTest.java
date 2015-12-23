@@ -22,6 +22,20 @@
 
 package org.wildfly.plugin.server;
 
+import com.sun.jdi.Bootstrap;
+import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.VirtualMachineManager;
+import com.sun.jdi.connect.AttachingConnector;
+import com.sun.jdi.connect.Connector;
+import com.sun.jdi.connect.IllegalConnectorArgumentsException;
+import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.controller.client.helpers.domain.DomainClient;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Test;
+import org.wildfly.plugin.tests.AbstractWildFlyMojoTest;
+import org.wildfly.plugin.tests.Environment;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -30,14 +44,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.controller.client.helpers.domain.DomainClient;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Test;
-import org.wildfly.plugin.tests.AbstractWildFlyMojoTest;
-import org.wildfly.plugin.tests.Environment;
+import java.util.Map;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
@@ -156,6 +163,54 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
             // Verify the server is running
             Assert.assertFalse("The start goal did not start the server.", ServerHelper.isDomainRunning(client));
         }
+    }
+
+    @Test
+    public void testStartStandaloneDebug() throws Exception {
+        final StartMojo mojo = getStartMojo("start-with-debug-pom.xml");
+        mojo.execute();
+        try (final ModelControllerClient client = createClient()) {
+            // Verify the server is running
+            Assert.assertTrue("The start goal did not start the server.", ServerHelper.isStandaloneRunning(client));
+        }
+        verifyDebugOnPort(5005);
+    }
+
+    @Test
+    public void testStartStandaloneDebugPort() throws Exception {
+        final StartMojo mojo = getStartMojo("start-with-debug-port-pom.xml");
+        mojo.execute();
+        try (final ModelControllerClient client = createClient()) {
+            // Verify the server is running
+            Assert.assertTrue("The start goal did not start the server.", ServerHelper.isStandaloneRunning(client));
+        }
+        verifyDebugOnPort(1337);
+    }
+
+    private void verifyDebugOnPort(final int debugPort) throws IOException, IllegalConnectorArgumentsException {
+        final VirtualMachineManager virtualMachineManager = Bootstrap.virtualMachineManager();
+        final AttachingConnector debugSocketConnector = getAttachingConnector(virtualMachineManager);
+        if (debugSocketConnector == null) {
+            Assert.fail("Socket connector for debug operations could not be retrieved.");
+        }
+
+        final Map<String, Connector.Argument> paramsMap = debugSocketConnector.defaultArguments();
+        final Connector.IntegerArgument portArgument = (Connector.IntegerArgument) paramsMap.get("port");
+        portArgument.setValue(debugPort);
+        final VirtualMachine wildflyJvm = debugSocketConnector.attach(paramsMap);
+        Assert.assertNotNull("Could not attach to Wildfly JVM using debug port: " + debugPort, wildflyJvm.name());
+    }
+
+    private AttachingConnector getAttachingConnector(VirtualMachineManager virtualMachineManager) {
+        AttachingConnector debugSocketConnector = null;
+        List<AttachingConnector> attachingConnectors = virtualMachineManager.attachingConnectors();
+        for (AttachingConnector attachingConnector : attachingConnectors) {
+            if (attachingConnector.transport().name().equals("dt_socket")) {
+                debugSocketConnector = attachingConnector;
+                break;
+            }
+        }
+        return debugSocketConnector;
     }
 
     private StartMojo getStartMojo() throws Exception {
