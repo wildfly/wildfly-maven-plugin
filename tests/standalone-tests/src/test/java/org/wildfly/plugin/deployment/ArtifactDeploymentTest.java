@@ -52,7 +52,7 @@ public class ArtifactDeploymentTest extends AbstractWildFlyServerMojoTest {
     @Test
     public void testDeploy() throws Exception {
         final DeployArtifactMojo mojo = lookupMojoAndVerify("deploy-artifact", "deploy-artifact-pom.xml");
-        testDeploy(mojo, "");
+        testDeploy(mojo, null);
     }
 
     @Test
@@ -64,7 +64,7 @@ public class ArtifactDeploymentTest extends AbstractWildFlyServerMojoTest {
     @Test
     public void testUndeploy() throws Exception {
         final UndeployArtifactMojo mojo = lookupMojoAndVerify("undeploy-artifact", "deploy-artifact-pom.xml");
-        testUndeploy(mojo, "");
+        testUndeploy(mojo, null);
     }
 
     @Test

@@ -85,9 +85,9 @@ public final class UndeployArtifactMojo extends AbstractDeployment {
         final Set<Artifact> dependencies = project.getDependencyArtifacts();
         Artifact artifact = null;
         for (final Artifact a : dependencies) {
-            if (a.getArtifactId().equals(artifactId) &&
-                    a.getGroupId().equals(groupId) &&
-                    a.getClassifier().equals(classifier == null ? "" : classifier)) {
+            if (equalsNullSafe(a.getArtifactId(), artifactId) &&
+                equalsNullSafe(a.getGroupId(), groupId) &&
+                equalsNullSafe(a.getClassifier(), classifier)) {
                 artifact = a;
                 break;
             }
