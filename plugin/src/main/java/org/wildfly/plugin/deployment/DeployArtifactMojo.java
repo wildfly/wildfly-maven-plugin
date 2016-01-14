@@ -23,6 +23,7 @@
 package org.wildfly.plugin.deployment;
 
 import java.io.File;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.maven.artifact.Artifact;
@@ -88,9 +89,9 @@ public final class DeployArtifactMojo extends AbstractDeployment {
         final Set<Artifact> dependencies = project.getDependencyArtifacts();
         Artifact artifact = null;
         for (final Artifact a : dependencies) {
-            if (equalsNullSafe(a.getArtifactId(), artifactId) &&
-                equalsNullSafe(a.getGroupId(), groupId) &&
-                equalsNullSafe(a.getClassifier(), classifier)) {
+            if (Objects.equals(a.getArtifactId(), artifactId) &&
+                Objects.equals(a.getGroupId(), groupId) &&
+                Objects.equals(a.getClassifier(), classifier)) {
                 artifact = a;
                 break;
             }

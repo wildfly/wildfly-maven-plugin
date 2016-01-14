@@ -232,24 +232,4 @@ abstract class AbstractDeployment extends AbstractServerConnection {
             throw new DeploymentFailureException("Server is running in standalone mode, but server groups have been defined.");
         }
     }
-
-
-    /**
-     * Checks if the given strings are equal. {@code null} ist handles as empty string.
-     * @param first the first value
-     * @param second the second value
-     * @return {@code true} if the given strings are equal.
-     */
-    protected boolean equalsNullSafe(String first, String second) {
-        return trimNullSafe(first).equals(trimNullSafe(second));
-    }
-
-    /**
-     * Trims the given string null-safe. {@code null} is replaced with ""
-     * @param value the value to be trimmed
-     * @return the trimmed string.
-     */
-    protected String trimNullSafe(String value) {
-        return value == null ? "" : value.trim();
-    }
 }
