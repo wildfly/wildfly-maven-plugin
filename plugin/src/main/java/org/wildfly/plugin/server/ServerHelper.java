@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.Operations;
+import org.jboss.as.controller.client.helpers.Operations.CompositeOperationBuilder;
 import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.jboss.as.controller.client.helpers.domain.ServerIdentity;
 import org.jboss.as.controller.client.helpers.domain.ServerStatus;
@@ -90,6 +91,14 @@ public class ServerHelper {
 
     static void shutdownDomain(final DomainClient client) {
         shutdownDomain(client, new HashMap<ServerIdentity, ServerStatus>());
+    }
+
+    static ModelNode determineHostAddress(final ModelControllerClient client) throws IOException {
+        ModelNode response = client.execute(Operations.createReadAttributeOperation(EMPTY_ADDRESS, "local-host-name"));
+        if (Operations.isSuccessfulOutcome(response)) {
+            return ServerOperations.createAddress("host", Operations.readResult(response).asString());
+        }
+        throw new RuntimeException("Could not determine host name; " + Operations.getFailureDescription(response).asString());
     }
 
     static void shutdownDomain(final DomainClient client, final Map<ServerIdentity, ServerStatus> servers) {
@@ -182,6 +191,22 @@ public class ServerHelper {
 
     private static boolean isDomainRunning(final DomainClient client, final Map<ServerIdentity, ServerStatus> servers, boolean shutdown) {
         try {
+            // Check for admin-only
+            final ModelNode hostAddress = determineHostAddress(client);
+            final CompositeOperationBuilder builder = CompositeOperationBuilder.create()
+                    .addStep(Operations.createReadAttributeOperation(hostAddress, "running-mode"))
+                    .addStep(Operations.createReadAttributeOperation(hostAddress, "host-state"));
+            ModelNode response = client.execute(builder.build());
+            if (Operations.isSuccessfulOutcome(response)) {
+                response = Operations.readResult(response);
+                if ("ADMIN_ONLY".equals(Operations.readResult(response.get("step-1")).asString())) {
+                    if (Operations.isSuccessfulOutcome(response.get("step-2"))) {
+                        final String state = Operations.readResult(response).asString();
+                        return !CONTROLLER_PROCESS_STATE_STARTING.equals(state)
+                                && !CONTROLLER_PROCESS_STATE_STOPPING.equals(state);
+                    }
+                }
+            }
             final Map<ServerIdentity, ServerStatus> statuses = client.getServerStatuses();
             for (ServerIdentity id : statuses.keySet()) {
                 final ServerStatus status = statuses.get(id);
