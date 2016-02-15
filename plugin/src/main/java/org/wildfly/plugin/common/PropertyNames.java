@@ -93,4 +93,9 @@ public interface PropertyNames {
 
     String SERVER_ARGS = "wildfly.serverArgs";
 
+    String DEBUG = "wildfly.debug";
+
+    String DEBUG_PORT = "wildfly.debugPort";
+
+    String DEBUG_SUSPEND = "wildfly.debugSuspend";
 }

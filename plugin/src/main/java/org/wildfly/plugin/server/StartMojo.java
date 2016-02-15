@@ -219,6 +219,27 @@ public class StartMojo extends AbstractServerConnection {
     @Parameter(alias = "server-type", property = "wildfly.server.type", defaultValue = "STANDALONE")
     private ServerType serverType;
 
+    /**
+     * Enables "debug" mode for server.  Applicable only when running in standalone mode.
+     *
+     * Can be customized using {@code debugPort} and {@code debugSuspend} properties.
+     */
+    @Parameter(property = PropertyNames.DEBUG, defaultValue = "false")
+    private String debug;
+
+    /**
+     * Port for server debug listener.  Only used when {@code debug} is {@code true}.
+     */
+    @Parameter(property = PropertyNames.DEBUG_PORT, defaultValue = "5005")
+    private int debugPort;
+
+
+    /**
+     * Whether or not to suspend and wait for debug listener.  Only used when {@code debug} is {@code true}.
+     */
+    @Parameter(property = PropertyNames.DEBUG_SUSPEND, defaultValue = "false")
+    private String debugSuspend;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         final Log log = getLog();
@@ -297,6 +318,10 @@ public class StartMojo extends AbstractServerConnection {
 
         if (serverArgs != null) {
             commandBuilder.addServerArguments(serverArgs);
+        }
+
+        if (Boolean.parseBoolean(debug)) {
+            commandBuilder.setDebug(Boolean.parseBoolean(debugSuspend), debugPort);
         }
 
         // Print some server information
