@@ -72,7 +72,7 @@ public class Commands {
      * </p>
      */
     @Parameter(alias = "fail-on-error", defaultValue = "true")
-    private boolean failOnError;
+    private boolean failOnError = true;
 
     /**
      * Indicates whether or not commands should be executed in a batch.
