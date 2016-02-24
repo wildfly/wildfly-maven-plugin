@@ -96,20 +96,25 @@ public class CommandExecutor {
     private void executeCommands(final ModelControllerClient client, final Commands commands) throws IOException {
 
         if (commands.hasCommands() || commands.hasScripts()) {
-            final ModelControllerClient c = new NonClosingModelControllerClient(client);
-            final CommandContext ctx = create(c);
             try {
+                ModuleEnvironment.initJaxp();
+                final ModelControllerClient c = new NonClosingModelControllerClient(client);
+                final CommandContext ctx = create(c);
+                try {
 
-                if (commands.isBatch()) {
-                    executeBatch(ctx, commands.getCommands());
-                } else {
-                    executeCommands(ctx, commands.getCommands(), commands.isFailOnError());
+                    if (commands.isBatch()) {
+                        executeBatch(ctx, commands.getCommands());
+                    } else {
+                        executeCommands(ctx, commands.getCommands(), commands.isFailOnError());
+                    }
+                    executeScripts(ctx, commands.getScripts());
+
+                } finally {
+                    ctx.terminateSession();
+                    ctx.bindClient(null);
                 }
-                executeScripts(ctx, commands.getScripts());
-
             } finally {
-                ctx.terminateSession();
-                ctx.bindClient(null);
+                ModuleEnvironment.restorePlatform();
             }
         }
     }
