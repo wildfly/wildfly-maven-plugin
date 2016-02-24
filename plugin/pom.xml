@@ -38,6 +38,10 @@
         Server.
     </description>
 
+    <prerequisites>
+        <maven>${version.org.apache.maven.maven-core}</maven>
+    </prerequisites>
+
     <build>
         <plugins>
             <plugin>
