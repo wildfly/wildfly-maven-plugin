@@ -22,7 +22,6 @@
 
 package org.wildfly.plugin.cli;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -107,7 +106,7 @@ public class CommandExecutor {
                     } else {
                         executeCommands(ctx, commands.getCommands(), commands.isFailOnError());
                     }
-                    executeScripts(ctx, commands.getScripts());
+                    executeScripts(ctx, commands.getScripts(), commands.isFailOnError());
 
                 } finally {
                     ctx.terminateSession();
@@ -119,25 +118,13 @@ public class CommandExecutor {
         }
     }
 
-    private static void executeScripts(final CommandContext ctx, final Iterable<File> scripts) throws IOException {
+    private static void executeScripts(final CommandContext ctx, final Iterable<File> scripts, final boolean failOnError) throws IOException {
 
         for (File script : scripts) {
-            try (BufferedReader reader = Files.newBufferedReader(script.toPath(), StandardCharsets.UTF_8)) {
-                String line = reader.readLine();
-                while (!ctx.isTerminated() && line != null) {
-
-                    try {
-                        ctx.handle(line.trim());
-                    } catch (CommandFormatException e) {
-                        throw new IllegalArgumentException(String.format("Command '%s' is invalid. %s", line, e.getLocalizedMessage()), e);
-                    } catch (CommandLineException e) {
-                        throw new IllegalArgumentException(String.format("Command execution failed for command '%s'. %s", line, e.getLocalizedMessage()), e);
-                    }
-                    line = reader.readLine();
-
-                }
+            try {
+                executeCommands(ctx, Files.readAllLines(script.toPath(), StandardCharsets.UTF_8), failOnError);
             } catch (Exception e) {
-                throw new IllegalStateException("Failed to process file '" + script.getAbsolutePath() + "'", e);
+                throw new IllegalArgumentException("Failed to process file '" + script.getAbsolutePath() + "'", e);
             }
         }
     }
