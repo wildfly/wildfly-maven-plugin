@@ -125,4 +125,47 @@ public class FailOnErrorTest extends AbstractWildFlyServerMojoTest {
         }
     }
 
+    @Test
+    public void testExecuteCommandScriptFailOnError() throws Exception {
+
+        final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-script-failOnError-pom.xml");
+
+        try {
+            executeCommandsMojo.execute();
+            fail("IllegalArgumentException expected.");
+        } catch (IllegalArgumentException e) {
+            assertEquals(IllegalArgumentException.class, e.getCause().getClass());
+            assertEquals(CommandLineException.class, e.getCause().getCause().getClass());
+        }
+        final ModelNode address = ServerOperations.createAddress("system-property", "scriptFailOnError");
+        final ModelNode op = ServerOperations.createReadAttributeOperation(address, "value");
+        final ModelNode result = executeOperation(op);
+        try {
+            assertEquals("initial value", ServerOperations.readResultAsString(result));
+        } finally {
+            // Remove the system property
+            executeOperation(ServerOperations.createRemoveOperation(address));
+        }
+    }
+
+    @Test
+    public void testExecuteCommandScriptContinueOnError() throws Exception {
+
+        final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-script-continueOnError-pom.xml");
+
+        executeCommandsMojo.execute();
+
+        // Read the attribute
+        final ModelNode address = ServerOperations.createAddress("system-property", "scriptContinueOnError");
+        final ModelNode op = ServerOperations.createReadAttributeOperation(address, "value");
+        final ModelNode result = executeOperation(op);
+
+        try {
+            assertEquals("continue on error", ServerOperations.readResultAsString(result));
+        } finally {
+            // Clean up the property
+            executeOperation(ServerOperations.createRemoveOperation(address));
+        }
+    }
+
 }

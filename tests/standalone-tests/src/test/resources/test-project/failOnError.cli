@@ -1,0 +1,3 @@
+/system-property=scriptFailOnError:add(value="initial value")
+/system-property=scriptFailOnError:add(value="fail on error")
+/system-property=scriptFailOnError:write-attribute(name=value, value="should not be set")

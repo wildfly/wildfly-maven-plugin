@@ -67,9 +67,6 @@ public class Commands {
     /**
      * Indicates whether or not subsequent commands should be executed if an error occurs executing a command. A value
      * of {@code false} will continue processing commands even if a previous command execution results in a failure.
-     * <p>
-     * Note that this setting is not used for scripts. Scripts must handle errors on their own.
-     * </p>
      */
     @Parameter(alias = "fail-on-error", defaultValue = "true")
     private boolean failOnError = true;

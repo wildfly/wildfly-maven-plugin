@@ -1,0 +1,3 @@
+/system-property=scriptContinueOnError:add(value="initial value")
+/system-property=scriptContinueOnError:add(value="second value")
+/system-property=scriptContinueOnError:write-attribute(name=value, value="continue on error")
