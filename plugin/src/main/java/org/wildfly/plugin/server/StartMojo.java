@@ -217,6 +217,12 @@ public class StartMojo extends AbstractServerConnection {
     @Parameter(alias = "add-user", property = "wildfly.add-user")
     private AddUser addUser;
 
+    /**
+     * The type of server to start.
+     * <p>
+     * {@code STANDALONE} for a standalone server and {@code DOMAIN} for a domain server.
+     * </p>
+     */
     @Parameter(alias = "server-type", property = "wildfly.server.type", defaultValue = "STANDALONE")
     private ServerType serverType;
 
