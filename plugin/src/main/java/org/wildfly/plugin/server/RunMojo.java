@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
@@ -170,6 +171,19 @@ public class RunMojo extends DeployMojo {
     @Parameter(alias = "add-user", property = "wildfly.add-user")
     private AddUser addUser;
 
+    /**
+     * Specifies the environment variables to be passed to the process being started.
+     * <div>
+     * <pre>
+     * &lt;env&gt;
+     *     &lt;HOME&gt;/home/wildfly/&lt;/HOME&gt;
+     * &lt;/env&gt;
+     * </pre>
+     * </div>
+     */
+    @Parameter
+    private Map<String, String> env;
+
     @Override
     protected void doExecute() throws MojoExecutionException, MojoFailureException {
         final Log log = getLog();
@@ -216,7 +230,7 @@ public class RunMojo extends DeployMojo {
                 addUser.addUsers(commandBuilder.getWildFlyHome(), commandBuilder.getJavaHome());
             }
             // Create the server
-            server = Server.create(commandBuilder, client);
+            server = Server.create(commandBuilder, env, client);
             // Start the server
             log.info("Server is starting up. Press CTRL + C to stop the server.");
             server.start(startupTimeout);

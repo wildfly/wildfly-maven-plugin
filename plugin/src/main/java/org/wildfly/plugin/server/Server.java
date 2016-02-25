@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -49,22 +50,24 @@ abstract class Server {
     private final ScheduledExecutorService timerService;
     private final CommandBuilder commandBuilder;
     private final OutputStream stdout;
+    private final Map<String, String> env;
     private volatile Thread shutdownHook;
     private Process process;
 
-    private Server(final CommandBuilder commandBuilder, final OutputStream stdout) {
+    private Server(final CommandBuilder commandBuilder, final Map<String, String> env, final OutputStream stdout) {
         this.commandBuilder = commandBuilder;
         timerService = Executors.newScheduledThreadPool(1);
         this.stdout = stdout;
+        this.env = (env == null ? Collections.<String, String>emptyMap() : new HashMap<>(env));
     }
 
-    static Server create(final CommandBuilder commandBuilder, final ModelControllerClient client) {
-        return create(commandBuilder, client, null);
+    static Server create(final CommandBuilder commandBuilder, final Map<String, String> env, final ModelControllerClient client) {
+        return create(commandBuilder, env, client, null);
     }
 
-    static Server create(final CommandBuilder commandBuilder, final ModelControllerClient client, final OutputStream stdout) {
+    static Server create(final CommandBuilder commandBuilder, final Map<String, String> env, final ModelControllerClient client, final OutputStream stdout) {
         if (commandBuilder instanceof DomainCommandBuilder) {
-            return new Server(commandBuilder, stdout) {
+            return new Server(commandBuilder, env, stdout) {
                 final DomainClient domainClient = DomainClient.Factory.create(client);
                 final Map<ServerIdentity, ServerStatus> servers = new HashMap<>();
                 volatile boolean isRunning = false;
@@ -94,7 +97,7 @@ abstract class Server {
                 }
             };
         }
-        return new Server(commandBuilder, stdout) {
+        return new Server(commandBuilder, env, stdout) {
             volatile boolean isRunning = false;
 
             @Override
@@ -129,7 +132,8 @@ abstract class Server {
      * @throws IOException the an error occurs creating the process
      */
     public final synchronized void start(final long timeout) throws IOException, InterruptedException {
-        final Launcher launcher = Launcher.of(commandBuilder);
+        final Launcher launcher = Launcher.of(commandBuilder)
+                .addEnvironmentVariables(env);
         // Determine if we should consume stdout
         if (stdout == null) {
             launcher.inherit();

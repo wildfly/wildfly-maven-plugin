@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Locale;
+import java.util.Map;
 import javax.inject.Inject;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -216,8 +217,27 @@ public class StartMojo extends AbstractServerConnection {
     @Parameter(alias = "add-user", property = "wildfly.add-user")
     private AddUser addUser;
 
+    /**
+     * The type of server to start.
+     * <p>
+     * {@code STANDALONE} for a standalone server and {@code DOMAIN} for a domain server.
+     * </p>
+     */
     @Parameter(alias = "server-type", property = "wildfly.server.type", defaultValue = "STANDALONE")
     private ServerType serverType;
+
+    /**
+     * Specifies the environment variables to be passed to the process being started.
+     * <div>
+     * <pre>
+     * &lt;env&gt;
+     *     &lt;HOME&gt;/home/wildfly/&lt;/HOME&gt;
+     * &lt;/env&gt;
+     * </pre>
+     * </div>
+     */
+    @Parameter
+    private Map<String, String> env;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -257,7 +277,7 @@ public class StartMojo extends AbstractServerConnection {
                 }
             }
             // Create the server, note the client should be shutdown when the server is stopped
-            final Server server = Server.create(createCommandBuilder(jbossHome), createClient(), out);
+            final Server server = Server.create(createCommandBuilder(jbossHome), env, createClient(), out);
             // Start the server
             log.info(String.format("%s server is starting up.", serverType));
             server.start(startupTimeout);
