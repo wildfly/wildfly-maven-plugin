@@ -27,11 +27,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
+import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.as.controller.client.helpers.domain.DeploymentActionResult;
 import org.jboss.as.controller.client.helpers.domain.DeploymentActionsCompleteBuilder;
 import org.jboss.as.controller.client.helpers.domain.DeploymentPlan;
@@ -42,12 +45,12 @@ import org.jboss.as.controller.client.helpers.domain.DomainDeploymentManager;
 import org.jboss.as.controller.client.helpers.domain.DuplicateDeploymentNameException;
 import org.jboss.as.controller.client.helpers.domain.ServerGroupDeploymentActionResult;
 import org.jboss.as.controller.client.helpers.domain.ServerGroupDeploymentPlanBuilder;
-import org.jboss.as.controller.client.helpers.domain.ServerIdentity;
-import org.jboss.as.controller.client.helpers.domain.ServerStatus;
 import org.jboss.as.controller.client.helpers.domain.ServerUpdateResult;
+import org.jboss.dmr.ModelNode;
 import org.wildfly.plugin.common.DeploymentExecutionException;
 import org.wildfly.plugin.common.DeploymentFailureException;
 import org.wildfly.plugin.common.DeploymentInspector;
+import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.deployment.Deployment;
 import org.wildfly.plugin.deployment.MatchPatternStrategy;
 
@@ -190,26 +193,25 @@ class DomainDeployment implements Deployment {
     }
 
     void validate() throws DeploymentFailureException {
-        final Map<ServerIdentity, ServerStatus> statuses = client.getServerStatuses();
-        // Check for NPE
+        // Get the server-groups we're deploying to
         final List<String> serverGroups = domain.getServerGroups();
-        for (String serverGroup : serverGroups) {
-            boolean notFound = true;
-            // Check the servers
-            for (ServerIdentity serverId : statuses.keySet()) {
-                if (serverGroup.equals(serverId.getServerGroupName())) {
-                    ServerStatus currentStatus = statuses.get(serverId);
-                    if (currentStatus != ServerStatus.STARTED) {
-                        throw new DeploymentFailureException("Status of server group '%s' is '%s', but is required to be '%s'.",
-                                serverGroup, currentStatus, ServerStatus.STARTED);
+        // Get all the server groups from the server
+        final ModelNode op = ServerOperations.createOperation(ServerOperations.READ_CHILDREN_NAMES);
+        op.get(ClientConstants.CHILD_TYPE).set(ClientConstants.SERVER_GROUP);
+        try {
+            final ModelNode result = client.execute(op);
+            if (ServerOperations.isSuccessfulOutcome(result)) {
+                final List<String> availableGroups = readResultAsStringList(result);
+                for (String serverGroup : serverGroups) {
+                    if (!availableGroups.contains(serverGroup)) {
+                        throw new DeploymentFailureException("Server group '%s' does not exist on the server. Available server groups %s.", serverGroup, availableGroups);
                     }
-                    notFound = false;
-                    break;
                 }
+            } else {
+                throw new DeploymentFailureException("Failed to get the available server groups. %s", ServerOperations.getFailureDescription(result));
             }
-            if (notFound) {
-                throw new DeploymentFailureException("Server group '%s' does not exist on the server.", serverGroup);
-            }
+        } catch (Exception e) {
+            throw new DeploymentFailureException("Failed to get the available server groups.", e);
         }
     }
 
@@ -237,9 +239,22 @@ class DomainDeployment implements Deployment {
         }
     }
 
-    private static void safeClose(final Closeable closeable){
+    private static void safeClose(final Closeable closeable) {
         if (closeable != null) try {
             closeable.close();
-        } catch (IOException ignore){}
+        } catch (IOException ignore) {
+        }
+    }
+
+    private static List<String> readResultAsStringList(final ModelNode result) {
+        final ModelNode r = ServerOperations.readResult(result);
+        if (r.isDefined()) {
+            final List<String> l = new ArrayList<>();
+            for (ModelNode n : r.asList()) {
+                l.add(n.asString());
+            }
+            return l;
+        }
+        return Collections.emptyList();
     }
 }

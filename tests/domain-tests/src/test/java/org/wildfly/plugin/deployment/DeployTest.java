@@ -131,6 +131,29 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
     }
 
     @Test
+    public void testDeployWithStoppedServer() throws Exception {
+        // Make sure the archive is not deployed
+        if (deployments.isDeployed(DEPLOYMENT_NAME)) {
+            deployments.undeploy(DEPLOYMENT_NAME);
+        }
+        final ModelNode address = ServerOperations.createAddress("host", "master", "server-config", "server-one");
+        try {
+            // Shutdown server-one
+            final ModelNode op = ServerOperations.createOperation("stop", address);
+            op.get("blocking").set(true);
+            executeOperation(op);
+
+            executeAndVerifyDeploymentExists("deploy", "deploy-webarchive-pom.xml");
+            deployments.undeploy(DEPLOYMENT_NAME);
+        } finally {
+            // Restart server-twp
+            final ModelNode op = ServerOperations.createOperation("start", address);
+            op.get("blocking").set(true);
+            executeOperation(op);
+        }
+    }
+
+    @Test
     public void testRedeploy() throws Exception {
 
         // Make sure the archive is deployed
