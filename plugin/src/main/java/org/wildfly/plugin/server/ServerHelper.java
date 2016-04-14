@@ -63,22 +63,36 @@ public class ServerHelper {
         return result;
     }
 
-    static boolean waitForDomain(final Process process, final DomainClient client, final Map<ServerIdentity, ServerStatus> servers, final long startupTimeout) throws InterruptedException, IOException {
+    /**
+     * @param process
+     * @param client
+     * @param servers
+     * @param startupTimeout in seconds
+     * @throws ServerLifecycleException
+     *             in case the process dies unexpectedly or not up within the
+     *             given {@code startupTimeout}
+     * @throws InterruptedException if the current thread was interrupted
+     */
+    static void waitForDomain(final Process process, final DomainClient client,
+            final Map<ServerIdentity, ServerStatus> servers, final long startupTimeout)
+                    throws ServerLifecycleException, InterruptedException {
         long timeout = startupTimeout * 1000;
         final long sleep = 100;
         while (timeout > 0) {
             long before = System.currentTimeMillis();
             if (isDomainRunning(client, servers)) {
-                return true;
+                return;
             }
             timeout -= (System.currentTimeMillis() - before);
             if (ProcessHelper.processHasDied(process)) {
-                return false;
+                throw new ServerLifecycleException(
+                        "The server process has unexpectedly exited with code " + process.exitValue());
             }
             TimeUnit.MILLISECONDS.sleep(sleep);
             timeout -= sleep;
         }
-        return false;
+        throw new StartupTimeoutException(
+                String.format("Managed server was not started within [%d] s", startupTimeout));
     }
 
     static boolean isDomainRunning(final DomainClient client) {
@@ -134,21 +148,34 @@ public class ServerHelper {
         }
     }
 
-    static boolean waitForStandalone(final Process process, final ModelControllerClient client, final long startupTimeout) throws InterruptedException, IOException {
+    /**
+     * @param process
+     * @param client
+     * @param startupTimeout in seconds
+     * @throws ServerLifecycleException
+     *             in case the process dies unexpectedly or not up within the
+     *             given {@code startupTimeout}
+     * @throws InterruptedException if the current thread was interrupted
+     */
+    static void waitForStandalone(final Process process, final ModelControllerClient client, final long startupTimeout)
+            throws ServerLifecycleException, InterruptedException {
         long timeout = startupTimeout * 1000;
         final long sleep = 100L;
         while (timeout > 0) {
             long before = System.currentTimeMillis();
-            if (isStandaloneRunning(client))
-                return true;
+            if (isStandaloneRunning(client)) {
+                return;
+            }
             timeout -= (System.currentTimeMillis() - before);
             if (ProcessHelper.processHasDied(process)) {
-                return false;
+                throw new ServerLifecycleException(
+                        "The server process has unexpectedly exited with code " + process.exitValue());
             }
             TimeUnit.MILLISECONDS.sleep(sleep);
             timeout -= sleep;
         }
-        return false;
+        throw new StartupTimeoutException(
+                String.format("Managed server was not started within [%d] s", startupTimeout));
     }
 
     static boolean isStandaloneRunning(final ModelControllerClient client) {

@@ -82,8 +82,8 @@ abstract class Server {
                 }
 
                 @Override
-                protected boolean waitForStart(final long timeout) throws IOException, InterruptedException {
-                    return ServerHelper.waitForDomain(super.process, domainClient, servers, timeout);
+                protected void waitForStart(final long timeout) throws ServerLifecycleException, InterruptedException {
+                    ServerHelper.waitForDomain(super.process, domainClient, servers, timeout);
                 }
 
                 @Override
@@ -110,8 +110,8 @@ abstract class Server {
             }
 
             @Override
-            protected boolean waitForStart(final long timeout) throws IOException, InterruptedException {
-                return ServerHelper.waitForStandalone(super.process, client, timeout);
+            protected void waitForStart(final long timeout) throws ServerLifecycleException, InterruptedException {
+                ServerHelper.waitForStandalone(super.process, client, timeout);
             }
 
             @Override
@@ -127,11 +127,15 @@ abstract class Server {
     }
 
     /**
-     * Starts the server.
+     * Start the server with the given {@code timeout}.
      *
-     * @throws IOException the an error occurs creating the process
+     * @param timeout in seconds
+     *
+     * @throws ServerLifecycleException in case the server process cannot be launched, the server process crashes
+     *         or the server has not started with in the given {@code timeout}
+     * @throws InterruptedException
      */
-    public final synchronized void start(final long timeout) throws IOException, InterruptedException {
+    public final synchronized void start(final long timeout) throws ServerLifecycleException, InterruptedException {
         final Launcher launcher = Launcher.of(commandBuilder)
                 .addEnvironmentVariables(env);
         // Determine if we should consume stdout
@@ -140,7 +144,11 @@ abstract class Server {
         } else {
             launcher.setRedirectErrorStream(true);
         }
-        process = launcher.launch();
+        try {
+            process = launcher.launch();
+        } catch (IOException e) {
+            throw new ServerLifecycleException("Could not launch the server process", e);
+        }
         if (stdout != null) {
             new Thread(new ConsoleConsumer(process.getInputStream(), stdout)).start();
         }
@@ -151,14 +159,15 @@ abstract class Server {
                 return ProcessHelper.addShutdownHook(process);
             }
         });
-        if (waitForStart(timeout)) {
+        try {
+            waitForStart(timeout);
             timerService.scheduleWithFixedDelay(new Reaper(), 20, 10, TimeUnit.SECONDS);
-        } else {
+        } catch (StartupTimeoutException e) {
             try {
                 ProcessHelper.destroyProcess(process);
-            } catch (InterruptedException ignore) {
+            } catch (InterruptedException ignored) {
             }
-            throw new IllegalStateException(String.format("Managed server was not started within [%d] s", timeout));
+            throw e;
         }
     }
 
@@ -199,7 +208,7 @@ abstract class Server {
      */
     protected abstract void stopServer();
 
-    protected abstract boolean waitForStart(long timeout) throws IOException, InterruptedException;
+    protected abstract void waitForStart(long timeout) throws ServerLifecycleException, InterruptedException;
 
     /**
      * Checks the status of the server and returns {@code true} if the server is fully started.
