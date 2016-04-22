@@ -41,6 +41,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.core.launcher.CommandBuilder;
 import org.wildfly.core.launcher.DomainCommandBuilder;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
@@ -276,12 +277,14 @@ public class StartMojo extends AbstractServerConnection {
                     out = new BufferedOutputStream(Files.newOutputStream(path));
                 }
             }
-            // Create the server, note the client should be shutdown when the server is stopped
-            final Server server = Server.create(createCommandBuilder(jbossHome), env, createClient(), out);
-            // Start the server
-            log.info(String.format("%s server is starting up.", serverType));
-            server.start(startupTimeout);
-            server.checkServerState();
+            // Create the server and close the client after the start. The process will continue running even after
+            // the maven process may have been finished
+            try (final ModelControllerClient client = createClient()) {
+                final Server server = Server.create(createCommandBuilder(jbossHome), env, client, out);
+                // Start the server
+                log.info(String.format("%s server is starting up.", serverType));
+                server.start(startupTimeout);
+            }
         } catch (Exception e) {
             throw new MojoExecutionException("The server failed to start", e);
         }
