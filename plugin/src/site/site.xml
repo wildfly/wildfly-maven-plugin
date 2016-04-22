@@ -21,14 +21,12 @@
   ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
   -->
 
-<project xmlns="http://maven.apache.org/DECORATION/1.3.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/DECORATION/1.3.0 http://maven.apache.org/xsd/decoration-1.3.0.xsd"
-         name="WildFly Maven Plugin">
+<project name="WildFly Maven Plugin">
 
     <skin>
         <groupId>org.apache.maven.skins</groupId>
         <artifactId>maven-fluido-skin</artifactId>
-        <version>1.3.1</version>
+        <version>1.5</version>
     </skin>
     <bannerLeft>
         <name>WildFly Maven Plugin</name>
@@ -54,9 +52,10 @@
 
         <menu name="Project Documentation">
             <item name="JavaDoc" href="apidocs/index.html"/>
-            <item name="WildFly" href="https://docs.jboss.org/author/display/WFLY8/Documentation"/>
+            <item name="WildFly" href="https://docs.jboss.org/author/display/WFLY10/Documentation"/>
         </menu>
 
         <menu ref="reports"/>
+        <footer><![CDATA[<a href="http://www.redhat.com/"><img src="http://static.jboss.org/theme/images/common/redhat_logo.png"></a>]]></footer>
     </body>
 </project>
