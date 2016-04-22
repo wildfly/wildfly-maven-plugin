@@ -31,7 +31,17 @@
         <faq id="maven31">
             <question>What versions of maven will the plugin work with?</question>
             <answer>
-                <p>You can use maven 3.0.x or maven 3.1.x.</p>
+                <p>The plugin requires maven 3.1.1 or higher.</p>
+            </answer>
+        </faq>
+        <faq id="startProc">
+            <question>Why is there a server process still running when executing the start goal?</question>
+            <answer>
+                <p>
+                    In version 1.1+ of the plugin the start goal was changed to the leave the server process running. If
+                    previously you relied on the maven process ending to shutdown the server you should now execute the
+                    shutdown goal before the maven process ends.
+                </p>
             </answer>
         </faq>
     </part>

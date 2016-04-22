@@ -120,8 +120,8 @@ mvn ${pluginPrefix}:run
 * The <<<${pluginPrefix}:start>>> Goal
 
   The <<<${pluginPrefix}:start>>> goal will start a ${appServerName}. If the <<<${pluginPrefix}.home>>> property is not set,
-  the server will be downloaded. The server will be shutdown when the maven process ends unless an explicit shutdown was
-  invoked.
+  the server will be downloaded. The server will continue to run until the shutdown goal is executed, a shutdown management
+  operation has been issued or the process is killed.
 
   To execute the start goal type the following on the command line:
 

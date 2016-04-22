@@ -52,8 +52,8 @@ ${project.name} (${project.artifactId})
 
   * {{{./run-mojo.html}${pluginPrefix}:run}} runs the application server and deploys your application.
 
-  * {{{./start-mojo.html}${pluginPrefix}:start}} starts the application server and shuts it down at last when the maven process
-    ends unless an explicit shutdown from a management client or the {{{./shutdown-mojo.html}shutdown goal}} is executed.
+  * {{{./start-mojo.html}${pluginPrefix}:start}} starts the application server and leaves the process running. In most cases
+    the {{{./shutdown-mojo.html}shutdown goal}} be executed to ensure the server is shutdown.
 
   * {{{./shutdown-mojo.html}${pluginPrefix}:shutdown}} shuts down a running application server.
 

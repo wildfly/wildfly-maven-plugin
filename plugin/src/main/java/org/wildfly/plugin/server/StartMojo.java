@@ -52,8 +52,7 @@ import org.wildfly.plugin.server.ArtifactResolver.ArtifactNameSplitter;
 /**
  * Starts a standalone instance of WildFly Application Server.
  * <p/>
- * The purpose of this goal is to start a WildFly Application Server for testing during the maven lifecycle. This can
- * start a remote server, but the server will be shutdown when the maven process ends.
+ * The purpose of this goal is to start a WildFly Application Server for testing during the maven lifecycle.
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
