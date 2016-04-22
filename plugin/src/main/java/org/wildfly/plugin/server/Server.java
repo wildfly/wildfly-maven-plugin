@@ -25,14 +25,9 @@ package org.wildfly.plugin.server;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.domain.DomainClient;
@@ -47,18 +42,19 @@ import org.wildfly.core.launcher.ProcessHelper;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 abstract class Server {
-    private final ScheduledExecutorService timerService;
     private final CommandBuilder commandBuilder;
     private final OutputStream stdout;
     private final Map<String, String> env;
-    private volatile Thread shutdownHook;
+    private final long stateCheckTimeout;
+    private volatile long lastStateCheckTime;
+    private volatile boolean running;
     private Process process;
 
     private Server(final CommandBuilder commandBuilder, final Map<String, String> env, final OutputStream stdout) {
         this.commandBuilder = commandBuilder;
-        timerService = Executors.newScheduledThreadPool(1);
         this.stdout = stdout;
         this.env = (env == null ? Collections.<String, String>emptyMap() : new HashMap<>(env));
+        stateCheckTimeout = 5000L;
     }
 
     static Server create(final CommandBuilder commandBuilder, final Map<String, String> env, final ModelControllerClient client) {
@@ -70,7 +66,6 @@ abstract class Server {
             return new Server(commandBuilder, env, stdout) {
                 final DomainClient domainClient = DomainClient.Factory.create(client);
                 final Map<ServerIdentity, ServerStatus> servers = new HashMap<>();
-                volatile boolean isRunning = false;
 
                 @Override
                 protected void stopServer() {
@@ -87,18 +82,12 @@ abstract class Server {
                 }
 
                 @Override
-                public boolean isRunning() {
-                    return isRunning;
-                }
-
-                @Override
-                protected void checkServerState() {
-                    isRunning = ServerHelper.isDomainRunning(domainClient, servers);
+                protected boolean isServerRunning() {
+                    return ServerHelper.isDomainRunning(domainClient, servers);
                 }
             };
         }
         return new Server(commandBuilder, env, stdout) {
-            volatile boolean isRunning = false;
 
             @Override
             protected void stopServer() {
@@ -115,13 +104,8 @@ abstract class Server {
             }
 
             @Override
-            public boolean isRunning() {
-                return isRunning;
-            }
-
-            @Override
-            protected void checkServerState() {
-                isRunning = ServerHelper.isStandaloneRunning(client);
+            protected boolean isServerRunning() {
+                return ServerHelper.isStandaloneRunning(client);
             }
         };
     }
@@ -144,19 +128,14 @@ abstract class Server {
         if (stdout != null) {
             new Thread(new ConsoleConsumer(process.getInputStream(), stdout)).start();
         }
-        // Running maven in a SM is unlikely, but we'll be safe
-        shutdownHook = AccessController.doPrivileged(new PrivilegedAction<Thread>() {
-            @Override
-            public Thread run() {
-                return ProcessHelper.addShutdownHook(process);
-            }
-        });
         if (waitForStart(timeout)) {
-            timerService.scheduleWithFixedDelay(new Reaper(), 20, 10, TimeUnit.SECONDS);
+            running = true;
         } else {
             try {
                 ProcessHelper.destroyProcess(process);
             } catch (InterruptedException ignore) {
+            } finally {
+                running = false;
             }
             throw new IllegalStateException(String.format("Managed server was not started within [%d] s", timeout));
         }
@@ -167,22 +146,6 @@ abstract class Server {
      */
     public final synchronized void stop() {
         try {
-            // Remove the shutdown hook. Running maven in a SM is unlikely, but we'll be safe
-            AccessController.doPrivileged(new PrivilegedAction<Object>() {
-                @Override
-                public Object run() {
-                    try {
-                        Runtime.getRuntime().removeShutdownHook(shutdownHook);
-                    } catch (Exception ignore) {
-                    }
-                    return null;
-                }
-            });
-            // Shutdown the reaper
-            try {
-                timerService.shutdown();
-            } catch (Exception ignore) {
-            }
             // Stop the servers
             stopServer();
         } finally {
@@ -206,24 +169,24 @@ abstract class Server {
      *
      * @return {@code true} if the server is fully started, otherwise {@code false}
      */
-    public abstract boolean isRunning();
+    public final boolean isRunning() {
+        final long currentTime = System.currentTimeMillis();
+        final boolean isRunning;
+        if ((currentTime - lastStateCheckTime) > stateCheckTimeout) {
+            running = isRunning = isServerRunning();
+            lastStateCheckTime = currentTime;
+        } else {
+            isRunning = running;
+        }
+        return isRunning;
+    }
 
     /**
-     * Checks whether the server is running or not. If the server is no longer running the {@link #isRunning()} should
-     * return {@code false}.
+     * Queries the state of the server to determine if it's running or not.
+     *
+     * @return {@code true} if the server appears to be running otherwise {@code false}
      */
-    protected abstract void checkServerState();
-
-    private class Reaper implements Runnable {
-
-        @Override
-        public void run() {
-            checkServerState();
-            if (!isRunning()) {
-                stop();
-            }
-        }
-    }
+    protected abstract boolean isServerRunning();
 
     static class ConsoleConsumer implements Runnable {
         private final InputStream in;

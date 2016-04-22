@@ -235,7 +235,6 @@ public class RunMojo extends DeployMojo {
             log.info("Server is starting up. Press CTRL + C to stop the server.");
             server.start(startupTimeout);
             // Deploy the application
-            server.checkServerState();
             if (server.isRunning()) {
                 log.info(String.format("Deploying application '%s'%n", deploymentFile.getName()));
                 final Deployment deployment = new StandaloneDeploymentBuilder(client)
