@@ -26,6 +26,8 @@ import static org.jboss.as.controller.client.helpers.ClientConstants.CONTROLLER_
 import static org.jboss.as.controller.client.helpers.ClientConstants.CONTROLLER_PROCESS_STATE_STOPPING;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -38,6 +40,8 @@ import org.jboss.as.controller.client.helpers.domain.ServerIdentity;
 import org.jboss.as.controller.client.helpers.domain.ServerStatus;
 import org.jboss.dmr.ModelNode;
 import org.jboss.logging.Logger;
+import org.wildfly.core.launcher.CommandBuilder;
+import org.wildfly.core.launcher.Launcher;
 import org.wildfly.core.launcher.ProcessHelper;
 import org.wildfly.plugin.common.ServerOperations;
 
@@ -63,30 +67,47 @@ public class ServerHelper {
         return result;
     }
 
-    static boolean waitForDomain(final Process process, final DomainClient client, final Map<ServerIdentity, ServerStatus> servers, final long startupTimeout) throws InterruptedException, IOException {
+    static Process startProcess(final CommandBuilder commandBuilder, final Map<String, String> env, final OutputStream stdout) throws IOException {
+        final Launcher launcher = Launcher.of(commandBuilder);
+        if (env != null) {
+            launcher.addEnvironmentVariables(env);
+        }
+        // Determine if we should consume stdout
+        if (stdout == null) {
+            launcher.inherit();
+        } else {
+            launcher.setRedirectErrorStream(true);
+        }
+        final Process process = launcher.launch();
+        if (stdout != null) {
+            consumeOutput(process, stdout);
+        }
+        return process;
+    }
+
+    static void waitForDomain(final Process process, final DomainClient client, final long startupTimeout) throws InterruptedException, IOException {
         long timeout = startupTimeout * 1000;
         final long sleep = 100;
         while (timeout > 0) {
             long before = System.currentTimeMillis();
-            if (isDomainRunning(client, servers)) {
-                return true;
+            if (isDomainRunning(client)) {
+                break;
             }
             timeout -= (System.currentTimeMillis() - before);
             if (ProcessHelper.processHasDied(process)) {
-                return false;
+                throw new RuntimeException(String.format("The process has unexpectedly exited with code %d", process.exitValue()));
             }
             TimeUnit.MILLISECONDS.sleep(sleep);
             timeout -= sleep;
         }
-        return false;
+        if (timeout <= 0) {
+            process.destroy();
+            throw new RuntimeException(String.format("The server did not start within %s seconds.", startupTimeout));
+        }
     }
 
     static boolean isDomainRunning(final DomainClient client) {
         return isDomainRunning(client, new HashMap<ServerIdentity, ServerStatus>(), false);
-    }
-
-    static boolean isDomainRunning(final DomainClient client, final Map<ServerIdentity, ServerStatus> servers) {
-        return isDomainRunning(client, servers, false);
     }
 
     static void shutdownDomain(final DomainClient client) {
@@ -134,21 +155,24 @@ public class ServerHelper {
         }
     }
 
-    static boolean waitForStandalone(final Process process, final ModelControllerClient client, final long startupTimeout) throws InterruptedException, IOException {
+    static void waitForStandalone(final Process process, final ModelControllerClient client, final long startupTimeout) throws InterruptedException, IOException {
         long timeout = startupTimeout * 1000;
         final long sleep = 100L;
         while (timeout > 0) {
             long before = System.currentTimeMillis();
             if (isStandaloneRunning(client))
-                return true;
+                break;
             timeout -= (System.currentTimeMillis() - before);
             if (ProcessHelper.processHasDied(process)) {
-                return false;
+                throw new RuntimeException(String.format("The process has unexpectedly exited with code %d", process.exitValue()));
             }
             TimeUnit.MILLISECONDS.sleep(sleep);
             timeout -= sleep;
         }
-        return false;
+        if (timeout <= 0) {
+            process.destroy();
+            throw new RuntimeException(String.format("The server did not start within %s seconds.", startupTimeout));
+        }
     }
 
     static boolean isStandaloneRunning(final ModelControllerClient client) {
@@ -189,6 +213,12 @@ public class ServerHelper {
         }
     }
 
+    private static Thread consumeOutput(final Process process, final OutputStream stdout) {
+        final Thread thread = new Thread(new ConsoleConsumer(process.getInputStream(), stdout), "WildFly-stdout");
+        thread.start();
+        return thread;
+    }
+
     private static boolean isDomainRunning(final DomainClient client, final Map<ServerIdentity, ServerStatus> servers, boolean shutdown) {
         try {
             // Check for admin-only
@@ -226,5 +256,28 @@ public class ServerHelper {
             LOGGER.debug("Interrupted determining if domain is running", e);
         }
         return false;
+    }
+
+    private static class ConsoleConsumer implements Runnable {
+        private final InputStream in;
+        private final OutputStream out;
+
+        ConsoleConsumer(final InputStream in, final OutputStream out) {
+            this.in = in;
+            this.out = out;
+        }
+
+
+        @Override
+        public void run() {
+            byte[] buffer = new byte[64];
+            try {
+                int len;
+                while ((len = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, len);
+                }
+            } catch (IOException ignore) {
+            }
+        }
     }
 }

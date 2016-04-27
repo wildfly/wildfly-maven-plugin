@@ -29,7 +29,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -41,8 +40,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.jboss.as.controller.client.ModelControllerClient;
+import org.wildfly.core.launcher.CommandBuilder;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
-import org.wildfly.plugin.common.DeploymentFailureException;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.deployment.DeployMojo;
@@ -223,20 +222,18 @@ public class RunMojo extends DeployMojo {
         // Print some server information
         log.info(String.format("JAVA_HOME=%s", commandBuilder.getJavaHome()));
         log.info(String.format("JBOSS_HOME=%s%n", commandBuilder.getWildFlyHome()));
-        Server server = null;
-        try (final ModelControllerClient client = createClient()) {
+        Process process = null;
+        try {
             if (addUser != null && addUser.hasUsers()) {
                 log.info("Adding users: " + addUser);
                 addUser.addUsers(commandBuilder.getWildFlyHome(), commandBuilder.getJavaHome());
             }
-            // Create the server
-            server = Server.create(commandBuilder, env, client);
             // Start the server
             log.info("Server is starting up. Press CTRL + C to stop the server.");
-            server.start(startupTimeout);
+            process = startContainer(commandBuilder);
             // Deploy the application
-            if (server.isRunning()) {
-                log.info(String.format("Deploying application '%s'%n", deploymentFile.getName()));
+            log.info(String.format("Deploying application '%s'%n", deploymentFile.getName()));
+            try (final ModelControllerClient client = createClient()) {
                 final Deployment deployment = new StandaloneDeploymentBuilder(client)
                         .setContent(deploymentFile)
                         .setName(name)
@@ -251,16 +248,24 @@ public class RunMojo extends DeployMojo {
                     case SUCCESS:
                         break;
                 }
-            } else {
-                throw new DeploymentFailureException("Cannot deploy to a server that is not running.");
             }
-            while (server.isRunning()) {
-                TimeUnit.SECONDS.sleep(1L);
+            // Wait for the process to die
+            boolean keepRunning = true;
+            while (keepRunning) {
+                final int exitCode = process.waitFor();
+                // 10 is the magic code used in the scripts to survive a :shutdown(restart=true) operation
+                if (exitCode == 10) {
+                    // Ensure the current process is destroyed and restart a new one
+                    process.destroy();
+                    process = startContainer(commandBuilder);
+                } else {
+                    keepRunning = false;
+                }
             }
         } catch (Exception e) {
             throw new MojoExecutionException("The server failed to start", e);
         } finally {
-            if (server != null) server.stop();
+            if (process != null) process.destroy();
         }
 
     }
@@ -300,5 +305,13 @@ public class RunMojo extends DeployMojo {
     @Override
     public String goal() {
         return "run";
+    }
+
+    private Process startContainer(final CommandBuilder commandBuilder) throws IOException, InterruptedException {
+        final Process process = ServerHelper.startProcess(commandBuilder, env, null);
+        try (final ModelControllerClient client = createClient()) {
+            ServerHelper.waitForStandalone(process, client, startupTimeout);
+        }
+        return process;
     }
 }

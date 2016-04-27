@@ -25,10 +25,8 @@ package org.wildfly.plugin.server;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -90,8 +88,7 @@ public class DomainTestServer implements TestServer {
                 shutdownThread = ProcessHelper.addShutdownHook(process);
                 client = DomainClient.Factory.create(ModelControllerClient.Factory.create(Environment.HOSTNAME, Environment.PORT));
                 currentProcess = process;
-                final Map<ServerIdentity, ServerStatus> servers = new HashMap<>();
-                ServerHelper.waitForDomain(process, client, servers, Environment.TIMEOUT);
+                ServerHelper.waitForDomain(process, client, Environment.TIMEOUT);
                 this.servers.putAll(servers);
             } catch (Throwable t) {
                 try {
