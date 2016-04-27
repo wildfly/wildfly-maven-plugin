@@ -150,3 +150,32 @@ Run Examples
     </build>
 ...
 </project>
+----------
+
+* Enable debugging
+
+   The example below shows how to run a server with debugging enabled
+
+----------
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <java-opts>
+                        <java-opt>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005</java-opt>
+                    </java-opts>
+                </configuration>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
