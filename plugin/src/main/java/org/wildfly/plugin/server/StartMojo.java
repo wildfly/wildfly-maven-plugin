@@ -42,6 +42,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.wildfly.core.launcher.CommandBuilder;
 import org.wildfly.core.launcher.DomainCommandBuilder;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
@@ -195,7 +196,6 @@ public class StartMojo extends AbstractServerConnection {
     /**
      * Indicates how {@code stdout} and {@code stderr} should be handled for the spawned server process. Note that
      * {@code stderr} will be redirected to {@code stdout} if the value is defined unless the value is {@code none}.
-     *
      * <div>
      * By default {@code stdout} and {@code stderr} are inherited from the current process. You can change the setting
      * to one of the follow:
@@ -279,10 +279,14 @@ public class StartMojo extends AbstractServerConnection {
             // Create the server and close the client after the start. The process will continue running even after
             // the maven process may have been finished
             try (final ModelControllerClient client = createClient()) {
-                final Server server = Server.create(createCommandBuilder(jbossHome), env, client, out);
-                // Start the server
+                final CommandBuilder commandBuilder = createCommandBuilder(jbossHome);
                 log.info(String.format("%s server is starting up.", serverType));
-                server.start(startupTimeout);
+                final Process process = ServerHelper.startProcess(commandBuilder, env, out);
+                if (serverType == ServerType.DOMAIN) {
+                    ServerHelper.waitForDomain(process, DomainClient.Factory.create(client), startupTimeout);
+                } else {
+                    ServerHelper.waitForStandalone(process, client, startupTimeout);
+                }
             }
         } catch (Exception e) {
             throw new MojoExecutionException("The server failed to start", e);
