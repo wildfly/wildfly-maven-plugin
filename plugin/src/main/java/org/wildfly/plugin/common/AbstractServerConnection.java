@@ -109,8 +109,6 @@ public abstract class AbstractServerConnection extends AbstractMojo {
     @Inject
     private SettingsDecrypter settingsDecrypter;
 
-    private ModelControllerClientConfiguration clientConfiguration;
-
     /**
      * The goal of the deployment.
      *
@@ -133,46 +131,41 @@ public abstract class AbstractServerConnection extends AbstractMojo {
      * @return the configuration to use
      */
     protected synchronized ModelControllerClientConfiguration getClientConfiguration() {
-        if (clientConfiguration == null) {
-            final Log log = getLog();
-            String username = this.username;
-            String password = this.password;
-            if (username == null && password == null) {
-                if (id != null) {
-                    if (settings != null) {
-                        Server server = settings.getServer(id);
-                        if (server != null) {
-                            log.debug(DEBUG_MESSAGE_SETTINGS_HAS_ID);
-                            password = decrypt(server);
-                            username = server.getUsername();
-                            if (username != null && password != null) {
-                                log.debug(DEBUG_MESSAGE_SETTINGS_HAS_CREDS);
-                            } else {
-                                log.debug(DEBUG_MESSAGE_NO_CREDS);
-                            }
+        final Log log = getLog();
+        String username = this.username;
+        String password = this.password;
+        if (username == null && password == null) {
+            if (id != null) {
+                if (settings != null) {
+                    Server server = settings.getServer(id);
+                    if (server != null) {
+                        log.debug(DEBUG_MESSAGE_SETTINGS_HAS_ID);
+                        password = decrypt(server);
+                        username = server.getUsername();
+                        if (username != null && password != null) {
+                            log.debug(DEBUG_MESSAGE_SETTINGS_HAS_CREDS);
                         } else {
-                            log.debug(DEBUG_MESSAGE_NO_SERVER_SECTION);
+                            log.debug(DEBUG_MESSAGE_NO_CREDS);
                         }
                     } else {
-                        log.debug(DEBUG_MESSAGE_NO_SETTINGS_FILE);
+                        log.debug(DEBUG_MESSAGE_NO_SERVER_SECTION);
                     }
                 } else {
-                    log.debug(DEBUG_MESSAGE_NO_ID);
+                    log.debug(DEBUG_MESSAGE_NO_SETTINGS_FILE);
                 }
             } else {
-                log.debug(DEBUG_MESSAGE_POM_HAS_CREDS);
+                log.debug(DEBUG_MESSAGE_NO_ID);
             }
-            final String u = username;
-            final String p = password;
-            clientConfiguration = new ModelControllerClientConfiguration.Builder()
-                            .setProtocol(protocol)
-                            .setHostName(hostname)
-                            .setPort(port)
-                            .setConnectionTimeout(timeout * 1000)
-                            .setHandler(new ClientCallbackHandler(u, p, log))
-                    .build();
+        } else {
+            log.debug(DEBUG_MESSAGE_POM_HAS_CREDS);
         }
-        return clientConfiguration;
+        return new ModelControllerClientConfiguration.Builder()
+                .setProtocol(protocol)
+                .setHostName(hostname)
+                .setPort(port)
+                .setConnectionTimeout(timeout * 1000)
+                .setHandler(new ClientCallbackHandler(username, password, log))
+                .build();
     }
 
     private String decrypt(final Server server) {
