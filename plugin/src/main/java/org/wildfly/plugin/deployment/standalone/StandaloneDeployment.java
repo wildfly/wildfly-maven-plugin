@@ -33,15 +33,12 @@ import static org.jboss.as.controller.client.helpers.ClientConstants.RUNTIME_NAM
 import static org.jboss.as.controller.client.helpers.Operations.createAddOperation;
 import static org.jboss.as.controller.client.helpers.Operations.createOperation;
 import static org.wildfly.plugin.common.ServerOperations.ARCHIVE;
-import static org.wildfly.plugin.common.ServerOperations.BYTES;
 import static org.wildfly.plugin.common.ServerOperations.ENABLE;
 import static org.wildfly.plugin.common.ServerOperations.createAddress;
 import static org.wildfly.plugin.common.ServerOperations.createRemoveOperation;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 
 import org.jboss.as.controller.client.ModelControllerClient;
@@ -112,14 +109,14 @@ class StandaloneDeployment implements Deployment {
             final Operation operation;
             switch (type) {
                 case DEPLOY: {
-                    operation = createDeployOperation(content.toPath(), name, runtimeName);
+                    operation = createDeployOperation();
                     break;
                 }
                 case FORCE_DEPLOY: {
                     if (existingDeployments.contains(name)) {
-                        operation = createReplaceOperation(content.toPath(), name, runtimeName);
+                        operation = createReplaceOperation();
                     } else {
-                        operation = createDeployOperation(content.toPath(), name, runtimeName);
+                        operation = createDeployOperation();
                     }
                     break;
                 }
@@ -127,7 +124,7 @@ class StandaloneDeployment implements Deployment {
                     if (!existingDeployments.contains(name)) {
                         throw new DeploymentFailureException("Deployment '%s' not found, cannot redeploy", name);
                     }
-                    operation = createRedeployOperation(name);
+                    operation = createRedeployOperation();
                     break;
                 }
                 case UNDEPLOY: {
@@ -167,42 +164,46 @@ class StandaloneDeployment implements Deployment {
         return type;
     }
 
-    private static void addContent(final Path deployment, final ModelNode op, final boolean unmanaged) throws IOException {
+    private void addContent(final OperationBuilder builder, final ModelNode op) {
         final ModelNode contentNode = op.get(CONTENT);
         final ModelNode contentItem = contentNode.get(0);
-        if (unmanaged) {
-            contentItem.get(PATH).set(deployment.toString());
-            contentItem.get(ARCHIVE).set(!Files.isDirectory(deployment));
+        // If the content points to a directory we are deploying exploded content
+        if (content.isDirectory()) {
+            contentItem.get(PATH).set(content.getAbsolutePath());
+            contentItem.get(ARCHIVE).set(false);
         } else {
-            contentItem.get(BYTES).set(Files.readAllBytes(deployment));
+            contentItem.get(ServerOperations.INPUT_STREAM_INDEX).set(0);
+            builder.addFileAsAttachment(content);
         }
     }
 
-    private static Operation createDeployOperation(final Path deployment, final String name, final String runtimeName) throws IOException {
+    private Operation createDeployOperation() throws IOException {
         final ModelNode address = createAddress(DEPLOYMENT, name);
         final ModelNode addOperation = createAddOperation(address);
         if (runtimeName != null) {
             addOperation.get(RUNTIME_NAME).set(runtimeName);
         }
-        addContent(deployment, addOperation, Files.isDirectory(deployment));
-        return CompositeOperationBuilder.create()
+        final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
+        addContent(builder, addOperation);
+        return builder
                 .addStep(addOperation)
                 .addStep(createOperation(ClientConstants.DEPLOYMENT_DEPLOY_OPERATION, address))
                 .build();
     }
 
-    private static Operation createReplaceOperation(final Path deployment, final String name, final String runtimeName) throws IOException {
+    private Operation createReplaceOperation() throws IOException {
         final ModelNode op = createOperation(DEPLOYMENT_FULL_REPLACE_OPERATION);
         op.get(NAME).set(name);
         if (runtimeName != null) {
             op.get(RUNTIME_NAME).set(runtimeName);
         }
-        addContent(deployment, op, Files.isDirectory(deployment));
+        final OperationBuilder builder = OperationBuilder.create(op);
+        addContent(builder, op);
         op.get(ENABLE).set(true);
-        return OperationBuilder.create(op).build();
+        return builder.build();
     }
 
-    private static Operation createRedeployOperation(final String name) throws IOException {
+    private Operation createRedeployOperation() throws IOException {
         return OperationBuilder.create(createOperation(DEPLOYMENT_REDEPLOY_OPERATION, createAddress(DEPLOYMENT, name))).build();
     }
 
