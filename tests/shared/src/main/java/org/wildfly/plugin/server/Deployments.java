@@ -25,8 +25,7 @@ package org.wildfly.plugin.server;
 import java.io.File;
 import java.io.IOException;
 
-import org.wildfly.plugin.common.DeploymentExecutionException;
-import org.wildfly.plugin.common.DeploymentFailureException;
+import org.wildfly.plugin.deployment.DeploymentException;
 
 /**
  * A helper for interacting with deployments on a server.
@@ -54,11 +53,10 @@ public interface Deployments {
      * @param content        the content to deploy
      *
      * @throws IOException                  if an error occurs communicating with the server
-     * @throws DeploymentExecutionException if the deployment execution fails
-     * @throws DeploymentFailureException   if the the deployment execution fails
+     * @throws DeploymentException if the deployment execution fails
      * @throws RuntimeException             if an error occurs deploying the content
      */
-    void deploy(String deploymentName, File content) throws IOException, DeploymentExecutionException, DeploymentFailureException;
+    void deploy(String deploymentName, File content) throws IOException, DeploymentException;
 
     /**
      * Attempts to undeploy from a server.
@@ -66,9 +64,8 @@ public interface Deployments {
      * @param deploymentName the name of the deployment to remove
      *
      * @throws IOException                  if an error occurs communicating with the server
-     * @throws DeploymentExecutionException if the deployment execution fails
-     * @throws DeploymentFailureException   if the the deployment execution fails
+     * @throws DeploymentException if the deployment execution fails
      * @throws RuntimeException             if an error occurs removing the deployment
      */
-    void undeploy(String deploymentName) throws IOException, DeploymentExecutionException, DeploymentFailureException;
+    void undeploy(String deploymentName) throws IOException, DeploymentException;
 }

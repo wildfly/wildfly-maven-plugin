@@ -43,10 +43,9 @@ import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.core.launcher.CommandBuilder;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.common.PropertyNames;
-import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.deployment.DeployMojo;
 import org.wildfly.plugin.deployment.Deployment;
-import org.wildfly.plugin.deployment.standalone.StandaloneDeploymentBuilder;
+import org.wildfly.plugin.deployment.DeploymentBuilder;
 import org.wildfly.plugin.server.ArtifactResolver.ArtifactNameSplitter;
 
 /**
@@ -234,20 +233,13 @@ public class RunMojo extends DeployMojo {
             // Deploy the application
             log.info(String.format("Deploying application '%s'%n", deploymentFile.getName()));
             try (final ModelControllerClient client = createClient()) {
-                final Deployment deployment = new StandaloneDeploymentBuilder(client)
+                final Deployment deployment = DeploymentBuilder.of(client)
                         .setContent(deploymentFile)
                         .setName(name)
                         .setRuntimeName(runtimeName)
                         .setType(getType())
                         .build();
-                switch (executeDeployment(client, deployment, jbossHome)) {
-                    case REQUIRES_RESTART: {
-                        client.execute(ServerOperations.createOperation(ServerOperations.RELOAD));
-                        break;
-                    }
-                    case SUCCESS:
-                        break;
-                }
+                executeDeployment(client, deployment, jbossHome);
             }
             // Wait for the process to die
             boolean keepRunning = true;

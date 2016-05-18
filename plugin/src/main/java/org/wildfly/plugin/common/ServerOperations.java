@@ -45,6 +45,7 @@ public class ServerOperations extends Operations {
     public static final String ARCHIVE = "archive";
     public static final String BYTES = "bytes";
     public static final String ENABLE = "enable";
+    public static final String ENABLED = "enabled";
     public static final String INPUT_STREAM_INDEX = "input-stream-index";
     public static final String LAUNCH_TYPE = "launch-type";
     public static final String PROFILE = "profile";

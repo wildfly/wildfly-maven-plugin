@@ -26,15 +26,17 @@ import java.io.File;
 
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.deployment.Deployment.Type;
+import org.wildfly.plugin.deployment.domain.Domain;
 
 /**
  * Creates a deployment execution.
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-public abstract class DeploymentBuilder<T extends DeploymentBuilder<? super T>> {
+public class DeploymentBuilder {
 
     protected final ModelControllerClient client;
+    private final Domain domain;
     private File content;
     private String name;
     private String runtimeName;
@@ -42,11 +44,36 @@ public abstract class DeploymentBuilder<T extends DeploymentBuilder<? super T>> 
     private String matchPattern;
     private MatchPatternStrategy matchPatternStrategy;
 
-    protected DeploymentBuilder(final ModelControllerClient client) {
+    private DeploymentBuilder(final ModelControllerClient client, final Domain domain) {
         if (client == null) {
             throw new IllegalArgumentException("The client must be set to communicate with the server.");
         }
         this.client = client;
+        this.domain = domain;
+    }
+
+    /**
+     * Creates a new builder for a deployment.
+     *
+     * @param client the client used to execute the management operations
+     *
+     * @return the builder
+     */
+    public static DeploymentBuilder of(final ModelControllerClient client) {
+        return new DeploymentBuilder(client, null);
+    }
+
+    /**
+     * Creates a new builder for a deployment.
+     *
+     * @param client the client used to execute the management operations
+     * @param domain the domain to use for domain deployments, if this parameter is {@code null} a standalone
+     *               deployment will be assumed
+     *
+     * @return the builder
+     */
+    public static DeploymentBuilder of(final ModelControllerClient client, final Domain domain) {
+        return new DeploymentBuilder(client, domain);
     }
 
     /**
@@ -56,16 +83,7 @@ public abstract class DeploymentBuilder<T extends DeploymentBuilder<? super T>> 
      */
     public Deployment build() {
         validate();
-        return doBuild();
-    }
-
-    /**
-     * Gets the content for the deployment which may be {@code null} when this is an undeploy action.
-     *
-     * @return the content for the deployment or {@code null}
-     */
-    protected File getContent() {
-        return content;
+        return new Deployment(client, (domain == null ? null : domain.getServerGroups()), content, name, runtimeName, type, matchPattern, matchPatternStrategy);
     }
 
     /**
@@ -75,13 +93,9 @@ public abstract class DeploymentBuilder<T extends DeploymentBuilder<? super T>> 
      *
      * @return this builder
      */
-    public T setContent(final File content) {
+    public DeploymentBuilder setContent(final File content) {
         this.content = content;
-        return getThis();
-    }
-
-    protected String getName() {
-        return name;
+        return this;
     }
 
     /**
@@ -91,13 +105,9 @@ public abstract class DeploymentBuilder<T extends DeploymentBuilder<? super T>> 
      *
      * @return this builder
      */
-    public T setName(final String name) {
+    public DeploymentBuilder setName(final String name) {
         this.name = name;
-        return getThis();
-    }
-
-    protected String getRuntimeName() {
-        return runtimeName;
+        return this;
     }
 
     /**
@@ -107,13 +117,9 @@ public abstract class DeploymentBuilder<T extends DeploymentBuilder<? super T>> 
      *
      * @return this builder
      */
-    public T setRuntimeName(final String runtimeName) {
+    public DeploymentBuilder setRuntimeName(final String runtimeName) {
         this.runtimeName = runtimeName;
-        return getThis();
-    }
-
-    protected Type getType() {
-        return type;
+        return this;
     }
 
     /**
@@ -123,13 +129,9 @@ public abstract class DeploymentBuilder<T extends DeploymentBuilder<? super T>> 
      *
      * @return this builder
      */
-    public T setType(final Type type) {
+    public DeploymentBuilder setType(final Type type) {
         this.type = type;
-        return getThis();
-    }
-
-    protected String getMatchPattern() {
-        return matchPattern;
+        return this;
     }
 
     /**
@@ -139,13 +141,9 @@ public abstract class DeploymentBuilder<T extends DeploymentBuilder<? super T>> 
      *
      * @return this builder
      */
-    public T setMatchPattern(final String matchPattern) {
+    public DeploymentBuilder setMatchPattern(final String matchPattern) {
         this.matchPattern = matchPattern;
-        return getThis();
-    }
-
-    protected MatchPatternStrategy getMatchPatternStrategy() {
-        return matchPatternStrategy;
+        return this;
     }
 
     /**
@@ -155,16 +153,12 @@ public abstract class DeploymentBuilder<T extends DeploymentBuilder<? super T>> 
      *
      * @return this builder
      */
-    public T setMatchPatternStrategy(final MatchPatternStrategy matchPatternStrategy) {
+    public DeploymentBuilder setMatchPatternStrategy(final MatchPatternStrategy matchPatternStrategy) {
         this.matchPatternStrategy = matchPatternStrategy;
-        return getThis();
+        return this;
     }
 
-    protected abstract T getThis();
-
-    protected abstract Deployment doBuild();
-
-    protected void validate() {
+    private void validate() {
         if (type != Type.UNDEPLOY && type != Type.UNDEPLOY_IGNORE_MISSING && content == null) {
             throw new IllegalStateException("The content to be deployed must be set for for deployments and re-deployments.");
         }
