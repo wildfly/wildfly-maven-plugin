@@ -30,7 +30,6 @@ import org.jboss.dmr.ModelNode;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.wildfly.plugin.common.DeploymentFailureException;
 import org.wildfly.plugin.common.DeploymentInspector;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
@@ -66,7 +65,7 @@ public class UndeploymentMatchTest extends AbstractWildFlyServerMojoTest {
         assertEquals(1, deployments.size());
     }
 
-    @Test(expected = DeploymentFailureException.class)
+    @Test(expected = DeploymentException.class)
     public void undeployFail() throws Exception {
         undeploy(MatchPatternStrategy.FAIL);
     }

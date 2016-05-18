@@ -33,11 +33,10 @@ import org.jboss.dmr.ModelNode;
 import org.wildfly.core.launcher.Launcher;
 import org.wildfly.core.launcher.ProcessHelper;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
-import org.wildfly.plugin.common.DeploymentExecutionException;
-import org.wildfly.plugin.common.DeploymentFailureException;
+import org.wildfly.plugin.deployment.DeploymentBuilder;
+import org.wildfly.plugin.deployment.DeploymentException;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.deployment.Deployment;
-import org.wildfly.plugin.deployment.standalone.StandaloneDeploymentBuilder;
 import org.wildfly.plugin.tests.Environment;
 
 /**
@@ -115,16 +114,14 @@ public class StandaloneTestServer implements TestServer {
     }
 
     @Override
-    public void deploy(final String deploymentName, final File content) throws IOException, DeploymentExecutionException, DeploymentFailureException {
+    public void deploy(final String deploymentName, final File content) throws IOException, DeploymentException {
         checkState();
-        final Deployment deployment = new StandaloneDeploymentBuilder(client)
+        final Deployment deployment = DeploymentBuilder.of(client)
                 .setContent(content)
                 .setName(deploymentName)
                 .setType(Deployment.Type.DEPLOY)
                 .build();
-        if (deployment.execute() != Deployment.Status.SUCCESS) {
-            throw createError("Failed to deploy %s. Content: %s", deploymentName, content);
-        }
+        deployment.execute();
 
         // Verify deployed
         if (!isDeployed(deploymentName)) {
@@ -142,15 +139,13 @@ public class StandaloneTestServer implements TestServer {
     }
 
     @Override
-    public void undeploy(final String deploymentName) throws IOException, DeploymentExecutionException, DeploymentFailureException {
+    public void undeploy(final String deploymentName) throws IOException, DeploymentException {
         checkState();
-        final Deployment deployment = new StandaloneDeploymentBuilder(client)
+        final Deployment deployment = DeploymentBuilder.of(client)
                 .setName(deploymentName)
                 .setType(Deployment.Type.UNDEPLOY)
                 .build();
-        if (deployment.execute() != Deployment.Status.SUCCESS) {
-            throw createError("Failed to undeploy %", deploymentName);
-        }
+        deployment.execute();
 
         // Verify not deployed
         if (isDeployed(deploymentName)) {

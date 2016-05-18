@@ -31,7 +31,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.wildfly.plugin.common.DeploymentFailureException;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.deployment.Deployment.Type;
 
@@ -78,13 +77,13 @@ public final class DeployArtifactMojo extends AbstractDeployment {
 
 
     @Override
-    public void validate(final ModelControllerClient client, final boolean isDomain) throws DeploymentFailureException {
+    public void validate(final ModelControllerClient client, final boolean isDomain) throws DeploymentException {
         super.validate(client, isDomain);
         if (artifactId == null) {
-            throw new DeploymentFailureException("deploy-artifact must specify the artifactId");
+            throw new DeploymentException("deploy-artifact must specify the artifactId");
         }
         if (groupId == null) {
-            throw new DeploymentFailureException("deploy-artifact must specify the groupId");
+            throw new DeploymentException("deploy-artifact must specify the groupId");
         }
         final Set<Artifact> dependencies = project.getDependencyArtifacts();
         Artifact artifact = null;
@@ -97,7 +96,7 @@ public final class DeployArtifactMojo extends AbstractDeployment {
             }
         }
         if (artifact == null) {
-            throw new DeploymentFailureException("Could not resolve artifact to deploy " + groupId + ":" + artifactId);
+            throw new DeploymentException("Could not resolve artifact to deploy " + groupId + ":" + artifactId);
         }
         file = artifact.getFile();
     }

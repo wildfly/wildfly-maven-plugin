@@ -36,13 +36,8 @@ import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.cli.Commands;
 import org.wildfly.plugin.common.AbstractServerConnection;
-import org.wildfly.plugin.common.DeploymentExecutionException;
-import org.wildfly.plugin.common.DeploymentFailureException;
 import org.wildfly.plugin.common.PropertyNames;
-import org.wildfly.plugin.deployment.Deployment.Status;
 import org.wildfly.plugin.deployment.domain.Domain;
-import org.wildfly.plugin.deployment.domain.DomainDeploymentBuilder;
-import org.wildfly.plugin.deployment.standalone.StandaloneDeploymentBuilder;
 import org.wildfly.plugin.server.ServerHelper;
 
 /**
@@ -137,18 +132,17 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         doExecute();
     }
 
-    protected final Status executeDeployment(final ModelControllerClient client, final Deployment deployment, final Path wildflyHome)
-            throws DeploymentExecutionException, DeploymentFailureException, IOException {
+    protected final void executeDeployment(final ModelControllerClient client, final Deployment deployment, final Path wildflyHome)
+            throws DeploymentException, IOException {
         // Execute before deployment commands
         if (beforeDeployment != null)
             commandExecutor.execute(client, wildflyHome, beforeDeployment);
         // Deploy the deployment
         getLog().debug("Executing deployment");
-        final Status status = deployment.execute();
+        deployment.execute();
         // Execute after deployment commands
         if (afterDeployment != null)
             commandExecutor.execute(client, wildflyHome, afterDeployment);
-        return status;
     }
 
     /**
@@ -162,12 +156,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
             validate(client, isDomain);
             final String matchPattern = getMatchPattern();
             final MatchPatternStrategy matchPatternStrategy = getMatchPatternStrategy();
-            final DeploymentBuilder<?> deploymentBuilder;
-            if (isDomain) {
-                deploymentBuilder = new DomainDeploymentBuilder(client, domain);
-            } else {
-                deploymentBuilder = new StandaloneDeploymentBuilder(client);
-            }
+            final DeploymentBuilder deploymentBuilder = DeploymentBuilder.of(client, domain);
             deploymentBuilder
                     .setContent(file())
                     .setName(name)
@@ -176,15 +165,8 @@ abstract class AbstractDeployment extends AbstractServerConnection {
                     .setMatchPattern(matchPattern)
                     .setMatchPatternStrategy(matchPatternStrategy);
             final Path wildflyHome = jbossHome == null ? null : Paths.get(jbossHome);
-            switch (executeDeployment(client, deploymentBuilder.build(), wildflyHome)) {
-                case REQUIRES_RESTART: {
-                    getLog().info("Server requires a restart");
-                    break;
-                }
-                case SUCCESS:
-                    break;
-            }
-        } catch (MojoFailureException | MojoExecutionException e) {
+            executeDeployment(client, deploymentBuilder.build(), wildflyHome);
+        } catch (MojoExecutionException e) {
             throw e;
         } catch (IOException e) {
             throw new MojoExecutionException(String.format("Please make sure a server is running before executing goal " +
@@ -220,16 +202,16 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      * @param client   the client used for validation
      * @param isDomain {@code true} if this is a domain server, otherwise {@code false}
      *
-     * @throws DeploymentFailureException if the deployment is invalid.
+     * @throws DeploymentException if the deployment is invalid
      */
-    protected void validate(final ModelControllerClient client, final boolean isDomain) throws DeploymentFailureException {
+    protected void validate(final ModelControllerClient client, final boolean isDomain) throws DeploymentException {
         if (isDomain) {
             if (domain == null || domain.getServerGroups().isEmpty()) {
-                throw new DeploymentFailureException(
+                throw new DeploymentException(
                         "Server is running in domain mode, but no server groups have been defined.");
             }
         } else if (domain != null && !domain.getServerGroups().isEmpty()) {
-            throw new DeploymentFailureException("Server is running in standalone mode, but server groups have been defined.");
+            throw new DeploymentException("Server is running in standalone mode, but server groups have been defined.");
         }
     }
 }
