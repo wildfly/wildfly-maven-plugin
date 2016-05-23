@@ -44,7 +44,6 @@
         <jboss.home>${project.build.directory}${file.separator}wildfly-${version.org.wildfly.dist}</jboss.home>
 
         <wildfly.test.config.dir>${project.build.testOutputDirectory}</wildfly.test.config.dir>
-        <wildfly.test.deployment.name>test.war</wildfly.test.deployment.name>
     </properties>
 
     <build>
@@ -91,7 +90,6 @@
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <jboss.home>${jboss.home}</jboss.home>
                         <wildfly.management.port>10099</wildfly.management.port>
-                        <wildfly.test.deployment.name>${wildfly.test.deployment.name}</wildfly.test.deployment.name>
                         <wildfly.test.config.dir>${wildfly.test.config.dir}</wildfly.test.config.dir>
                     </systemPropertyVariables>
                 </configuration>

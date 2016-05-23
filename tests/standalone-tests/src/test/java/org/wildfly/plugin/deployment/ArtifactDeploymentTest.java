@@ -36,7 +36,7 @@ import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 import org.wildfly.plugin.common.ServerOperations;
-import org.wildfly.plugin.server.Deployments;
+import org.wildfly.plugin.server.DeploymentManager;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
 
 /**
@@ -47,7 +47,7 @@ public class ArtifactDeploymentTest extends AbstractWildFlyServerMojoTest {
     private final String artifactName = "dummy.jar";
 
     @Inject
-    private Deployments deployments;
+    private DeploymentManager deploymentManager;
 
     @Test
     public void testDeploy() throws Exception {
@@ -74,15 +74,15 @@ public class ArtifactDeploymentTest extends AbstractWildFlyServerMojoTest {
     }
 
     private void testDeploy(final DeployArtifactMojo mojo, final String classifier) throws Exception {
-        if (deployments.isDeployed(artifactName)) {
-            deployments.undeploy(artifactName);
+        if (deploymentManager.isDeployed(artifactName)) {
+            deploymentManager.undeploy(artifactName);
         }
         mojo.project.setDependencyArtifacts(Collections.singleton(createArtifact(classifier)));
 
         mojo.execute();
 
         // Verify deployed
-        assertTrue("Deployment " + artifactName + " was not deployed", deployments.isDeployed(artifactName));
+        assertTrue("Deployment " + artifactName + " was not deployed", deploymentManager.isDeployed(artifactName));
 
         // /deployment=test.war :read-attribute(name=status)
         final ModelNode address = ServerOperations.createAddress("deployment", artifactName);
@@ -93,15 +93,15 @@ public class ArtifactDeploymentTest extends AbstractWildFlyServerMojoTest {
     }
 
     private void testUndeploy(final UndeployArtifactMojo mojo, final String classifier) throws Exception {
-        if (!deployments.isDeployed(artifactName)) {
-            deployments.deploy(artifactName, new File(BASE_CONFIG_DIR, artifactName));
+        if (!deploymentManager.isDeployed(artifactName)) {
+            deploymentManager.deploy(artifactName, new File(BASE_CONFIG_DIR, artifactName));
         }
         mojo.project.setDependencyArtifacts(Collections.singleton(createArtifact(classifier)));
 
         mojo.execute();
 
         // Verify undeployed
-        assertFalse("Deployment " + artifactName + " was not undeployed", deployments.isDeployed(artifactName));
+        assertFalse("Deployment " + artifactName + " was not undeployed", deploymentManager.isDeployed(artifactName));
     }
 
     private Artifact createArtifact(final String classifier) {

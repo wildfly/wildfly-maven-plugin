@@ -23,10 +23,12 @@
 package org.wildfly.plugin.deployment;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.deployment.Deployment.Type;
-import org.wildfly.plugin.deployment.domain.Domain;
 
 /**
  * Creates a deployment execution.
@@ -36,7 +38,7 @@ import org.wildfly.plugin.deployment.domain.Domain;
 public class DeploymentBuilder {
 
     protected final ModelControllerClient client;
-    private final Domain domain;
+    private final Set<String> serverGroups;
     private File content;
     private String name;
     private String runtimeName;
@@ -44,12 +46,15 @@ public class DeploymentBuilder {
     private String matchPattern;
     private MatchPatternStrategy matchPatternStrategy;
 
-    private DeploymentBuilder(final ModelControllerClient client, final Domain domain) {
+    private DeploymentBuilder(final ModelControllerClient client, final Collection<String> serverGroups) {
         if (client == null) {
             throw new IllegalArgumentException("The client must be set to communicate with the server.");
         }
         this.client = client;
-        this.domain = domain;
+        this.serverGroups = new LinkedHashSet<>();
+        if (serverGroups != null) {
+            this.serverGroups.addAll(serverGroups);
+        }
     }
 
     /**
@@ -66,14 +71,13 @@ public class DeploymentBuilder {
     /**
      * Creates a new builder for a deployment.
      *
-     * @param client the client used to execute the management operations
-     * @param domain the domain to use for domain deployments, if this parameter is {@code null} a standalone
-     *               deployment will be assumed
+     * @param client       the client used to execute the management operations
+     * @param serverGroups the server groups to deploy to for domain servers or {@code null} for standalone servers
      *
      * @return the builder
      */
-    public static DeploymentBuilder of(final ModelControllerClient client, final Domain domain) {
-        return new DeploymentBuilder(client, domain);
+    public static DeploymentBuilder of(final ModelControllerClient client, final Collection<String> serverGroups) {
+        return new DeploymentBuilder(client, serverGroups);
     }
 
     /**
@@ -83,7 +87,7 @@ public class DeploymentBuilder {
      */
     public Deployment build() {
         validate();
-        return new Deployment(client, (domain == null ? null : domain.getServerGroups()), content, name, runtimeName, type, matchPattern, matchPatternStrategy);
+        return new Deployment(client, serverGroups, content, name, runtimeName, type, matchPattern, matchPatternStrategy);
     }
 
     /**

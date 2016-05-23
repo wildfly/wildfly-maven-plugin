@@ -24,7 +24,9 @@ package org.wildfly.plugin.server;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jboss.as.controller.client.ModelControllerClient;
@@ -99,14 +101,24 @@ public class StandaloneTestServer implements TestServer {
     }
 
     @Override
+    public Set<String> getDeployments() throws IOException {
+        checkState();
+        final Set<String> result = new LinkedHashSet<>();
+        final ModelNode op = ServerOperations.createOperation(ClientConstants.READ_CHILDREN_NAMES_OPERATION);
+        op.get(ClientConstants.CHILD_TYPE).set(ClientConstants.DEPLOYMENT);
+        final ModelNode outcome = executeOperation(op);
+        final List<ModelNode> deployments = ServerOperations.readResult(outcome).asList();
+        for (ModelNode deployment : deployments) {
+            result.add(deployment.asString());
+        }
+        return result;
+    }
+
+    @Override
     public boolean isDeployed(final String deploymentName) throws IOException {
         checkState();
-        final ModelNode address = ServerOperations.createAddress("deployment");
-        final ModelNode op = ServerOperations.createReadResourceOperation(address);
-        final ModelNode result = executeOperation(op);
-        final List<ModelNode> deployments = ServerOperations.readResult(result).asList();
-        for (ModelNode deployment : deployments) {
-            if (deploymentName.equals(ServerOperations.readResult(deployment).get(ClientConstants.NAME).asString())) {
+        for (String deployment : getDeployments()) {
+            if (deploymentName.equals(deployment)) {
                 return true;
             }
         }
@@ -122,20 +134,6 @@ public class StandaloneTestServer implements TestServer {
                 .setType(Deployment.Type.DEPLOY)
                 .build();
         deployment.execute();
-
-        // Verify deployed
-        if (!isDeployed(deploymentName)) {
-            throw createError("Deployment %s was not deployed", deploymentName);
-        }
-
-        // Check the status
-        final ModelNode address = ServerOperations.createAddress("deployment", deploymentName);
-        final ModelNode op = ServerOperations.createReadAttributeOperation(address, "status");
-        final ModelNode result = executeOperation(op);
-
-        if (!"OK".equals(ServerOperations.readResultAsString(result))) {
-            throw createError("Deployment is in an invalid state: %s", ServerOperations.readResultAsString(result));
-        }
     }
 
     @Override
@@ -146,11 +144,6 @@ public class StandaloneTestServer implements TestServer {
                 .setType(Deployment.Type.UNDEPLOY)
                 .build();
         deployment.execute();
-
-        // Verify not deployed
-        if (isDeployed(deploymentName)) {
-            throw createError("Deployment %s was not undeployed", deploymentName);
-        }
     }
 
     private ModelNode executeOperation(final ModelNode op) throws IOException {
@@ -188,9 +181,5 @@ public class StandaloneTestServer implements TestServer {
         final Thread result = new Thread(new ConsoleConsumer(process.getInputStream(), System.out));
         result.start();
         return result;
-    }
-
-    private static RuntimeException createError(final String format, final Object... args) {
-        return new RuntimeException(String.format(format, args));
     }
 }

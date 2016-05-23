@@ -24,8 +24,10 @@ package org.wildfly.plugin.server;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,17 +43,17 @@ import org.jboss.dmr.ModelNode;
 import org.wildfly.core.launcher.DomainCommandBuilder;
 import org.wildfly.core.launcher.Launcher;
 import org.wildfly.core.launcher.ProcessHelper;
-import org.wildfly.plugin.deployment.DeploymentBuilder;
-import org.wildfly.plugin.deployment.DeploymentException;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.deployment.Deployment;
+import org.wildfly.plugin.deployment.DeploymentBuilder;
+import org.wildfly.plugin.deployment.DeploymentException;
 import org.wildfly.plugin.deployment.domain.Domain;
 import org.wildfly.plugin.tests.Environment;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-public class DomainTestServer implements TestServer {
+public class DomainTestServer implements TestServer, DomainDeploymentManager {
 
     // A default domain based on current WildFly defaults. This could likely be generated in the start(), but we'll leave
     // it hard-coded for now.
@@ -125,14 +127,24 @@ public class DomainTestServer implements TestServer {
     }
 
     @Override
+    public Set<String> getDeployments() throws IOException {
+        checkState();
+        final Set<String> result = new LinkedHashSet<>();
+        final ModelNode op = ServerOperations.createOperation(ClientConstants.READ_CHILDREN_NAMES_OPERATION);
+        op.get(ClientConstants.CHILD_TYPE).set(ClientConstants.DEPLOYMENT);
+        final ModelNode outcome = executeOperation(op);
+        final List<ModelNode> deployments = ServerOperations.readResult(outcome).asList();
+        for (ModelNode deployment : deployments) {
+            result.add(deployment.asString());
+        }
+        return result;
+    }
+
+    @Override
     public boolean isDeployed(final String deploymentName) throws IOException {
         checkState();
-        final ModelNode address = ServerOperations.createAddress("deployment");
-        final ModelNode op = ServerOperations.createReadResourceOperation(address);
-        final ModelNode result = executeOperation(op);
-        final List<ModelNode> deployments = ServerOperations.readResult(result).asList();
-        for (ModelNode deployment : deployments) {
-            if (deploymentName.equals(ServerOperations.readResult(deployment).get(ClientConstants.NAME).asString())) {
+        for (String deployment : getDeployments()) {
+            if (deploymentName.equals(deployment)) {
                 return true;
             }
         }
@@ -141,42 +153,59 @@ public class DomainTestServer implements TestServer {
 
     @Override
     public void deploy(final String deploymentName, final File content) throws IOException, DeploymentException {
+        deploy(deploymentName, DEFAULT_DOMAIN.getServerGroups(), content);
+    }
+
+    @Override
+    public void undeploy(final String deploymentName) throws IOException, DeploymentException {
+        undeploy(deploymentName, DEFAULT_DOMAIN.getServerGroups());
+    }
+
+    @Override
+    public Set<String> getDeployments(final String serverGroup) throws IOException {
         checkState();
-        final Deployment deployment = DeploymentBuilder.of(client, DEFAULT_DOMAIN)
+        final Set<String> result = new LinkedHashSet<>();
+        final ModelNode address = ServerOperations.createAddress(ClientConstants.SERVER_GROUP, serverGroup);
+        final ModelNode op = ServerOperations.createOperation(ClientConstants.READ_CHILDREN_NAMES_OPERATION, address);
+        op.get(ClientConstants.CHILD_TYPE).set(ClientConstants.DEPLOYMENT);
+        final ModelNode outcome = executeOperation(op);
+        final List<ModelNode> deployments = ServerOperations.readResult(outcome).asList();
+        for (ModelNode deployment : deployments) {
+            result.add(deployment.asString());
+        }
+        return result;
+    }
+
+    @Override
+    public boolean isDeployed(final String deploymentName, final String serverGroup) throws IOException {
+        checkState();
+        for (String deployment : getDeployments(serverGroup)) {
+            if (deploymentName.equals(deployment)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void deploy(final String deploymentName, final Collection<String> serverGroups, final File content) throws IOException, DeploymentException {
+        checkState();
+        final Deployment deployment = DeploymentBuilder.of(client, serverGroups)
                 .setContent(content)
                 .setName(deploymentName)
                 .setType(Deployment.Type.DEPLOY)
                 .build();
         deployment.execute();
-
-        // Verify deployed
-        if (!isDeployed(deploymentName)) {
-            throw createError("Deployment %s was not deployed", deploymentName);
-        }
-
-        // Check the status
-        final ModelNode address = ServerOperations.createAddress("server-group", "main-server-group", "deployment", deploymentName);
-        final ModelNode op = ServerOperations.createReadAttributeOperation(address, "enabled");
-        final ModelNode result = executeOperation(op);
-
-        if (!ServerOperations.readResult(result).asBoolean()) {
-            throw createError("Deployment was not enabled on the main-server-group");
-        }
     }
 
     @Override
-    public void undeploy(final String deploymentName) throws IOException, DeploymentException {
+    public void undeploy(final String deploymentName, final Collection<String> serverGroups) throws IOException, DeploymentException {
         checkState();
-        final Deployment deployment = DeploymentBuilder.of(client, DEFAULT_DOMAIN)
+        final Deployment deployment = DeploymentBuilder.of(client, serverGroups)
                 .setName(deploymentName)
                 .setType(Deployment.Type.UNDEPLOY)
                 .build();
         deployment.execute();
-
-        // Verify not deployed
-        if (isDeployed(deploymentName)) {
-            throw createError("Deployment %s was not undeployed", deploymentName);
-        }
     }
 
     public Set<String> getServerGroups() {
