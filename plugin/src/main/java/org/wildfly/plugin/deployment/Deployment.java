@@ -40,7 +40,8 @@ import static org.wildfly.plugin.common.ServerOperations.createRemoveOperation;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 
@@ -51,7 +52,6 @@ import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.as.controller.client.helpers.Operations;
 import org.jboss.as.controller.client.helpers.Operations.CompositeOperationBuilder;
 import org.jboss.dmr.ModelNode;
-import org.wildfly.plugin.common.DeploymentInspector;
 import org.wildfly.plugin.common.ServerOperations;
 
 /**
@@ -83,6 +83,7 @@ public class Deployment {
     private final Type type;
     private final String matchPattern;
     private final MatchPatternStrategy matchPatternStrategy;
+    private final Deployments deployments;
 
     /**
      * Creates a new deployment.
@@ -106,9 +107,10 @@ public class Deployment {
         this.type = type;
         this.matchPattern = matchPattern;
         this.matchPatternStrategy = matchPatternStrategy;
+        deployments = Deployments.create(client, serverGroups);
     }
 
-    private void validateExistingDeployments(List<String> existingDeployments) throws DeploymentException {
+    private void validateExistingDeployments(final Collection<String> existingDeployments) throws DeploymentException {
         if (matchPattern == null) {
             return;
         }
@@ -126,7 +128,6 @@ public class Deployment {
      */
     public void execute() throws DeploymentException {
         try {
-            final List<String> existingDeployments = DeploymentInspector.getDeployments(client, name, matchPattern);
             final Operation operation;
             switch (type) {
                 case DEPLOY: {
@@ -134,31 +135,29 @@ public class Deployment {
                     break;
                 }
                 case FORCE_DEPLOY: {
-                    if (existingDeployments.contains(name)) {
-                        operation = createReplaceOperation();
+                    if (deployments.hasDeployment(name)) {
+                        operation = createReplaceOperation(true);
                     } else {
                         operation = createDeployOperation();
                     }
                     break;
                 }
                 case REDEPLOY: {
-                    if (!existingDeployments.contains(name)) {
+                    if (!deployments.hasDeployment(name)) {
                         throw new DeploymentException("Deployment '%s' not found, cannot redeploy", name);
                     }
                     operation = createRedeployOperation();
                     break;
                 }
                 case UNDEPLOY: {
-                    validateExistingDeployments(existingDeployments);
-                    operation = createUndeployOperation(matchPatternStrategy, existingDeployments);
+                    operation = createUndeployOperation(matchPatternStrategy, true);
                     break;
                 }
                 case UNDEPLOY_IGNORE_MISSING: {
-                    if (existingDeployments.isEmpty()) {
+                    operation = createUndeployOperation(matchPatternStrategy, false);
+                    // This may be null if there was nothing to deploy
+                    if (operation == null) {
                         return;
-                    } else {
-                        validateExistingDeployments(existingDeployments);
-                        operation = createUndeployOperation(matchPatternStrategy, existingDeployments);
                     }
                     break;
                 }
@@ -227,15 +226,32 @@ public class Deployment {
         return builder.build();
     }
 
-    private Operation createReplaceOperation() throws IOException {
+    private Operation createReplaceOperation(final boolean allowAddIfMissing) throws IOException {
+        final CompositeOperationBuilder builder = CompositeOperationBuilder.create();
+        // Adds need to happen first on server-groups otherwise the full-replace-deployment will fail currently
+        if (allowAddIfMissing) {
+            // If deployment is not on the server group, add it but don't yet enable it. The full-replace-deployment
+            // should handle that part.
+            for (String serverGroup : serverGroups) {
+                if (!deployments.hasDeployment(serverGroup, name)) {
+                    final ModelNode sgAddress = ServerOperations.createAddress(SERVER_GROUP, serverGroup, DEPLOYMENT, name);
+                    final ModelNode addOp = ServerOperations.createAddOperation(sgAddress);
+                    addOp.get(ServerOperations.ENABLED).set(false);
+                    if (runtimeName != null) {
+                        addOp.get(RUNTIME_NAME).set(runtimeName);
+                    }
+                    builder.addStep(addOp);
+                }
+            }
+        }
         final ModelNode op = createOperation(DEPLOYMENT_FULL_REPLACE_OPERATION);
         op.get(NAME).set(name);
         if (runtimeName != null) {
             op.get(RUNTIME_NAME).set(runtimeName);
         }
-        final OperationBuilder builder = OperationBuilder.create(op);
         addContent(builder, op);
         op.get(ENABLE).set(true);
+        builder.addStep(op);
         return builder.build();
     }
 
@@ -243,30 +259,63 @@ public class Deployment {
         if (serverGroups.isEmpty()) {
             return OperationBuilder.create(createOperation(DEPLOYMENT_REDEPLOY_OPERATION, createAddress(DEPLOYMENT, name))).build();
         }
-        return createReplaceOperation();
+        return createReplaceOperation(false);
     }
 
-    private Operation createUndeployOperation(final MatchPatternStrategy matchPatternStrategy, final Iterable<String> names) throws IOException {
+    private Operation createUndeployOperation(final MatchPatternStrategy matchPatternStrategy, final boolean failOnMissing) throws IOException, DeploymentException {
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create();
-        for (String name : names) {
-            if (serverGroups.isEmpty()) {
-                final ModelNode address = createAddress(DEPLOYMENT, name);
+        boolean stepAdded = false;
+        // Being empty we'll assume this is a standalone server
+        if (serverGroups.isEmpty()) {
+            final Set<String> deploymentNames = deployments.filter(name, matchPattern);
+            validateExistingDeployments(deploymentNames);
+            if (deploymentNames.isEmpty() && failOnMissing) {
+                throw new DeploymentException("No deployment matching %s found to undeploy.", (matchPattern == null ? name : matchPattern));
+            }
+            // Undeploy each deployment required
+            for (String deploymentName : deploymentNames) {
+                stepAdded = true;
+                final ModelNode address = createAddress(DEPLOYMENT, deploymentName);
                 builder.addStep(createOperation(DEPLOYMENT_UNDEPLOY_OPERATION, address))
                         .addStep(createRemoveOperation(address));
-            } else {
-                for (String serverGroup : serverGroups) {
-                    final ModelNode address = createAddress(SERVER_GROUP, serverGroup, DEPLOYMENT, name);
-                    builder.addStep(createOperation(DEPLOYMENT_UNDEPLOY_OPERATION, address))
-                            .addStep(createRemoveOperation(address));
+                if (matchPatternStrategy == MatchPatternStrategy.FIRST) {
+                    break;
                 }
-                builder.addStep(createRemoveOperation(createAddress(DEPLOYMENT, name)));
             }
-
-            if (matchPatternStrategy == MatchPatternStrategy.FIRST) {
-                break;
+        } else {
+            final Set<String> toRemove = new HashSet<>();
+            // Process each server group separately
+            for (String serverGroup : serverGroups) {
+                final Set<String> deploymentNames = deployments.filter(name, matchPattern, serverGroup);
+                validateExistingDeployments(deploymentNames);
+                if (deploymentNames.isEmpty() && failOnMissing) {
+                    throw new DeploymentException("No deployment matching %s found to undeploy on server group %s.",
+                            (matchPattern == null ? name : matchPattern), serverGroup);
+                }
+                // Undeploy each deployment required
+                for (String deploymentName : deploymentNames) {
+                    // If the deployment is present on the server group add the undeploy and remove operation
+                    if (deployments.hasDeployment(serverGroup, deploymentName)) {
+                        stepAdded = true;
+                        final ModelNode address = createAddress(SERVER_GROUP, serverGroup, DEPLOYMENT, deploymentName);
+                        builder.addStep(createOperation(DEPLOYMENT_UNDEPLOY_OPERATION, address))
+                                .addStep(createRemoveOperation(address));
+                    } else if (failOnMissing) {
+                        throw new DeploymentException("Could not undeploy %s. Deployment was not found on server group %s.", deploymentName, serverGroup);
+                    }
+                    // Add the deployment to the list of deployments to be removed from the domain content repository
+                    toRemove.add(deploymentName);
+                    if (matchPatternStrategy == MatchPatternStrategy.FIRST) {
+                        break;
+                    }
+                }
+            }
+            for (String deploymentName : toRemove) {
+                stepAdded = true;
+                builder.addStep(createRemoveOperation(createAddress(DEPLOYMENT, deploymentName)));
             }
         }
-        return builder.build();
+        // If no steps were added return null
+        return (stepAdded ? builder.build() : null);
     }
-
 }

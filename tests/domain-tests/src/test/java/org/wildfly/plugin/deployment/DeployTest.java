@@ -26,12 +26,18 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
 import javax.inject.Inject;
 
+import org.jboss.as.controller.client.helpers.ClientConstants;
+import org.jboss.as.controller.client.helpers.Operations.CompositeOperationBuilder;
 import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 import org.wildfly.plugin.common.ServerOperations;
-import org.wildfly.plugin.server.DeploymentManager;
+import org.wildfly.plugin.server.DomainDeploymentManager;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
 
 /**
@@ -42,7 +48,7 @@ import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
 public class DeployTest extends AbstractWildFlyServerMojoTest {
 
     @Inject
-    private DeploymentManager deploymentManager;
+    private DomainDeploymentManager deploymentManager;
 
     @Test
     public void testDeploy() throws Exception {
@@ -154,6 +160,27 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
     }
 
     @Test
+    public void testDeployNewServerGroup() throws Exception {
+        // Make sure the deployment is deployed to the main-server-group and not deployed to the other-server-group
+        if (!deploymentManager.isDeployed(DEPLOYMENT_NAME, "main-server-group")) {
+            deploymentManager.deploy(DEPLOYMENT_NAME, Collections.singleton("main-server-group"), getDeployment());
+        }
+        if (deploymentManager.isDeployed(DEPLOYMENT_NAME, "other-server-group")) {
+            deploymentManager.undeploy(DEPLOYMENT_NAME, Collections.singleton("other-deployment-group"));
+        }
+        // Set up the other-server-group servers to ensure the full deployment process works correctly
+        final ModelNode op = ServerOperations.createOperation("start-servers", ServerOperations.createAddress(ClientConstants.SERVER_GROUP, "other-server-group"));
+        op.get("blocking").set(true);
+        executeOperation(op);
+
+        // Deploy to both server groups and ensure the deployment exists on both, it should already be on the
+        // main-server-group and should have been added to the other-server-group
+        final Collection<String> serverGroups = Arrays.asList("main-server-group", "other-server-group");
+        executeAndVerifyDeploymentExists("deploy", "deploy-multi-server-group-pom.xml", null, serverGroups);
+        deploymentManager.undeploy(DEPLOYMENT_NAME, serverGroups);
+    }
+
+    @Test
     public void testRedeploy() throws Exception {
 
         // Make sure the archive is deployed
@@ -198,6 +225,10 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
     }
 
     private void executeAndVerifyDeploymentExists(final String goal, final String fileName, final String runtimeName) throws Exception {
+        executeAndVerifyDeploymentExists(goal, fileName, runtimeName, Collections.singleton("main-server-group"));
+    }
+
+    private void executeAndVerifyDeploymentExists(final String goal, final String fileName, final String runtimeName, final Iterable<String> serverGroups) throws Exception {
 
         final AbstractDeployment deployMojo = lookupMojoAndVerify(goal, fileName);
 
@@ -206,17 +237,27 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         // Verify deployed
         assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed", deploymentManager.isDeployed(DEPLOYMENT_NAME));
 
+        // Verify deployed on all server groups
+        for (String serverGroup : serverGroups) {
+            assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed on server group " + serverGroup, deploymentManager.isDeployed(DEPLOYMENT_NAME, serverGroup));
+        }
+
         // /deployment=test.war :read-attribute(name=status)
-        final ModelNode address = ServerOperations.createAddress("server-group", "main-server-group", "deployment", DEPLOYMENT_NAME);
-        ModelNode op = ServerOperations.createReadAttributeOperation(address, "enabled");
-        ModelNode result = executeOperation(op);
-
-        assertTrue("Deployment was not enabled", ServerOperations.readResult(result).asBoolean());
-
+        final CompositeOperationBuilder builder = CompositeOperationBuilder.create();
+        for (String serverGroup : serverGroups) {
+            final ModelNode address = ServerOperations.createAddress(ClientConstants.SERVER_GROUP, serverGroup,
+                    ClientConstants.DEPLOYMENT, DEPLOYMENT_NAME);
+            builder.addStep(ServerOperations.createReadAttributeOperation(address, "runtime-name"));
+        }
         if (runtimeName != null) {
-            op = ServerOperations.createReadAttributeOperation(address, "runtime-name");
-            result = executeOperation(op);
-            assertEquals("Runtime name does not match", runtimeName, ServerOperations.readResultAsString(result));
+            final ModelNode result = client.execute(builder.build());
+            assertTrue(ServerOperations.getFailureDescriptionAsString(result), ServerOperations.isSuccessfulOutcome(result));
+            // Get the result of the step
+            final ModelNode stepResults = ServerOperations.readResult(result);
+            final Set<String> stepKeys = stepResults.keys();
+            for (String stepKey : stepKeys) {
+                assertEquals("Runtime name does not match", runtimeName, ServerOperations.readResultAsString(stepResults.get(stepKey)));
+            }
         }
     }
 

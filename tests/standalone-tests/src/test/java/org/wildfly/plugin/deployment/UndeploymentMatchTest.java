@@ -22,16 +22,17 @@
 
 package org.wildfly.plugin.deployment;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import java.util.List;
+import java.util.Set;
+import javax.inject.Inject;
 
 import org.jboss.dmr.ModelNode;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.wildfly.plugin.common.DeploymentInspector;
 import org.wildfly.plugin.common.ServerOperations;
+import org.wildfly.plugin.server.DeploymentManager;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
 
 /**
@@ -41,8 +42,12 @@ import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
  */
 public class UndeploymentMatchTest extends AbstractWildFlyServerMojoTest {
 
+    @Inject
+    private DeploymentManager deploymentManager;
+
     @Before
     public void before() throws Exception {
+
         deploy("test-undeploy-1.war");
         deploy("test-undeploy-2.war");
     }
@@ -52,7 +57,7 @@ public class UndeploymentMatchTest extends AbstractWildFlyServerMojoTest {
 
         undeploy(MatchPatternStrategy.ALL);
 
-        List<String> deployments = DeploymentInspector.getDeployments(client, "", ".*.war");
+        final Set<String> deployments = deploymentManager.getDeployments();
         assertEquals(0, deployments.size());
     }
 
@@ -61,7 +66,7 @@ public class UndeploymentMatchTest extends AbstractWildFlyServerMojoTest {
 
         undeploy(MatchPatternStrategy.FIRST);
 
-        List<String> deployments = DeploymentInspector.getDeployments(client, "", ".*.war");
+        final Set<String> deployments = deploymentManager.getDeployments();
         assertEquals(1, deployments.size());
     }
 
