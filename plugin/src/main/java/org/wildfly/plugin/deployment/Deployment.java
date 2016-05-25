@@ -40,8 +40,8 @@ import static org.wildfly.plugin.common.ServerOperations.createRemoveOperation;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 
 import org.jboss.as.controller.client.ModelControllerClient;
@@ -76,7 +76,7 @@ public class Deployment {
     }
 
     private final File content;
-    private final List<String> serverGroups;
+    private final Set<String> serverGroups;
     private final ModelControllerClient client;
     private final String name;
     private final String runtimeName;
@@ -96,11 +96,11 @@ public class Deployment {
      * @param matchPattern         the pattern for matching multiple artifacts, if {@code null} the name is used.
      * @param matchPatternStrategy the strategy for handling multiple artifacts.
      */
-    Deployment(final ModelControllerClient client, final List<String> serverGroups, final File content, final String name, final String runtimeName, final Type type,
+    Deployment(final ModelControllerClient client, final Set<String> serverGroups, final File content, final String name, final String runtimeName, final Type type,
                final String matchPattern, final MatchPatternStrategy matchPatternStrategy) {
         this.content = content;
         this.client = client;
-        this.serverGroups = (serverGroups == null ? Collections.<String>emptyList() : serverGroups);
+        this.serverGroups = serverGroups;
         this.name = (name == null ? content.getName() : name);
         this.runtimeName = runtimeName;
         this.type = type;

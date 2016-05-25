@@ -156,7 +156,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
             validate(client, isDomain);
             final String matchPattern = getMatchPattern();
             final MatchPatternStrategy matchPatternStrategy = getMatchPatternStrategy();
-            final DeploymentBuilder deploymentBuilder = DeploymentBuilder.of(client, domain);
+            final DeploymentBuilder deploymentBuilder = DeploymentBuilder.of(client, (domain == null ? null : domain.getServerGroups()));
             deploymentBuilder
                     .setContent(file())
                     .setName(name)

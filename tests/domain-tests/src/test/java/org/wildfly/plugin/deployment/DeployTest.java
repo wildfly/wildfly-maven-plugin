@@ -31,7 +31,7 @@ import javax.inject.Inject;
 import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 import org.wildfly.plugin.common.ServerOperations;
-import org.wildfly.plugin.server.Deployments;
+import org.wildfly.plugin.server.DeploymentManager;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
 
 /**
@@ -42,46 +42,46 @@ import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
 public class DeployTest extends AbstractWildFlyServerMojoTest {
 
     @Inject
-    private Deployments deployments;
+    private DeploymentManager deploymentManager;
 
     @Test
     public void testDeploy() throws Exception {
 
         // Make sure the archive is not deployed
-        if (deployments.isDeployed(DEPLOYMENT_NAME)) {
-            deployments.undeploy(DEPLOYMENT_NAME);
+        if (deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
+            deploymentManager.undeploy(DEPLOYMENT_NAME);
         }
         executeAndVerifyDeploymentExists("deploy", "deploy-webarchive-pom.xml");
-        deployments.undeploy(DEPLOYMENT_NAME);
+        deploymentManager.undeploy(DEPLOYMENT_NAME);
     }
 
     @Test
     public void testDeployWithRuntimeName() throws Exception {
         // Make sure the archive is not deployed
-        if (deployments.isDeployed(DEPLOYMENT_NAME)) {
-            deployments.undeploy(DEPLOYMENT_NAME);
+        if (deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
+            deploymentManager.undeploy(DEPLOYMENT_NAME);
         }
         executeAndVerifyDeploymentExists("deploy", "deploy-webarchive-with-runtime-name-pom.xml", "test-runtime.war");
-        deployments.undeploy(DEPLOYMENT_NAME);
+        deploymentManager.undeploy(DEPLOYMENT_NAME);
     }
 
     @Test
     public void testDeployOnly() throws Exception {
 
         // Make sure the archive is not deployed
-        if (deployments.isDeployed(DEPLOYMENT_NAME)) {
-            deployments.undeploy(DEPLOYMENT_NAME);
+        if (deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
+            deploymentManager.undeploy(DEPLOYMENT_NAME);
         }
         executeAndVerifyDeploymentExists("deploy-only", "deploy-webarchive-pom.xml");
-        deployments.undeploy(DEPLOYMENT_NAME);
+        deploymentManager.undeploy(DEPLOYMENT_NAME);
     }
 
     @Test
     public void testDeployWithCommands() throws Exception {
 
         // Make sure the archive is not deployed
-        if (deployments.isDeployed(DEPLOYMENT_NAME)) {
-            deployments.undeploy(DEPLOYMENT_NAME);
+        if (deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
+            deploymentManager.undeploy(DEPLOYMENT_NAME);
         }
 
         executeAndVerifyDeploymentExists("deploy", "deploy-webarchive-with-commands-pom.xml");
@@ -100,15 +100,15 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         // Remove the logger to clean-up
         op = ServerOperations.createRemoveOperation(address);
         executeOperation(op);
-        deployments.undeploy(DEPLOYMENT_NAME);
+        deploymentManager.undeploy(DEPLOYMENT_NAME);
     }
 
     @Test
     public void testDeployOnlyWithCommands() throws Exception {
 
         // Make sure the archive is not deployed
-        if (deployments.isDeployed(DEPLOYMENT_NAME)) {
-            deployments.undeploy(DEPLOYMENT_NAME);
+        if (deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
+            deploymentManager.undeploy(DEPLOYMENT_NAME);
         }
 
         executeAndVerifyDeploymentExists("deploy-only", "deploy-webarchive-with-commands-pom.xml");
@@ -127,14 +127,14 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         // Remove the logger to clean-up
         op = ServerOperations.createRemoveOperation(address);
         executeOperation(op);
-        deployments.undeploy(DEPLOYMENT_NAME);
+        deploymentManager.undeploy(DEPLOYMENT_NAME);
     }
 
     @Test
     public void testDeployWithStoppedServer() throws Exception {
         // Make sure the archive is not deployed
-        if (deployments.isDeployed(DEPLOYMENT_NAME)) {
-            deployments.undeploy(DEPLOYMENT_NAME);
+        if (deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
+            deploymentManager.undeploy(DEPLOYMENT_NAME);
         }
         final ModelNode address = ServerOperations.createAddress("host", "master", "server-config", "server-one");
         try {
@@ -144,7 +144,7 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
             executeOperation(op);
 
             executeAndVerifyDeploymentExists("deploy", "deploy-webarchive-pom.xml");
-            deployments.undeploy(DEPLOYMENT_NAME);
+            deploymentManager.undeploy(DEPLOYMENT_NAME);
         } finally {
             // Restart server-twp
             final ModelNode op = ServerOperations.createOperation("start", address);
@@ -157,32 +157,32 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
     public void testRedeploy() throws Exception {
 
         // Make sure the archive is deployed
-        if (!deployments.isDeployed(DEPLOYMENT_NAME)) {
-            deployments.deploy(DEPLOYMENT_NAME, getDeployment());
+        if (!deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
+            deploymentManager.deploy(DEPLOYMENT_NAME, getDeployment());
         }
 
         executeAndVerifyDeploymentExists("redeploy", "deploy-webarchive-pom.xml");
-        deployments.undeploy(DEPLOYMENT_NAME);
+        deploymentManager.undeploy(DEPLOYMENT_NAME);
     }
 
     @Test
     public void testRedeployOnly() throws Exception {
 
         // Make sure the archive is deployed
-        if (!deployments.isDeployed(DEPLOYMENT_NAME)) {
-            deployments.deploy(DEPLOYMENT_NAME, getDeployment());
+        if (!deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
+            deploymentManager.deploy(DEPLOYMENT_NAME, getDeployment());
         }
 
         executeAndVerifyDeploymentExists("redeploy-only", "deploy-webarchive-pom.xml");
-        deployments.undeploy(DEPLOYMENT_NAME);
+        deploymentManager.undeploy(DEPLOYMENT_NAME);
     }
 
     @Test
     public void testUndeploy() throws Exception {
 
         // Make sure the archive is deployed
-        if (!deployments.isDeployed(DEPLOYMENT_NAME)) {
-            deployments.deploy(DEPLOYMENT_NAME, getDeployment());
+        if (!deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
+            deploymentManager.deploy(DEPLOYMENT_NAME, getDeployment());
         }
 
         final AbstractDeployment deployMojo = lookupMojoAndVerify("undeploy", "deploy-webarchive-pom.xml");
@@ -190,7 +190,7 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         deployMojo.execute();
 
         // Verify deployed
-        assertFalse("Deployment " + DEPLOYMENT_NAME + " was not undeployed", deployments.isDeployed(DEPLOYMENT_NAME));
+        assertFalse("Deployment " + DEPLOYMENT_NAME + " was not undeployed", deploymentManager.isDeployed(DEPLOYMENT_NAME));
     }
 
     private void executeAndVerifyDeploymentExists(final String goal, final String fileName) throws Exception {
@@ -204,7 +204,7 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         deployMojo.execute();
 
         // Verify deployed
-        assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed", deployments.isDeployed(DEPLOYMENT_NAME));
+        assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed", deploymentManager.isDeployed(DEPLOYMENT_NAME));
 
         // /deployment=test.war :read-attribute(name=status)
         final ModelNode address = ServerOperations.createAddress("server-group", "main-server-group", "deployment", DEPLOYMENT_NAME);

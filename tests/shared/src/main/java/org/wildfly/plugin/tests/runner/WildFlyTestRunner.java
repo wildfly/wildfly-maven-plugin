@@ -33,7 +33,7 @@ import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.InitializationError;
-import org.wildfly.plugin.server.Deployments;
+import org.wildfly.plugin.server.DeploymentManager;
 import org.wildfly.plugin.server.TestServer;
 
 /**
@@ -93,7 +93,7 @@ public class WildFlyTestRunner extends BlockJUnit4ClassRunner {
                                 field.set(instance, server.getClient());
                             } else if (TestServer.class.isAssignableFrom(field.getType())) {
                                 field.set(instance, server);
-                            } else if (Deployments.class.isAssignableFrom(field.getType())) {
+                            } else if (DeploymentManager.class.isAssignableFrom(field.getType())) {
                                 field.set(instance, server);
                             }
                         }
