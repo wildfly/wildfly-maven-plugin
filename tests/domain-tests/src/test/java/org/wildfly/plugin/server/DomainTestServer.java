@@ -193,7 +193,7 @@ public class DomainTestServer implements TestServer, DomainDeploymentManager {
         final Deployment deployment = DeploymentBuilder.of(client, serverGroups)
                 .setContent(content)
                 .setName(deploymentName)
-                .setType(Deployment.Type.DEPLOY)
+                .setType(Deployment.Type.FORCE_DEPLOY)
                 .build();
         deployment.execute();
     }
@@ -203,7 +203,7 @@ public class DomainTestServer implements TestServer, DomainDeploymentManager {
         checkState();
         final Deployment deployment = DeploymentBuilder.of(client, serverGroups)
                 .setName(deploymentName)
-                .setType(Deployment.Type.UNDEPLOY)
+                .setType(Deployment.Type.UNDEPLOY_IGNORE_MISSING)
                 .build();
         deployment.execute();
     }

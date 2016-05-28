@@ -34,6 +34,7 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DefaultArtifact;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.jboss.dmr.ModelNode;
+import org.junit.After;
 import org.junit.Test;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.server.DeploymentManager;
@@ -48,6 +49,13 @@ public class ArtifactDeploymentTest extends AbstractWildFlyServerMojoTest {
 
     @Inject
     private DeploymentManager deploymentManager;
+
+    @After
+    public void cleanup() throws Exception {
+        if (deploymentManager.isDeployed(artifactName)) {
+            deploymentManager.undeploy(artifactName);
+        }
+    }
 
     @Test
     public void testDeploy() throws Exception {
