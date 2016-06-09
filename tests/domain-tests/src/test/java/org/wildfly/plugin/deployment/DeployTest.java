@@ -27,8 +27,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import javax.inject.Inject;
 
@@ -37,7 +37,8 @@ import org.jboss.as.controller.client.helpers.Operations.CompositeOperationBuild
 import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 import org.wildfly.plugin.common.ServerOperations;
-import org.wildfly.plugin.server.DomainDeploymentManager;
+import org.wildfly.plugin.core.DeploymentManager;
+import org.wildfly.plugin.core.UndeployDescription;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
 
 /**
@@ -46,48 +47,50 @@ import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
  * @author <a href="mailto:heinz.wilming@akquinet.de">Heinz Wilming</a>
  */
 public class DeployTest extends AbstractWildFlyServerMojoTest {
+    private static final String DEFAULT_SERVER_GROUP = "main-server-group";
+    private static final Set<String> DEFAULT_SERVER_GROUPS = Collections.singleton(DEFAULT_SERVER_GROUP);
 
     @Inject
-    private DomainDeploymentManager deploymentManager;
+    private DeploymentManager deploymentManager;
 
     @Test
     public void testDeploy() throws Exception {
 
         // Make sure the archive is not deployed
-        if (deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
-            deploymentManager.undeploy(DEPLOYMENT_NAME);
+        if (deploymentManager.hasDeployment(DEPLOYMENT_NAME, DEFAULT_SERVER_GROUP)) {
+            deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
         }
         executeAndVerifyDeploymentExists("deploy", "deploy-webarchive-pom.xml");
-        deploymentManager.undeploy(DEPLOYMENT_NAME);
+        deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
     }
 
     @Test
     public void testDeployWithRuntimeName() throws Exception {
         // Make sure the archive is not deployed
-        if (deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
-            deploymentManager.undeploy(DEPLOYMENT_NAME);
+        if (deploymentManager.hasDeployment(DEPLOYMENT_NAME, DEFAULT_SERVER_GROUP)) {
+            deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
         }
         executeAndVerifyDeploymentExists("deploy", "deploy-webarchive-with-runtime-name-pom.xml", "test-runtime.war");
-        deploymentManager.undeploy(DEPLOYMENT_NAME);
+        deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
     }
 
     @Test
     public void testDeployOnly() throws Exception {
 
         // Make sure the archive is not deployed
-        if (deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
-            deploymentManager.undeploy(DEPLOYMENT_NAME);
+        if (deploymentManager.hasDeployment(DEPLOYMENT_NAME, DEFAULT_SERVER_GROUP)) {
+            deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
         }
         executeAndVerifyDeploymentExists("deploy-only", "deploy-webarchive-pom.xml");
-        deploymentManager.undeploy(DEPLOYMENT_NAME);
+        deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
     }
 
     @Test
     public void testDeployWithCommands() throws Exception {
 
         // Make sure the archive is not deployed
-        if (deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
-            deploymentManager.undeploy(DEPLOYMENT_NAME);
+        if (deploymentManager.hasDeployment(DEPLOYMENT_NAME, DEFAULT_SERVER_GROUP)) {
+            deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
         }
 
         executeAndVerifyDeploymentExists("deploy", "deploy-webarchive-with-commands-pom.xml");
@@ -106,15 +109,15 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         // Remove the logger to clean-up
         op = ServerOperations.createRemoveOperation(address);
         executeOperation(op);
-        deploymentManager.undeploy(DEPLOYMENT_NAME);
+        deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
     }
 
     @Test
     public void testDeployOnlyWithCommands() throws Exception {
 
         // Make sure the archive is not deployed
-        if (deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
-            deploymentManager.undeploy(DEPLOYMENT_NAME);
+        if (deploymentManager.hasDeployment(DEPLOYMENT_NAME, DEFAULT_SERVER_GROUP)) {
+            deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
         }
 
         executeAndVerifyDeploymentExists("deploy-only", "deploy-webarchive-with-commands-pom.xml");
@@ -133,14 +136,14 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         // Remove the logger to clean-up
         op = ServerOperations.createRemoveOperation(address);
         executeOperation(op);
-        deploymentManager.undeploy(DEPLOYMENT_NAME);
+        deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
     }
 
     @Test
     public void testDeployWithStoppedServer() throws Exception {
         // Make sure the archive is not deployed
-        if (deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
-            deploymentManager.undeploy(DEPLOYMENT_NAME);
+        if (deploymentManager.hasDeployment(DEPLOYMENT_NAME, DEFAULT_SERVER_GROUP)) {
+            deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
         }
         final ModelNode address = ServerOperations.createAddress("host", "master", "server-config", "server-one");
         try {
@@ -150,7 +153,7 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
             executeOperation(op);
 
             executeAndVerifyDeploymentExists("deploy", "deploy-webarchive-pom.xml");
-            deploymentManager.undeploy(DEPLOYMENT_NAME);
+            deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
         } finally {
             // Restart server-twp
             final ModelNode op = ServerOperations.createOperation("start", address);
@@ -162,11 +165,11 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
     @Test
     public void testDeployNewServerGroup() throws Exception {
         // Make sure the deployment is deployed to the main-server-group and not deployed to the other-server-group
-        if (!deploymentManager.isDeployed(DEPLOYMENT_NAME, "main-server-group")) {
-            deploymentManager.deploy(DEPLOYMENT_NAME, Collections.singleton("main-server-group"), getDeployment());
+        if (!deploymentManager.hasDeployment(DEPLOYMENT_NAME, "main-server-group")) {
+            deploymentManager.deploy(getDeployment().addServerGroup("main-server-group"));
         }
-        if (deploymentManager.isDeployed(DEPLOYMENT_NAME, "other-server-group")) {
-            deploymentManager.undeploy(DEPLOYMENT_NAME, Collections.singleton("other-deployment-group"));
+        if (deploymentManager.hasDeployment(DEPLOYMENT_NAME, "other-server-group")) {
+            deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroup("other-deployment-group"));
         }
         // Set up the other-server-group servers to ensure the full deployment process works correctly
         final ModelNode op = ServerOperations.createOperation("start-servers", ServerOperations.createAddress(ClientConstants.SERVER_GROUP, "other-server-group"));
@@ -175,41 +178,41 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
 
         // Deploy to both server groups and ensure the deployment exists on both, it should already be on the
         // main-server-group and should have been added to the other-server-group
-        final Collection<String> serverGroups = Arrays.asList("main-server-group", "other-server-group");
+        final Set<String> serverGroups = new HashSet<>(Arrays.asList("main-server-group", "other-server-group"));
         executeAndVerifyDeploymentExists("deploy", "deploy-multi-server-group-pom.xml", null, serverGroups);
-        deploymentManager.undeploy(DEPLOYMENT_NAME, serverGroups);
+        deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(serverGroups));
     }
 
     @Test
     public void testRedeploy() throws Exception {
 
         // Make sure the archive is deployed
-        if (!deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
-            deploymentManager.deploy(DEPLOYMENT_NAME, getDeployment());
+        if (!deploymentManager.hasDeployment(DEPLOYMENT_NAME, DEFAULT_SERVER_GROUP)) {
+            deploymentManager.deploy(getDeployment().addServerGroup(DEFAULT_SERVER_GROUP));
         }
 
         executeAndVerifyDeploymentExists("redeploy", "deploy-webarchive-pom.xml");
-        deploymentManager.undeploy(DEPLOYMENT_NAME);
+        deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
     }
 
     @Test
     public void testRedeployOnly() throws Exception {
 
         // Make sure the archive is deployed
-        if (!deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
-            deploymentManager.deploy(DEPLOYMENT_NAME, getDeployment());
+        if (!deploymentManager.hasDeployment(DEPLOYMENT_NAME, DEFAULT_SERVER_GROUP)) {
+            deploymentManager.deploy(getDeployment().addServerGroup(DEFAULT_SERVER_GROUP));
         }
 
         executeAndVerifyDeploymentExists("redeploy-only", "deploy-webarchive-pom.xml");
-        deploymentManager.undeploy(DEPLOYMENT_NAME);
+        deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
     }
 
     @Test
     public void testUndeploy() throws Exception {
 
         // Make sure the archive is deployed
-        if (!deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
-            deploymentManager.deploy(DEPLOYMENT_NAME, getDeployment());
+        if (!deploymentManager.hasDeployment(DEPLOYMENT_NAME, DEFAULT_SERVER_GROUP)) {
+            deploymentManager.deploy(getDeployment().addServerGroup(DEFAULT_SERVER_GROUP));
         }
 
         final AbstractDeployment deployMojo = lookupMojoAndVerify("undeploy", "deploy-webarchive-pom.xml");
@@ -217,7 +220,7 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         deployMojo.execute();
 
         // Verify deployed
-        assertFalse("Deployment " + DEPLOYMENT_NAME + " was not undeployed", deploymentManager.isDeployed(DEPLOYMENT_NAME));
+        assertFalse("Deployment " + DEPLOYMENT_NAME + " was not undeployed", deploymentManager.hasDeployment(DEPLOYMENT_NAME, DEFAULT_SERVER_GROUP));
     }
 
     private void executeAndVerifyDeploymentExists(final String goal, final String fileName) throws Exception {
@@ -235,11 +238,11 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         deployMojo.execute();
 
         // Verify deployed
-        assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed", deploymentManager.isDeployed(DEPLOYMENT_NAME));
+        assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed", deploymentManager.hasDeployment(DEPLOYMENT_NAME));
 
         // Verify deployed on all server groups
         for (String serverGroup : serverGroups) {
-            assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed on server group " + serverGroup, deploymentManager.isDeployed(DEPLOYMENT_NAME, serverGroup));
+            assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed on server group " + serverGroup, deploymentManager.hasDeployment(DEPLOYMENT_NAME, serverGroup));
         }
 
         // /deployment=test.war :read-attribute(name=status)

@@ -24,7 +24,6 @@ package org.wildfly.plugin.tests;
 
 import static org.junit.Assert.*;
 
-import java.io.File;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,6 +33,7 @@ import java.nio.file.StandardCopyOption;
 import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.testing.MojoRule;
 import org.junit.Rule;
+import org.wildfly.plugin.core.Deployment;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
@@ -59,8 +59,8 @@ public abstract class AbstractWildFlyMojoTest {
      *
      * @return the deployment
      */
-    protected File getDeployment() {
-        return Paths.get(BASE_CONFIG_DIR, "target", DEPLOYMENT_NAME).toFile();
+    protected Deployment getDeployment() {
+        return Deployment.of(Paths.get(BASE_CONFIG_DIR, "target", DEPLOYMENT_NAME));
     }
 
     /**

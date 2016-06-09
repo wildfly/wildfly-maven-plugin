@@ -48,6 +48,8 @@ import org.wildfly.core.launcher.DomainCommandBuilder;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
+import org.wildfly.plugin.core.ServerHelper;
+import org.wildfly.plugin.core.ServerProcess;
 import org.wildfly.plugin.server.ArtifactResolver.ArtifactNameSplitter;
 
 /**
@@ -262,7 +264,7 @@ public class StartMojo extends AbstractServerConnection {
                 } else if ("system.err".equals(value)) {
                     out = System.err;
                 } else if ("none".equals(value)) {
-                    out = null;
+                    out = ServerProcess.DISCARDING;
                 } else {
                     // Attempt to create a file
                     final Path path = Paths.get(value);
@@ -281,7 +283,7 @@ public class StartMojo extends AbstractServerConnection {
             try (final ModelControllerClient client = createClient()) {
                 final CommandBuilder commandBuilder = createCommandBuilder(jbossHome);
                 log.info(String.format("%s server is starting up.", serverType));
-                final Process process = ServerHelper.startProcess(commandBuilder, env, out);
+                final Process process = ServerProcess.start(commandBuilder, env, out);
                 if (serverType == ServerType.DOMAIN) {
                     ServerHelper.waitForDomain(process, DomainClient.Factory.create(client), startupTimeout);
                 } else {

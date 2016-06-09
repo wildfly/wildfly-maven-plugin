@@ -31,7 +31,8 @@ import javax.inject.Inject;
 import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 import org.wildfly.plugin.common.ServerOperations;
-import org.wildfly.plugin.server.DeploymentManager;
+import org.wildfly.plugin.core.DeploymentManager;
+import org.wildfly.plugin.core.UndeployDescription;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
 
 /**
@@ -48,8 +49,8 @@ public class DeployOnlyTest extends AbstractWildFlyServerMojoTest {
     public void testDeploy() throws Exception {
 
         // Make sure the archive is not deployed
-        if (deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
-            deploymentManager.undeploy(DEPLOYMENT_NAME);
+        if (deploymentManager.hasDeployment(DEPLOYMENT_NAME)) {
+            deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME));
         }
 
         final AbstractDeployment deployMojo = lookupMojoAndVerify("deploy-only", "deploy-only-webarchive-pom.xml");
@@ -57,7 +58,7 @@ public class DeployOnlyTest extends AbstractWildFlyServerMojoTest {
         deployMojo.execute();
 
         // Verify deployed
-        assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed", deploymentManager.isDeployed(DEPLOYMENT_NAME));
+        assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed", deploymentManager.hasDeployment(DEPLOYMENT_NAME));
 
         // /deployment=test.war :read-attribute(name=status)
         final ModelNode address = ServerOperations.createAddress("deployment", DEPLOYMENT_NAME);
@@ -71,8 +72,8 @@ public class DeployOnlyTest extends AbstractWildFlyServerMojoTest {
     public void testDeployWithCommands() throws Exception {
 
         // Make sure the archive is not deployed
-        if (deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
-            deploymentManager.undeploy(DEPLOYMENT_NAME);
+        if (deploymentManager.hasDeployment(DEPLOYMENT_NAME)) {
+            deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME));
         }
 
         final AbstractDeployment deployMojo = lookupMojoAndVerify("deploy-only", "deploy-only-webarchive-with-commands-pom.xml");
@@ -106,8 +107,8 @@ public class DeployOnlyTest extends AbstractWildFlyServerMojoTest {
     public void testRedeploy() throws Exception {
 
         // Make sure the archive is deployed
-        if (!deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
-            deploymentManager.deploy(DEPLOYMENT_NAME, getDeployment());
+        if (!deploymentManager.hasDeployment(DEPLOYMENT_NAME)) {
+            deploymentManager.deploy(getDeployment());
         }
 
         final AbstractDeployment deployMojo = lookupMojoAndVerify("redeploy-only", "redeploy-only-webarchive-pom.xml");
@@ -115,7 +116,7 @@ public class DeployOnlyTest extends AbstractWildFlyServerMojoTest {
         deployMojo.execute();
 
         // Verify deployed
-        assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed", deploymentManager.isDeployed(DEPLOYMENT_NAME));
+        assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed", deploymentManager.hasDeployment(DEPLOYMENT_NAME));
 
         // /deployment=test.war :read-attribute(name=status)
         final ModelNode address = ServerOperations.createAddress("deployment", DEPLOYMENT_NAME);
@@ -129,8 +130,8 @@ public class DeployOnlyTest extends AbstractWildFlyServerMojoTest {
     public void testUndeploy() throws Exception {
 
         // Make sure the archive is deployed
-        if (!deploymentManager.isDeployed(DEPLOYMENT_NAME)) {
-            deploymentManager.deploy(DEPLOYMENT_NAME, getDeployment());
+        if (!deploymentManager.hasDeployment(DEPLOYMENT_NAME)) {
+            deploymentManager.deploy(getDeployment());
         }
 
         final AbstractDeployment deployMojo = lookupMojoAndVerify("undeploy", "undeploy-webarchive-pom.xml");
@@ -138,6 +139,6 @@ public class DeployOnlyTest extends AbstractWildFlyServerMojoTest {
         deployMojo.execute();
 
         // Verify deployed
-        assertFalse("Deployment " + DEPLOYMENT_NAME + " was not undeployed", deploymentManager.isDeployed(DEPLOYMENT_NAME));
+        assertFalse("Deployment " + DEPLOYMENT_NAME + " was not undeployed", deploymentManager.hasDeployment(DEPLOYMENT_NAME));
     }
 }

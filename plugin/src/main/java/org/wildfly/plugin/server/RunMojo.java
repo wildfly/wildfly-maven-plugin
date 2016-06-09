@@ -29,6 +29,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import javax.inject.Inject;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -43,8 +44,10 @@ import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.core.launcher.CommandBuilder;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.common.PropertyNames;
+import org.wildfly.plugin.core.ServerHelper;
+import org.wildfly.plugin.core.ServerProcess;
 import org.wildfly.plugin.deployment.DeployMojo;
-import org.wildfly.plugin.deployment.Deployment;
+import org.wildfly.plugin.deployment.MavenDeployment;
 import org.wildfly.plugin.deployment.DeploymentBuilder;
 import org.wildfly.plugin.server.ArtifactResolver.ArtifactNameSplitter;
 
@@ -233,7 +236,7 @@ public class RunMojo extends DeployMojo {
             // Deploy the application
             log.info(String.format("Deploying application '%s'%n", deploymentFile.getName()));
             try (final ModelControllerClient client = createClient()) {
-                final Deployment deployment = DeploymentBuilder.of(client)
+                final MavenDeployment deployment = DeploymentBuilder.of(client)
                         .setContent(deploymentFile)
                         .setName(name)
                         .setRuntimeName(runtimeName)
@@ -299,8 +302,8 @@ public class RunMojo extends DeployMojo {
         return "run";
     }
 
-    private Process startContainer(final CommandBuilder commandBuilder) throws IOException, InterruptedException {
-        final Process process = ServerHelper.startProcess(commandBuilder, env, null);
+    private Process startContainer(final CommandBuilder commandBuilder) throws IOException, InterruptedException, TimeoutException {
+        final Process process = ServerProcess.start(commandBuilder, env);
         try (final ModelControllerClient client = createClient()) {
             ServerHelper.waitForStandalone(process, client, startupTimeout);
         }
