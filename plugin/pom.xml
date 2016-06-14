@@ -175,6 +175,13 @@
             <artifactId>wildfly-protocol</artifactId>
         </dependency>
 
+        <!-- https://github.com/wildfly/wildfly-maven-plugin/issues/105 -->
+        <dependency>
+            <groupId>com.sun.org.apache</groupId>
+            <artifactId>jaxp-ri</artifactId>
+            <version>1.4</version>
+        </dependency>
+
         <!-- Test dependencies -->
         <dependency>
             <groupId>junit</groupId>
