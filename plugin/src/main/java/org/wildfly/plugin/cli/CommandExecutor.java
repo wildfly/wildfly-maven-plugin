@@ -54,6 +54,7 @@ import org.wildfly.plugin.common.ServerOperations;
 @Named
 @Singleton
 public class CommandExecutor {
+    private static final String SAX_PARSER = "org.xml.sax.driver";
 
     /**
      * Executes the commands and scripts provided.
@@ -95,6 +96,7 @@ public class CommandExecutor {
     private void executeCommands(final ModelControllerClient client, final Commands commands) throws IOException {
 
         if (commands.hasCommands() || commands.hasScripts()) {
+            String oldSax = initSaxParser();
             try {
                 ModuleEnvironment.initJaxp();
                 final ModelControllerClient c = new NonClosingModelControllerClient(client);
@@ -114,7 +116,25 @@ public class CommandExecutor {
                 }
             } finally {
                 ModuleEnvironment.restorePlatform();
+                restoreSaxParser(oldSax);
             }
+        }
+    }
+
+    /**
+     * Setting SAX parser system property, see dependency com.sun.org.apache:jaxp-ri:1.4
+     */
+    private static String initSaxParser() {
+        String oldParser = System.getProperty(SAX_PARSER);
+        System.setProperty(SAX_PARSER, "com.sun.org.apache.xerces.internal.parsers.SAXParser");
+        return oldParser;
+    }
+
+    private static void restoreSaxParser(final String oldSaxParser) {
+        if (oldSaxParser == null) {
+            System.clearProperty(SAX_PARSER);
+        } else {
+            System.setProperty(SAX_PARSER, oldSaxParser);
         }
     }
 
