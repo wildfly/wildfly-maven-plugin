@@ -32,7 +32,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.wildfly.plugin.common.ServerOperations;
-import org.wildfly.plugin.server.DeploymentManager;
+import org.wildfly.plugin.core.DeploymentDescription;
+import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
 
 /**
@@ -57,7 +58,7 @@ public class UndeploymentMatchTest extends AbstractWildFlyServerMojoTest {
 
         undeploy(MatchPatternStrategy.ALL);
 
-        final Set<String> deployments = deploymentManager.getDeployments();
+        final Set<DeploymentDescription> deployments = deploymentManager.getDeployments();
         assertEquals(0, deployments.size());
     }
 
@@ -66,11 +67,11 @@ public class UndeploymentMatchTest extends AbstractWildFlyServerMojoTest {
 
         undeploy(MatchPatternStrategy.FIRST);
 
-        final Set<String> deployments = deploymentManager.getDeployments();
+        final Set<DeploymentDescription> deployments = deploymentManager.getDeployments();
         assertEquals(1, deployments.size());
     }
 
-    @Test(expected = DeploymentException.class)
+    @Test(expected = MojoDeploymentException.class)
     public void undeployFail() throws Exception {
         undeploy(MatchPatternStrategy.FAIL);
     }

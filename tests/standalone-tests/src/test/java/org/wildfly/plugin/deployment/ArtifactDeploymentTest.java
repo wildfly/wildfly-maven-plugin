@@ -27,6 +27,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.Collections;
 import javax.inject.Inject;
 
@@ -37,7 +38,9 @@ import org.jboss.dmr.ModelNode;
 import org.junit.After;
 import org.junit.Test;
 import org.wildfly.plugin.common.ServerOperations;
-import org.wildfly.plugin.server.DeploymentManager;
+import org.wildfly.plugin.core.Deployment;
+import org.wildfly.plugin.core.DeploymentManager;
+import org.wildfly.plugin.core.UndeployDescription;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
 
 /**
@@ -52,8 +55,8 @@ public class ArtifactDeploymentTest extends AbstractWildFlyServerMojoTest {
 
     @After
     public void cleanup() throws Exception {
-        if (deploymentManager.isDeployed(artifactName)) {
-            deploymentManager.undeploy(artifactName);
+        if (deploymentManager.hasDeployment(artifactName)) {
+            deploymentManager.undeploy(UndeployDescription.of(artifactName));
         }
     }
 
@@ -82,15 +85,15 @@ public class ArtifactDeploymentTest extends AbstractWildFlyServerMojoTest {
     }
 
     private void testDeploy(final DeployArtifactMojo mojo, final String classifier) throws Exception {
-        if (deploymentManager.isDeployed(artifactName)) {
-            deploymentManager.undeploy(artifactName);
+        if (deploymentManager.hasDeployment(artifactName)) {
+            deploymentManager.undeploy(UndeployDescription.of(artifactName));
         }
         mojo.project.setDependencyArtifacts(Collections.singleton(createArtifact(classifier)));
 
         mojo.execute();
 
         // Verify deployed
-        assertTrue("Deployment " + artifactName + " was not deployed", deploymentManager.isDeployed(artifactName));
+        assertTrue("Deployment " + artifactName + " was not deployed", deploymentManager.hasDeployment(artifactName));
 
         // /deployment=test.war :read-attribute(name=status)
         final ModelNode address = ServerOperations.createAddress("deployment", artifactName);
@@ -101,15 +104,15 @@ public class ArtifactDeploymentTest extends AbstractWildFlyServerMojoTest {
     }
 
     private void testUndeploy(final UndeployArtifactMojo mojo, final String classifier) throws Exception {
-        if (!deploymentManager.isDeployed(artifactName)) {
-            deploymentManager.deploy(artifactName, new File(BASE_CONFIG_DIR, artifactName));
+        if (!deploymentManager.hasDeployment(artifactName)) {
+            deploymentManager.deploy(Deployment.of(Paths.get(BASE_CONFIG_DIR, artifactName)));
         }
         mojo.project.setDependencyArtifacts(Collections.singleton(createArtifact(classifier)));
 
         mojo.execute();
 
         // Verify undeployed
-        assertFalse("Deployment " + artifactName + " was not undeployed", deploymentManager.isDeployed(artifactName));
+        assertFalse("Deployment " + artifactName + " was not undeployed", deploymentManager.hasDeployment(artifactName));
     }
 
     private Artifact createArtifact(final String classifier) {

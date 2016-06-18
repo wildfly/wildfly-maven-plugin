@@ -22,23 +22,15 @@
 
 package org.wildfly.plugin.server;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.controller.client.helpers.ClientConstants;
-import org.jboss.dmr.ModelNode;
 import org.wildfly.core.launcher.Launcher;
 import org.wildfly.core.launcher.ProcessHelper;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
-import org.wildfly.plugin.deployment.DeploymentBuilder;
-import org.wildfly.plugin.deployment.DeploymentException;
-import org.wildfly.plugin.common.ServerOperations;
-import org.wildfly.plugin.deployment.Deployment;
+import org.wildfly.plugin.core.DeploymentManager;
+import org.wildfly.plugin.core.ServerHelper;
 import org.wildfly.plugin.tests.Environment;
 
 /**
@@ -49,6 +41,7 @@ public class StandaloneTestServer implements TestServer {
     private volatile Process currentProcess;
     private volatile Thread shutdownThread;
     private volatile ModelControllerClient client;
+    private volatile DeploymentManager deploymentManager;
 
     @Override
     public void start() {
@@ -65,6 +58,7 @@ public class StandaloneTestServer implements TestServer {
                 client = ModelControllerClient.Factory.create(Environment.HOSTNAME, Environment.PORT);
                 currentProcess = process;
                 ServerHelper.waitForStandalone(process, client, Environment.TIMEOUT);
+                deploymentManager = DeploymentManager.Factory.create(client);
             } catch (Throwable t) {
                 try {
                     throw new RuntimeException("Failed to start server", t);
@@ -90,6 +84,8 @@ public class StandaloneTestServer implements TestServer {
             if (STARTED.compareAndSet(true, false)) {
                 ServerHelper.shutdownStandalone(client);
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         } finally {
             cleanUp();
         }
@@ -101,57 +97,8 @@ public class StandaloneTestServer implements TestServer {
     }
 
     @Override
-    public Set<String> getDeployments() throws IOException {
-        checkState();
-        final Set<String> result = new LinkedHashSet<>();
-        final ModelNode op = ServerOperations.createOperation(ClientConstants.READ_CHILDREN_NAMES_OPERATION);
-        op.get(ClientConstants.CHILD_TYPE).set(ClientConstants.DEPLOYMENT);
-        final ModelNode outcome = executeOperation(op);
-        final List<ModelNode> deployments = ServerOperations.readResult(outcome).asList();
-        for (ModelNode deployment : deployments) {
-            result.add(deployment.asString());
-        }
-        return result;
-    }
-
-    @Override
-    public boolean isDeployed(final String deploymentName) throws IOException {
-        checkState();
-        for (String deployment : getDeployments()) {
-            if (deploymentName.equals(deployment)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public void deploy(final String deploymentName, final File content) throws IOException, DeploymentException {
-        checkState();
-        final Deployment deployment = DeploymentBuilder.of(client)
-                .setContent(content)
-                .setName(deploymentName)
-                .setType(Deployment.Type.DEPLOY)
-                .build();
-        deployment.execute();
-    }
-
-    @Override
-    public void undeploy(final String deploymentName) throws IOException, DeploymentException {
-        checkState();
-        final Deployment deployment = DeploymentBuilder.of(client)
-                .setName(deploymentName)
-                .setType(Deployment.Type.UNDEPLOY)
-                .build();
-        deployment.execute();
-    }
-
-    private ModelNode executeOperation(final ModelNode op) throws IOException {
-        final ModelNode result = client.execute(op);
-        if (ServerOperations.isSuccessfulOutcome(result)) {
-            return result;
-        }
-        throw new RuntimeException(ServerOperations.getFailureDescriptionAsString(result));
+    public DeploymentManager getDeploymentManager() {
+        return deploymentManager;
     }
 
     private void cleanUp() {
@@ -168,12 +115,6 @@ public class StandaloneTestServer implements TestServer {
             }
         } finally {
             currentProcess = null;
-        }
-    }
-
-    private void checkState() {
-        if (!STARTED.get()) {
-            throw new IllegalStateException("The server has not been started");
         }
     }
 

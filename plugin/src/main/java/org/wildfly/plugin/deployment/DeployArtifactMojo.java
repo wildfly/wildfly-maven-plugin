@@ -30,9 +30,8 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.common.PropertyNames;
-import org.wildfly.plugin.deployment.Deployment.Type;
+import org.wildfly.plugin.deployment.MavenDeployment.Type;
 
 /**
  * Deploys an arbitrary artifact to the WildFly application server
@@ -77,26 +76,26 @@ public final class DeployArtifactMojo extends AbstractDeployment {
 
 
     @Override
-    public void validate(final ModelControllerClient client, final boolean isDomain) throws DeploymentException {
-        super.validate(client, isDomain);
+    public void validate(final boolean isDomain) throws MojoDeploymentException {
+        super.validate(isDomain);
         if (artifactId == null) {
-            throw new DeploymentException("deploy-artifact must specify the artifactId");
+            throw new MojoDeploymentException("deploy-artifact must specify the artifactId");
         }
         if (groupId == null) {
-            throw new DeploymentException("deploy-artifact must specify the groupId");
+            throw new MojoDeploymentException("deploy-artifact must specify the groupId");
         }
         final Set<Artifact> dependencies = project.getDependencyArtifacts();
         Artifact artifact = null;
         for (final Artifact a : dependencies) {
             if (Objects.equals(a.getArtifactId(), artifactId) &&
-                Objects.equals(a.getGroupId(), groupId) &&
-                Objects.equals(a.getClassifier(), classifier)) {
+                    Objects.equals(a.getGroupId(), groupId) &&
+                    Objects.equals(a.getClassifier(), classifier)) {
                 artifact = a;
                 break;
             }
         }
         if (artifact == null) {
-            throw new DeploymentException("Could not resolve artifact to deploy " + groupId + ":" + artifactId);
+            throw new MojoDeploymentException("Could not resolve artifact to deploy " + groupId + ":" + artifactId);
         }
         file = artifact.getFile();
     }

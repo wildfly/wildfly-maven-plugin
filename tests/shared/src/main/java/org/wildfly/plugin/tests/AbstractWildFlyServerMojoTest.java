@@ -22,15 +22,15 @@
 
 package org.wildfly.plugin.tests;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import javax.inject.Inject;
 
 import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.controller.client.helpers.Operations;
 import org.jboss.dmr.ModelNode;
 import org.junit.runner.RunWith;
-import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.tests.runner.WildFlyTestRunner;
 
 /**
@@ -44,7 +44,9 @@ public abstract class AbstractWildFlyServerMojoTest extends AbstractWildFlyMojoT
 
     protected ModelNode executeOperation(final ModelNode op) throws IOException {
         final ModelNode result = client.execute(op);
-        assertTrue(ServerOperations.getFailureDescriptionAsString(result), ServerOperations.isSuccessfulOutcome(result));
+        if (!Operations.isSuccessfulOutcome(result)) {
+            fail(Operations.getFailureDescription(result).asString());
+        }
         return result;
     }
 

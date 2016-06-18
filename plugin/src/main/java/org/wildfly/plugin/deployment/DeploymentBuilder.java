@@ -28,7 +28,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.wildfly.plugin.deployment.Deployment.Type;
+import org.wildfly.plugin.deployment.MavenDeployment.Type;
 
 /**
  * Creates a deployment execution.
@@ -85,9 +85,9 @@ public class DeploymentBuilder {
      *
      * @return the deployment
      */
-    public Deployment build() {
+    public MavenDeployment build() {
         validate();
-        return new Deployment(client, serverGroups, content, name, runtimeName, type, matchPattern, matchPatternStrategy);
+        return new MavenDeployment(client, serverGroups, content, name, runtimeName, type, matchPattern, matchPatternStrategy);
     }
 
     /**

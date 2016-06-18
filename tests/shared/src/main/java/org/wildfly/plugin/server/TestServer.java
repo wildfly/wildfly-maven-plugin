@@ -27,17 +27,20 @@ import java.io.InputStream;
 import java.io.PrintStream;
 
 import org.jboss.as.controller.client.ModelControllerClient;
+import org.wildfly.plugin.core.DeploymentManager;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-public interface TestServer extends DeploymentManager {
+public interface TestServer {
 
     void start();
 
     void stop();
 
     ModelControllerClient getClient();
+
+    DeploymentManager getDeploymentManager();
 
     class ConsoleConsumer implements Runnable {
         private final InputStream in;

@@ -36,6 +36,7 @@ import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
+import org.wildfly.plugin.core.ServerHelper;
 import org.wildfly.plugin.tests.AbstractWildFlyMojoTest;
 import org.wildfly.plugin.tests.Environment;
 
@@ -56,9 +57,13 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
             }
             // Ensure we shutdown the server
             if (isDomain) {
-                ServerHelper.shutdownDomain(DomainClient.Factory.create(client));
+                if (ServerHelper.isDomainRunning(client)) {
+                    ServerHelper.shutdownDomain(client);
+                }
             } else {
-                ServerHelper.shutdownStandalone(client);
+                if (ServerHelper.isStandaloneRunning(client)) {
+                    ServerHelper.shutdownStandalone(client);
+                }
             }
         }
     }

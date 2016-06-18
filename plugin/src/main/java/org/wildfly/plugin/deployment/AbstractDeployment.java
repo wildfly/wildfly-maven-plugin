@@ -37,8 +37,8 @@ import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.cli.Commands;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
+import org.wildfly.plugin.core.ServerHelper;
 import org.wildfly.plugin.deployment.domain.Domain;
-import org.wildfly.plugin.server.ServerHelper;
 
 /**
  * The default implementation for executing build plans on the server.
@@ -121,7 +121,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      *
      * @return the deployment type.
      */
-    public abstract Deployment.Type getType();
+    public abstract MavenDeployment.Type getType();
 
     @Override
     public final void execute() throws MojoExecutionException, MojoFailureException {
@@ -132,8 +132,8 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         doExecute();
     }
 
-    protected final void executeDeployment(final ModelControllerClient client, final Deployment deployment, final Path wildflyHome)
-            throws DeploymentException, IOException {
+    protected final void executeDeployment(final ModelControllerClient client, final MavenDeployment deployment, final Path wildflyHome)
+            throws MojoDeploymentException, IOException {
         // Execute before deployment commands
         if (beforeDeployment != null)
             commandExecutor.execute(client, wildflyHome, beforeDeployment);
@@ -153,7 +153,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     protected void doExecute() throws MojoExecutionException, MojoFailureException {
         try (final ModelControllerClient client = createClient()) {
             final boolean isDomain = ServerHelper.isDomainServer(client);
-            validate(client, isDomain);
+            validate(isDomain);
             final String matchPattern = getMatchPattern();
             final MatchPatternStrategy matchPatternStrategy = getMatchPatternStrategy();
             final DeploymentBuilder deploymentBuilder = DeploymentBuilder.of(client, (domain == null ? null : domain.getServerGroups()));
@@ -199,19 +199,18 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     /**
      * Validates the deployment.
      *
-     * @param client   the client used for validation
      * @param isDomain {@code true} if this is a domain server, otherwise {@code false}
      *
-     * @throws DeploymentException if the deployment is invalid
+     * @throws MojoDeploymentException if the deployment is invalid
      */
-    protected void validate(final ModelControllerClient client, final boolean isDomain) throws DeploymentException {
+    protected void validate(final boolean isDomain) throws MojoDeploymentException {
         if (isDomain) {
             if (domain == null || domain.getServerGroups().isEmpty()) {
-                throw new DeploymentException(
+                throw new MojoDeploymentException(
                         "Server is running in domain mode, but no server groups have been defined.");
             }
         } else if (domain != null && !domain.getServerGroups().isEmpty()) {
-            throw new DeploymentException("Server is running in standalone mode, but server groups have been defined.");
+            throw new MojoDeploymentException("Server is running in standalone mode, but server groups have been defined.");
         }
     }
 }

@@ -175,6 +175,11 @@
             <artifactId>wildfly-protocol</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.wildfly.plugins</groupId>
+            <artifactId>wildfly-plugin-core</artifactId>
+        </dependency>
+
         <!-- Test dependencies -->
         <dependency>
             <groupId>junit</groupId>

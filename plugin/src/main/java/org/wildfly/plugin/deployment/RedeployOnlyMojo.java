@@ -23,7 +23,7 @@
 package org.wildfly.plugin.deployment;
 
 import org.apache.maven.plugins.annotations.Mojo;
-import org.wildfly.plugin.deployment.Deployment.Type;
+import org.wildfly.plugin.deployment.MavenDeployment.Type;
 
 /**
  * Redeploys only the application to the WildFly Application Server without first invoking the

@@ -28,7 +28,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.wildfly.plugin.common.PropertyNames;
-import org.wildfly.plugin.deployment.Deployment.Type;
+import org.wildfly.plugin.deployment.MavenDeployment.Type;
 
 /**
  * Deploys the application to the WildFly Application Server.

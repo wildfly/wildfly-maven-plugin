@@ -56,8 +56,8 @@ public class DeployOnlyMojo extends AbstractAppDeployment {
     }
 
     @Override
-    public Deployment.Type getType() {
-        return (force ? Deployment.Type.FORCE_DEPLOY : Deployment.Type.DEPLOY);
+    public MavenDeployment.Type getType() {
+        return (force ? MavenDeployment.Type.FORCE_DEPLOY : MavenDeployment.Type.DEPLOY);
     }
 
 }

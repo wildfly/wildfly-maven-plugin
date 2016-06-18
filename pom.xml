@@ -116,6 +116,7 @@
     </properties>
 
     <modules>
+        <module>core</module>
         <module>plugin</module>
         <module>tests</module>
     </modules>
@@ -220,6 +221,12 @@
                         <artifactId>jboss-logmanager</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-plugin-core</artifactId>
+                <version>${project.version}</version>
             </dependency>
 
             <dependency>
