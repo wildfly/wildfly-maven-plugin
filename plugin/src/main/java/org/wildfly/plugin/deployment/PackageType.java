@@ -23,6 +23,7 @@
 package org.wildfly.plugin.deployment;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.maven.project.MavenProject;
@@ -32,10 +33,12 @@ import org.apache.maven.project.MavenProject;
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
+@SuppressWarnings("WeakerAccess")
 final class PackageType implements Comparable<PackageType> {
 
-    private static final PackageType MAVEN_PLUGIN = new PackageType("maven-project");
-    private static final PackageType POM = new PackageType("pom");
+
+    private static final PackageType MAVEN_PLUGIN = new PackageType("maven-project", true);
+    private static final PackageType POM = new PackageType("pom", true);
     private static final PackageType EJB = new PackageType("ejb", "jar");
     private static final Map<String, PackageType> DEFAULT_TYPES;
 
@@ -48,15 +51,24 @@ final class PackageType implements Comparable<PackageType> {
 
     private final String packaging;
     private final String fileExtension;
+    private final boolean ignored;
 
     private PackageType(final String packaging) {
-        this.packaging = packaging;
-        this.fileExtension = packaging;
+        this(packaging, packaging, false);
+    }
+
+    private PackageType(final String packaging, final boolean ignored) {
+        this(packaging, packaging, ignored);
     }
 
     private PackageType(final String packaging, final String fileExtension) {
+        this(packaging, fileExtension, false);
+    }
+
+    private PackageType(final String packaging, final String fileExtension, final boolean ignored) {
         this.packaging = packaging;
         this.fileExtension = fileExtension;
+        this.ignored = ignored;
     }
 
     /**
@@ -67,7 +79,7 @@ final class PackageType implements Comparable<PackageType> {
      * @return the package type
      */
     public static PackageType resolve(final MavenProject project) {
-        final String packaging = project.getPackaging();
+        final String packaging = project.getPackaging().toLowerCase(Locale.ROOT);
         if (DEFAULT_TYPES.containsKey(packaging)) {
             return DEFAULT_TYPES.get(packaging);
         }
@@ -80,7 +92,7 @@ final class PackageType implements Comparable<PackageType> {
      * @return {@code true} if the package type should be ignored, otherwise {@code false}.
      */
     public boolean isIgnored() {
-        return false;
+        return ignored;
     }
 
     /**
