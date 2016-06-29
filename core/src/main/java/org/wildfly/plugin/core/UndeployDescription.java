@@ -34,12 +34,13 @@ import java.util.Set;
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class UndeployDescription implements DeploymentDescription, Comparable<UndeployDescription> {
 
     private final String name;
     private final Set<String> serverGroups;
     private boolean failOnMissing;
+    private boolean removeContent;
 
     /**
      * Creates a new undeploy description.
@@ -49,6 +50,8 @@ public class UndeployDescription implements DeploymentDescription, Comparable<Un
     private UndeployDescription(final String name) {
         this.name = name;
         serverGroups = new LinkedHashSet<>();
+        failOnMissing = false;
+        removeContent = true;
     }
 
     /**
@@ -139,6 +142,32 @@ public class UndeployDescription implements DeploymentDescription, Comparable<Un
      */
     public UndeployDescription setFailOnMissing(final boolean failOnMissing) {
         this.failOnMissing = failOnMissing;
+        return this;
+    }
+
+    /**
+     * Indicates whether or not the content should be removed from the content repository.
+     *
+     * @return {@code true} if the content should also be removed from the repository, {@code false} it only an
+     * {@code undeploy} operation should be executed and the content should remain in the repository
+     */
+    public boolean isRemoveContent() {
+        return removeContent;
+    }
+
+    /**
+     * Sets whether or not the content should be removed after the {@code undeploy} operation.
+     * <p>
+     * The default value is {@code true}.
+     * </p>
+     *
+     * @param removeContent {@code true} if the content should be removed, {@code false} if the content should remain
+     *                      in the repository
+     *
+     * @return the deployment description
+     */
+    public UndeployDescription setRemoveContent(final boolean removeContent) {
+        this.removeContent = removeContent;
         return this;
     }
 
