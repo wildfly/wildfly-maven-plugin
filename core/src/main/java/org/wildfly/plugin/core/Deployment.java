@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -37,23 +38,13 @@ import java.util.Set;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
-public class Deployment implements DeploymentDescription {
+public class Deployment implements DeploymentDescription, Comparable<Deployment> {
 
     private final DeploymentContent content;
     private final Set<String> serverGroups;
     private String name;
     private String runtimeName;
-    private boolean enabled;
-
-    /**
-     * Creates a new deployment for the file. If the file is a directory the content will be deployed exploded using
-     * the file system location.
-     *
-     * @param content the file containing the content
-     */
-    public Deployment(final File content) {
-        this(Assertions.requiresNotNullParameter(content, "content").toPath());
-    }
+    private boolean enabled = true;
 
     /**
      * Creates a new deployment for the path. If the path is a directory the content will be deployed exploded using
@@ -61,8 +52,8 @@ public class Deployment implements DeploymentDescription {
      *
      * @param content the path containing the content
      */
-    public Deployment(final Path content) {
-        this.content = DeploymentContent.of(Assertions.requiresNotNullParameter(content, "content"));
+    private Deployment(final Path content) {
+        this.content = DeploymentContent.of(content);
         name = this.content.resolvedName();
         serverGroups = new LinkedHashSet<>();
     }
@@ -73,14 +64,14 @@ public class Deployment implements DeploymentDescription {
      * {@link IllegalArgumentException} will be thrown.
      * <p>
      * The {@linkplain InputStream content} will be copied, stored in-memory and then closed. Large content should be
-     * written to a file and the {@link #Deployment(Path)} or {@link #Deployment(File)} constructor should be used.
+     * written to a file and the {@link #Deployment(Path)} constructor should be used.
      * </p>
      *
      * @param content the input stream representing the content
      * @param name    the name for the deployment
      */
-    public Deployment(final InputStream content, final String name) {
-        this.content = DeploymentContent.of(Assertions.requiresNotNullParameter(content, "content"));
+    private Deployment(final InputStream content, final String name) {
+        this.content = DeploymentContent.of(content);
         this.name = Assertions.requiresNotNullParameter(name, "name");
         serverGroups = new LinkedHashSet<>();
     }
@@ -94,7 +85,7 @@ public class Deployment implements DeploymentDescription {
      * @return the deployment
      */
     public static Deployment of(final File content) {
-        return new Deployment(content);
+        return new Deployment(Assertions.requiresNotNullParameter(content, "content").toPath());
     }
 
     /**
@@ -106,7 +97,7 @@ public class Deployment implements DeploymentDescription {
      * @return the deployment
      */
     public static Deployment of(final Path content) {
-        return new Deployment(content);
+        return new Deployment(Assertions.requiresNotNullParameter(content, "content"));
     }
 
     /**
@@ -124,7 +115,8 @@ public class Deployment implements DeploymentDescription {
      * @return the deployment
      */
     public static Deployment of(final InputStream content, final String name) {
-        return new Deployment(content, name);
+        return new Deployment(Assertions.requiresNotNullParameter(content, "content"),
+                Assertions.requiresNotNullParameter(name, "name"));
     }
 
     /**
@@ -164,7 +156,37 @@ public class Deployment implements DeploymentDescription {
 
     @Override
     public Set<String> getServerGroups() {
-        return new LinkedHashSet<>(serverGroups);
+        return Collections.unmodifiableSet(serverGroups);
+    }
+
+    /**
+     * Indicates whether or not the deployment should be enabled by default.
+     * <p>
+     * If the value is set to {@code false} the content will only be added. An explicit {@code deploy} operation will
+     * be required to deploy the content to the runtime.
+     * </p>
+     *
+     * @return {@code true} if the deployment should be enabled, {@code false} if the deployment should not be enabled
+     */
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    /**
+     * Sets whether or not the deployment should be enabled. If set to {@code false} the deployment will not be enabled,
+     * but the content will be uploaded and added. This is set to {@code true} by default.
+     * <p>
+     * If the value is set to {@code false} the content will only be added. An explicit {@code deploy} operation will
+     * be required to deploy the content to the runtime.
+     * </p>
+     *
+     * @param enabled {@code false} to keep the content disabled
+     *
+     * @return this deployment
+     */
+    public Deployment setEnabled(final boolean enabled) {
+        this.enabled = enabled;
+        return this;
     }
 
     @Override
@@ -216,13 +238,13 @@ public class Deployment implements DeploymentDescription {
     }
 
     @Override
-    public int compareTo(@SuppressWarnings("NullableProblems") final DeploymentDescription o) {
-        return getName().compareTo(o.getName());
+    public int compareTo(@SuppressWarnings("NullableProblems") final Deployment o) {
+        return name.compareTo(o.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName());
+        return Objects.hash(name);
     }
 
     @Override
@@ -241,7 +263,7 @@ public class Deployment implements DeploymentDescription {
     public String toString() {
         final StringBuilder result = new StringBuilder(Deployment.class.getSimpleName());
         result.append('(');
-        result.append("name=").append(getName());
+        result.append("name=").append(name);
         if (runtimeName != null) {
             result.append(", runtimeName=").append(runtimeName);
         }

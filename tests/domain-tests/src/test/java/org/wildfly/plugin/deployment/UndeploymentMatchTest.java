@@ -40,7 +40,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.wildfly.plugin.core.DeploymentDescription;
 import org.wildfly.plugin.core.DeploymentManager;
-import org.wildfly.plugin.core.DeploymentOperations;
 import org.wildfly.plugin.core.DeploymentResult;
 import org.wildfly.plugin.core.UndeployDescription;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
@@ -104,7 +103,7 @@ public class UndeploymentMatchTest extends AbstractWildFlyServerMojoTest {
             Assert.assertTrue(result.getFailureMessage(), result.successful());
         }
         // Set up the other-server-group servers to ensure the full deployment process works correctly
-        final ModelNode op = Operations.createOperation("start-servers", DeploymentOperations.createAddress(ClientConstants.SERVER_GROUP, "other-server-group"));
+        final ModelNode op = Operations.createOperation("start-servers", new ModelNode().setEmptyList().add(ClientConstants.SERVER_GROUP, "other-server-group"));
         op.get("blocking").set(true);
         executeOperation(op);
 

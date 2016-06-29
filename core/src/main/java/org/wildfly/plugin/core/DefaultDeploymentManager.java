@@ -63,7 +63,7 @@ class DefaultDeploymentManager implements DeploymentManager {
         if (failedResult != null) {
             return failedResult;
         }
-        return execute(DeploymentOperations.createDeployOperation(deployment));
+        return execute(DeploymentOperations.createAddDeploymentOperation(deployment));
     }
 
     @Override
@@ -72,7 +72,7 @@ class DefaultDeploymentManager implements DeploymentManager {
         if (failedResult != null) {
             return failedResult;
         }
-        return execute(DeploymentOperations.createDeployOperation(deployments));
+        return execute(DeploymentOperations.createAddDeploymentOperation(deployments));
     }
 
     @Override
@@ -119,7 +119,7 @@ class DefaultDeploymentManager implements DeploymentManager {
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
         // Add all the deploy steps
         for (Deployment deployment : toDeploy) {
-            DeploymentOperations.addDeployOperationStep(builder, deployment);
+            DeploymentOperations.addDeploymentOperationStep(builder, deployment);
         }
         // Add all the redeploy steps
         for (Deployment deployment : toRedeploy.keySet()) {
@@ -133,6 +133,16 @@ class DefaultDeploymentManager implements DeploymentManager {
         }
 
         return execute(builder.build());
+    }
+
+    @Override
+    public DeploymentResult deployToRuntime(final DeploymentDescription deployment) throws IOException {
+        return execute(DeploymentOperations.createDeployOperation(deployment));
+    }
+
+    @Override
+    public DeploymentResult deployToRuntime(final Set<DeploymentDescription> deployments) throws IOException {
+        return execute(DeploymentOperations.createDeployOperation(deployments));
     }
 
 
@@ -152,6 +162,16 @@ class DefaultDeploymentManager implements DeploymentManager {
             return failedResult;
         }
         return execute(DeploymentOperations.createReplaceOperation(deployments));
+    }
+
+    @Override
+    public DeploymentResult redeployToRuntime(final DeploymentDescription deployment) throws IOException {
+        return execute(DeploymentOperations.createRedeployOperation(deployment));
+    }
+
+    @Override
+    public DeploymentResult redeployToRuntime(final Set<DeploymentDescription> deployments) throws IOException {
+        return execute(DeploymentOperations.createRedeployOperation(deployments));
     }
 
     @Override
@@ -215,8 +235,7 @@ class DefaultDeploymentManager implements DeploymentManager {
                 final Set<DeploymentDescription> deployments = new LinkedHashSet<>();
                 for (Map.Entry<String, Set<String>> entry : serverGroupDeployments.entrySet()) {
                     final String name = entry.getKey();
-                    final Set<String> serverGroups = Collections.unmodifiableSet(entry.getValue());
-                    deployments.add(SimpleDeploymentDescription.of(name, serverGroups));
+                    deployments.add(SimpleDeploymentDescription.of(name, entry.getValue()));
                 }
                 return deployments;
             }
@@ -324,7 +343,7 @@ class DefaultDeploymentManager implements DeploymentManager {
                 // Add the server-group to the map of deployments
                 serverGroups.add(foundServerGroup);
             }
-            return SimpleDeploymentDescription.of(name, Collections.unmodifiableSet(serverGroups));
+            return SimpleDeploymentDescription.of(name, serverGroups);
         }
         throw new RuntimeException("Failed to get listing of deployments. Reason: " + Operations.getFailureDescription(result).asString());
     }
