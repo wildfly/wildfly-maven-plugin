@@ -240,7 +240,12 @@ public class DeploymentOperations {
     }
 
     /**
-     * Creates an undeploy operation. The operation will undeploy and remove the content.
+     * Creates an undeploy operation.
+     * <p>
+     * If the {@link UndeployDescription#isRemoveContent()} returns {@code true} the content will also be removed from
+     * the content repository. Otherwise the content will remain on the server and only the {@code undeploy} operation
+     * will be executed.
+     * </p>
      *
      * @param undeployDescription the description used to crate the operation
      *
@@ -254,7 +259,12 @@ public class DeploymentOperations {
     }
 
     /**
-     * Creates an undeploy operation. The operation will undeploy and remove the content.
+     * Creates an undeploy operation for each deployment description.
+     * <p>
+     * If the {@link UndeployDescription#isRemoveContent()} returns {@code true} the content will also be removed from
+     * the content repository. Otherwise the content will remain on the server and only the {@code undeploy} operation
+     * will be executed.
+     * </p>
      *
      * @param undeployDescriptions the set of descriptions used to crate the operation
      *
@@ -418,15 +428,21 @@ public class DeploymentOperations {
         final Set<String> serverGroups = undeployDescription.getServerGroups();
         if (serverGroups.isEmpty()) {
             final ModelNode address = createAddress(DEPLOYMENT, name);
-            builder.addStep(createOperation(DEPLOYMENT_UNDEPLOY_OPERATION, address))
-                    .addStep(createRemoveOperation(address));
+            builder.addStep(createOperation(DEPLOYMENT_UNDEPLOY_OPERATION, address));
+            if (undeployDescription.isRemoveContent()) {
+                builder.addStep(createRemoveOperation(address));
+            }
         } else {
             for (String serverGroup : serverGroups) {
                 final ModelNode address = createAddress(SERVER_GROUP, serverGroup, DEPLOYMENT, name);
-                builder.addStep(createOperation(DEPLOYMENT_UNDEPLOY_OPERATION, address))
-                        .addStep(createRemoveOperation(address));
+                builder.addStep(createOperation(DEPLOYMENT_UNDEPLOY_OPERATION, address));
+                if (undeployDescription.isRemoveContent()) {
+                    builder.addStep(createRemoveOperation(address));
+                }
             }
-            builder.addStep(createRemoveOperation(createAddress(DEPLOYMENT, name)));
+            if (undeployDescription.isRemoveContent()) {
+                builder.addStep(createRemoveOperation(createAddress(DEPLOYMENT, name)));
+            }
         }
     }
 
