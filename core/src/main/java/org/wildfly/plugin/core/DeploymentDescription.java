@@ -27,7 +27,7 @@ import java.util.Set;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 @SuppressWarnings("WeakerAccess")
-public interface DeploymentDescription extends Comparable<DeploymentDescription> {
+public interface DeploymentDescription {
 
     /**
      * Returns the name for this deployment.

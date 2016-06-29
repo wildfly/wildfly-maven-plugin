@@ -20,6 +20,7 @@
 package org.wildfly.plugin.core;
 
 import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT;
+import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_DEPLOY_OPERATION;
 import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_FULL_REPLACE_OPERATION;
 import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_REDEPLOY_OPERATION;
 import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_UNDEPLOY_OPERATION;
@@ -30,15 +31,12 @@ import static org.jboss.as.controller.client.helpers.Operations.createAddOperati
 import static org.jboss.as.controller.client.helpers.Operations.createOperation;
 import static org.jboss.as.controller.client.helpers.Operations.createRemoveOperation;
 
-import java.io.InputStream;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.jboss.as.controller.client.Operation;
-import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.as.controller.client.helpers.Operations.CompositeOperationBuilder;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
@@ -59,7 +57,6 @@ import org.jboss.dmr.ModelType;
  */
 @SuppressWarnings({"unused", "StaticMethodOnlyUsedInOneClass", "WeakerAccess"})
 public class DeploymentOperations {
-    private static final String ENABLE = "enable";
     private static final String ENABLED = "enabled";
     static final ModelNode EMPTY_ADDRESS = new ModelNode().setEmptyList();
 
@@ -79,7 +76,7 @@ public class DeploymentOperations {
      *
      * @return an address for the key/value pairs
      */
-    public static ModelNode createAddress(final String... pairs) {
+    static ModelNode createAddress(final String... pairs) {
         return createAddress(Arrays.asList(pairs));
     }
 
@@ -95,7 +92,7 @@ public class DeploymentOperations {
      *
      * @return an address for the key/value pairs
      */
-    public static ModelNode createAddress(final Iterable<String> pairs) {
+    static ModelNode createAddress(final Iterable<String> pairs) {
         final ModelNode address = new ModelNode();
         final Iterator<String> iterator = pairs.iterator();
         while (iterator.hasNext()) {
@@ -107,64 +104,49 @@ public class DeploymentOperations {
     }
 
     /**
-     * Creates an operation to add deployment content to the deployment repository.
-     * <p>
-     * Note this does not deploy the content.
-     * </p>
+     * Creates an operation to add deployment content to a running server. If the deployment is set to be
+     * {@linkplain Deployment#isEnabled() enabled} the content will also be deployed.
      *
-     * @param content     the path to the content to deploy
-     * @param name        the name for the deployment content, if {@code null} the paths file name is used
-     * @param runtimeName the runtime name for the deployment content
+     * @param deployment the deployment to deploy
      *
-     * @return the add operation
+     * @return the deploy operation
+     *
+     * @see #createDeployOperation(DeploymentDescription)
      */
-    public static Operation createDeploymentAddOperation(final Path content, final String name, final String runtimeName) {
-        Assertions.requiresNotNullParameter(content, "content");
-        final ModelNode address = createAddress(DEPLOYMENT, name);
-        final ModelNode addOperation = createAddOperation(address);
-        if (runtimeName != null) {
-            addOperation.get(RUNTIME_NAME).set(runtimeName);
-        }
+    public static Operation createAddDeploymentOperation(final Deployment deployment) {
+        Assertions.requiresNotNullParameter(deployment, "deployment");
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
-        DeploymentContent.of(content).addContentToOperation(builder, addOperation);
-        builder.addStep(addOperation);
+        addDeploymentOperationStep(builder, deployment);
         return builder.build();
     }
 
     /**
-     * Creates an operation to add deployment content to the deployment repository.
-     * <p>
-     * Note this does not deploy the content.
-     * </p>
+     * Creates an operation to add deployment content to a running server for each deployment. If the deployment is set
+     * to be {@linkplain Deployment#isEnabled() enabled} the content will also be deployed.
      *
-     * @param content     the content to deploy
-     * @param name        the name for the deployment content
-     * @param runtimeName the runtime name for the deployment content, can be {@code null}
+     * @param deployments a set of deployments to deploy
      *
-     * @return the add operation
+     * @return the deploy operation
+     *
+     * @see #createDeployOperation(Set)
      */
-    public static Operation createDeploymentAddOperation(final InputStream content, final String name, final String runtimeName) {
-        Assertions.requiresNotNullParameter(content, "content");
-        Assertions.requiresNotNullParameter(name, "name");
-        final ModelNode address = createAddress(DEPLOYMENT, name);
-        final ModelNode addOperation = createAddOperation(address);
-        if (runtimeName != null) {
-            addOperation.get(RUNTIME_NAME).set(runtimeName);
-        }
+    public static Operation createAddDeploymentOperation(final Set<Deployment> deployments) {
+        Assertions.requiresNotNullParameter(deployments, "deployments");
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
-        builder.addStep(addOperation);
-        DeploymentContent.of(content).addContentToOperation(builder, addOperation);
+        for (Deployment deployment : deployments) {
+            addDeploymentOperationStep(builder, deployment);
+        }
         return builder.build();
     }
 
     /**
-     * Creates an operation to deploy the content to a running server.
+     * Creates an operation to deploy existing deployment content to the runtime.
      *
      * @param deployment the deployment to deploy
      *
      * @return the deploy operation
      */
-    public static Operation createDeployOperation(final Deployment deployment) {
+    public static Operation createDeployOperation(final DeploymentDescription deployment) {
         Assertions.requiresNotNullParameter(deployment, "deployment");
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
         addDeployOperationStep(builder, deployment);
@@ -172,16 +154,16 @@ public class DeploymentOperations {
     }
 
     /**
-     * Creates an operation to deploy the content to a running server.
+     * Creates an option to deploy existing content to the runtime for each deployment
      *
      * @param deployments a set of deployments to deploy
      *
      * @return the deploy operation
      */
-    public static Operation createDeployOperation(final Set<Deployment> deployments) {
+    public static Operation createDeployOperation(final Set<DeploymentDescription> deployments) {
         Assertions.requiresNotNullParameter(deployments, "deployments");
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
-        for (Deployment deployment : deployments) {
+        for (DeploymentDescription deployment : deployments) {
             addDeployOperationStep(builder, deployment);
         }
         return builder.build();
@@ -197,16 +179,8 @@ public class DeploymentOperations {
      */
     public static Operation createReplaceOperation(final Deployment deployment) {
         Assertions.requiresNotNullParameter(deployment, "deployment");
-        final ModelNode op = createOperation(DEPLOYMENT_FULL_REPLACE_OPERATION);
-        op.get(NAME).set(deployment.getName());
-        op.get(ENABLED).set(true);
-        final String runtimeName = deployment.getRuntimeName();
-        if (runtimeName != null) {
-            op.get(RUNTIME_NAME).set(runtimeName);
-        }
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
-        addContent(builder, op, deployment);
-        builder.addStep(op);
+        addReplaceOperationSteps(builder, deployment);
         return builder.build();
     }
 
@@ -296,12 +270,17 @@ public class DeploymentOperations {
     }
 
     /**
-     * Adds the deploy operation as a step to the composite operation.
+     * Creates an add operation on the deployment resource to the composite operation.
+     * <p>
+     * If the {@link Deployment#isEnabled()} is {@code false} a step to
+     * {@linkplain #addDeployOperationStep(CompositeOperationBuilder, DeploymentDescription) deploy} the content may be
+     * required.
+     * </p>
      *
      * @param builder    the builder to add the step to
      * @param deployment the deployment to deploy
      */
-    static void addDeployOperationStep(final CompositeOperationBuilder builder, final Deployment deployment) {
+    static void addDeploymentOperationStep(final CompositeOperationBuilder builder, final Deployment deployment) {
         final String name = deployment.getName();
         final ModelNode address = createAddress(DEPLOYMENT, name);
         final String runtimeName = deployment.getRuntimeName();
@@ -309,23 +288,44 @@ public class DeploymentOperations {
         if (runtimeName != null) {
             addOperation.get(RUNTIME_NAME).set(runtimeName);
         }
+        addOperation.get(ENABLED).set(deployment.isEnabled());
         addContent(builder, addOperation, deployment);
         builder.addStep(addOperation);
 
         final Set<String> serverGroups = deployment.getServerGroups();
         // If the server groups are empty this is a standalone deployment
-        if (serverGroups.isEmpty()) {
-            builder.addStep(createOperation(ClientConstants.DEPLOYMENT_DEPLOY_OPERATION, address));
-        } else {
+        if (!serverGroups.isEmpty()) {
             for (String serverGroup : serverGroups) {
                 final ModelNode sgAddress = createAddress(SERVER_GROUP, serverGroup, DEPLOYMENT, name);
 
                 final ModelNode op = createAddOperation(sgAddress);
-                op.get(ENABLE).set(true);
+                op.get(ENABLED).set(deployment.isEnabled());
                 if (runtimeName != null) {
                     op.get(RUNTIME_NAME).set(runtimeName);
                 }
                 builder.addStep(op);
+            }
+        }
+    }
+
+    /**
+     * Adds the deploy operation as a step to the composite operation.
+     *
+     * @param builder    the builder to add the step to
+     * @param deployment the deployment to deploy
+     */
+    static void addDeployOperationStep(final CompositeOperationBuilder builder, final DeploymentDescription deployment) {
+        final String name = deployment.getName();
+
+        final Set<String> serverGroups = deployment.getServerGroups();
+        // If the server groups are empty this is a standalone deployment
+        if (serverGroups.isEmpty()) {
+            final ModelNode address = createAddress(DEPLOYMENT, name);
+            builder.addStep(createOperation(DEPLOYMENT_DEPLOY_OPERATION, address));
+        } else {
+            for (String serverGroup : serverGroups) {
+                final ModelNode address = createAddress(SERVER_GROUP, serverGroup, DEPLOYMENT, name);
+                builder.addStep(createOperation(DEPLOYMENT_DEPLOY_OPERATION, address));
             }
         }
     }
@@ -354,7 +354,14 @@ public class DeploymentOperations {
             if (!serverGroups.isEmpty()) {
                 serverGroups.removeAll(currentDeployment.getServerGroups());
                 for (String serverGroup : serverGroups) {
-                    addDeploymentToServerGroupOperationStep(builder, name, runtimeName, serverGroup, false);
+                    final ModelNode sgAddress = createAddress(SERVER_GROUP, serverGroup, DEPLOYMENT, name);
+                    final ModelNode addOp = createAddOperation(sgAddress);
+                    // Explicitly set to false here as the full-replace-deployment should take care of enabling this
+                    addOp.get(ENABLED).set(false);
+                    if (runtimeName != null) {
+                        addOp.get(RUNTIME_NAME).set(runtimeName);
+                    }
+                    builder.addStep(addOp);
                 }
             }
         }
@@ -364,7 +371,7 @@ public class DeploymentOperations {
             op.get(RUNTIME_NAME).set(runtimeName);
         }
         addContent(builder, op, deployment);
-        op.get(ENABLED).set(true);
+        op.get(ENABLED).set(deployment.isEnabled());
         builder.addStep(op);
     }
 
@@ -383,7 +390,7 @@ public class DeploymentOperations {
             op.get(RUNTIME_NAME).set(runtimeName);
         }
         addContent(builder, op, deployment);
-        op.get(ENABLED).set(true);
+        op.get(ENABLED).set(deployment.isEnabled());
         builder.addStep(op);
     }
 
@@ -421,19 +428,6 @@ public class DeploymentOperations {
             }
             builder.addStep(createRemoveOperation(createAddress(DEPLOYMENT, name)));
         }
-    }
-
-
-    private static void addDeploymentToServerGroupOperationStep(final CompositeOperationBuilder builder, final String name,
-                                                                final String runtimeName, final String serverGroup,
-                                                                final boolean enabled) {
-        final ModelNode sgAddress = createAddress(SERVER_GROUP, serverGroup, DEPLOYMENT, name);
-        final ModelNode addOp = createAddOperation(sgAddress);
-        addOp.get(ENABLED).set(enabled);
-        if (runtimeName != null) {
-            addOp.get(RUNTIME_NAME).set(runtimeName);
-        }
-        builder.addStep(addOp);
     }
 
     private static void addContent(final CompositeOperationBuilder builder, final ModelNode op, final Deployment deployment) {

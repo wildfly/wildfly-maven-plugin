@@ -19,7 +19,10 @@
 
 package org.wildfly.plugin.core;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -28,13 +31,15 @@ import java.util.Set;
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-class SimpleDeploymentDescription implements DeploymentDescription {
+@SuppressWarnings({"WeakerAccess", "unused"})
+public class SimpleDeploymentDescription implements DeploymentDescription, Comparable<SimpleDeploymentDescription> {
+
     private final String name;
     private final Set<String> serverGroups;
 
-    private SimpleDeploymentDescription(final String name, final Set<String> serverGroups) {
+    private SimpleDeploymentDescription(final String name) {
         this.name = name;
-        this.serverGroups = serverGroups;
+        serverGroups = new LinkedHashSet<>();
     }
 
     /**
@@ -44,8 +49,8 @@ class SimpleDeploymentDescription implements DeploymentDescription {
      *
      * @return the deployment description
      */
-    static SimpleDeploymentDescription of(final String name) {
-        return new SimpleDeploymentDescription(Assertions.requiresNotNullParameter(name, "name"), Collections.<String>emptySet());
+    public static SimpleDeploymentDescription of(final String name) {
+        return new SimpleDeploymentDescription(Assertions.requiresNotNullParameter(name, "name"));
     }
 
     /**
@@ -56,9 +61,52 @@ class SimpleDeploymentDescription implements DeploymentDescription {
      *
      * @return the deployment description
      */
-    static SimpleDeploymentDescription of(final String name, final Set<String> serverGroups) {
-        return new SimpleDeploymentDescription(Assertions.requiresNotNullParameter(name, "name"),
-                Assertions.requiresNotNullParameter(serverGroups, "serverGroups"));
+    public static SimpleDeploymentDescription of(final String name, @SuppressWarnings("TypeMayBeWeakened") final Set<String> serverGroups) {
+        final SimpleDeploymentDescription result = of(name);
+        if (serverGroups != null) {
+            result.addServerGroups(serverGroups);
+        }
+        return result;
+    }
+
+    /**
+     * Adds a server group for the deployment description.
+     *
+     * @param serverGroup the server group to add
+     *
+     * @return this deployment description
+     */
+    public SimpleDeploymentDescription addServerGroup(final String serverGroup) {
+        serverGroups.add(serverGroup);
+        return this;
+    }
+
+    /**
+     * Adds the server groups for the deployment description.
+     *
+     * @param serverGroups the server groups to add
+     *
+     * @return this deployment description
+     */
+    public SimpleDeploymentDescription addServerGroups(final String... serverGroups) {
+        return addServerGroups(Arrays.asList(serverGroups));
+    }
+
+    /**
+     * Adds the server groups for the deployment description.
+     *
+     * @param serverGroups the server groups to add
+     *
+     * @return this deployment description
+     */
+    public SimpleDeploymentDescription addServerGroups(final Collection<String> serverGroups) {
+        this.serverGroups.addAll(serverGroups);
+        return this;
+    }
+
+    @Override
+    public Set<String> getServerGroups() {
+        return Collections.unmodifiableSet(serverGroups);
     }
 
     @Override
@@ -67,8 +115,8 @@ class SimpleDeploymentDescription implements DeploymentDescription {
     }
 
     @Override
-    public Set<String> getServerGroups() {
-        return serverGroups;
+    public int compareTo(@SuppressWarnings("NullableProblems") final SimpleDeploymentDescription o) {
+        return name.compareTo(o.name);
     }
 
     @Override
@@ -84,24 +132,18 @@ class SimpleDeploymentDescription implements DeploymentDescription {
         if (!(obj instanceof SimpleDeploymentDescription)) {
             return false;
         }
-        @SuppressWarnings("TypeMayBeWeakened")
         final SimpleDeploymentDescription other = (SimpleDeploymentDescription) obj;
-        return Objects.equals(getName(), other.getName());
+        return Objects.equals(name, other.name);
     }
 
     @Override
     public String toString() {
         final StringBuilder result = new StringBuilder(SimpleDeploymentDescription.class.getSimpleName());
         result.append('(');
-        result.append("name=").append(getName());
+        result.append("name=").append(name);
         if (!serverGroups.isEmpty()) {
             result.append(", serverGroups=").append(serverGroups);
         }
         return result.append(')').toString();
-    }
-
-    @Override
-    public int compareTo(@SuppressWarnings("NullableProblems") final DeploymentDescription o) {
-        return getName().compareTo(o.getName());
     }
 }

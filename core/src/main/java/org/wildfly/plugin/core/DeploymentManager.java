@@ -39,73 +39,161 @@ public interface DeploymentManager {
 
     /**
      * Deploys the content to the server.
+     * <p>
+     * If the deployment is not {@linkplain Deployment#setEnabled(boolean) enabled} a {@code deploy} operation will
+     * need to be invoked. This can also be achieved by invoking the {@link #deployToRuntime(DeploymentDescription)}
+     * method.
+     * </p>
      *
      * @param deployment the deployment to deploy
      *
      * @return the result of the deployment
      *
      * @throws IOException if a failure occurs communicating with the server
+     * @see #deployToRuntime(DeploymentDescription)
      */
     DeploymentResult deploy(Deployment deployment) throws IOException;
 
     /**
      * Deploys the content of each deployment to the server.
+     * <p>
+     * If the deployment is not {@linkplain Deployment#setEnabled(boolean) enabled} a {@code deploy} operation will
+     * need to be invoked. This can also be achieved by invoking the {@link #deployToRuntime(Set)} method.
+     * </p>
+     * <p>
+     * Also note that it is safe to trigger a {@code deploy} operation on already deployed deployments.
+     * </p>
      *
      * @param deployments a set of deployments to deploy
      *
      * @return the result of the deployment
      *
      * @throws IOException if a failure occurs communicating with the server
+     * @see #deployToRuntime(Set)
      */
     DeploymentResult deploy(Set<Deployment> deployments) throws IOException;
 
     /**
      * Deploys the content to the server if it does not already exist on the server. If the deployment already exist the
      * deployment is replaced.
+     * <p>
+     * If the deployment is not {@linkplain Deployment#setEnabled(boolean) enabled} a {@code deploy} operation will
+     * need to be invoked. This can also be achieved by invoking the {@link #deployToRuntime(DeploymentDescription)}
+     * method.
+     * </p>
      *
      * @param deployment the deployment to deploy
      *
      * @return the result of the deployment
      *
      * @throws IOException if a failure occurs communicating with the server
+     * @see #deployToRuntime(DeploymentDescription)
      */
     DeploymentResult forceDeploy(Deployment deployment) throws IOException;
 
     /**
      * Deploys the content to the server if it does not already exist on the server. If the deployment already exist the
      * deployment is replaced.
+     * <p>
+     * If the deployment is not {@linkplain Deployment#setEnabled(boolean) enabled} a {@code deploy} operation will
+     * need to be invoked. This can also be achieved by invoking the {@link #deployToRuntime(Set)} method.
+     * </p>
+     * <p>
+     * Also note that it is safe to trigger a {@code deploy} operation on already deployed deployments.
+     * </p>
      *
      * @param deployments a set of deployments to deploy
      *
      * @return the result of the deployment
      *
      * @throws IOException if a failure occurs communicating with the server
+     * @see #deployToRuntime(Set)
      */
     DeploymentResult forceDeploy(Set<Deployment> deployments) throws IOException;
 
     /**
+     * Deploys existing deployment content to the runtime.
+     *
+     * @param deployment the deployment description to deploy
+     *
+     * @return the result of the deployment
+     *
+     * @throws IOException if a failure occurs communicating with the server
+     */
+    DeploymentResult deployToRuntime(DeploymentDescription deployment) throws IOException;
+
+    /**
+     * Deploys existing deployment content to the runtime for each deployment description.
+     *
+     * @param deployments the deployment descriptions to deploy
+     *
+     * @return the result of the deployment
+     *
+     * @throws IOException if a failure occurs communicating with the server
+     */
+    DeploymentResult deployToRuntime(Set<DeploymentDescription> deployments) throws IOException;
+
+    /**
      * Redeploys the content to the server. Uses a {@code full-replace-deployment} operation to upload the new content,
      * undeploy the old content, deploy the new content and then remove the old content.
+     * <p>
+     * If the deployment is not {@linkplain Deployment#setEnabled(boolean) enabled} a {@code deploy} or {@code redeploy}
+     * operation will need to be invoked. This can also be achieved by invoking the
+     * {@link #deployToRuntime(DeploymentDescription)} method or the {@link #redeployToRuntime(DeploymentDescription)}
+     * method.
+     * </p>
      *
      * @param deployment the deployment to redeploy
      *
      * @return the result of the deployment
      *
      * @throws IOException if a failure occurs communicating with the server
+     * @see #redeployToRuntime(DeploymentDescription)
      */
     DeploymentResult redeploy(Deployment deployment) throws IOException;
 
     /**
      * Redeploys the content to the server. Uses a {@code full-replace-deployment} operation to upload the new content,
      * undeploy the old content, deploy the new content and then remove the old content.
+     * <p>
+     * If the deployment is not {@linkplain Deployment#setEnabled(boolean) enabled} a {@code deploy} or {@code redeploy}
+     * operation will need to be invoked. This can also be achieved by invoking the {@link #deployToRuntime(Set)}
+     * method or the {@link #redeployToRuntime(Set)} method.
+     * </p>
+     * <p>
+     * Also note that it is safe to trigger a {@code deploy} or operation on already deployed deployments.
+     * </p>
      *
      * @param deployments a set of deployments to redeploy
      *
      * @return the result of the deployment
      *
      * @throws IOException if a failure occurs communicating with the server
+     * @see #redeployToRuntime(Set)
      */
     DeploymentResult redeploy(Set<Deployment> deployments) throws IOException;
+
+    /**
+     * Redeploys existing deployment content to the runtime.
+     *
+     * @param deployment the deployment description to redeploy
+     *
+     * @return the result of the deployment
+     *
+     * @throws IOException if a failure occurs communicating with the server
+     */
+    DeploymentResult redeployToRuntime(DeploymentDescription deployment) throws IOException;
+
+    /**
+     * Redeploys existing deployment content to the runtime for each deployment description.
+     *
+     * @param deployments the deployment descriptions to redeploy
+     *
+     * @return the result of the deployment
+     *
+     * @throws IOException if a failure occurs communicating with the server
+     */
+    DeploymentResult redeployToRuntime(Set<DeploymentDescription> deployments) throws IOException;
 
     /**
      * Undeploys the deployment from the server.

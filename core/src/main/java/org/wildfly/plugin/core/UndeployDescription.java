@@ -21,6 +21,7 @@ package org.wildfly.plugin.core;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -34,7 +35,7 @@ import java.util.Set;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 @SuppressWarnings("unused")
-public class UndeployDescription implements DeploymentDescription {
+public class UndeployDescription implements DeploymentDescription, Comparable<UndeployDescription> {
 
     private final String name;
     private final Set<String> serverGroups;
@@ -45,8 +46,8 @@ public class UndeployDescription implements DeploymentDescription {
      *
      * @param name the name of the deployment
      */
-    public UndeployDescription(final String name) {
-        this.name = Assertions.requiresNotNullParameter(name, "name");
+    private UndeployDescription(final String name) {
+        this.name = name;
         serverGroups = new LinkedHashSet<>();
     }
 
@@ -58,7 +59,7 @@ public class UndeployDescription implements DeploymentDescription {
      * @return the description
      */
     public static UndeployDescription of(final String name) {
-        return new UndeployDescription(name);
+        return new UndeployDescription(Assertions.requiresNotNullParameter(name, "name"));
     }
 
     /**
@@ -69,6 +70,7 @@ public class UndeployDescription implements DeploymentDescription {
      * @return the description
      */
     public static UndeployDescription of(final DeploymentDescription deploymentDescription) {
+        Assertions.requiresNotNullParameter(deploymentDescription, "deploymentDescription");
         return of(deploymentDescription.getName()).addServerGroups(deploymentDescription.getServerGroups());
     }
 
@@ -109,7 +111,7 @@ public class UndeployDescription implements DeploymentDescription {
 
     @Override
     public Set<String> getServerGroups() {
-        return new LinkedHashSet<>(serverGroups);
+        return Collections.unmodifiableSet(serverGroups);
     }
 
     @Override
@@ -141,13 +143,13 @@ public class UndeployDescription implements DeploymentDescription {
     }
 
     @Override
-    public int compareTo(@SuppressWarnings("NullableProblems") final DeploymentDescription o) {
-        return getName().compareTo(o.getName());
+    public int compareTo(@SuppressWarnings("NullableProblems") final UndeployDescription o) {
+        return name.compareTo(o.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName());
+        return Objects.hash(name);
     }
 
     @Override
@@ -158,16 +160,15 @@ public class UndeployDescription implements DeploymentDescription {
         if (!(obj instanceof UndeployDescription)) {
             return false;
         }
-        @SuppressWarnings("TypeMayBeWeakened")
         final UndeployDescription other = (UndeployDescription) obj;
-        return Objects.equals(getName(), other.getName());
+        return Objects.equals(name, other.name);
     }
 
     @Override
     public String toString() {
         final StringBuilder result = new StringBuilder(UndeployDescription.class.getSimpleName());
         result.append('(');
-        result.append("name=").append(getName());
+        result.append("name=").append(name);
         result.append(", failOnMissing=").append(failOnMissing);
         if (!serverGroups.isEmpty()) {
             result.append(", serverGroups=").append(serverGroups);
