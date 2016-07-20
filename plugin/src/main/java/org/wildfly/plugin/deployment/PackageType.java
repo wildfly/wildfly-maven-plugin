@@ -45,8 +45,8 @@ final class PackageType implements Comparable<PackageType> {
     static {
         DEFAULT_TYPES = new HashMap<>();
         DEFAULT_TYPES.put(MAVEN_PLUGIN.packaging, MAVEN_PLUGIN);
-        DEFAULT_TYPES.put(POM.packaging, MAVEN_PLUGIN);
-        DEFAULT_TYPES.put(EJB.packaging, MAVEN_PLUGIN);
+        DEFAULT_TYPES.put(POM.packaging, POM);
+        DEFAULT_TYPES.put(EJB.packaging, EJB);
     }
 
     private final String packaging;
