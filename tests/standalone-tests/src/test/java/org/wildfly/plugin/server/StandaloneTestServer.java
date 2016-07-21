@@ -26,11 +26,11 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.wildfly.core.launcher.Launcher;
 import org.wildfly.core.launcher.ProcessHelper;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.core.ServerHelper;
+import org.wildfly.plugin.core.ServerProcess;
 import org.wildfly.plugin.tests.Environment;
 
 /**
@@ -50,10 +50,7 @@ public class StandaloneTestServer implements TestServer {
                 final StandaloneCommandBuilder commandBuilder = StandaloneCommandBuilder.of(Environment.WILDFLY_HOME)
                         .setBindAddressHint("management", Environment.HOSTNAME)
                         .addJavaOption("-Djboss.management.http.port=" + Environment.PORT);
-                final Process process = Launcher.of(commandBuilder)
-                        .setRedirectErrorStream(true)
-                        .launch();
-                startConsoleConsumer(process);
+                final Process process = ServerProcess.start(commandBuilder, null, System.out);
                 shutdownThread = ProcessHelper.addShutdownHook(process);
                 client = ModelControllerClient.Factory.create(Environment.HOSTNAME, Environment.PORT);
                 currentProcess = process;
@@ -116,11 +113,5 @@ public class StandaloneTestServer implements TestServer {
         } finally {
             currentProcess = null;
         }
-    }
-
-    private static Thread startConsoleConsumer(final Process process) {
-        final Thread result = new Thread(new ConsoleConsumer(process.getInputStream(), System.out));
-        result.start();
-        return result;
     }
 }

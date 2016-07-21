@@ -22,10 +22,6 @@
 
 package org.wildfly.plugin.server;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
-
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.core.DeploymentManager;
 
@@ -41,27 +37,4 @@ public interface TestServer {
     ModelControllerClient getClient();
 
     DeploymentManager getDeploymentManager();
-
-    class ConsoleConsumer implements Runnable {
-        private final InputStream in;
-        private final PrintStream out;
-
-        ConsoleConsumer(final InputStream in, final PrintStream out) {
-            this.in = in;
-            this.out = out;
-        }
-
-
-        @Override
-        public void run() {
-            byte[] buffer = new byte[64];
-            try {
-                int len;
-                while ((len = in.read(buffer)) != -1) {
-                    out.write(buffer, 0, len);
-                }
-            } catch (IOException ignore) {
-            }
-        }
-    }
 }
