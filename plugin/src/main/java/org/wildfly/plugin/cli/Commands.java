@@ -24,7 +24,6 @@ package org.wildfly.plugin.cli;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -65,8 +64,14 @@ public class Commands {
     private List<File> scripts = new ArrayList<>();
 
     /**
-     * Indicates whether or not subsequent commands should be executed if an error occurs executing a command. A value
-     * of {@code false} will continue processing commands even if a previous command execution results in a failure.
+     * The properties files to use when executing CLI scripts or commands.
+     */
+    @Parameter
+    private List<File> propertiesFiles = new ArrayList<>();
+
+    /**
+     * Indicates whether or not subsequent commands should be executed if an error occurs executing a command. A value of
+     * {@code false} will continue processing commands even if a previous command execution results in a failure.
      */
     @Parameter(alias = "fail-on-error", defaultValue = "true")
     private boolean failOnError = true;
@@ -82,20 +87,11 @@ public class Commands {
     }
 
     /**
-     * Checks of there are commands that should be executed.
-     *
-     * @return {@code true} if there are commands to be processed, otherwise {@code false}
-     */
-    public boolean hasCommands() {
-        return commands != null && !commands.isEmpty();
-    }
-
-    /**
      * Get the defined commands or an empty list.
      *
      * @return the defined commands or an empty list
      */
-    protected Collection<String> getCommands() {
+    protected List<String> getCommands() {
         if (hasCommands()) {
             return new ArrayList<>(commands);
         }
@@ -107,9 +103,21 @@ public class Commands {
      *
      * @return the defined script files or an empty list
      */
-    protected Collection<File> getScripts() {
+    protected List<File> getScripts() {
         if (hasScripts()) {
             return new ArrayList<>(scripts);
+        }
+        return Collections.emptyList();
+    }
+
+    /**
+     * Get the defined properties files or an empty list.
+     *
+     * @return the defined properties files or an empty list
+     */
+    protected List<File> getPropertiesFiles() {
+        if (hasPropertiesFiles()) {
+            return new ArrayList<>(propertiesFiles);
         }
         return Collections.emptyList();
     }
@@ -125,12 +133,29 @@ public class Commands {
     }
 
     /**
-     * Checks of there are a CLI script file that should be executed.
+     * Checks if there are commands that should be executed.
      *
-     * @return {@code true} if there are a CLI script to be processed, otherwise
-     * {@code false}
+     * @return {@code true} if there are commands to be processed, otherwise {@code false}
+     */
+    public boolean hasCommands() {
+        return commands != null && !commands.isEmpty();
+    }
+
+    /**
+     * Checks if there are CLI script files that should be executed.
+     *
+     * @return {@code true} if there are CLI script files to be processed, otherwise {@code false}
      */
     public boolean hasScripts() {
         return scripts != null && !scripts.isEmpty();
+    }
+
+    /**
+     * Checks of there are CLI properties files that should be used when executing scripts or commands.
+     *
+     * @return {@code true} if there are CLI properties flies to be processed, otherwise {@code false}
+     */
+    public boolean hasPropertiesFiles() {
+        return propertiesFiles != null && !propertiesFiles.isEmpty();
     }
 }
