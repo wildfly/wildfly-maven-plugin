@@ -25,7 +25,6 @@ package org.wildfly.plugin.deployment;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -66,12 +65,13 @@ public class UndeploymentMatchTest extends AbstractWildFlyServerMojoTest {
 
     @After
     public void cleanup() throws Exception {
-        final Collection<DeploymentDescription> deployments = deploymentManager.getDeployments();
-        final Set<UndeployDescription> toRemove = new HashSet<>();
-        for (DeploymentDescription deployment : deployments) {
-            toRemove.add(UndeployDescription.of(deployment).setFailOnMissing(false));
+        final Set<UndeployDescription> deployments = new HashSet<>();
+        for (DeploymentDescription deployment : deploymentManager.getDeployments()) {
+            deployments.add(UndeployDescription.of(deployment));
         }
-        deploymentManager.undeploy(toRemove);
+        if (!deployments.isEmpty()) {
+            deploymentManager.undeploy(deployments).assertSuccess();
+        }
     }
 
     @Test

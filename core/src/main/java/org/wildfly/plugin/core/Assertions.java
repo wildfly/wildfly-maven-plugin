@@ -19,30 +19,62 @@
 
 package org.wildfly.plugin.core;
 
-import java.util.Arrays;
+import java.util.Collection;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 class Assertions {
+
     /**
-     * Checks if the parameter is {@code null} and throws an {@link IllegalArgumentException} it is.
+     * Checks if the parameter is {@code null} and throws an {@link IllegalArgumentException} if it is.
      *
-     * @param object the object to check
-     * @param name   the name of the parameter
-     * @param <T>    the parameter type
+     * @param value the value to check
+     * @param name  the name of the parameter
+     * @param <T>   the parameter type
      *
      * @return the parameter value
      *
      * @throws IllegalArgumentException if the object representing the parameter is {@code null}
      */
-    static <T> T requiresNotNullParameter(final T object, final String name) throws IllegalArgumentException {
-        if (object == null) {
-            final IllegalArgumentException e = new IllegalArgumentException(String.format("Parameter %s is required and cannot be null.", name));
-            final StackTraceElement[] st = e.getStackTrace();
-            e.setStackTrace(Arrays.copyOfRange(st, 1, st.length));
-            throw e;
+    static <T> T requiresNotNullParameter(final T value, final String name) throws IllegalArgumentException {
+        if (value == null) {
+            throw new IllegalArgumentException(String.format("Parameter %s is required and cannot be null.", name));
         }
-        return object;
+        return value;
+    }
+
+    /**
+     * Checks if the parameter is {@code null} or empty and throws an {@link IllegalArgumentException} if it is.
+     *
+     * @param value the value to check
+     * @param name  the name of the parameter
+     *
+     * @return the parameter value
+     *
+     * @throws IllegalArgumentException if the object representing the parameter is {@code null}
+     */
+    static String requiresNotNullOrNotEmptyParameter(final String value, final String name) throws IllegalArgumentException {
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException(String.format("Parameter %s is required and cannot be null or empty.", name));
+        }
+        return value;
+    }
+
+    /**
+     * Checks if the parameter is {@code null} or empty and throws an {@link IllegalArgumentException} if it is.
+     *
+     * @param value the value to check
+     * @param name  the name of the parameter
+     *
+     * @return the parameter value
+     *
+     * @throws IllegalArgumentException if the object representing the parameter is {@code null}
+     */
+    static <E, T extends Collection<E>> T requiresNotNullOrNotEmptyParameter(final T value, final String name) throws IllegalArgumentException {
+        if (value == null || value.isEmpty()) {
+            throw new IllegalArgumentException(String.format("Parameter %s is required and cannot be null or empty.", name));
+        }
+        return value;
     }
 }

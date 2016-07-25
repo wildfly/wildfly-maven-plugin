@@ -113,6 +113,9 @@
         <wildfly.scm.connection>scm:git://github.com/wildfly/wildfly-maven-plugin.git</wildfly.scm.connection>
         <wildfly.scm.developer.connection>scm:git:git@github.com:wildfly/wildfly-maven-plugin.git</wildfly.scm.developer.connection>
         <wildfly.scm.url>http://github.com/wildfly/wildfly-maven-plugin</wildfly.scm.url>
+
+        <!-- Other properties -->
+        <maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
     </properties>
 
     <modules>
@@ -128,6 +131,13 @@
                     <groupId>org.eclipse.sisu</groupId>
                     <artifactId>sisu-maven-plugin</artifactId>
                     <version>${version.org.eclipse.sisu}</version>
+                </plugin>
+
+                <plugin>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                        <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>

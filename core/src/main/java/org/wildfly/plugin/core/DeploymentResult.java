@@ -55,7 +55,7 @@ public class DeploymentResult {
         } else {
             failureMessage = Operations.getFailureDescription(result).asString();
         }
-        this.result = (successful ? Operations.readResult(result).clone() : new ModelNode());
+        this.result = result.clone();
         this.result.protect();
     }
 
@@ -78,10 +78,7 @@ public class DeploymentResult {
      * @param args   the arguments for the format pattern
      */
     DeploymentResult(final String format, final Object... args) {
-        successful = false;
-        this.failureMessage = String.format(format, args);
-        result = new ModelNode();
-        result.protect();
+        this(String.format(format, args));
     }
 
     /**

@@ -72,7 +72,7 @@ public class Deployment implements DeploymentDescription, Comparable<Deployment>
      */
     private Deployment(final InputStream content, final String name) {
         this.content = DeploymentContent.of(content);
-        this.name = Assertions.requiresNotNullParameter(name, "name");
+        this.name = Assertions.requiresNotNullOrNotEmptyParameter(name, "name");
         serverGroups = new LinkedHashSet<>();
     }
 
@@ -116,7 +116,7 @@ public class Deployment implements DeploymentDescription, Comparable<Deployment>
      */
     public static Deployment of(final InputStream content, final String name) {
         return new Deployment(Assertions.requiresNotNullParameter(content, "content"),
-                Assertions.requiresNotNullParameter(name, "name"));
+                Assertions.requiresNotNullOrNotEmptyParameter(name, "name"));
     }
 
     /**
@@ -125,6 +125,9 @@ public class Deployment implements DeploymentDescription, Comparable<Deployment>
      * @param serverGroup the server group to add
      *
      * @return this deployment
+     *
+     * @see #addServerGroups(Collection)
+     * @see #addServerGroups(String...)
      */
     public Deployment addServerGroup(final String serverGroup) {
         serverGroups.add(serverGroup);
@@ -137,6 +140,9 @@ public class Deployment implements DeploymentDescription, Comparable<Deployment>
      * @param serverGroups the server groups to add
      *
      * @return this deployment
+     *
+     * @see #addServerGroup(String)
+     * @see #addServerGroups(Collection)
      */
     public Deployment addServerGroups(final String... serverGroups) {
         return addServerGroups(Arrays.asList(serverGroups));
@@ -148,6 +154,9 @@ public class Deployment implements DeploymentDescription, Comparable<Deployment>
      * @param serverGroups the server groups to add
      *
      * @return this deployment
+     *
+     * @see #addServerGroup(String)
+     * @see #addServerGroups(String...)
      */
     public Deployment addServerGroups(final Collection<String> serverGroups) {
         this.serverGroups.addAll(serverGroups);

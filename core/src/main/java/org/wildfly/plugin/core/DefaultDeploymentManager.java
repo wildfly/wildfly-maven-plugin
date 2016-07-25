@@ -137,12 +137,12 @@ class DefaultDeploymentManager implements DeploymentManager {
 
     @Override
     public DeploymentResult deployToRuntime(final DeploymentDescription deployment) throws IOException {
-        return execute(DeploymentOperations.createDeployOperation(deployment));
+        return execute(DeploymentOperations.createDeployOperation(Assertions.requiresNotNullParameter(deployment, "deployment")));
     }
 
     @Override
     public DeploymentResult deployToRuntime(final Set<DeploymentDescription> deployments) throws IOException {
-        return execute(DeploymentOperations.createDeployOperation(deployments));
+        return execute(DeploymentOperations.createDeployOperation(Assertions.requiresNotNullOrNotEmptyParameter(deployments, "deployments")));
     }
 
 
@@ -166,12 +166,12 @@ class DefaultDeploymentManager implements DeploymentManager {
 
     @Override
     public DeploymentResult redeployToRuntime(final DeploymentDescription deployment) throws IOException {
-        return execute(DeploymentOperations.createRedeployOperation(deployment));
+        return execute(DeploymentOperations.createRedeployOperation(Assertions.requiresNotNullParameter(deployment, "deployment")));
     }
 
     @Override
     public DeploymentResult redeployToRuntime(final Set<DeploymentDescription> deployments) throws IOException {
-        return execute(DeploymentOperations.createRedeployOperation(deployments));
+        return execute(DeploymentOperations.createRedeployOperation(Assertions.requiresNotNullOrNotEmptyParameter(deployments, "deployments")));
     }
 
     @Override
@@ -180,7 +180,15 @@ class DefaultDeploymentManager implements DeploymentManager {
         if (failedResult != null) {
             return failedResult;
         }
-        return execute(DeploymentOperations.createUndeployOperation(undeployDescription));
+        if (undeployDescription.isFailOnMissing()) {
+            return execute(DeploymentOperations.createUndeployOperation(undeployDescription));
+        }
+        final Set<DeploymentDescription> currentDeployments = getDeployments();
+        final DeploymentDescription found = findDeployment(currentDeployments, undeployDescription);
+        if (currentDeployments.isEmpty() || found == null) {
+            return DeploymentResult.SUCCESSFUL;
+        }
+        return execute(DeploymentOperations.createUndeployOperation(copyIfRequired(undeployDescription, found)));
     }
 
     @Override
@@ -189,7 +197,37 @@ class DefaultDeploymentManager implements DeploymentManager {
         if (failedResult != null) {
             return failedResult;
         }
-        return execute(DeploymentOperations.createUndeployOperation(undeployDescriptions));
+        final Set<DeploymentDescription> currentDeployments = getDeployments();
+        final Set<UndeployDescription> toRemove = new LinkedHashSet<>(undeployDescriptions.size());
+        final Set<UndeployDescription> skipped = new LinkedHashSet<>(undeployDescriptions.size());
+        boolean failOnMissing = false;
+        for (UndeployDescription undeployDescription : undeployDescriptions) {
+            if (undeployDescription.isFailOnMissing()) {
+                failOnMissing = true;
+            }
+            if (failOnMissing) {
+                toRemove.add(undeployDescription);
+            } else {
+                final DeploymentDescription found = findDeployment(currentDeployments, undeployDescription);
+                if (found == null) {
+                    skipped.add(undeployDescription);
+                } else {
+                    toRemove.add(copyIfRequired(undeployDescription, found));
+                }
+            }
+        }
+        if (toRemove.isEmpty()) {
+            if (failOnMissing) {
+                return new DeploymentResult("No deployments were found matching any of the following deployments: %s", undeployDescriptions);
+            }
+            return DeploymentResult.SUCCESSFUL;
+        }
+        // If this is expecting to fail we need to add the skipped ones so execution will fail and the failure message
+        // will be accurate.
+        if (failOnMissing) {
+            toRemove.addAll(skipped);
+        }
+        return execute(DeploymentOperations.createUndeployOperation(toRemove));
     }
 
 
@@ -256,6 +294,7 @@ class DefaultDeploymentManager implements DeploymentManager {
 
     @Override
     public Set<DeploymentDescription> getDeployments(final String serverGroup) throws IOException {
+        Assertions.requiresNotNullOrNotEmptyParameter(serverGroup, "serverGroup");
         if (!isDomain()) {
             throw new IllegalStateException("Server is not a managed domain. Running container: " + ServerHelper.getContainerDescription(client));
         }
@@ -288,13 +327,28 @@ class DefaultDeploymentManager implements DeploymentManager {
 
     @Override
     public boolean hasDeployment(final String name) throws IOException {
-        return hasDeployment(DeploymentOperations.EMPTY_ADDRESS, name);
+        return hasDeployment(DeploymentOperations.EMPTY_ADDRESS, Assertions.requiresNotNullOrNotEmptyParameter(name, "name"));
     }
 
     @Override
     public boolean hasDeployment(final String name, final String serverGroup) {
-        final ModelNode address = DeploymentOperations.createAddress(SERVER_GROUP, serverGroup);
-        return hasDeployment(address, name);
+        final ModelNode address = DeploymentOperations.createAddress(SERVER_GROUP, Assertions.requiresNotNullOrNotEmptyParameter(serverGroup, "serverGroup"));
+        return hasDeployment(address, Assertions.requiresNotNullOrNotEmptyParameter(name, "name"));
+    }
+
+    @Override
+    public boolean isEnabled(final String name) throws IOException {
+        return isEnabled(DeploymentOperations.createAddress(DEPLOYMENT, Assertions.requiresNotNullOrNotEmptyParameter(name, "name")));
+    }
+
+    @Override
+    public boolean isEnabled(final String name, final String serverGroup) throws IOException {
+        return isEnabled(DeploymentOperations.createAddress(
+                SERVER_GROUP,
+                Assertions.requiresNotNullOrNotEmptyParameter(serverGroup, "serverGroup"),
+                DEPLOYMENT,
+                Assertions.requiresNotNullOrNotEmptyParameter(name, "name"))
+        );
     }
 
     private boolean hasDeployment(final ModelNode address, final String name) {
@@ -318,6 +372,21 @@ class DefaultDeploymentManager implements DeploymentManager {
             throw new IllegalStateException(String.format("Could not execute operation '%s'", op), e);
         }
         return false;
+    }
+
+    private boolean isEnabled(final ModelNode address) {
+        final ModelNode op = Operations.createReadAttributeOperation(address, DeploymentOperations.ENABLED);
+        try {
+            final ModelNode result = client.execute(op);
+            // Check to make sure there is an outcome
+            if (Operations.isSuccessfulOutcome(result)) {
+                return Operations.readResult(result).asBoolean();
+            } else {
+                throw new IllegalStateException(Operations.getFailureDescription(result).asString());
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(String.format("Could not execute operation '%s'", op), e);
+        }
     }
 
     private DeploymentResult execute(final Operation op) throws IOException {
@@ -360,7 +429,7 @@ class DefaultDeploymentManager implements DeploymentManager {
     }
 
     private DeploymentResult validateDeployment(final Set<? extends DeploymentDescription> deployments) throws IOException {
-        Assertions.requiresNotNullParameter(deployments, "deployments");
+        Assertions.requiresNotNullOrNotEmptyParameter(deployments, "deployments");
 
         final Collection<DeploymentDescription> missingServerGroups = new LinkedHashSet<>();
         final Collection<DeploymentDescription> standaloneWithServerGroups = new LinkedHashSet<>();
@@ -401,6 +470,22 @@ class DefaultDeploymentManager implements DeploymentManager {
             }
         }
         return null;
+    }
+
+    private static UndeployDescription copyIfRequired(final UndeployDescription undeployDescription, final DeploymentDescription found) {
+        final Collection<String> unmatched = new LinkedHashSet<>(undeployDescription.getServerGroups());
+        unmatched.removeAll(found.getServerGroups());
+        if (unmatched.isEmpty()) {
+            return undeployDescription;
+        }
+        final Collection<String> toRemove = new LinkedHashSet<>(undeployDescription.getServerGroups());
+        toRemove.removeAll(unmatched);
+        // The parameter has more server-groups than the deployment found, create a new UndeployDescription description
+        // using only the server-groups the deployment exists on
+        return UndeployDescription.of(undeployDescription.getName())
+                .addServerGroups(toRemove)
+                .setFailOnMissing(undeployDescription.isFailOnMissing())
+                .setRemoveContent(undeployDescription.isRemoveContent());
     }
 
     private class LazyDomainCheck {

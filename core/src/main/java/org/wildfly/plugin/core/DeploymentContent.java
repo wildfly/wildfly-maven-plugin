@@ -83,7 +83,8 @@ abstract class DeploymentContent {
                     contentItem.get(PATH).set(content.toAbsolutePath().toString());
                     contentItem.get("archive").set(false);
                 } else {
-                    contentItem.get(ClientConstants.INPUT_STREAM_INDEX).set(0);
+                    // The index is 0 based so use the input stream count before adding the input stream
+                    contentItem.get(ClientConstants.INPUT_STREAM_INDEX).set(builder.getInputStreamCount());
                     builder.addFileAsAttachment(content.toFile());
                 }
             }
@@ -116,7 +117,8 @@ abstract class DeploymentContent {
                 copiedContent.reset();
                 final ModelNode contentNode = op.get(CONTENT);
                 final ModelNode contentItem = contentNode.get(0);
-                contentItem.get(ClientConstants.INPUT_STREAM_INDEX).set(0);
+                // The index is 0 based so use the input stream count before adding the input stream
+                contentItem.get(ClientConstants.INPUT_STREAM_INDEX).set(builder.getInputStreamCount());
                 builder.addInputStream(copiedContent);
             }
 

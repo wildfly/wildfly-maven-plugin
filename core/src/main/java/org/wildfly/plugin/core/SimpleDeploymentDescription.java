@@ -50,7 +50,7 @@ public class SimpleDeploymentDescription implements DeploymentDescription, Compa
      * @return the deployment description
      */
     public static SimpleDeploymentDescription of(final String name) {
-        return new SimpleDeploymentDescription(Assertions.requiresNotNullParameter(name, "name"));
+        return new SimpleDeploymentDescription(Assertions.requiresNotNullOrNotEmptyParameter(name, "name"));
     }
 
     /**
