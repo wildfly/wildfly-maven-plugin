@@ -165,6 +165,7 @@ public class ServerProcess extends Process {
      *
      * @return the consumer thread or {@code null} if the processes inherits the streams from the parent process
      */
+    @SuppressWarnings("unused")
     public Thread getConsoleConsumer() {
         return consoleConsumer;
     }
@@ -174,6 +175,7 @@ public class ServerProcess extends Process {
      *
      * @return {@code true} if the streams are inherited from the parent process, otherwise {@code false}
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public boolean isInheritedStreams() {
         return inherited;
     }
@@ -198,7 +200,8 @@ public class ServerProcess extends Process {
 
         @Override
         public void run() {
-            byte[] buffer = new byte[64];
+            @SuppressWarnings("MagicNumber")
+            final byte[] buffer = new byte[64];
             try {
                 int len;
                 while ((len = in.read(buffer)) != -1) {

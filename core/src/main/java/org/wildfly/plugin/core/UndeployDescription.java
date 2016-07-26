@@ -62,7 +62,7 @@ public class UndeployDescription implements DeploymentDescription, Comparable<Un
      * @return the description
      */
     public static UndeployDescription of(final String name) {
-        return new UndeployDescription(Assertions.requiresNotNullParameter(name, "name"));
+        return new UndeployDescription(Assertions.requiresNotNullOrNotEmptyParameter(name, "name"));
     }
 
     /**
@@ -199,6 +199,7 @@ public class UndeployDescription implements DeploymentDescription, Comparable<Un
         result.append('(');
         result.append("name=").append(name);
         result.append(", failOnMissing=").append(failOnMissing);
+        result.append(", removeContent=").append(removeContent);
         if (!serverGroups.isEmpty()) {
             result.append(", serverGroups=").append(serverGroups);
         }

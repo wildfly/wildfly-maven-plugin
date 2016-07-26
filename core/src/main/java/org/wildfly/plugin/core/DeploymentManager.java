@@ -31,6 +31,11 @@ import org.jboss.as.controller.client.ModelControllerClient;
  * The {@linkplain DeploymentResult#asModelNode() server result} for each deployment operation will be the result of a
  * composite operation.
  * </p>
+ * <p>
+ * If the server is a managed domain {@linkplain DeploymentDescription#getServerGroups() server groups} are required. If
+ * the server is a standalone server no server groups are allowed to be define. A failed {@link DeploymentResult}
+ * will be returned if the server groups are empty for a managed domain or populated for a standalone server.
+ * </p>
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
@@ -249,25 +254,57 @@ public interface DeploymentManager {
     Set<String> getDeploymentNames() throws IOException;
 
     /**
-     * Checks if the deployment is on the server.
+     * Checks if the deployment content is on the server.
      *
      * @param name the name of the deployment
      *
-     * @return {@code true} if the deployment exists otherwise {@code false}
+     * @return {@code true} if the deployment content exists otherwise {@code false}
      *
      * @throws IOException if a failure occurs communicating with the server
      */
     boolean hasDeployment(String name) throws IOException;
 
     /**
-     * Checks if the deployment is on the server.
+     * Checks if the deployment content is on the server.
      *
      * @param name        the name of the deployment
      * @param serverGroup the server group to check for the deployment on
      *
-     * @return {@code true} if the deployment exists otherwise {@code false}
+     * @return {@code true} if the deployment content exists otherwise {@code false}
      */
     boolean hasDeployment(String name, String serverGroup) throws IOException;
+
+    /**
+     * Checks if the deployment has been deployed to the runtime. The deployment must already exist on the server.
+     * <p>
+     * If a deployment is enabled it has been deployed to the runtime. Otherwise the deployment has <em>not</em> been
+     * deployed to the runtime.
+     * </p>
+     *
+     * @param name the name of the deployment
+     *
+     * @return {@code true} if the deployment content exists and is enabled otherwise {@code false}
+     *
+     * @throws IOException if a failure occurs communicating with the server
+     * @see #isEnabled(String, String) for managed domain deployments
+     */
+    boolean isEnabled(String name) throws IOException;
+
+    /**
+     * Checks if the deployment has been deployed to the runtime. The deployment must already exist on the server.
+     * <p>
+     * If a deployment is enabled it has been deployed to the runtime. Otherwise the deployment has <em>not</em> been
+     * deployed to the runtime.
+     * </p>
+     *
+     * @param name        the name of the deployment
+     * @param serverGroup the server group to check for the deployment on
+     *
+     * @return {@code true} if the deployment content exists and is enabled otherwise {@code false}
+     *
+     * @see #isEnabled(String) for standalone deployments
+     */
+    boolean isEnabled(String name, String serverGroup) throws IOException;
 
     /**
      * A factory to create a new deployment manager
@@ -276,6 +313,10 @@ public interface DeploymentManager {
 
         /**
          * Creates a new deployment manager.
+         * <p>
+         * The client will not be {@linkplain ModelControllerClient#close() closed} by the {@link DeploymentManager}.
+         * The user is responsible for {@linkplain ModelControllerClient#close() closing} the client.
+         * </p>
          *
          * @param client the client used to communicate with the server
          *

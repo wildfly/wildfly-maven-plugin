@@ -120,6 +120,9 @@ public class MavenDeployment {
                         result = deploymentManager.undeploy(UndeployDescription.of(name).addServerGroups(serverGroups).setFailOnMissing(true));
                     } else {
                         final Set<UndeployDescription> matchedDeployments = findDeployments(true);
+                        if (matchedDeployments.isEmpty()) {
+                            throw new MojoDeploymentException("No deployments matched the match-pattern %s.", matchPattern);
+                        }
                         result = deploymentManager.undeploy(matchedDeployments);
                     }
                     break;
@@ -129,6 +132,9 @@ public class MavenDeployment {
                         result = deploymentManager.undeploy(UndeployDescription.of(name).addServerGroups(serverGroups).setFailOnMissing(false));
                     } else {
                         final Set<UndeployDescription> matchedDeployments = findDeployments(false);
+                        if (matchedDeployments.isEmpty()) {
+                            return;
+                        }
                         result = deploymentManager.undeploy(matchedDeployments);
                     }
                     break;

@@ -57,7 +57,7 @@ import org.jboss.dmr.ModelType;
  */
 @SuppressWarnings({"unused", "StaticMethodOnlyUsedInOneClass", "WeakerAccess"})
 public class DeploymentOperations {
-    private static final String ENABLED = "enabled";
+    static final String ENABLED = "enabled";
     static final ModelNode EMPTY_ADDRESS = new ModelNode().setEmptyList();
 
     static {
@@ -131,7 +131,7 @@ public class DeploymentOperations {
      * @see #createDeployOperation(Set)
      */
     public static Operation createAddDeploymentOperation(final Set<Deployment> deployments) {
-        Assertions.requiresNotNullParameter(deployments, "deployments");
+        Assertions.requiresNotNullOrNotEmptyParameter(deployments, "deployments");
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
         for (Deployment deployment : deployments) {
             addDeploymentOperationStep(builder, deployment);
@@ -161,7 +161,7 @@ public class DeploymentOperations {
      * @return the deploy operation
      */
     public static Operation createDeployOperation(final Set<DeploymentDescription> deployments) {
-        Assertions.requiresNotNullParameter(deployments, "deployments");
+        Assertions.requiresNotNullOrNotEmptyParameter(deployments, "deployments");
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
         for (DeploymentDescription deployment : deployments) {
             addDeployOperationStep(builder, deployment);
@@ -193,7 +193,7 @@ public class DeploymentOperations {
      * @return the deploy operation
      */
     public static Operation createReplaceOperation(final Set<Deployment> deployments) {
-        Assertions.requiresNotNullParameter(deployments, "deployments");
+        Assertions.requiresNotNullOrNotEmptyParameter(deployments, "deployments");
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
         for (Deployment deployment : deployments) {
             addReplaceOperationSteps(builder, deployment);
@@ -231,7 +231,7 @@ public class DeploymentOperations {
      * @return the redeploy operation
      */
     public static Operation createRedeployOperation(final Set<DeploymentDescription> deployments) {
-        Assertions.requiresNotNullParameter(deployments, "deployments");
+        Assertions.requiresNotNullOrNotEmptyParameter(deployments, "deployments");
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
         for (DeploymentDescription deployment : deployments) {
             addRedeployOperationStep(builder, deployment);
@@ -245,6 +245,10 @@ public class DeploymentOperations {
      * If the {@link UndeployDescription#isRemoveContent()} returns {@code true} the content will also be removed from
      * the content repository. Otherwise the content will remain on the server and only the {@code undeploy} operation
      * will be executed.
+     * </p>
+     * <p>
+     * Note that the {@link UndeployDescription#isFailOnMissing() failOnMissing} is ignored and the operation will fail
+     * if any deployments being undeployed are missing.
      * </p>
      *
      * @param undeployDescription the description used to crate the operation
@@ -265,13 +269,17 @@ public class DeploymentOperations {
      * the content repository. Otherwise the content will remain on the server and only the {@code undeploy} operation
      * will be executed.
      * </p>
+     * <p>
+     * Note that the {@link UndeployDescription#isFailOnMissing() failOnMissing} is ignored and the operation will fail
+     * if any deployments being undeployed are missing.
+     * </p>
      *
      * @param undeployDescriptions the set of descriptions used to crate the operation
      *
      * @return the undeploy operation
      */
     public static Operation createUndeployOperation(final Set<UndeployDescription> undeployDescriptions) {
-        Assertions.requiresNotNullParameter(undeployDescriptions, "undeployDescriptions");
+        Assertions.requiresNotNullOrNotEmptyParameter(undeployDescriptions, "undeployDescriptions");
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
         for (UndeployDescription undeployDescription : undeployDescriptions) {
             addUndeployOperationStep(builder, undeployDescription);

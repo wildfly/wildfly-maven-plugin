@@ -34,6 +34,12 @@
         Utilities a plugin can use to interact with WildFly container.
     </description>
 
+    <properties>
+        <version.org.jboss.shrinkwrap.shrinkwrap>1.2.6</version.org.jboss.shrinkwrap.shrinkwrap>
+
+        <jboss.home>${project.build.directory}${file.separator}wildfly-${version.org.wildfly.dist}</jboss.home>
+    </properties>
+
     <licenses>
         <license>
             <name>Apache License Version 2.0</name>
@@ -73,5 +79,74 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.jboss.shrinkwrap</groupId>
+            <artifactId>shrinkwrap-api</artifactId>
+            <version>${version.org.jboss.shrinkwrap.shrinkwrap}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss.shrinkwrap</groupId>
+            <artifactId>shrinkwrap-impl-base</artifactId>
+            <version>${version.org.jboss.shrinkwrap.shrinkwrap}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack-wildfly</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.wildfly</groupId>
+                                    <artifactId>wildfly-dist</artifactId>
+                                    <version>${version.org.wildfly.dist}</version>
+                                    <type>zip</type>
+                                    <!-- overwrite to clean any previous deployments -->
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemProperties>
+                        <test.deployment.dir>${project.build.testOutputDirectory}</test.deployment.dir>
+                    </systemProperties>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration>
+                    <redirectTestOutputToFile>${maven.test.redirectTestOutputToFile}</redirectTestOutputToFile>
+                    <systemPropertyVariables>
+                        <jboss.home>${jboss.home}</jboss.home>
+                    </systemPropertyVariables>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
