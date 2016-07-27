@@ -26,12 +26,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import javax.inject.Inject;
 
+import org.apache.maven.plugin.Mojo;
 import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.as.controller.client.helpers.Operations.CompositeOperationBuilder;
 import org.jboss.dmr.ModelNode;
@@ -61,6 +64,9 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
             deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
         }
         executeAndVerifyDeploymentExists("deploy", "deploy-webarchive-pom.xml");
+        deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
+
+        executeAndVerifyDeploymentExists("deploy", "legacy-deploy-webarchive-pom.xml");
         deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
     }
 
@@ -223,6 +229,13 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         assertFalse("Deployment " + DEPLOYMENT_NAME + " was not undeployed", deploymentManager.hasDeployment(DEPLOYMENT_NAME, DEFAULT_SERVER_GROUP));
     }
 
+    @Override
+    public <T extends Mojo> T lookupMojoAndVerify(final String goal, final String fileName) throws Exception {
+        final Mojo mojo = super.lookupMojoAndVerify(goal, fileName);
+        setValue(mojo, "serverGroups", Collections.singletonList("main-server-group"));
+        return (T) mojo;
+    }
+
     private void executeAndVerifyDeploymentExists(final String goal, final String fileName) throws Exception {
         executeAndVerifyDeploymentExists(goal, fileName, null);
     }
@@ -231,9 +244,13 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         executeAndVerifyDeploymentExists(goal, fileName, runtimeName, Collections.singleton("main-server-group"));
     }
 
-    private void executeAndVerifyDeploymentExists(final String goal, final String fileName, final String runtimeName, final Iterable<String> serverGroups) throws Exception {
+    private void executeAndVerifyDeploymentExists(final String goal, final String fileName, final String runtimeName, final Collection<String> serverGroups) throws Exception {
 
         final AbstractDeployment deployMojo = lookupMojoAndVerify(goal, fileName);
+
+        // Server groups are required to be set and when there is a property defined on an attribute parameter the
+        // test harness does not set the fields
+        setValue(deployMojo, "serverGroups", new ArrayList<>(serverGroups));
 
         deployMojo.execute();
 

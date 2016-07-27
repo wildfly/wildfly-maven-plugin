@@ -35,10 +35,11 @@
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
                     <filename>test.war</filename>
-                    <server-groups>
-                        <server-group>main-server-group</server-group>
-                        <server-group>other-server-group</server-group>
-                    </server-groups>
+                    <domain>
+                        <server-groups>
+                            <server-group>main-server-group</server-group>
+                        </server-groups>
+                    </domain>
                 </configuration>
             </plugin>
         </plugins>
