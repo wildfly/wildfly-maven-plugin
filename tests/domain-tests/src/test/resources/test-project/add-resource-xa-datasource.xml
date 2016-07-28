@@ -33,11 +33,9 @@
                 <groupId>org.wildfly.plugins</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
-                    <domain>
-                        <profiles>
-                            <profile>full</profile>
-                        </profiles>
-                    </domain>
+                    <profiles>
+                        <profile>full</profile>
+                    </profiles>
                     <address>subsystem=datasources</address>
                     <resources>
                         <resource>

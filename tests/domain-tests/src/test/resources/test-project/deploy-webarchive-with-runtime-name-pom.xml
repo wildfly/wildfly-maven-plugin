@@ -36,11 +36,9 @@
                 <configuration>
                     <runtimeName>test-runtime.war</runtimeName>
                     <filename>test.war</filename>
-                    <domain>
-                        <server-groups>
-                            <server-group>main-server-group</server-group>
-                        </server-groups>
-                    </domain>
+                    <server-groups>
+                        <server-group>main-server-group</server-group>
+                    </server-groups>
                 </configuration>
             </plugin>
         </plugins>

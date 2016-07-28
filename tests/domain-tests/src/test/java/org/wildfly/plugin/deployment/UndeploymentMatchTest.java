@@ -25,8 +25,10 @@ package org.wildfly.plugin.deployment;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import javax.inject.Inject;
 
@@ -107,7 +109,7 @@ public class UndeploymentMatchTest extends AbstractWildFlyServerMojoTest {
         op.get("blocking").set(true);
         executeOperation(op);
 
-        undeploy(MatchPatternStrategy.FIRST, "undeploy-multi-server-group-match-pom.xml");
+        undeploy(MatchPatternStrategy.FIRST, "undeploy-multi-server-group-match-pom.xml", Arrays.asList("main-server-group", "other-server-group"));
 
         final Set<DeploymentDescription> deployments = deploymentManager.getDeployments();
         assertEquals(1, deployments.size());
@@ -143,8 +145,15 @@ public class UndeploymentMatchTest extends AbstractWildFlyServerMojoTest {
     }
 
     private void undeploy(final MatchPatternStrategy matchPatternStrategy, final String pomName) throws Exception {
+        undeploy(matchPatternStrategy, pomName, Collections.singletonList("main-server-group"));
+    }
+
+    private void undeploy(final MatchPatternStrategy matchPatternStrategy, final String pomName, final List<String> serverGroups) throws Exception {
 
         final UndeployMojo undeployMojo = lookupMojoAndVerify("undeploy", pomName);
+        // Server groups are required to be set and when there is a property defined on an attribute parameter the
+        // test harness does not set the fields
+        setValue(undeployMojo, "serverGroups", serverGroups);
 
         undeployMojo.matchPatternStrategy = matchPatternStrategy.toString();
         undeployMojo.execute();

@@ -178,16 +178,14 @@ Complex Deployment and Resource Examples
                 <artifactId>${project.artifactId}</artifactId>
                 <version>${project.version}</version>
                 <configuration>
-                    <domain>
-                        <server-groups>
-                            <server-group>main-server-group</server-group>
-                        </server-groups>
-                        <profiles>
-                            <profile>default</profile>
-                            <profile>ha</profile>
-                            <profile>full-ha</profile>
-                        </profiles>
-                    </domain>
+                    <server-groups>
+                        <server-group>main-server-group</server-group>
+                    </server-groups>
+                    <profiles>
+                        <profile>default</profile>
+                        <profile>ha</profile>
+                        <profile>full-ha</profile>
+                    </profiles>
                 </configuration>
                 <executions>
                     <!-- Undeploy the application on clean -->

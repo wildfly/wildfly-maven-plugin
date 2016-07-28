@@ -207,8 +207,8 @@ Adding Resources Examples
 
 * Adding resources in domain mode
 
-  Adding resources in domain mode works the same as the examples above, except you need to add the <domain> tag as well
-  as specify at least one profile.
+  Adding resources in domain mode works the same as the examples above, except you need to add the <profiles> property
+  as well as specify at least one profile.
 
 ----------
 <project>
@@ -229,11 +229,9 @@ Adding Resources Examples
                             <goal>add-resource</goal>
                         </goals>
                         <configuration>
-                            <domain>
-                                <profiles>
-                                    <profile>default</profile>
-                                </profiles>
-                            </domain>
+                            <profiles>
+                                <profile>default</profile>
+                            </profiles>
                             <address>subsystem=datasources,data-source=java:jboss/myDs</address>
                              <resources>
                                 <resource>

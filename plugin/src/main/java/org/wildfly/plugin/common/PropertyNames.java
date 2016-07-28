@@ -77,9 +77,13 @@ public interface PropertyNames {
 
     String PROTOCOL = "wildfly.protocol";
 
+    String PROFILES = "wildfly.profiles";
+
     String RELOAD = "wildfly.reload";
 
     String SERVER_CONFIG = "wildfly.serverConfig";
+
+    String SERVER_GROUPS = "wildfly.serverGroups";
 
     String STARTUP_TIMEOUT = "wildfly.startupTimeout";
 

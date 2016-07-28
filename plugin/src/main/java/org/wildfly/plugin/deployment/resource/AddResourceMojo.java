@@ -22,6 +22,8 @@
 package org.wildfly.plugin.deployment.resource;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
@@ -38,12 +40,13 @@ import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.ServerOperations;
+import org.wildfly.plugin.core.ServerHelper;
 import org.wildfly.plugin.deployment.domain.Domain;
 
 /**
  * Adds a resource
  * <p/>
- * If {@code force} is set to {@code false} and the resource has already been deployed to the server, an error will
+ * If {@code force} is set to {@code false} and the resource has already been added to the server, an error will
  * occur and the operation will fail.
  * <p/>
  *
@@ -57,9 +60,18 @@ public class AddResourceMojo extends AbstractServerConnection {
 
     /**
      * Specifies the configuration for a domain server.
+     *
+     * @deprecated use {@code <profiles/>} property
      */
     @Parameter
+    @Deprecated
     private Domain domain;
+
+    /**
+     * The profiles where resources should be added to.
+     */
+    @Parameter(property = PropertyNames.PROFILES)
+    private List<String> profiles;
 
     /**
      * The operation address, as a comma separated string.
@@ -86,7 +98,7 @@ public class AddResourceMojo extends AbstractServerConnection {
     private boolean force;
 
     /**
-     * Set to {@code true} if you want the deployment to be skipped, otherwise {@code false}.
+     * Set to {@code true} if you want this goal to be skipped, otherwise {@code false}.
      */
     @Parameter(defaultValue = "false")
     private boolean skip;
@@ -124,10 +136,14 @@ public class AddResourceMojo extends AbstractServerConnection {
     }
 
     private void processResources(final ModelControllerClient client, final Resource... resources) throws IOException {
+        final Collection<String> profiles = getProfiles();
+        final boolean isDomain = ServerHelper.isDomainServer(client);
         for (Resource resource : resources) {
-            if (domain != null) {
+            if (isDomain && profiles.isEmpty()) {
+                throw new IllegalStateException("Cannot add resources when no profiles were defined.");
+            }
+            if (isDomain) {
                 // Profiles are required when adding resources in domain mode
-                final List<String> profiles = domain.getProfiles();
                 if (profiles.isEmpty()) {
                     throw new IllegalStateException("Cannot add resources when no profiles were defined.");
                 }
@@ -175,7 +191,7 @@ public class AddResourceMojo extends AbstractServerConnection {
         }
         // The address cannot be null
         if (inputAddress == null) {
-            throw new RuntimeException("You must specify the address to deploy the resource to.");
+            throw new RuntimeException("You must specify the address to add the resource to.");
         }
         final ModelNode address = parseAddress(profileName, inputAddress);
         if (checkExistence) {
@@ -309,5 +325,16 @@ public class AddResourceMojo extends AbstractServerConnection {
         if (!ServerOperations.isSuccessfulOutcome(result)) {
             throw new RuntimeException(ServerOperations.getFailureDescriptionAsString(result));
         }
+    }
+
+    private Collection<String> getProfiles() {
+        final Collection<String> result = new ArrayList<>();
+        if (domain != null) {
+            result.addAll(domain.getProfiles());
+        }
+        if (profiles != null) {
+            result.addAll(profiles);
+        }
+        return result;
     }
 }

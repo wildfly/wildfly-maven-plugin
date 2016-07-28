@@ -26,6 +26,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -53,9 +56,18 @@ abstract class AbstractDeployment extends AbstractServerConnection {
 
     /**
      * Specifies the configuration for a domain server.
+     *
+     * @deprecated use {@code <server-groups/>} property
      */
     @Parameter
+    @Deprecated
     private Domain domain;
+
+    /**
+     * The server groups the content should be deployed to.
+     */
+    @Parameter(alias = "server-groups", property = PropertyNames.SERVER_GROUPS)
+    private List<String> serverGroups;
 
     /**
      * Specifies the name used for the deployment.
@@ -64,7 +76,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     protected String name;
 
     /**
-     * The runtime name for the dployment.
+     * The runtime name for the deployment.
      * <p>
      * In some cases users may wish to have two deployments with the same {@code runtime-name} (e.g. two versions of
      * {@code example.war}) both available in the management configuration, in which case the deployments would need to
@@ -156,7 +168,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
             validate(isDomain);
             final String matchPattern = getMatchPattern();
             final MatchPatternStrategy matchPatternStrategy = getMatchPatternStrategy();
-            final DeploymentBuilder deploymentBuilder = DeploymentBuilder.of(client, (domain == null ? null : domain.getServerGroups()));
+            final DeploymentBuilder deploymentBuilder = DeploymentBuilder.of(client, getServerGroups());
             deploymentBuilder
                     .setContent(file())
                     .setName(name)
@@ -204,13 +216,36 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      * @throws MojoDeploymentException if the deployment is invalid
      */
     protected void validate(final boolean isDomain) throws MojoDeploymentException {
+        final boolean hasServerGroups = hasServerGroups();
         if (isDomain) {
-            if (domain == null || domain.getServerGroups().isEmpty()) {
+            if (!hasServerGroups) {
                 throw new MojoDeploymentException(
                         "Server is running in domain mode, but no server groups have been defined.");
             }
-        } else if (domain != null && !domain.getServerGroups().isEmpty()) {
+        } else if (hasServerGroups) {
             throw new MojoDeploymentException("Server is running in standalone mode, but server groups have been defined.");
         }
+    }
+
+    private Collection<String> getServerGroups() {
+        final Collection<String> result = new ArrayList<>();
+        if (domain != null) {
+            result.addAll(domain.getServerGroups());
+        }
+        if (serverGroups != null) {
+            result.addAll(serverGroups);
+        }
+        return result;
+    }
+
+    private boolean hasServerGroups() {
+        int count = 0;
+        if (domain != null) {
+            count += domain.getServerGroups().size();
+        }
+        if (serverGroups != null) {
+            count += serverGroups.size();
+        }
+        return count > 0;
     }
 }
