@@ -21,6 +21,7 @@ package org.wildfly.plugin.core;
 
 import java.io.File;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
@@ -46,33 +47,9 @@ public class Deployment implements DeploymentDescription, Comparable<Deployment>
     private String runtimeName;
     private boolean enabled = true;
 
-    /**
-     * Creates a new deployment for the path. If the path is a directory the content will be deployed exploded using
-     * the file system location.
-     *
-     * @param content the path containing the content
-     */
-    private Deployment(final Path content) {
-        this.content = DeploymentContent.of(content);
-        name = this.content.resolvedName();
-        serverGroups = new LinkedHashSet<>();
-    }
-
-    /**
-     * Creates a new deployment for the input stream. The name is required for the deployment and cannot be {@code null}.
-     * If {@link #setName(String)} with a {@code null} argument is invoked when using this constructor an
-     * {@link IllegalArgumentException} will be thrown.
-     * <p>
-     * The {@linkplain InputStream content} will be copied, stored in-memory and then closed. Large content should be
-     * written to a file and the {@link #Deployment(Path)} constructor should be used.
-     * </p>
-     *
-     * @param content the input stream representing the content
-     * @param name    the name for the deployment
-     */
-    private Deployment(final InputStream content, final String name) {
-        this.content = DeploymentContent.of(content);
-        this.name = Assertions.requiresNotNullOrNotEmptyParameter(name, "name");
+    private Deployment(final DeploymentContent content, final String name) {
+        this.content = content;
+        this.name = Assertions.requiresNotNullOrNotEmptyParameter((name == null ? this.content.resolvedName() : name), "name");
         serverGroups = new LinkedHashSet<>();
     }
 
@@ -85,7 +62,8 @@ public class Deployment implements DeploymentDescription, Comparable<Deployment>
      * @return the deployment
      */
     public static Deployment of(final File content) {
-        return new Deployment(Assertions.requiresNotNullParameter(content, "content").toPath());
+        final DeploymentContent deploymentContent = DeploymentContent.of(Assertions.requiresNotNullParameter(content, "content").toPath());
+        return new Deployment(deploymentContent, null);
     }
 
     /**
@@ -97,7 +75,8 @@ public class Deployment implements DeploymentDescription, Comparable<Deployment>
      * @return the deployment
      */
     public static Deployment of(final Path content) {
-        return new Deployment(Assertions.requiresNotNullParameter(content, "content"));
+        final DeploymentContent deploymentContent = DeploymentContent.of(Assertions.requiresNotNullParameter(content, "content"));
+        return new Deployment(deploymentContent, null);
     }
 
     /**
@@ -115,8 +94,20 @@ public class Deployment implements DeploymentDescription, Comparable<Deployment>
      * @return the deployment
      */
     public static Deployment of(final InputStream content, final String name) {
-        return new Deployment(Assertions.requiresNotNullParameter(content, "content"),
-                Assertions.requiresNotNullOrNotEmptyParameter(name, "name"));
+        final DeploymentContent deploymentContent = DeploymentContent.of(Assertions.requiresNotNullParameter(content, "content"));
+        return new Deployment(deploymentContent, Assertions.requiresNotNullOrNotEmptyParameter(name, "name"));
+    }
+
+    /**
+     * Creates a new deployment for the URL. The target server will require access to the URL.
+     *
+     * @param url the URL representing the content
+     *
+     * @return the deployment
+     */
+    public static Deployment of(final URL url) {
+        final DeploymentContent deploymentContent = DeploymentContent.of(Assertions.requiresNotNullParameter(url, "url"));
+        return new Deployment(deploymentContent, null);
     }
 
     /**
@@ -166,6 +157,30 @@ public class Deployment implements DeploymentDescription, Comparable<Deployment>
     @Override
     public Set<String> getServerGroups() {
         return Collections.unmodifiableSet(serverGroups);
+    }
+
+    /**
+     * Sets the server groups for the deployment.
+     *
+     * @param serverGroups the server groups to set
+     *
+     * @return this deployment
+     */
+    public Deployment setServerGroups(final String... serverGroups) {
+        return setServerGroups(Arrays.asList(serverGroups));
+    }
+
+    /**
+     * Sets the server groups for the deployment.
+     *
+     * @param serverGroups the server groups to set
+     *
+     * @return this deployment
+     */
+    public Deployment setServerGroups(final Collection<String> serverGroups) {
+        this.serverGroups.clear();
+        this.serverGroups.addAll(serverGroups);
+        return this;
     }
 
     /**

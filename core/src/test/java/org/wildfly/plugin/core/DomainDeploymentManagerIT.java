@@ -28,7 +28,6 @@ import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.jboss.dmr.ModelNode;
-import org.jboss.shrinkwrap.api.Archive;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -93,7 +92,7 @@ public class DomainDeploymentManagerIT extends AbstractDeploymentManagerTest {
     @Test
     public void testFailedDeploy() throws Exception {
         // Expect a failure with no server groups defined
-        final Deployment failedDeployment = createDefaultDeployment("test-failed-deployment.war", false);
+        final Deployment failedDeployment = createDefaultDeployment("test-failed-deployment.war").setServerGroups(Collections.<String>emptySet());
         assertFailed(deploymentManager.deploy(failedDeployment));
         assertDeploymentDoesNotExist(failedDeployment);
     }
@@ -103,7 +102,7 @@ public class DomainDeploymentManagerIT extends AbstractDeploymentManagerTest {
         // Expect a failure with no server groups defined
         final Set<Deployment> failedDeployments = new HashSet<>();
         failedDeployments.add(createDefaultDeployment("test-failed-deployment-1.war"));
-        failedDeployments.add(createDefaultDeployment("test-failed-deployment-2.war", false));
+        failedDeployments.add(createDefaultDeployment("test-failed-deployment-2.war").setServerGroups(Collections.<String>emptySet()));
         assertFailed(deploymentManager.deploy(failedDeployments));
         for (Deployment failedDeployment : failedDeployments) {
             assertDeploymentDoesNotExist(failedDeployment);
@@ -113,7 +112,7 @@ public class DomainDeploymentManagerIT extends AbstractDeploymentManagerTest {
     @Test
     public void testFailedForceDeploy() throws Exception {
         // Expect a failure with no server groups defined
-        final Deployment failedDeployment = createDefaultDeployment("test-failed-deployment.war", false);
+        final Deployment failedDeployment = createDefaultDeployment("test-failed-deployment.war").setServerGroups(Collections.<String>emptySet());
         assertFailed(deploymentManager.forceDeploy(failedDeployment));
         assertDeploymentDoesNotExist(failedDeployment);
 
@@ -122,7 +121,7 @@ public class DomainDeploymentManagerIT extends AbstractDeploymentManagerTest {
     @Test
     public void testFailedRedeploy() throws Exception {
         // Expect a failure with no server groups defined
-        assertFailed(deploymentManager.redeploy(createDefaultDeployment("test-redeploy.war", false)));
+        assertFailed(deploymentManager.redeploy(createDefaultDeployment("test-redeploy.war").setServerGroups(Collections.<String>emptySet())));
     }
 
     @Test
@@ -168,24 +167,7 @@ public class DomainDeploymentManagerIT extends AbstractDeploymentManagerTest {
     }
 
     @Override
-    Deployment createDefaultDeployment(final String name) {
-        return createDefaultDeployment(name, true);
-    }
-
-    @Override
-    Deployment createDeployment(final Archive<?> archive) {
-        return createDeployment(archive, true);
-    }
-
-    private Deployment createDefaultDeployment(final String name, final boolean addServerGroup) {
-        return createDeployment(createDefaultArchive(name), addServerGroup);
-    }
-
-    private Deployment createDeployment(final Archive<?> archive, final boolean addServerGroup) {
-        final Deployment result = super.createDeployment(archive);
-        if (addServerGroup) {
-            result.addServerGroups(DEFAULT_SERVER_GROUP);
-        }
-        return result;
+    Deployment configureDeployment(final Deployment deployment) {
+        return deployment.addServerGroups(DEFAULT_SERVER_GROUP);
     }
 }

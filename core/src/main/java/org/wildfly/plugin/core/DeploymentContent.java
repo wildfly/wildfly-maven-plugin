@@ -27,6 +27,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -125,6 +126,39 @@ abstract class DeploymentContent {
             @Override
             public String toString() {
                 return String.format("%s(%s)", DeploymentContent.class.getName(), copiedContent);
+            }
+        };
+    }
+
+    /**
+     * Creates new deployment content based on the {@linkplain URL URL}. The server will require access to the URL.
+     *
+     * @param url the URL of the content to deploy
+     *
+     * @return the deployment content
+     */
+    static DeploymentContent of(final URL url) {
+        return new DeploymentContent() {
+            @Override
+            void addContentToOperation(final OperationBuilder builder, final ModelNode op) {
+                final ModelNode contentNode = op.get(CONTENT);
+                final ModelNode contentItem = contentNode.get(0);
+                contentItem.get("url").set(url.toExternalForm());
+            }
+
+            @Override
+            String resolvedName() {
+                final String path = url.getPath();
+                final int index = path.lastIndexOf('/');
+                if (index >= 0) {
+                    return path.substring(index + 1);
+                }
+                return path;
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%s(%s)", DeploymentContent.class.getName(), url.toExternalForm());
             }
         };
     }
