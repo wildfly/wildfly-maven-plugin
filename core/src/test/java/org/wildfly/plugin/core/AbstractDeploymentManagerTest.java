@@ -22,6 +22,11 @@ package org.wildfly.plugin.core;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -100,6 +105,34 @@ abstract class AbstractDeploymentManagerTest {
         // Deployments should still exist and be enabled
         assertDeploymentExists(deployment1, true);
         assertDeploymentExists(deployment2, true);
+    }
+
+    @Test
+    public void testDeployFile() throws Exception {
+        final Path tempPath = Files.createTempDirectory("deployment-content");
+        try {
+            final Path content = tempPath.resolve("test-deploy-file.war");
+            createDefaultArchive(content.getFileName().toString()).as(ZipExporter.class).exportTo(content.toFile(), true);
+            final Deployment deployment = configureDeployment(Deployment.of(content));
+            deployForSuccess(deployment);
+            assertDeploymentEnabled(deployment);
+        } finally {
+            deletePath(tempPath);
+        }
+    }
+
+    @Test
+    public void testDeployUrl() throws Exception {
+        final Path tempPath = Files.createTempDirectory("deployment-content");
+        try {
+            final Path content = tempPath.resolve("test-deploy-file.war");
+            createDefaultArchive(content.getFileName().toString()).as(ZipExporter.class).exportTo(content.toFile(), true);
+            final Deployment deployment = configureDeployment(Deployment.of(content.toUri().toURL()));
+            deployForSuccess(deployment);
+            assertDeploymentEnabled(deployment);
+        } finally {
+            deletePath(tempPath);
+        }
     }
 
     @Test
@@ -281,6 +314,38 @@ abstract class AbstractDeploymentManagerTest {
             if (checkTime) {
                 Assert.assertNotEquals("Last enabled times should not match.", deployResult.enabledTime, currentDeployResult.enabledTime);
             }
+        }
+    }
+
+    @Test
+    public void testRedeployFile() throws Exception {
+        final Path tempPath = Files.createTempDirectory("deployment-content");
+        try {
+            final Path content = tempPath.resolve("test-deploy-file.war");
+            createDefaultArchive(content.getFileName().toString()).as(ZipExporter.class).exportTo(content.toFile(), true);
+            final Deployment deployment = configureDeployment(Deployment.of(content));
+            // First deploy, then redeploy
+            deployForSuccess(deployment);
+            redeployForSuccess(deployment);
+            assertDeploymentEnabled(deployment);
+        } finally {
+            deletePath(tempPath);
+        }
+    }
+
+    @Test
+    public void testRedeployUrl() throws Exception {
+        final Path tempPath = Files.createTempDirectory("deployment-content");
+        try {
+            final Path content = tempPath.resolve("test-deploy-file.war");
+            createDefaultArchive(content.getFileName().toString()).as(ZipExporter.class).exportTo(content.toFile(), true);
+            final Deployment deployment = configureDeployment(Deployment.of(content.toUri().toURL()));
+            // First deploy, then redeploy
+            deployForSuccess(deployment);
+            redeployForSuccess(deployment);
+            assertDeploymentEnabled(deployment);
+        } finally {
+            deletePath(tempPath);
         }
     }
 
@@ -591,7 +656,11 @@ abstract class AbstractDeploymentManagerTest {
     }
 
     Deployment createDeployment(final Archive<?> archive) {
-        return Deployment.of(archive.as(ZipExporter.class).exportAsInputStream(), archive.getName());
+        return configureDeployment(Deployment.of(archive.as(ZipExporter.class).exportAsInputStream(), archive.getName()));
+    }
+
+    Deployment configureDeployment(final Deployment deployment) {
+        return deployment;
     }
 
     private byte[] readDeploymentHash(final String deploymentName) throws IOException {
@@ -640,6 +709,26 @@ abstract class AbstractDeploymentManagerTest {
         final Set<E> result = new LinkedHashSet<>();
         Collections.addAll(result, entries);
         return result;
+    }
+
+    private static void deletePath(final Path path) throws IOException {
+        if (Files.isDirectory(path)) {
+            Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
+                    Files.deleteIfExists(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(final Path dir, final IOException exc) throws IOException {
+                    Files.deleteIfExists(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } else {
+            Files.deleteIfExists(path);
+        }
     }
 
     private static String bytesToHexString(final byte[] bytes) {
