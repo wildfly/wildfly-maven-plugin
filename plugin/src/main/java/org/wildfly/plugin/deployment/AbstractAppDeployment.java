@@ -24,8 +24,6 @@ package org.wildfly.plugin.deployment;
 
 import java.io.File;
 
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.wildfly.plugin.common.PropertyNames;
 
@@ -59,21 +57,22 @@ abstract class AbstractAppDeployment extends AbstractDeployment {
     @Parameter(alias = "check-packaging", property = PropertyNames.CHECK_PACKAGING, defaultValue = "true")
     private boolean checkPackaging;
 
-    private PackageType packageType;
-
     @Override
-    protected void doExecute() throws MojoExecutionException, MojoFailureException {
-        final PackageType packageType = getPackageType();
-        if (checkPackaging && packageType.isIgnored()) {
-            getLog().debug(String.format("Ignoring packaging type %s.", packageType.getPackaging()));
-        } else {
-            super.doExecute();
+    protected boolean skipExecution() {
+        boolean skip = super.skipExecution();
+        if (!skip) {
+            final PackageType packageType = PackageType.resolve(project);
+            if (checkPackaging && packageType.isIgnored()) {
+                getLog().debug(String.format("Ignoring packaging type %s.", packageType.getPackaging()));
+                skip = true;
+            }
         }
+        return skip;
     }
 
     @Override
     protected File file() {
-        final PackageType packageType = getPackageType();
+        final PackageType packageType = PackageType.resolve(project);
         final String filename;
         if (this.filename == null) {
             filename = String.format("%s.%s", project.getBuild().getFinalName(), packageType.getFileExtension());
@@ -81,12 +80,5 @@ abstract class AbstractAppDeployment extends AbstractDeployment {
             filename = this.filename;
         }
         return new File(targetDir, filename);
-    }
-
-    private synchronized PackageType getPackageType() {
-        if (packageType == null) {
-            packageType = PackageType.resolve(project);
-        }
-        return packageType;
     }
 }

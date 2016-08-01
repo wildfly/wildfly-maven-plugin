@@ -35,6 +35,8 @@ public interface PropertyNames {
 
     String DEPLOYMENT_FILENAME = "wildfly.deployment.filename";
 
+    String DEPLOYMENT_NAME = "wildfly.deployment.name";
+
     String DEPLOYMENT_RUNTIME_NAME = "wildfly.deployment.runtime.name";
 
     String DEPLOYMENT_TARGET_DIR = "wildfly.deployment.targetDir";
@@ -84,6 +86,8 @@ public interface PropertyNames {
     String SERVER_CONFIG = "wildfly.serverConfig";
 
     String SERVER_GROUPS = "wildfly.serverGroups";
+
+    String SKIP = "wildfly.skip";
 
     String STARTUP_TIMEOUT = "wildfly.startupTimeout";
 

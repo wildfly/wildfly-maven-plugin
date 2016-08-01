@@ -22,11 +22,15 @@
 
 package org.wildfly.plugin.deployment;
 
+import java.io.IOException;
+
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.wildfly.plugin.deployment.MavenDeployment.Type;
+import org.wildfly.plugin.core.Deployment;
+import org.wildfly.plugin.core.DeploymentManager;
+import org.wildfly.plugin.core.DeploymentResult;
 
 /**
  * Redeploys the application to the WildFly Application Server.
@@ -35,7 +39,7 @@ import org.wildfly.plugin.deployment.MavenDeployment.Type;
  */
 @Mojo(name = "redeploy", requiresDependencyResolution = ResolutionScope.RUNTIME, threadSafe = true)
 @Execute(phase = LifecyclePhase.PACKAGE)
-public final class RedeployMojo extends AbstractAppDeployment {
+public class RedeployMojo extends AbstractAppDeployment {
 
     @Override
     public String goal() {
@@ -43,8 +47,8 @@ public final class RedeployMojo extends AbstractAppDeployment {
     }
 
     @Override
-    public Type getType() {
-        return Type.REDEPLOY;
+    protected DeploymentResult executeDeployment(final DeploymentManager deploymentManager, final Deployment deployment) throws IOException {
+        return deploymentManager.redeploy(deployment);
     }
 
 }

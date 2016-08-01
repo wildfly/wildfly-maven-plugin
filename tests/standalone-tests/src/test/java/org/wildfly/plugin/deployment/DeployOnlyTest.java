@@ -134,7 +134,7 @@ public class DeployOnlyTest extends AbstractWildFlyServerMojoTest {
             deploymentManager.deploy(getDeployment());
         }
 
-        final AbstractDeployment deployMojo = lookupMojoAndVerify("undeploy", "undeploy-webarchive-pom.xml");
+        final UndeployMojo deployMojo = lookupMojoAndVerify("undeploy", "undeploy-webarchive-pom.xml");
 
         deployMojo.execute();
 

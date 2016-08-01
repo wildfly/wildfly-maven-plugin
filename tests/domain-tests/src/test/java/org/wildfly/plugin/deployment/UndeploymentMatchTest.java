@@ -155,7 +155,7 @@ public class UndeploymentMatchTest extends AbstractWildFlyServerMojoTest {
         // test harness does not set the fields
         setValue(undeployMojo, "serverGroups", serverGroups);
 
-        undeployMojo.matchPatternStrategy = matchPatternStrategy.toString();
+        setValue(undeployMojo, "matchPatternStrategy", matchPatternStrategy.toString());
         undeployMojo.execute();
     }
 

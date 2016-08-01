@@ -22,13 +22,17 @@
 
 package org.wildfly.plugin.deployment;
 
+import java.io.IOException;
+
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.wildfly.plugin.common.PropertyNames;
-import org.wildfly.plugin.deployment.MavenDeployment.Type;
+import org.wildfly.plugin.core.Deployment;
+import org.wildfly.plugin.core.DeploymentManager;
+import org.wildfly.plugin.core.DeploymentResult;
 
 /**
  * Deploys the application to the WildFly Application Server.
@@ -61,8 +65,11 @@ public class DeployMojo extends AbstractAppDeployment {
     }
 
     @Override
-    public Type getType() {
-        return (force ? Type.FORCE_DEPLOY : Type.DEPLOY);
+    protected DeploymentResult executeDeployment(final DeploymentManager deploymentManager, final Deployment deployment) throws IOException {
+        if (force) {
+            return deploymentManager.forceDeploy(deployment);
+        }
+        return deploymentManager.deploy(deployment);
     }
 
 }

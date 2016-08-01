@@ -23,9 +23,9 @@
 package org.wildfly.plugin.deployment;
 
 
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.wildfly.plugin.common.PropertyNames;
 
 /**
  * Deploys only the application to the WildFly Application Server without first invoking the
@@ -39,25 +39,12 @@ import org.wildfly.plugin.common.PropertyNames;
  * will occur and the deployment will fail.
  */
 @Mojo(name = "deploy-only", threadSafe = true)
-public class DeployOnlyMojo extends AbstractAppDeployment {
-
-    /**
-     * Specifies whether force mode should be used or not.
-     * </p>
-     * If force mode is disabled, the deploy goal will cause a build failure if the application being deployed already
-     * exists.
-     */
-    @Parameter(defaultValue = "true", property = PropertyNames.DEPLOY_FORCE)
-    private boolean force;
+@Execute(phase = LifecyclePhase.NONE)
+public class DeployOnlyMojo extends DeployMojo {
 
     @Override
     public String goal() {
         return "deploy-only";
-    }
-
-    @Override
-    public MavenDeployment.Type getType() {
-        return (force ? MavenDeployment.Type.FORCE_DEPLOY : MavenDeployment.Type.DEPLOY);
     }
 
 }

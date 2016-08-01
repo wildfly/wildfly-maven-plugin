@@ -56,7 +56,7 @@ public class ShutdownMojo extends AbstractServerConnection {
     /**
      * Set to {@code true} if you want to skip server shutdown, otherwise {@code false}.
      */
-    @Parameter(defaultValue = "false")
+    @Parameter(defaultValue = "false", property = PropertyNames.SKIP)
     private boolean skip;
 
     @Override

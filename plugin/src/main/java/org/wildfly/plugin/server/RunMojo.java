@@ -47,8 +47,6 @@ import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.core.ServerHelper;
 import org.wildfly.plugin.core.ServerProcess;
 import org.wildfly.plugin.deployment.DeployMojo;
-import org.wildfly.plugin.deployment.MavenDeployment;
-import org.wildfly.plugin.deployment.DeploymentBuilder;
 import org.wildfly.plugin.server.ArtifactResolver.ArtifactNameSplitter;
 
 /**
@@ -185,8 +183,11 @@ public class RunMojo extends DeployMojo {
     @Parameter
     private Map<String, String> env;
 
+    private Process process;
+
     @Override
-    protected void doExecute() throws MojoExecutionException, MojoFailureException {
+    protected void beforeDeployment(final ModelControllerClient client) throws MojoExecutionException, MojoFailureException, IOException {
+        super.beforeDeployment(client);
         final Log log = getLog();
         final File deploymentFile = file();
         // The deployment must exist before we do anything
@@ -198,6 +199,49 @@ public class RunMojo extends DeployMojo {
         if (!Files.isDirectory(jbossHome)) {
             throw new MojoExecutionException(String.format("JBOSS_HOME '%s' is not a valid directory.", jbossHome));
         }
+        final StandaloneCommandBuilder commandBuilder = createCommandBuilder();
+
+        // Print some server information
+        log.info(String.format("JAVA_HOME=%s", commandBuilder.getJavaHome()));
+        log.info(String.format("JBOSS_HOME=%s%n", commandBuilder.getWildFlyHome()));
+        try {
+            if (addUser != null && addUser.hasUsers()) {
+                log.info("Adding users: " + addUser);
+                addUser.addUsers(commandBuilder.getWildFlyHome(), commandBuilder.getJavaHome());
+            }
+            // Start the server
+            log.info("Server is starting up. Press CTRL + C to stop the server.");
+            process = startContainer(commandBuilder);
+        } catch (Exception e) {
+            throw new MojoExecutionException("The server failed to start", e);
+        }
+    }
+
+    @Override
+    protected void afterDeployment(final ModelControllerClient client) throws MojoExecutionException, MojoFailureException, IOException {
+        super.afterDeployment(client);
+        try {
+            // Wait for the process to die
+            boolean keepRunning = true;
+            while (keepRunning) {
+                final int exitCode = process.waitFor();
+                // 10 is the magic code used in the scripts to survive a :shutdown(restart=true) operation
+                if (exitCode == 10) {
+                    // Ensure the current process is destroyed and restart a new one
+                    process.destroy();
+                    process = startContainer(createCommandBuilder());
+                } else {
+                    keepRunning = false;
+                }
+            }
+        } catch (Exception e) {
+            throw new MojoExecutionException("The server failed to start", e);
+        } finally {
+            if (process != null) process.destroy();
+        }
+    }
+
+    private StandaloneCommandBuilder createCommandBuilder() {
         final StandaloneCommandBuilder commandBuilder = StandaloneCommandBuilder.of(jbossHome)
                 .setJavaHome(javaHome)
                 .addModuleDirs(modulesPath.getModulePaths());
@@ -220,49 +264,7 @@ public class RunMojo extends DeployMojo {
         if (serverArgs != null) {
             commandBuilder.addServerArguments(serverArgs);
         }
-
-        // Print some server information
-        log.info(String.format("JAVA_HOME=%s", commandBuilder.getJavaHome()));
-        log.info(String.format("JBOSS_HOME=%s%n", commandBuilder.getWildFlyHome()));
-        Process process = null;
-        try {
-            if (addUser != null && addUser.hasUsers()) {
-                log.info("Adding users: " + addUser);
-                addUser.addUsers(commandBuilder.getWildFlyHome(), commandBuilder.getJavaHome());
-            }
-            // Start the server
-            log.info("Server is starting up. Press CTRL + C to stop the server.");
-            process = startContainer(commandBuilder);
-            // Deploy the application
-            log.info(String.format("Deploying application '%s'%n", deploymentFile.getName()));
-            try (final ModelControllerClient client = createClient()) {
-                final MavenDeployment deployment = DeploymentBuilder.of(client)
-                        .setContent(deploymentFile)
-                        .setName(name)
-                        .setRuntimeName(runtimeName)
-                        .setType(getType())
-                        .build();
-                executeDeployment(client, deployment, jbossHome);
-            }
-            // Wait for the process to die
-            boolean keepRunning = true;
-            while (keepRunning) {
-                final int exitCode = process.waitFor();
-                // 10 is the magic code used in the scripts to survive a :shutdown(restart=true) operation
-                if (exitCode == 10) {
-                    // Ensure the current process is destroyed and restart a new one
-                    process.destroy();
-                    process = startContainer(commandBuilder);
-                } else {
-                    keepRunning = false;
-                }
-            }
-        } catch (Exception e) {
-            throw new MojoExecutionException("The server failed to start", e);
-        } finally {
-            if (process != null) process.destroy();
-        }
-
+        return commandBuilder;
     }
 
     private Path extractIfRequired(final Path buildDir) throws MojoFailureException, MojoExecutionException {

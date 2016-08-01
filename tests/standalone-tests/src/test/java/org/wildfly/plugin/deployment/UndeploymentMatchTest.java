@@ -27,11 +27,9 @@ import static org.junit.Assert.assertEquals;
 import java.util.Set;
 import javax.inject.Inject;
 
-import org.jboss.dmr.ModelNode;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.core.DeploymentDescription;
 import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
@@ -49,8 +47,8 @@ public class UndeploymentMatchTest extends AbstractWildFlyServerMojoTest {
     @Before
     public void before() throws Exception {
 
-        deploy("test-undeploy-1.war");
-        deploy("test-undeploy-2.war");
+        deploymentManager.deploy(getDeployment().setName("test-undeploy-1.war"));
+        deploymentManager.deploy(getDeployment().setName("test-undeploy-2.war"));
     }
 
     @Test
@@ -85,23 +83,8 @@ public class UndeploymentMatchTest extends AbstractWildFlyServerMojoTest {
 
         final UndeployMojo undeployMojo = lookupMojoAndVerify("undeploy", "undeploy-webarchive-match-pom.xml");
 
-        undeployMojo.matchPatternStrategy = matchPatternStrategy.toString();
+        setValue(undeployMojo, "matchPatternStrategy", matchPatternStrategy.toString());
         undeployMojo.execute();
-    }
-
-    private void deploy(String deploymentName) throws Exception {
-
-        final AbstractDeployment deployMojo = lookupMojoAndVerify("deploy", "deploy-webarchive-pom.xml");
-
-        deployMojo.name = deploymentName;
-        deployMojo.execute();
-
-        // /deployment=test.war :read-attribute(name=status)
-        final ModelNode address = ServerOperations.createAddress("deployment", deploymentName);
-        final ModelNode op = ServerOperations.createReadAttributeOperation(address, "status");
-        final ModelNode result = executeOperation(op);
-
-        assertEquals("OK", ServerOperations.readResultAsString(result));
     }
 
 }
