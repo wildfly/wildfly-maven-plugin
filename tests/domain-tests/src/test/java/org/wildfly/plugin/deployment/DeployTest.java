@@ -221,7 +221,7 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
             deploymentManager.deploy(getDeployment().addServerGroup(DEFAULT_SERVER_GROUP));
         }
 
-        final AbstractDeployment deployMojo = lookupMojoAndVerify("undeploy", "deploy-webarchive-pom.xml");
+        final UndeployMojo deployMojo = lookupMojoAndVerify("undeploy", "undeploy-webarchive-pom.xml");
 
         deployMojo.execute();
 

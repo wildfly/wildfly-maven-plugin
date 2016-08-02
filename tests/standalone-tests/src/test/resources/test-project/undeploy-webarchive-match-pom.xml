@@ -34,7 +34,7 @@
                 <groupId>org.wildfly.plugins</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
-                    <filename>test.war</filename>
+                    <name>test.war</name>
                     <match-pattern>test.*.war</match-pattern>
                     <match-pattern-strategy>all</match-pattern-strategy>
                     <checkPackaging>false</checkPackaging>

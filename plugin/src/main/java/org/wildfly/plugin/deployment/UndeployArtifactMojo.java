@@ -22,16 +22,28 @@
 
 package org.wildfly.plugin.deployment;
 
-import java.io.File;
+import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import javax.inject.Inject;
 
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.project.MavenProject;
+import org.jboss.as.controller.client.ModelControllerClient;
+import org.wildfly.plugin.cli.CommandExecutor;
+import org.wildfly.plugin.cli.Commands;
+import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
-import org.wildfly.plugin.deployment.MavenDeployment.Type;
+import org.wildfly.plugin.core.DeploymentManager;
+import org.wildfly.plugin.core.DeploymentResult;
+import org.wildfly.plugin.core.UndeployDescription;
+import org.wildfly.plugin.deployment.domain.Domain;
 
 /**
  * Undeploys (removes) an arbitrary artifact to the WildFly application server
@@ -39,7 +51,10 @@ import org.wildfly.plugin.deployment.MavenDeployment.Type;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 @Mojo(name = "undeploy-artifact", requiresDependencyResolution = ResolutionScope.RUNTIME, threadSafe = true)
-public final class UndeployArtifactMojo extends AbstractDeployment {
+public class UndeployArtifactMojo extends AbstractServerConnection {
+
+    @Parameter(defaultValue = "${project}", readonly = true, required = true)
+    protected MavenProject project;
 
     /**
      * The artifact to deploys groupId
@@ -61,54 +76,110 @@ public final class UndeployArtifactMojo extends AbstractDeployment {
     private String classifier;
 
     /**
+     * Specifies the name used for the deployment.
+     * <p>
+     * The default name is derived from the {@code project.build.finalName} and the packaging type.
+     * </p>
+     */
+    @Parameter(property = PropertyNames.DEPLOYMENT_NAME)
+    private String name;
+
+    /**
+     * Specifies the configuration for a domain server.
+     *
+     * @deprecated use {@code <server-groups/>} property
+     */
+    @Parameter
+    @Deprecated
+    private Domain domain;
+
+    /**
+     * The server groups the content should be deployed to.
+     */
+    @Parameter(alias = "server-groups", property = PropertyNames.SERVER_GROUPS)
+    private List<String> serverGroups;
+
+    /**
+     * Commands to run before the deployment
+     *
+     * @deprecated use the {@code execute-commands} goal
+     */
+    @Parameter(alias = "before-deployment")
+    @Deprecated
+    private Commands beforeDeployment;
+
+    /**
+     * Executions to run after the deployment
+     *
+     * @deprecated use the {@code execute-commands} goal
+     */
+    @Parameter(alias = "after-deployment")
+    @Deprecated
+    private Commands afterDeployment;
+
+    /**
      * Indicates whether undeploy should ignore the undeploy operation if the deployment does not exist.
      */
     @Parameter(defaultValue = "true", property = PropertyNames.IGNORE_MISSING_DEPLOYMENT)
     private boolean ignoreMissingDeployment;
 
     /**
-     * The resolved dependency file
+     * Set to {@code true} if you want the deployment to be skipped, otherwise {@code false}.
      */
-    private File file;
+    @Parameter(defaultValue = "false", property = PropertyNames.SKIP)
+    private boolean skip;
 
+    @Inject
+    private CommandExecutor commandExecutor;
 
     @Override
-    public void validate(final boolean isDomain) throws MojoDeploymentException {
-        super.validate(isDomain);
+    public void execute() throws MojoExecutionException, MojoFailureException {
         if (artifactId == null) {
             throw new MojoDeploymentException("undeploy-artifact must specify the artifactId");
         }
         if (groupId == null) {
             throw new MojoDeploymentException("undeploy-artifact must specify the groupId");
         }
-        final Set<Artifact> dependencies = project.getDependencyArtifacts();
-        Artifact artifact = null;
-        for (final Artifact a : dependencies) {
-            if (Objects.equals(a.getArtifactId(), artifactId) &&
-                    Objects.equals(a.getGroupId(), groupId) &&
-                    Objects.equals(a.getClassifier(), classifier)) {
-                artifact = a;
-                break;
+        final String deploymentName;
+        if (name == null) {
+            final Set<Artifact> dependencies = project.getDependencyArtifacts();
+            Artifact artifact = null;
+            for (final Artifact a : dependencies) {
+                if (Objects.equals(a.getArtifactId(), artifactId) &&
+                        Objects.equals(a.getGroupId(), groupId) &&
+                        Objects.equals(a.getClassifier(), classifier)) {
+                    artifact = a;
+                    break;
+                }
             }
+            if (artifact == null) {
+                throw new MojoDeploymentException("Could not resolve artifact to deploy %s:%s", groupId, artifactId);
+            }
+            deploymentName = artifact.getFile().getName();
+        } else {
+            deploymentName = name;
         }
-        if (artifact == null) {
-            throw new MojoDeploymentException("Could not resolve artifact to deploy %s:%s", groupId, artifactId);
+        final DeploymentResult result;
+        try (final ModelControllerClient client = createClient()) {
+            if (beforeDeployment != null) {
+                commandExecutor.execute(client, beforeDeployment);
+            }
+            final boolean failOnMissing = !ignoreMissingDeployment;
+            final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
+            result = deploymentManager.undeploy(UndeployDescription.of(deploymentName).addServerGroups(serverGroups).setFailOnMissing(failOnMissing));
+            if (afterDeployment != null) {
+                commandExecutor.execute(client, afterDeployment);
+            }
+        } catch (IOException e) {
+            throw new MojoFailureException(String.format("Failed to execute %s goal.", goal()), e);
         }
-        file = artifact.getFile();
-    }
-
-    @Override
-    protected File file() {
-        return file;
+        if (!result.successful()) {
+            throw new MojoDeploymentException("Failed to undeploy %s. Reason: %s", deploymentName, result.getFailureMessage());
+        }
     }
 
     @Override
     public String goal() {
         return "undeploy-artifact";
-    }
-
-    @Override
-    public Type getType() {
-        return (ignoreMissingDeployment ? Type.UNDEPLOY_IGNORE_MISSING : Type.UNDEPLOY);
     }
 }

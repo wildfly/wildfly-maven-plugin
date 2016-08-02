@@ -56,7 +56,7 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     /**
      * {@code true} if commands execution should be skipped.
      */
-    @Parameter(defaultValue = "false")
+    @Parameter(defaultValue = "false", property = PropertyNames.SKIP)
     private boolean skip;
 
     /**

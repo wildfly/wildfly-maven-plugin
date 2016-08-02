@@ -64,6 +64,18 @@ public class CommandExecutor {
      * Executes the commands and scripts provided.
      *
      * @param client      the client use
+     * @param commands    the commands to execute
+     *
+     * @throws IOException if an error occurs processing the commands
+     */
+    public void execute(final ModelControllerClient client, final Commands commands) throws IOException {
+        execute(client, (Path) null, commands);
+    }
+
+    /**
+     * Executes the commands and scripts provided.
+     *
+     * @param client      the client use
      * @param wildflyHome the path to WildFly for setting the {@code jboss.home.dir} system property or {@code null} if
      *                    should not be set
      * @param commands    the commands to execute

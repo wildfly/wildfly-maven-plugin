@@ -100,7 +100,7 @@ public class AddResourceMojo extends AbstractServerConnection {
     /**
      * Set to {@code true} if you want this goal to be skipped, otherwise {@code false}.
      */
-    @Parameter(defaultValue = "false")
+    @Parameter(defaultValue = "false", property = PropertyNames.SKIP)
     private boolean skip;
 
     /**

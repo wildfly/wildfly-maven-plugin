@@ -24,8 +24,6 @@ package org.wildfly.plugin.deployment;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -40,6 +38,9 @@ import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.cli.Commands;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
+import org.wildfly.plugin.core.Deployment;
+import org.wildfly.plugin.core.DeploymentManager;
+import org.wildfly.plugin.core.DeploymentResult;
 import org.wildfly.plugin.core.ServerHelper;
 import org.wildfly.plugin.deployment.domain.Domain;
 
@@ -72,8 +73,8 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     /**
      * Specifies the name used for the deployment.
      */
-    @Parameter
-    protected String name;
+    @Parameter(property = PropertyNames.DEPLOYMENT_NAME)
+    private String name;
 
     /**
      * The runtime name for the deployment.
@@ -84,31 +85,30 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      * </p>
      */
     @Parameter(alias = "runtime-name", property = PropertyNames.DEPLOYMENT_RUNTIME_NAME)
-    protected String runtimeName;
-
-    /**
-     * The WildFly Application Server's home directory. This is not required, but should be used for commands such as
-     * {@code module add} as they are executed on the local file system.
-     */
-    @Parameter(alias = "jboss-home", property = PropertyNames.JBOSS_HOME)
-    private String jbossHome;
+    private String runtimeName;
 
     /**
      * Commands to run before the deployment
+     *
+     * @deprecated use the {@code execute-commands} goal
      */
     @Parameter(alias = "before-deployment")
+    @Deprecated
     private Commands beforeDeployment;
 
     /**
      * Executions to run after the deployment
+     *
+     * @deprecated use the {@code execute-commands} goal
      */
     @Parameter(alias = "after-deployment")
+    @Deprecated
     private Commands afterDeployment;
 
     /**
      * Set to {@code true} if you want the deployment to be skipped, otherwise {@code false}.
      */
-    @Parameter(defaultValue = "false")
+    @Parameter(defaultValue = "false", property = PropertyNames.SKIP)
     private boolean skip;
 
     @Inject
@@ -128,84 +128,55 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      */
     public abstract String goal();
 
-    /**
-     * The type of the deployment.
-     *
-     * @return the deployment type.
-     */
-    public abstract MavenDeployment.Type getType();
-
     @Override
     public final void execute() throws MojoExecutionException, MojoFailureException {
-        if (skip) {
+        if (skipExecution()) {
             getLog().debug(String.format("Skipping deployment of %s:%s", project.getGroupId(), project.getArtifactId()));
             return;
         }
-        doExecute();
-    }
-
-    protected final void executeDeployment(final ModelControllerClient client, final MavenDeployment deployment, final Path wildflyHome)
-            throws MojoDeploymentException, IOException {
-        // Execute before deployment commands
-        if (beforeDeployment != null)
-            commandExecutor.execute(client, wildflyHome, beforeDeployment);
-        // Deploy the deployment
-        getLog().debug("Executing deployment");
-        deployment.execute();
-        // Execute after deployment commands
-        if (afterDeployment != null)
-            commandExecutor.execute(client, wildflyHome, afterDeployment);
-    }
-
-    /**
-     * Executes additional processing.
-     *
-     * @see #execute()
-     */
-    protected void doExecute() throws MojoExecutionException, MojoFailureException {
         try (final ModelControllerClient client = createClient()) {
             final boolean isDomain = ServerHelper.isDomainServer(client);
             validate(isDomain);
-            final String matchPattern = getMatchPattern();
-            final MatchPatternStrategy matchPatternStrategy = getMatchPatternStrategy();
-            final DeploymentBuilder deploymentBuilder = DeploymentBuilder.of(client, getServerGroups());
-            deploymentBuilder
-                    .setContent(file())
-                    .setName(name)
-                    .setRuntimeName(runtimeName)
-                    .setType(getType())
-                    .setMatchPattern(matchPattern)
-                    .setMatchPatternStrategy(matchPatternStrategy);
-            final Path wildflyHome = jbossHome == null ? null : Paths.get(jbossHome);
-            executeDeployment(client, deploymentBuilder.build(), wildflyHome);
-        } catch (MojoExecutionException e) {
-            throw e;
+            beforeDeployment(client);
+            // Deploy the deployment
+            getLog().debug("Executing deployment");
+
+            final Deployment deployment = createDeployment();
+
+            final DeploymentResult result = executeDeployment(DeploymentManager.Factory.create(client), deployment);
+            if (!result.successful()) {
+                throw new MojoExecutionException(String.format("Failed to execute goal %s: %s", goal(), result.getFailureMessage()));
+            }
+            afterDeployment(client);
         } catch (IOException e) {
-            throw new MojoExecutionException(String.format("Please make sure a server is running before executing goal " +
-                    "%s on deployment %s. Reason: %s", goal(), file(), e.getMessage()), e);
-        } catch (Exception e) {
-            throw new MojoExecutionException(String.format("Could not execute goal %s on %s. Reason: %s", goal(), file(),
-                    e.getMessage()), e);
+            throw new MojoFailureException(String.format("Failed to execute goal %s.", goal()), e);
         }
     }
 
-    /**
-     * Returns the matching pattern for undeploy and redeploy goals. By default {@code null} is returned.
-     *
-     * @return the pattern or {@code null}
-     */
-    protected String getMatchPattern() {
-        return null;
+    protected boolean skipExecution() {
+        return skip;
     }
 
-    /**
-     * Returns the matching pattern strategy to use if more than one deployment matches the {@link #getMatchPattern()
-     * pattern} returns more than one instance of a deployment. By default {@code null} is returned.
-     *
-     * @return the matching strategy or {@code null}
-     */
-    protected MatchPatternStrategy getMatchPatternStrategy() {
-        return null;
+    protected void beforeDeployment(final ModelControllerClient client) throws MojoExecutionException, MojoFailureException, IOException {
+        // Execute before deployment commands
+        if (beforeDeployment != null)
+            commandExecutor.execute(client, beforeDeployment);
+    }
+
+    protected abstract DeploymentResult executeDeployment(DeploymentManager deploymentManager, Deployment deployment) throws IOException;
+
+    protected void afterDeployment(final ModelControllerClient client) throws MojoExecutionException, MojoFailureException, IOException {
+
+        // Execute after deployment commands
+        if (afterDeployment != null)
+            commandExecutor.execute(client, afterDeployment);
+    }
+
+    protected Deployment createDeployment() {
+        return Deployment.of(file())
+                .setName(name)
+                .setRuntimeName(runtimeName)
+                .addServerGroups(getServerGroups());
     }
 
     /**
