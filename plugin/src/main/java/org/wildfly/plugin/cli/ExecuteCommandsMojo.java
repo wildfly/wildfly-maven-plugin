@@ -22,7 +22,14 @@
 
 package org.wildfly.plugin.cli;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 import javax.inject.Inject;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -67,6 +74,12 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     private String jbossHome;
 
     /**
+     * The properties files to use when executing CLI scripts or commands.
+     */
+    @Parameter
+    private List<File> propertiesFiles = new ArrayList<>();
+
+    /**
      * The commands to execute.
      */
     @Parameter(alias = "execute-commands")
@@ -86,11 +99,35 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             getLog().debug("Skipping commands execution");
             return;
         }
-        getLog().debug("Executing commands");
-        try (final ModelControllerClient client = createClient()) {
-            commandExecutor.execute(client, jbossHome, executeCommands);
+        final Properties currentSystemProperties = System.getProperties();
+        try {
+            getLog().debug("Executing commands");
+            // Create new system properties with the defaults set to the current system properties
+            final Properties newSystemProperties = new Properties(currentSystemProperties);
+
+            if (propertiesFiles != null) {
+                for (File file : propertiesFiles) {
+                    parseProperties(file, newSystemProperties);
+                }
+            }
+
+            // Set the system properties for executing commands
+            System.setProperties(newSystemProperties);
+            try (final ModelControllerClient client = createClient()) {
+                commandExecutor.execute(client, jbossHome, executeCommands);
+            } catch (IOException e) {
+                throw new MojoExecutionException("Could not execute commands.", e);
+            }
         } catch (IOException e) {
-            throw new MojoExecutionException("Could not execute commands.", e);
+            throw new MojoFailureException("Failed to parse properties.", e);
+        } finally {
+            System.setProperties(currentSystemProperties);
+        }
+    }
+
+    private static void parseProperties(final File file, final Properties properties) throws IOException {
+        try (final BufferedReader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
+            properties.load(reader);
         }
     }
 }

@@ -23,15 +23,11 @@
 package org.wildfly.plugin.cli;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Properties;
-
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -49,7 +45,6 @@ import org.jboss.as.controller.client.OperationResponse;
 import org.jboss.dmr.ModelNode;
 import org.jboss.threads.AsyncFuture;
 import org.wildfly.plugin.common.ServerOperations;
-import org.wildfly.security.manager.WildFlySecurityManager;
 
 /**
  * Executes CLI commands.
@@ -113,10 +108,6 @@ public class CommandExecutor {
 
         if (commands.hasCommands() || commands.hasScripts()) {
 
-            if (commands.hasPropertiesFiles()) {
-                parsePropertiesFiles(commands.getPropertiesFiles());
-            }
-
             try {
                 ModuleEnvironment.initJaxp();
                 final ModelControllerClient c = new NonClosingModelControllerClient(client);
@@ -137,34 +128,6 @@ public class CommandExecutor {
             } finally {
                 ModuleEnvironment.restorePlatform();
             }
-        }
-    }
-
-    private static void parsePropertiesFiles(Iterable<File> propertiesFiles) {
-        Properties resultingProperties = new Properties();
-        for (File propertiesFile : propertiesFiles) {
-            if (!propertiesFile.exists()) {
-                throw new IllegalArgumentException("File doesn't exist: " + propertiesFile.getAbsolutePath());
-            }
-
-            final Properties props = new Properties();
-            try (FileInputStream fis = new FileInputStream(propertiesFile)) {
-                props.load(fis);
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
-            } catch (java.io.IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            for (String key : props.stringPropertyNames()) {
-                if (!resultingProperties.contains(key)) {
-                    resultingProperties.put(key, props.getProperty(key));
-                }
-            }
-        }
-
-        for (String key : resultingProperties.stringPropertyNames()) {
-            WildFlySecurityManager.setPropertyPrivileged(key, resultingProperties.getProperty(key));
         }
     }
 
