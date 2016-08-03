@@ -64,12 +64,6 @@ public class Commands {
     private List<File> scripts = new ArrayList<>();
 
     /**
-     * The properties files to use when executing CLI scripts or commands.
-     */
-    @Parameter
-    private List<File> propertiesFiles = new ArrayList<>();
-
-    /**
      * Indicates whether or not subsequent commands should be executed if an error occurs executing a command. A value of
      * {@code false} will continue processing commands even if a previous command execution results in a failure.
      */
@@ -111,18 +105,6 @@ public class Commands {
     }
 
     /**
-     * Get the defined properties files or an empty list.
-     *
-     * @return the defined properties files or an empty list
-     */
-    protected List<File> getPropertiesFiles() {
-        if (hasPropertiesFiles()) {
-            return new ArrayList<>(propertiesFiles);
-        }
-        return Collections.emptyList();
-    }
-
-    /**
      * Checks where or not subsequent commands should be run or not if a failure occurs.
      *
      * @return {@code true} if subsequent commands should not be executed if there was a failed command, {@code false}
@@ -148,14 +130,5 @@ public class Commands {
      */
     public boolean hasScripts() {
         return scripts != null && !scripts.isEmpty();
-    }
-
-    /**
-     * Checks of there are CLI properties files that should be used when executing scripts or commands.
-     *
-     * @return {@code true} if there are CLI properties flies to be processed, otherwise {@code false}
-     */
-    public boolean hasPropertiesFiles() {
-        return propertiesFiles != null && !propertiesFiles.isEmpty();
     }
 }
