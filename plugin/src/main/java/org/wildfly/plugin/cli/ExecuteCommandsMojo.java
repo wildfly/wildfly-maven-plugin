@@ -29,6 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import javax.inject.Inject;
 
@@ -74,6 +75,12 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     private String jbossHome;
 
     /**
+     * The system properties to be set when executing CLI commands.
+     */
+    @Parameter(alias = "system-properties")
+    private Map<String, String> systemProperties;
+
+    /**
      * The properties files to use when executing CLI scripts or commands.
      */
     @Parameter
@@ -109,6 +116,10 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
                 for (File file : propertiesFiles) {
                     parseProperties(file, newSystemProperties);
                 }
+            }
+
+            if (systemProperties != null) {
+                newSystemProperties.putAll(systemProperties);
             }
 
             // Set the system properties for executing commands
