@@ -24,7 +24,6 @@ package org.wildfly.plugin.cli;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.maven.plugins.annotations.Parameter;
@@ -63,12 +62,29 @@ public class Commands {
     @Parameter
     private List<File> scripts = new ArrayList<>();
 
+    private final boolean failOnError;
+
     /**
-     * Indicates whether or not subsequent commands should be executed if an error occurs executing a command. A value of
-     * {@code false} will continue processing commands even if a previous command execution results in a failure.
+     * @deprecated Used only for MOJO injection
      */
-    @Parameter(alias = "fail-on-error", defaultValue = "true")
-    private boolean failOnError = true;
+    @Deprecated
+    public Commands() {
+        failOnError = true;
+    }
+
+    /**
+     * @param batch       {@code true} if commands should be executed in a batch
+     * @param commands    the commands to execute
+     * @param scripts     the scripts to execute
+     * @param failOnError {@code false} if commands should continue to be executed even if the command fails,
+     *                    {@code true} if to fail if a command fails after execution
+     */
+    Commands(final boolean batch, final List<String> commands, final List<File> scripts, final boolean failOnError) {
+        this.batch = batch;
+        this.commands = commands;
+        this.scripts = scripts;
+        this.failOnError = failOnError;
+    }
 
     /**
      * Indicates whether or not commands should be executed in a batch.
@@ -86,10 +102,7 @@ public class Commands {
      * @return the defined commands or an empty list
      */
     protected List<String> getCommands() {
-        if (hasCommands()) {
-            return new ArrayList<>(commands);
-        }
-        return Collections.emptyList();
+        return new ArrayList<>(commands);
     }
 
     /**
@@ -98,10 +111,7 @@ public class Commands {
      * @return the defined script files or an empty list
      */
     protected List<File> getScripts() {
-        if (hasScripts()) {
-            return new ArrayList<>(scripts);
-        }
-        return Collections.emptyList();
+        return new ArrayList<>(scripts);
     }
 
     /**

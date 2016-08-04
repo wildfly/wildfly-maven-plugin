@@ -48,12 +48,11 @@ import org.wildfly.plugin.common.PropertyNames;
  * <p/>
  * Executing commands in a batch will rollback all changes if one command fails.
  * <pre>
- *      &lt;execute-commands&gt;
- *          &lt;batch&gt;true&lt;/batch&gt;
- *          &lt;commands&gt;
- *              &lt;command&gt;/subsystem=logging/console=CONSOLE:write-attribute(name=level,value=DEBUG)&lt;/command&gt;
- *          &lt;/commands&gt;
- *      &lt;/execute-commands&gt;
+ *      &lt;batch&gt;true&lt;/batch&gt;
+ *      &lt;fail-on-error&gt;false&lt;/fail-on-error&gt;
+ *      &lt;commands&gt;
+ *          &lt;command&gt;/subsystem=logging/console=CONSOLE:write-attribute(name=level,value=DEBUG)&lt;/command&gt;
+ *      &lt;/commands&gt;
  * </pre>
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
@@ -66,6 +65,13 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
      */
     @Parameter(defaultValue = "false", property = PropertyNames.SKIP)
     private boolean skip;
+
+    /**
+     * {@code true} if commands should be executed in a batch or {@code false} if they should be executed one at a
+     * time.
+     */
+    @Parameter(defaultValue = "false", property = PropertyNames.BATCH)
+    private boolean batch;
 
     /**
      * The WildFly Application Server's home directory. This is not required, but should be used for commands such as
@@ -88,9 +94,35 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
 
     /**
      * The commands to execute.
+     * <p>
+     * Note that if defined the {@link #commands commands}, {@link #scripts scripts} and {@link #failOnError fail-on-error}
+     * parameters outside of this configuration property are ignored.
+     * </p>
+     *
+     * @deprecated Use the {@code <commands/>}, {@code <scripts/>} and {@code <batch/>} configuration parameters
      */
     @Parameter(alias = "execute-commands")
+    @Deprecated
     private Commands executeCommands;
+
+    /**
+     * The CLI commands to execute.
+     */
+    @Parameter(property = PropertyNames.COMMANDS)
+    private List<String> commands = new ArrayList<>();
+
+    /**
+     * The CLI script files to execute.
+     */
+    @Parameter(property = PropertyNames.SCRIPTS)
+    private List<File> scripts = new ArrayList<>();
+
+    /**
+     * Indicates whether or not subsequent commands should be executed if an error occurs executing a command. A value of
+     * {@code false} will continue processing commands even if a previous command execution results in a failure.
+     */
+    @Parameter(alias = "fail-on-error", defaultValue = "true", property = PropertyNames.FAIL_ON_ERROR)
+    private boolean failOnError = true;
 
     @Inject
     private CommandExecutor commandExecutor;
@@ -125,7 +157,7 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             // Set the system properties for executing commands
             System.setProperties(newSystemProperties);
             try (final ModelControllerClient client = createClient()) {
-                commandExecutor.execute(client, jbossHome, executeCommands);
+                commandExecutor.execute(client, jbossHome, getCommands());
             } catch (IOException e) {
                 throw new MojoExecutionException("Could not execute commands.", e);
             }
@@ -134,6 +166,13 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
         } finally {
             System.setProperties(currentSystemProperties);
         }
+    }
+
+    private Commands getCommands() {
+        if (executeCommands != null) {
+            return executeCommands;
+        }
+        return new Commands(batch, commands, scripts, failOnError);
     }
 
     private static void parseProperties(final File file, final Properties properties) throws IOException {

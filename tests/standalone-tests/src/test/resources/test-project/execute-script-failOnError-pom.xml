@@ -33,11 +33,9 @@
                 <groupId>org.wildfly.plugins</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
-                    <execute-commands>
-                        <scripts>
-                            <script>failOnError.cli</script>
-                        </scripts>
-                    </execute-commands>
+                    <scripts>
+                        <script>failOnError.cli</script>
+                    </scripts>
                 </configuration>
 
             </plugin>

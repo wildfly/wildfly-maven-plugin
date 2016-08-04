@@ -29,7 +29,11 @@ public interface PropertyNames {
 
     String ADD_RESOURCE_FORCE = "add-resource.force";
 
+    String BATCH = "wildfly.batch";
+
     String CHECK_PACKAGING = "wildfly.checkPackaging";
+
+    String COMMANDS = "wildfly.commands";
 
     String DEPLOY_FORCE = "deploy.force";
 
@@ -42,6 +46,8 @@ public interface PropertyNames {
     String DEPLOYMENT_TARGET_DIR = "wildfly.deployment.targetDir";
 
     String DOMAIN_CONFIG = "wildfly.domainConfig";
+
+    String FAIL_ON_ERROR = "wildfly.failOnError";
 
     String HOST_CONFIG = "wildfly.hostConfig";
 
@@ -82,6 +88,8 @@ public interface PropertyNames {
     String PROFILES = "wildfly.profiles";
 
     String RELOAD = "wildfly.reload";
+
+    String SCRIPTS = "wildfly.scripts";
 
     String SERVER_CONFIG = "wildfly.serverConfig";
 
