@@ -44,5 +44,29 @@
                 </p>
             </answer>
         </faq>
+        <faq id="beforeAfterCommands">
+            <question>Why were the <code>&lt;beforeDeployment/&gt;</code> and <code>&lt;afterDeployment/&gt;</code> options removed?</question>
+            <answer>
+                <p>
+                    These options are redundant since the <code>execute-commands</code> goal could be run before and/or
+                    after a deployment goal.
+                </p>
+            </answer>
+        </faq>
+        <faq id="executeCommands">
+            <question>Why was the <code>&lt;executeCommands/&gt;</code> option deprecated?</question>
+            <answer>
+                <p>
+                    The complex <code>&lt;executeCommands/&gt;</code> configuration parameter has been deprecated in favor
+                    of using the simple parameters. All configuration parameters can now to the parent configuration
+                    element.
+                </p>
+                <p>
+                    To migrate from previous versions of the plugin simply remove the surrounding
+                    <code>&lt;executeCommands&gt;&lt;/executeCommands&gt;</code> element from your configuration leaving
+                    the children elements.
+                </p>
+            </answer>
+        </faq>
     </part>
 </faqs>

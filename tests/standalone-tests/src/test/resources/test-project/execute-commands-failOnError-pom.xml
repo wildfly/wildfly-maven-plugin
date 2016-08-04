@@ -33,13 +33,11 @@
                 <groupId>org.wildfly.plugins</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
-                    <execute-commands>
-                        <failOnError>true</failOnError>
-                        <commands>
-                            <command>/system-property=propertyFailOnError:add(value="initial value")</command>
-                            <command>/system-property=propertyFailOnError:add(value="fail on error")</command>
-                        </commands>
-                    </execute-commands>
+                    <failOnError>true</failOnError>
+                    <commands>
+                        <command>/system-property=propertyFailOnError:add(value="initial value")</command>
+                        <command>/system-property=propertyFailOnError:add(value="fail on error")</command>
+                    </commands>
                 </configuration>
             </plugin>
         </plugins>

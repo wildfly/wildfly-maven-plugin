@@ -33,14 +33,12 @@
                 <groupId>org.wildfly.plugins</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
-                    <execute-commands>
-                        <failOnError>false</failOnError>
-                        <commands>
-                            <command>/system-property=propertyContinueOnError:add(value="initial value")</command>
-                            <command>/system-property=propertyContinueOnError:add(value="second value")</command>
-                            <command>/system-property=propertyContinueOnError:write-attribute(name=value, value="continue on error")</command>
-                        </commands>
-                    </execute-commands>
+                    <failOnError>false</failOnError>
+                    <commands>
+                        <command>/system-property=propertyContinueOnError:add(value="initial value")</command>
+                        <command>/system-property=propertyContinueOnError:add(value="second value")</command>
+                        <command>/system-property=propertyContinueOnError:write-attribute(name=value, value="continue on error")</command>
+                    </commands>
                 </configuration>
             </plugin>
         </plugins>

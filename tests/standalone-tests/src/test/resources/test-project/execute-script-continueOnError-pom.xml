@@ -33,12 +33,10 @@
                 <groupId>org.wildfly.plugins</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
-                    <execute-commands>
-                        <fail-on-error>false</fail-on-error>
-                        <scripts>
-                            <script>continueOnError.cli</script>
-                        </scripts>
-                    </execute-commands>
+                    <failOnError>false</failOnError>
+                    <scripts>
+                        <script>continueOnError.cli</script>
+                    </scripts>
                 </configuration>
 
             </plugin>

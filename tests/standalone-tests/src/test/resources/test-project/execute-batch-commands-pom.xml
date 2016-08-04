@@ -35,9 +35,6 @@
                 <configuration>
                     <execute-commands>
                         <batch>true</batch>
-                        <!-- Explicitly set this because the test harness does not properly configure complex configuration
-                        attributes -->
-                        <fail-on-error>true</fail-on-error>
                         <commands>
                             <command>/system-property=org.wildfly.maven.plugin-batch:add(value=true)</command>
                         </commands>
