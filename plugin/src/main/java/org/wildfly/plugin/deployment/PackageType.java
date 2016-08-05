@@ -34,7 +34,7 @@ import org.apache.maven.project.MavenProject;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 @SuppressWarnings("WeakerAccess")
-final class PackageType implements Comparable<PackageType> {
+public final class PackageType implements Comparable<PackageType> {
 
 
     private static final PackageType MAVEN_PLUGIN = new PackageType("maven-project", true);
