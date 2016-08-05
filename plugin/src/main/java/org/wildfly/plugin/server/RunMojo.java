@@ -40,13 +40,19 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.project.MavenProject;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.core.launcher.CommandBuilder;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
+import org.wildfly.plugin.cli.CommandExecutor;
+import org.wildfly.plugin.cli.Commands;
+import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
+import org.wildfly.plugin.core.Deployment;
+import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.core.ServerHelper;
 import org.wildfly.plugin.core.ServerProcess;
-import org.wildfly.plugin.deployment.DeployMojo;
+import org.wildfly.plugin.deployment.PackageType;
 import org.wildfly.plugin.server.ArtifactResolver.ArtifactNameSplitter;
 
 /**
@@ -59,9 +65,12 @@ import org.wildfly.plugin.server.ArtifactResolver.ArtifactNameSplitter;
  */
 @Mojo(name = "run", requiresDependencyResolution = ResolutionScope.RUNTIME)
 @Execute(phase = LifecyclePhase.PACKAGE)
-public class RunMojo extends DeployMojo {
+public class RunMojo extends AbstractServerConnection {
 
     public static final String WILDFLY_DIR = "wildfly-run";
+
+    @Parameter(defaultValue = "${project}", readonly = true, required = true)
+    private MavenProject project;
 
     @Inject
     private ArtifactResolver artifactResolver;
@@ -183,23 +192,92 @@ public class RunMojo extends DeployMojo {
     @Parameter
     private Map<String, String> env;
 
-    private Process process;
+    /**
+     * Specifies the name used for the deployment.
+     */
+    @Parameter(property = PropertyNames.DEPLOYMENT_NAME)
+    private String name;
+
+    /**
+     * The runtime name for the deployment.
+     * <p>
+     * In some cases users may wish to have two deployments with the same {@code runtime-name} (e.g. two versions of
+     * {@code example.war}) both available in the management configuration, in which case the deployments would need to
+     * have distinct {@code name} values but would have the same {@code runtime-name}.
+     * </p>
+     */
+    @Parameter(alias = "runtime-name", property = PropertyNames.DEPLOYMENT_RUNTIME_NAME)
+    private String runtimeName;
+
+
+    /**
+     * The target directory the application to be deployed is located.
+     */
+    @Parameter(defaultValue = "${project.build.directory}/", property = PropertyNames.DEPLOYMENT_TARGET_DIR)
+    private File targetDir;
+
+    /**
+     * The file name of the application to be deployed.
+     * <p>
+     * The {@code filename} property does have a default of <code>${project.build.finalName}.${project.packaging}</code>.
+     * The default value is not injected as it normally would be due to packaging types like {@code ejb} that result in
+     * a file with a {@code .jar} extension rather than an {@code .ejb} extension.
+     * </p>
+     */
+    @Parameter(property = PropertyNames.DEPLOYMENT_FILENAME)
+    private String filename;
+
+    /**
+     * By default certain package types are ignored when processing, e.g. {@code maven-project} and {@code pom}. Set
+     * this value to {@code false} if this check should be bypassed.
+     */
+    @Parameter(alias = "check-packaging", property = PropertyNames.CHECK_PACKAGING, defaultValue = "true")
+    private boolean checkPackaging;
+
+    /**
+     * Commands to run before the deployment
+     *
+     * @deprecated use the {@code execute-commands} goal
+     */
+    @Parameter(alias = "before-deployment")
+    @Deprecated
+    private Commands beforeDeployment;
+
+    /**
+     * Executions to run after the deployment
+     *
+     * @deprecated use the {@code execute-commands} goal
+     */
+    @Parameter(alias = "after-deployment")
+    @Deprecated
+    private Commands afterDeployment;
+
+    /**
+     * Set to {@code true} if you want the deployment to be skipped, otherwise {@code false}.
+     */
+    @Parameter(defaultValue = "false", property = PropertyNames.SKIP)
+    private boolean skip;
+
+    @Inject
+    private CommandExecutor commandExecutor;
 
     @Override
-    protected void beforeDeployment(final ModelControllerClient client) throws MojoExecutionException, MojoFailureException, IOException {
-        super.beforeDeployment(client);
+    public void execute() throws MojoExecutionException, MojoFailureException {
+        if (skip) {
+            return;
+        }
         final Log log = getLog();
-        final File deploymentFile = file();
+        final Path deploymentContent = getDeploymentContent();
         // The deployment must exist before we do anything
-        if (!deploymentFile.exists()) {
-            throw new MojoExecutionException(String.format("The deployment '%s' could not be found.", deploymentFile.getAbsolutePath()));
+        if (Files.notExists(deploymentContent)) {
+            throw new MojoExecutionException(String.format("The deployment '%s' could not be found.", deploymentContent.toAbsolutePath()));
         }
         // Validate the environment
-        final Path jbossHome = extractIfRequired(deploymentFile.getParentFile().toPath());
-        if (!Files.isDirectory(jbossHome)) {
-            throw new MojoExecutionException(String.format("JBOSS_HOME '%s' is not a valid directory.", jbossHome));
+        final Path wildflyPath = extractIfRequired(deploymentContent.getParent());
+        if (!Files.isDirectory(wildflyPath)) {
+            throw new MojoExecutionException(String.format("JBOSS_HOME '%s' is not a valid directory.", wildflyPath));
         }
-        final StandaloneCommandBuilder commandBuilder = createCommandBuilder();
+        final StandaloneCommandBuilder commandBuilder = createCommandBuilder(wildflyPath);
 
         // Print some server information
         log.info(String.format("JAVA_HOME=%s", commandBuilder.getJavaHome()));
@@ -211,38 +289,46 @@ public class RunMojo extends DeployMojo {
             }
             // Start the server
             log.info("Server is starting up. Press CTRL + C to stop the server.");
-            process = startContainer(commandBuilder);
-        } catch (Exception e) {
-            throw new MojoExecutionException("The server failed to start", e);
-        }
-    }
-
-    @Override
-    protected void afterDeployment(final ModelControllerClient client) throws MojoExecutionException, MojoFailureException, IOException {
-        super.afterDeployment(client);
-        try {
-            // Wait for the process to die
-            boolean keepRunning = true;
-            while (keepRunning) {
-                final int exitCode = process.waitFor();
-                // 10 is the magic code used in the scripts to survive a :shutdown(restart=true) operation
-                if (exitCode == 10) {
-                    // Ensure the current process is destroyed and restart a new one
-                    process.destroy();
-                    process = startContainer(createCommandBuilder());
-                } else {
-                    keepRunning = false;
+            Process process = startContainer(commandBuilder);
+            try (ModelControllerClient client = createClient()) {
+                if (beforeDeployment != null) {
+                    commandExecutor.execute(client, wildflyPath, beforeDeployment);
                 }
+                final Deployment deployment = Deployment.of(deploymentContent)
+                        .setName(name)
+                        .setRuntimeName(runtimeName);
+                final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
+                deploymentManager.forceDeploy(deployment);
+                if (afterDeployment != null) {
+                    commandExecutor.execute(client, wildflyPath, afterDeployment);
+                }
+            }
+            try {
+                // Wait for the process to die
+                boolean keepRunning = true;
+                while (keepRunning) {
+                    final int exitCode = process.waitFor();
+                    // 10 is the magic code used in the scripts to survive a :shutdown(restart=true) operation
+                    if (exitCode == 10) {
+                        // Ensure the current process is destroyed and restart a new one
+                        process.destroy();
+                        process = startContainer(commandBuilder);
+                    } else {
+                        keepRunning = false;
+                    }
+                }
+            } catch (Exception e) {
+                throw new MojoExecutionException("The server failed to start", e);
+            } finally {
+                if (process != null) process.destroy();
             }
         } catch (Exception e) {
             throw new MojoExecutionException("The server failed to start", e);
-        } finally {
-            if (process != null) process.destroy();
         }
     }
 
-    private StandaloneCommandBuilder createCommandBuilder() {
-        final StandaloneCommandBuilder commandBuilder = StandaloneCommandBuilder.of(jbossHome)
+    private StandaloneCommandBuilder createCommandBuilder(final Path wildflyPath) {
+        final StandaloneCommandBuilder commandBuilder = StandaloneCommandBuilder.of(wildflyPath)
                 .setJavaHome(javaHome)
                 .addModuleDirs(modulesPath.getModulePaths());
 
@@ -310,5 +396,16 @@ public class RunMojo extends DeployMojo {
             ServerHelper.waitForStandalone(process, client, startupTimeout);
         }
         return process;
+    }
+
+    private Path getDeploymentContent() {
+        final PackageType packageType = PackageType.resolve(project);
+        final String filename;
+        if (this.filename == null) {
+            filename = String.format("%s.%s", project.getBuild().getFinalName(), packageType.getFileExtension());
+        } else {
+            filename = this.filename;
+        }
+        return targetDir.toPath().resolve(filename);
     }
 }
