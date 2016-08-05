@@ -163,7 +163,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
             commandExecutor.execute(client, beforeDeployment);
     }
 
-    protected abstract DeploymentResult executeDeployment(DeploymentManager deploymentManager, Deployment deployment) throws IOException;
+    protected abstract DeploymentResult executeDeployment(DeploymentManager deploymentManager, Deployment deployment) throws IOException, MojoDeploymentException;
 
     protected void afterDeployment(final ModelControllerClient client) throws MojoExecutionException, MojoFailureException, IOException {
 
