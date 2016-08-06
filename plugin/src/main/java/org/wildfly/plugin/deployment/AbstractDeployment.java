@@ -141,7 +141,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
             // Deploy the deployment
             getLog().debug("Executing deployment");
 
-            final Deployment deployment = createDeployment();
+            final Deployment deployment = configureDeployment(createDeployment());
 
             final DeploymentResult result = executeDeployment(DeploymentManager.Factory.create(client), deployment);
             if (!result.successful()) {
@@ -163,7 +163,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
             commandExecutor.execute(client, beforeDeployment);
     }
 
-    protected abstract DeploymentResult executeDeployment(DeploymentManager deploymentManager, Deployment deployment) throws IOException;
+    protected abstract DeploymentResult executeDeployment(DeploymentManager deploymentManager, Deployment deployment) throws IOException, MojoDeploymentException;
 
     protected void afterDeployment(final ModelControllerClient client) throws MojoExecutionException, MojoFailureException, IOException {
 
@@ -173,10 +173,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     }
 
     protected Deployment createDeployment() {
-        return Deployment.of(file())
-                .setName(name)
-                .setRuntimeName(runtimeName)
-                .addServerGroups(getServerGroups());
+        return Deployment.of(file());
     }
 
     /**
@@ -196,6 +193,12 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         } else if (hasServerGroups) {
             throw new MojoDeploymentException("Server is running in standalone mode, but server groups have been defined.");
         }
+    }
+
+    private Deployment configureDeployment(final Deployment deployment) {
+        return deployment.setName(name)
+                .setRuntimeName(runtimeName)
+                .addServerGroups(getServerGroups());
     }
 
     private Collection<String> getServerGroups() {

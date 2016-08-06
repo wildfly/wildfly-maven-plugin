@@ -37,6 +37,8 @@ public interface PropertyNames {
 
     String DEPLOY_FORCE = "deploy.force";
 
+    String DEPLOYMENT_CONTENT_URL = "wildfly.deployment.contentUrl";
+
     String DEPLOYMENT_FILENAME = "wildfly.deployment.filename";
 
     String DEPLOYMENT_NAME = "wildfly.deployment.name";
