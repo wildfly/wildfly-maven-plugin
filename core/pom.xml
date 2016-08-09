@@ -51,16 +51,6 @@
     <dependencies>
         <dependency>
             <groupId>org.wildfly.core</groupId>
-            <artifactId>wildfly-cli</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.jboss.logging</groupId>
-                    <artifactId>jboss-logging-processor</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.wildfly.core</groupId>
             <artifactId>wildfly-controller-client</artifactId>
         </dependency>
         <dependency>
