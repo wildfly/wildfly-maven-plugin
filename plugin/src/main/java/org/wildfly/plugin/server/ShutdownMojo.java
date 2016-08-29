@@ -39,7 +39,8 @@ import org.wildfly.plugin.core.ServerHelper;
 /**
  * Shuts down a running WildFly Application Server.
  * <p/>
- * Can also be used to issue a reload instead of a full shutdown.
+ * Can also be used to issue a reload instead of a full shutdown. If a reload is executed the process will wait for the
+ * serer to be available before returning.
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
@@ -48,7 +49,8 @@ public class ShutdownMojo extends AbstractServerConnection {
 
     /**
      * Set to {@code true} if a {@code reload} operation should be invoked instead of a {@code shutdown}. For domain
-     * servers this executes a {@code reload-servers} operation.
+     * servers this executes a {@code reload-servers} operation. If set to {@code true} the process will wait up to the
+     * {@code timeout} limit for the server to be available before returning.
      */
     @Parameter(defaultValue = "false", property = PropertyNames.RELOAD)
     private boolean reload;
@@ -69,12 +71,14 @@ public class ShutdownMojo extends AbstractServerConnection {
             if (ServerHelper.isDomainServer(client)) {
                 if (reload) {
                     client.execute(ServerOperations.createOperation("reload-servers"));
+                    ServerHelper.waitForDomain(client, timeout);
                 } else {
                     ServerHelper.shutdownDomain(DomainClient.Factory.create(client));
                 }
             } else {
                 if (reload) {
                     client.execute(ServerOperations.createOperation(ServerOperations.RELOAD));
+                    ServerHelper.waitForStandalone(client, timeout);
                 } else {
                     ServerHelper.shutdownStandalone(client);
                 }

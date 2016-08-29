@@ -104,7 +104,7 @@ public abstract class AbstractServerConnection extends AbstractMojo {
      * The timeout, in seconds, to wait for a management connection.
      */
     @Parameter(property = PropertyNames.TIMEOUT, defaultValue = "60")
-    private int timeout;
+    protected int timeout;
 
     @Inject
     private SettingsDecrypter settingsDecrypter;
