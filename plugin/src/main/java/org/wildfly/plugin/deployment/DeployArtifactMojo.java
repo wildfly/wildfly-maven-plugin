@@ -41,7 +41,7 @@ import org.wildfly.plugin.core.DeploymentResult;
  *
  * @author Stuart Douglas
  */
-@Mojo(name = "deploy-artifact", requiresDependencyResolution = ResolutionScope.RUNTIME, threadSafe = true)
+@Mojo(name = "deploy-artifact", requiresDependencyResolution = ResolutionScope.TEST, threadSafe = true)
 public class DeployArtifactMojo extends AbstractDeployment {
 
     /**
