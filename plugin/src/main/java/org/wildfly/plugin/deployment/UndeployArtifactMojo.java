@@ -134,6 +134,10 @@ public class UndeployArtifactMojo extends AbstractServerConnection {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        if (skip) {
+            getLog().debug(String.format("Skipping undeploy of artifact %s:%s", groupId, artifactId));
+            return;
+        }
         if (artifactId == null) {
             throw new MojoDeploymentException("undeploy-artifact must specify the artifactId");
         }

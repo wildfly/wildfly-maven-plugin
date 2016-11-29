@@ -141,6 +141,10 @@ public class UndeployMojo extends AbstractServerConnection {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        if (skip) {
+            getLog().debug(String.format("Skipping undeploy of %s:%s", project.getGroupId(), project.getArtifactId()));
+            return;
+        }
         final PackageType packageType = PackageType.resolve(project);
         // Configure the name if it wasn't yet set
         if (name == null) {
