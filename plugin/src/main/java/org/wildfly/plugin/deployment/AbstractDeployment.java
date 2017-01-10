@@ -24,8 +24,8 @@ package org.wildfly.plugin.deployment;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -202,7 +202,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     }
 
     private Collection<String> getServerGroups() {
-        final Collection<String> result = new ArrayList<>();
+        final Collection<String> result = new LinkedHashSet<>();
         if (domain != null) {
             result.addAll(domain.getServerGroups());
         }

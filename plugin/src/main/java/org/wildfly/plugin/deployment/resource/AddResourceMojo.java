@@ -22,8 +22,8 @@
 package org.wildfly.plugin.deployment.resource;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
@@ -328,7 +328,7 @@ public class AddResourceMojo extends AbstractServerConnection {
     }
 
     private Collection<String> getProfiles() {
-        final Collection<String> result = new ArrayList<>();
+        final Collection<String> result = new LinkedHashSet<>();
         if (domain != null) {
             result.addAll(domain.getProfiles());
         }
