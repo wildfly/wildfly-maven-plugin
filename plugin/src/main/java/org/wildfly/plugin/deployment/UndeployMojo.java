@@ -24,6 +24,7 @@ package org.wildfly.plugin.deployment;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -161,7 +162,7 @@ public class UndeployMojo extends AbstractServerConnection {
                 final boolean failOnMissing = !ignoreMissingDeployment;
                 final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
                 if (matchPattern == null) {
-                    result = deploymentManager.undeploy(UndeployDescription.of(name).addServerGroups(serverGroups).setFailOnMissing(failOnMissing));
+                    result = deploymentManager.undeploy(UndeployDescription.of(name).addServerGroups(getServerGroups()).setFailOnMissing(failOnMissing));
                 } else {
                     final Set<UndeployDescription> matchedDeployments = findDeployments(deploymentManager, failOnMissing);
                     if (matchedDeployments.isEmpty()) {
@@ -204,6 +205,7 @@ public class UndeployMojo extends AbstractServerConnection {
         for (DeploymentDescription deployment : deployments) {
             boolean matchFound = false;
             final String deploymentName = deployment.getName();
+            final Collection<String> serverGroups = getServerGroups();
             if (pattern.matcher(deploymentName).matches()) {
                 if (serverGroups.isEmpty()) {
                     matchFound = true;
@@ -244,5 +246,16 @@ public class UndeployMojo extends AbstractServerConnection {
         throw new IllegalStateException(
                 String.format("matchPatternStrategy '%s' is not a valid strategy. Valid strategies are %s, %s and %s",
                         matchPatternStrategy, MatchPatternStrategy.ALL, MatchPatternStrategy.FAIL, MatchPatternStrategy.FIRST));
+    }
+
+    private Collection<String> getServerGroups() {
+        final Collection<String> result = new LinkedHashSet<>();
+        if (domain != null) {
+            result.addAll(domain.getServerGroups());
+        }
+        if (serverGroups != null) {
+            result.addAll(serverGroups);
+        }
+        return result;
     }
 }

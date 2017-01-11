@@ -23,6 +23,8 @@
 package org.wildfly.plugin.deployment;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -170,7 +172,7 @@ public class UndeployArtifactMojo extends AbstractServerConnection {
             }
             final boolean failOnMissing = !ignoreMissingDeployment;
             final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
-            result = deploymentManager.undeploy(UndeployDescription.of(deploymentName).addServerGroups(serverGroups).setFailOnMissing(failOnMissing));
+            result = deploymentManager.undeploy(UndeployDescription.of(deploymentName).addServerGroups(getServerGroups()).setFailOnMissing(failOnMissing));
             if (afterDeployment != null) {
                 commandExecutor.execute(client, afterDeployment);
             }
@@ -185,5 +187,16 @@ public class UndeployArtifactMojo extends AbstractServerConnection {
     @Override
     public String goal() {
         return "undeploy-artifact";
+    }
+
+    private Collection<String> getServerGroups() {
+        final Collection<String> result = new LinkedHashSet<>();
+        if (domain != null) {
+            result.addAll(domain.getServerGroups());
+        }
+        if (serverGroups != null) {
+            result.addAll(serverGroups);
+        }
+        return result;
     }
 }
