@@ -27,7 +27,7 @@
     <parent>
         <artifactId>jboss-parent</artifactId>
         <groupId>org.jboss</groupId>
-        <version>19</version>
+        <version>21</version>
     </parent>
     <groupId>org.wildfly.plugins</groupId>
     <artifactId>wildfly-maven-plugin-parent</artifactId>
@@ -77,31 +77,28 @@
 
     <properties>
         <!-- WildFly/JBoss dependencies -->
-        <version.org.jboss.jdf.stacks-client>1.0.2.Final</version.org.jboss.jdf.stacks-client>
-        <version.org.jboss.logmanager>1.5.4.Final</version.org.jboss.logmanager>
+        <version.org.jboss.jdf.stacks-client>1.0.3.Final</version.org.jboss.jdf.stacks-client>
+        <version.org.jboss.logmanager>2.0.4.Final</version.org.jboss.logmanager>
         <version.org.wildfly.checkstyle-config>1.0.4.Final</version.org.wildfly.checkstyle-config>
-        <version.org.wildfly.core>1.0.1.Final</version.org.wildfly.core>
-        <version.org.wildfly.dist>9.0.1.Final</version.org.wildfly.dist>
+        <version.org.wildfly.core>3.0.0.Alpha16</version.org.wildfly.core>
+        <version.org.wildfly.dist>10.1.0.Final</version.org.wildfly.dist>
 
         <!-- maven dependencies -->
         <version.javax.inject.javax.inject>1</version.javax.inject.javax.inject>
-        <version.org.apache.maven.maven-core>3.1.1</version.org.apache.maven.maven-core>
-        <version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>3.1.0
+        <version.org.apache.maven.maven-core>3.3.1</version.org.apache.maven.maven-core>
+        <version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>3.3.0
         </version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>
-        <version.org.apache.maven.plugin-tools>3.3</version.org.apache.maven.plugin-tools>
-        <version.org.eclipse.aether>1.0.2.v20150114</version.org.eclipse.aether>
-        <version.org.eclipse.sisu>0.3.1</version.org.eclipse.sisu>
+        <version.org.apache.maven.plugin-tools>3.5</version.org.apache.maven.plugin-tools>
+        <version.org.eclipse.aether>1.1.0</version.org.eclipse.aether>
+        <version.org.eclipse.sisu>0.3.3</version.org.eclipse.sisu>
 
         <!-- other dependencies -->
-        <version.junit.junit>4.11</version.junit.junit>
-        <version.org.apache.commons.compress>1.5</version.org.apache.commons.compress>
-        <version.org.mockito.mockito-all>1.9.0</version.org.mockito.mockito-all>
+        <version.junit.junit>4.12</version.junit.junit>
+        <version.org.apache.commons.compress>1.13</version.org.apache.commons.compress>
+        <version.org.mockito.mockito-all>1.10.19</version.org.mockito.mockito-all>
 
         <!-- plugin versions -->
-        <version.dependency.plugin>2.8</version.dependency.plugin>
-        <version.enforcer.plugin>1.3</version.enforcer.plugin>
-        <version.plugin.plugin>3.2</version.plugin.plugin>
-        <version.site.plugin>3.5</version.site.plugin>
+        <version.plugin.plugin>3.5</version.plugin.plugin>
 
         <!-- checkstyle configuration -->
         <linkXRef>false</linkXRef>
