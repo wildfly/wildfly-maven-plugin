@@ -41,9 +41,9 @@
                     <address>subsystem=datasources</address>
                     <resources>
                         <resource>
-                            <address>data-source=java:/ds-name1</address>
+                            <address>data-source=java:/ds-name4</address>
                             <properties>
-                                <jndi-name>java:jboss/ds-name1</jndi-name>
+                                <jndi-name>java:jboss/ds-name4</jndi-name>
                                 <enabled>true</enabled>
                                 <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</connection-url>
                                 <driver-class>org.h2.Driver</driver-class>
