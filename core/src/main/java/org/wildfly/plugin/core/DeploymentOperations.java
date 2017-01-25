@@ -40,6 +40,7 @@ import org.jboss.as.controller.client.Operation;
 import org.jboss.as.controller.client.helpers.Operations.CompositeOperationBuilder;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
+import org.wildfly.common.Assert;
 
 /**
  * A helper to create deployment operations.
@@ -114,7 +115,7 @@ public class DeploymentOperations {
      * @see #createDeployOperation(DeploymentDescription)
      */
     public static Operation createAddDeploymentOperation(final Deployment deployment) {
-        Assertions.requiresNotNullParameter(deployment, "deployment");
+        Assert.checkNotNullParam("deployment", deployment);
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
         addDeploymentOperationStep(builder, deployment);
         return builder.build();
@@ -131,7 +132,7 @@ public class DeploymentOperations {
      * @see #createDeployOperation(Set)
      */
     public static Operation createAddDeploymentOperation(final Set<Deployment> deployments) {
-        Assertions.requiresNotNullOrNotEmptyParameter(deployments, "deployments");
+        Assertions.requiresNotNullOrNotEmptyParameter("deployments", deployments);
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
         for (Deployment deployment : deployments) {
             addDeploymentOperationStep(builder, deployment);
@@ -147,7 +148,7 @@ public class DeploymentOperations {
      * @return the deploy operation
      */
     public static Operation createDeployOperation(final DeploymentDescription deployment) {
-        Assertions.requiresNotNullParameter(deployment, "deployment");
+        Assert.checkNotNullParam("deployment", deployment);
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
         addDeployOperationStep(builder, deployment);
         return builder.build();
@@ -161,7 +162,7 @@ public class DeploymentOperations {
      * @return the deploy operation
      */
     public static Operation createDeployOperation(final Set<DeploymentDescription> deployments) {
-        Assertions.requiresNotNullOrNotEmptyParameter(deployments, "deployments");
+        Assertions.requiresNotNullOrNotEmptyParameter("deployments", deployments);
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
         for (DeploymentDescription deployment : deployments) {
             addDeployOperationStep(builder, deployment);
@@ -178,7 +179,7 @@ public class DeploymentOperations {
      * @return the deploy operation
      */
     public static Operation createReplaceOperation(final Deployment deployment) {
-        Assertions.requiresNotNullParameter(deployment, "deployment");
+        Assert.checkNotNullParam("deployment", deployment);
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
         addReplaceOperationSteps(builder, deployment);
         return builder.build();
@@ -193,7 +194,7 @@ public class DeploymentOperations {
      * @return the deploy operation
      */
     public static Operation createReplaceOperation(final Set<Deployment> deployments) {
-        Assertions.requiresNotNullOrNotEmptyParameter(deployments, "deployments");
+        Assertions.requiresNotNullOrNotEmptyParameter("deployments", deployments);
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
         for (Deployment deployment : deployments) {
             addReplaceOperationSteps(builder, deployment);
@@ -213,7 +214,7 @@ public class DeploymentOperations {
      * @return the redeploy operation
      */
     public static Operation createRedeployOperation(final DeploymentDescription deployment) {
-        Assertions.requiresNotNullParameter(deployment, "deployment");
+        Assert.checkNotNullParam("deployment", deployment);
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
         addRedeployOperationStep(builder, deployment);
         return builder.build();
@@ -231,7 +232,7 @@ public class DeploymentOperations {
      * @return the redeploy operation
      */
     public static Operation createRedeployOperation(final Set<DeploymentDescription> deployments) {
-        Assertions.requiresNotNullOrNotEmptyParameter(deployments, "deployments");
+        Assertions.requiresNotNullOrNotEmptyParameter("deployments", deployments);
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
         for (DeploymentDescription deployment : deployments) {
             addRedeployOperationStep(builder, deployment);
@@ -256,7 +257,7 @@ public class DeploymentOperations {
      * @return the undeploy operation
      */
     public static Operation createUndeployOperation(final UndeployDescription undeployDescription) {
-        Assertions.requiresNotNullParameter(undeployDescription, "undeployDescription");
+        Assert.checkNotNullParam("undeployDescription", undeployDescription);
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
         addUndeployOperationStep(builder, undeployDescription);
         return builder.build();
@@ -279,7 +280,7 @@ public class DeploymentOperations {
      * @return the undeploy operation
      */
     public static Operation createUndeployOperation(final Set<UndeployDescription> undeployDescriptions) {
-        Assertions.requiresNotNullOrNotEmptyParameter(undeployDescriptions, "undeployDescriptions");
+        Assertions.requiresNotNullOrNotEmptyParameter("undeployDescriptions", undeployDescriptions);
         final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
         for (UndeployDescription undeployDescription : undeployDescriptions) {
             addUndeployOperationStep(builder, undeployDescription);

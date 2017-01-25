@@ -36,6 +36,7 @@ import org.jboss.as.controller.client.helpers.domain.ServerIdentity;
 import org.jboss.as.controller.client.helpers.domain.ServerStatus;
 import org.jboss.dmr.ModelNode;
 import org.jboss.logging.Logger;
+import org.wildfly.common.Assert;
 import org.wildfly.core.launcher.ProcessHelper;
 
 /**
@@ -61,7 +62,7 @@ public class ServerHelper {
      * @throws OperationExecutionException if the operation used to query the container fails
      */
     public static ContainerDescription getContainerDescription(final ModelControllerClient client) throws IOException, OperationExecutionException {
-        return DefaultContainerDescription.lookup(Assertions.requiresNotNullParameter(client, "client"));
+        return DefaultContainerDescription.lookup(Assert.checkNotNullParam("client", client));
     }
 
     /**
@@ -77,7 +78,7 @@ public class ServerHelper {
         boolean result = false;
         // Check this is really a domain server
         final ModelNode op = Operations.createReadAttributeOperation(EMPTY_ADDRESS, "launch-type");
-        final ModelNode opResult = Assertions.requiresNotNullParameter(client, "client").execute(op);
+        final ModelNode opResult = Assert.checkNotNullParam("client", client).execute(op);
         if (Operations.isSuccessfulOutcome(opResult)) {
             result = ("DOMAIN".equalsIgnoreCase(Operations.readResult(opResult).asString()));
         }
@@ -118,7 +119,7 @@ public class ServerHelper {
      */
     public static void waitForDomain(final Process process, final ModelControllerClient client, final long startupTimeout)
             throws InterruptedException, RuntimeException, TimeoutException {
-        Assertions.requiresNotNullParameter(client, "client");
+        Assert.checkNotNullParam("client", client);
         long timeout = startupTimeout * 1000;
         final long sleep = 100;
         while (timeout > 0) {
@@ -263,7 +264,7 @@ public class ServerHelper {
      */
     public static void waitForStandalone(final Process process, final ModelControllerClient client, final long startupTimeout)
             throws InterruptedException, RuntimeException, TimeoutException {
-        Assertions.requiresNotNullParameter(client, "client");
+        Assert.checkNotNullParam("client", client);
         long timeout = startupTimeout * 1000;
         final long sleep = 100L;
         while (timeout > 0) {

@@ -41,6 +41,7 @@ import org.jboss.as.controller.client.helpers.Operations;
 import org.jboss.as.controller.client.helpers.Operations.CompositeOperationBuilder;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.Property;
+import org.wildfly.common.Assert;
 
 /**
  * The default deployment manager.
@@ -137,12 +138,12 @@ class DefaultDeploymentManager implements DeploymentManager {
 
     @Override
     public DeploymentResult deployToRuntime(final DeploymentDescription deployment) throws IOException {
-        return execute(DeploymentOperations.createDeployOperation(Assertions.requiresNotNullParameter(deployment, "deployment")));
+        return execute(DeploymentOperations.createDeployOperation(Assert.checkNotNullParam("deployment", deployment)));
     }
 
     @Override
     public DeploymentResult deployToRuntime(final Set<DeploymentDescription> deployments) throws IOException {
-        return execute(DeploymentOperations.createDeployOperation(Assertions.requiresNotNullOrNotEmptyParameter(deployments, "deployments")));
+        return execute(DeploymentOperations.createDeployOperation(Assertions.requiresNotNullOrNotEmptyParameter("deployments", deployments)));
     }
 
 
@@ -166,12 +167,12 @@ class DefaultDeploymentManager implements DeploymentManager {
 
     @Override
     public DeploymentResult redeployToRuntime(final DeploymentDescription deployment) throws IOException {
-        return execute(DeploymentOperations.createRedeployOperation(Assertions.requiresNotNullParameter(deployment, "deployment")));
+        return execute(DeploymentOperations.createRedeployOperation(Assert.checkNotNullParam("deployment", deployment)));
     }
 
     @Override
     public DeploymentResult redeployToRuntime(final Set<DeploymentDescription> deployments) throws IOException {
-        return execute(DeploymentOperations.createRedeployOperation(Assertions.requiresNotNullOrNotEmptyParameter(deployments, "deployments")));
+        return execute(DeploymentOperations.createRedeployOperation(Assertions.requiresNotNullOrNotEmptyParameter("deployments", deployments)));
     }
 
     @Override
@@ -294,7 +295,7 @@ class DefaultDeploymentManager implements DeploymentManager {
 
     @Override
     public Set<DeploymentDescription> getDeployments(final String serverGroup) throws IOException {
-        Assertions.requiresNotNullOrNotEmptyParameter(serverGroup, "serverGroup");
+        Assertions.requiresNotNullOrNotEmptyParameter("serverGroup", serverGroup);
         if (!isDomain()) {
             throw new IllegalStateException("Server is not a managed domain. Running container: " + ServerHelper.getContainerDescription(client));
         }
@@ -327,27 +328,27 @@ class DefaultDeploymentManager implements DeploymentManager {
 
     @Override
     public boolean hasDeployment(final String name) throws IOException {
-        return hasDeployment(DeploymentOperations.EMPTY_ADDRESS, Assertions.requiresNotNullOrNotEmptyParameter(name, "name"));
+        return hasDeployment(DeploymentOperations.EMPTY_ADDRESS, Assertions.requiresNotNullOrNotEmptyParameter("name", name));
     }
 
     @Override
     public boolean hasDeployment(final String name, final String serverGroup) {
-        final ModelNode address = DeploymentOperations.createAddress(SERVER_GROUP, Assertions.requiresNotNullOrNotEmptyParameter(serverGroup, "serverGroup"));
-        return hasDeployment(address, Assertions.requiresNotNullOrNotEmptyParameter(name, "name"));
+        final ModelNode address = DeploymentOperations.createAddress(SERVER_GROUP, Assertions.requiresNotNullOrNotEmptyParameter("serverGroup", serverGroup));
+        return hasDeployment(address, Assertions.requiresNotNullOrNotEmptyParameter("name", name));
     }
 
     @Override
     public boolean isEnabled(final String name) throws IOException {
-        return isEnabled(DeploymentOperations.createAddress(DEPLOYMENT, Assertions.requiresNotNullOrNotEmptyParameter(name, "name")));
+        return isEnabled(DeploymentOperations.createAddress(DEPLOYMENT, Assertions.requiresNotNullOrNotEmptyParameter("name", name)));
     }
 
     @Override
     public boolean isEnabled(final String name, final String serverGroup) throws IOException {
         return isEnabled(DeploymentOperations.createAddress(
                 SERVER_GROUP,
-                Assertions.requiresNotNullOrNotEmptyParameter(serverGroup, "serverGroup"),
+                Assertions.requiresNotNullOrNotEmptyParameter("serverGroup", serverGroup),
                 DEPLOYMENT,
-                Assertions.requiresNotNullOrNotEmptyParameter(name, "name"))
+                Assertions.requiresNotNullOrNotEmptyParameter("name", name))
         );
     }
 
@@ -418,7 +419,7 @@ class DefaultDeploymentManager implements DeploymentManager {
     }
 
     private DeploymentResult validateDeployment(final DeploymentDescription deployment) throws IOException {
-        Assertions.requiresNotNullParameter(deployment, "deployment");
+        Assert.checkNotNullParam("deployment", deployment);
         final Set<String> serverGroups = deployment.getServerGroups();
         if (isDomain() && serverGroups.isEmpty()) {
             return new DeploymentResult("No server groups were defined for the deployment operation. Deployment: %s", deployment);
@@ -429,7 +430,7 @@ class DefaultDeploymentManager implements DeploymentManager {
     }
 
     private DeploymentResult validateDeployment(final Set<? extends DeploymentDescription> deployments) throws IOException {
-        Assertions.requiresNotNullOrNotEmptyParameter(deployments, "deployments");
+        Assertions.requiresNotNullOrNotEmptyParameter("deployments", deployments);
 
         final Collection<DeploymentDescription> missingServerGroups = new LinkedHashSet<>();
         final Collection<DeploymentDescription> standaloneWithServerGroups = new LinkedHashSet<>();
