@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
 
+import org.wildfly.common.Assert;
 import org.wildfly.core.launcher.CommandBuilder;
 import org.wildfly.core.launcher.Launcher;
 
@@ -111,7 +112,7 @@ public class ServerProcess extends Process {
      * @throws IOException if an error occurs starting the process
      */
     public static ServerProcess start(final CommandBuilder commandBuilder, final Map<String, String> env, final OutputStream stdout) throws IOException {
-        final Launcher launcher = Launcher.of(Assertions.requiresNotNullParameter(commandBuilder, "commandBuilder"));
+        final Launcher launcher = Launcher.of(Assert.checkNotNullParam("commandBuilder", commandBuilder));
         if (env != null) {
             launcher.addEnvironmentVariables(env);
         }

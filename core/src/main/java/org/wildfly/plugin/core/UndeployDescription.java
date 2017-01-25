@@ -26,6 +26,8 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import org.wildfly.common.Assert;
+
 /**
  * Represents the description for undeploying content from a running container.
  * <p>
@@ -62,7 +64,7 @@ public class UndeployDescription implements DeploymentDescription, Comparable<Un
      * @return the description
      */
     public static UndeployDescription of(final String name) {
-        return new UndeployDescription(Assertions.requiresNotNullOrNotEmptyParameter(name, "name"));
+        return new UndeployDescription(Assertions.requiresNotNullOrNotEmptyParameter("name", name));
     }
 
     /**
@@ -73,7 +75,7 @@ public class UndeployDescription implements DeploymentDescription, Comparable<Un
      * @return the description
      */
     public static UndeployDescription of(final DeploymentDescription deploymentDescription) {
-        Assertions.requiresNotNullParameter(deploymentDescription, "deploymentDescription");
+        Assert.checkNotNullParam("deploymentDescription", deploymentDescription);
         return of(deploymentDescription.getName()).addServerGroups(deploymentDescription.getServerGroups());
     }
 

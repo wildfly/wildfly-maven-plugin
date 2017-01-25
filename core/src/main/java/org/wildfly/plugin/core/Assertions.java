@@ -21,60 +21,42 @@ package org.wildfly.plugin.core;
 
 import java.util.Collection;
 
+import org.wildfly.common.Assert;
+
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 class Assertions {
 
     /**
-     * Checks if the parameter is {@code null} and throws an {@link IllegalArgumentException} if it is.
+     * Checks if the parameter is {@code null} or empty and throws an {@link IllegalArgumentException} if it is.
      *
-     * @param value the value to check
      * @param name  the name of the parameter
-     * @param <T>   the parameter type
+     * @param value the value to check
      *
      * @return the parameter value
      *
      * @throws IllegalArgumentException if the object representing the parameter is {@code null}
      */
-    static <T> T requiresNotNullParameter(final T value, final String name) throws IllegalArgumentException {
-        if (value == null) {
-            throw new IllegalArgumentException(String.format("Parameter %s is required and cannot be null.", name));
-        }
+    static String requiresNotNullOrNotEmptyParameter(final String name, final String value) throws IllegalArgumentException {
+        Assert.checkNotNullParam(name, value);
+        Assert.checkNotEmptyParam(name, value);
         return value;
     }
 
     /**
      * Checks if the parameter is {@code null} or empty and throws an {@link IllegalArgumentException} if it is.
      *
-     * @param value the value to check
      * @param name  the name of the parameter
+     * @param value the value to check
      *
      * @return the parameter value
      *
      * @throws IllegalArgumentException if the object representing the parameter is {@code null}
      */
-    static String requiresNotNullOrNotEmptyParameter(final String value, final String name) throws IllegalArgumentException {
-        if (value == null || value.trim().isEmpty()) {
-            throw new IllegalArgumentException(String.format("Parameter %s is required and cannot be null or empty.", name));
-        }
-        return value;
-    }
-
-    /**
-     * Checks if the parameter is {@code null} or empty and throws an {@link IllegalArgumentException} if it is.
-     *
-     * @param value the value to check
-     * @param name  the name of the parameter
-     *
-     * @return the parameter value
-     *
-     * @throws IllegalArgumentException if the object representing the parameter is {@code null}
-     */
-    static <E, T extends Collection<E>> T requiresNotNullOrNotEmptyParameter(final T value, final String name) throws IllegalArgumentException {
-        if (value == null || value.isEmpty()) {
-            throw new IllegalArgumentException(String.format("Parameter %s is required and cannot be null or empty.", name));
-        }
+    static <E, T extends Collection<E>> T requiresNotNullOrNotEmptyParameter(final String name, final T value) throws IllegalArgumentException {
+        Assert.checkNotNullParam(name, value);
+        Assert.checkNotEmptyParam(name, value);
         return value;
     }
 }
