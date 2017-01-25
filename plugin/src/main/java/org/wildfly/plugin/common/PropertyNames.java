@@ -67,6 +67,8 @@ public interface PropertyNames {
 
     String WILDFLY_CLASSIFIER = "wildfly.classifier";
 
+    String WILDFLY_CLIENT_CONFIG = "wildfly.clientConfig";
+
     String WILDFLY_GROUP_ID = "wildfly.groupId";
 
     String JBOSS_HOME = "jboss-as.home"; // TODO (jrp) look at this one

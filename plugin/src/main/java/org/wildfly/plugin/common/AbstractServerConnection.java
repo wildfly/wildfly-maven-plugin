@@ -22,6 +22,9 @@
 
 package org.wildfly.plugin.common;
 
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.security.GeneralSecurityException;
 import javax.inject.Inject;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -34,6 +37,9 @@ import org.apache.maven.settings.crypto.SettingsDecrypter;
 import org.apache.maven.settings.crypto.SettingsDecryptionResult;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.ModelControllerClientConfiguration;
+import org.wildfly.client.config.ConfigXMLParseException;
+import org.wildfly.plugin.core.ContextualModelControllerClient;
+import org.wildfly.security.auth.client.ElytronXmlParser;
 
 /**
  * The default implementation for connecting to a running WildFly instance
@@ -106,6 +112,13 @@ public abstract class AbstractServerConnection extends AbstractMojo {
     @Parameter(property = PropertyNames.TIMEOUT, defaultValue = "60")
     protected int timeout;
 
+    /**
+     * A URL which points to the authentication configuration ({@code wildfly-config.xml}) the client uses to
+     * authenticate with the server.
+     */
+    @Parameter(alias = "wildfly-client-config", property = PropertyNames.WILDFLY_CLIENT_CONFIG)
+    private URL wildflyClientConfig;
+
     @Inject
     private SettingsDecrypter settingsDecrypter;
 
@@ -122,7 +135,13 @@ public abstract class AbstractServerConnection extends AbstractMojo {
      * @return the client
      */
     protected ModelControllerClient createClient() {
-        return ModelControllerClient.Factory.create(getClientConfiguration());
+        final URL wildflyConfig = this.wildflyClientConfig;
+        final ModelControllerClient client = ModelControllerClient.Factory.create(getClientConfiguration());
+        try {
+            return wildflyConfig == null ? client : new ContextualModelControllerClient(client, ElytronXmlParser.parseAuthenticationClientConfiguration(wildflyConfig.toURI()).create());
+        } catch (ConfigXMLParseException | GeneralSecurityException | URISyntaxException e) {
+            throw new RuntimeException("Failed to create client connection to server.", e);
+        }
     }
 
     /**
@@ -159,13 +178,15 @@ public abstract class AbstractServerConnection extends AbstractMojo {
         } else {
             log.debug(DEBUG_MESSAGE_POM_HAS_CREDS);
         }
-        return new ModelControllerClientConfiguration.Builder()
+        final ModelControllerClientConfiguration.Builder builder = new ModelControllerClientConfiguration.Builder()
                 .setProtocol(protocol)
                 .setHostName(hostname)
                 .setPort(port)
-                .setConnectionTimeout(timeout * 1000)
-                .setHandler(new ClientCallbackHandler(username, password, log))
-                .build();
+                .setConnectionTimeout(timeout * 1000);
+        if (wildflyClientConfig == null) {
+            builder.setHandler(new ClientCallbackHandler(username, password, log));
+        }
+        return builder.build();
     }
 
     private String decrypt(final Server server) {
