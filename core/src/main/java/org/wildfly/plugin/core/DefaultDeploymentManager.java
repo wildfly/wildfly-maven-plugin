@@ -496,7 +496,13 @@ class DefaultDeploymentManager implements DeploymentManager {
         public boolean get() throws IOException {
             while (value == null) {
                 if (set.compareAndSet(false, true)) {
-                    value = ServerHelper.isDomainServer(client);
+                    try {
+                        value = ServerHelper.isDomainServer(client);
+                    } catch (Throwable e) {
+                        // Reset the setting and throw the exception
+                        set.set(false);
+                        throw e;
+                    }
                 }
             }
             return value;
