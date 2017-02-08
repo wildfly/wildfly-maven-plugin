@@ -67,7 +67,7 @@ public class ShutdownMojo extends AbstractServerConnection {
             getLog().debug("Skipping server shutdown");
             return;
         }
-        try (final ModelControllerClient client = createClient()) {
+        try (ModelControllerClient client = createClient()) {
             if (ServerHelper.isDomainServer(client)) {
                 if (reload) {
                     client.execute(ServerOperations.createOperation("reload-servers"));

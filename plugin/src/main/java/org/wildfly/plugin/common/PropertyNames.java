@@ -113,4 +113,6 @@ public interface PropertyNames {
 
     String SERVER_ARGS = "wildfly.serverArgs";
 
+    String OFFLINE = "wildfly.offline";
+
 }

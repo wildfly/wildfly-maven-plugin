@@ -85,7 +85,7 @@ class Archives {
     public static void unzip(final Path zipFile, final Path targetDir) throws IOException {
         final Path archive = getArchive(zipFile);
 
-        try (final ArchiveInputStream in = new ArchiveStreamFactory().createArchiveInputStream(new BufferedInputStream(Files.newInputStream(archive)))) {
+        try (ArchiveInputStream in = new ArchiveStreamFactory().createArchiveInputStream(new BufferedInputStream(Files.newInputStream(archive)))) {
             ArchiveEntry entry;
             while ((entry = in.getNextEntry()) != null) {
                 final Path extractTarget = targetDir.resolve(entry.getName());
@@ -114,7 +114,7 @@ class Archives {
             } else {
                 result = Files.createTempFile(tempFileName.substring(0, index), "");
             }
-            try (final CompressorInputStream in = new CompressorStreamFactory().createCompressorInputStream(new BufferedInputStream(Files.newInputStream(path)))) {
+            try (CompressorInputStream in = new CompressorStreamFactory().createCompressorInputStream(new BufferedInputStream(Files.newInputStream(path)))) {
                 Files.copy(in, result, StandardCopyOption.REPLACE_EXISTING);
             } catch (CompressorException e) {
                 throw new IOException(e);

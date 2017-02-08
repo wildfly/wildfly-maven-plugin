@@ -22,16 +22,23 @@
 
 package org.wildfly.plugin.tests;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 
+import org.apache.maven.execution.DefaultMavenExecutionRequest;
+import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.testing.MojoRule;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectBuilder;
+import org.apache.maven.project.ProjectBuildingRequest;
+import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.wildfly.plugin.core.Deployment;
 
@@ -78,12 +85,23 @@ public abstract class AbstractWildFlyMojoTest {
         assertTrue("Not a directory: " + BASE_CONFIG_DIR, Files.exists(baseDir));
         final Path pom = Paths.get(BASE_CONFIG_DIR, fileName);
         assertTrue(Files.exists(pom));
-        Files.copy(pom, baseDir.resolve("pom.xml"), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+        MavenProject project = readMavenProject(pom);
         @SuppressWarnings("unchecked")
-        T mojo = (T) rule.lookupConfiguredMojo(baseDir.toFile(), goal);
+        T mojo = (T) rule.lookupConfiguredMojo(project, goal);
         assertNotNull(mojo);
         setDefaultEnvironment(mojo);
         return mojo;
+    }
+
+    public MavenProject readMavenProject(Path pom)
+            throws Exception {
+        MavenExecutionRequest request = new DefaultMavenExecutionRequest();
+        request.setBaseDirectory(pom.getParent().toFile());
+        ProjectBuildingRequest configuration = request.getProjectBuildingRequest();
+        configuration.setRepositorySession(new DefaultRepositorySystemSession());
+        MavenProject project = rule.lookup(ProjectBuilder.class).build(pom.toFile(), configuration).getProject();
+        Assert.assertNotNull(project);
+        return project;
     }
 
     protected static void setDefaultEnvironment(final Mojo instance) throws NoSuchFieldException, IllegalAccessException {

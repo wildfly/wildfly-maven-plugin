@@ -392,7 +392,7 @@ public class RunMojo extends AbstractServerConnection {
 
     private Process startContainer(final CommandBuilder commandBuilder) throws IOException, InterruptedException, TimeoutException {
         final Process process = ServerProcess.start(commandBuilder, env);
-        try (final ModelControllerClient client = createClient()) {
+        try (ModelControllerClient client = createClient()) {
             ServerHelper.waitForStandalone(process, client, startupTimeout);
         }
         return process;

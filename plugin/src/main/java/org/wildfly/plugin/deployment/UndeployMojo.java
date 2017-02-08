@@ -155,7 +155,7 @@ public class UndeployMojo extends AbstractServerConnection {
             getLog().debug(String.format("Ignoring packaging type %s.", packageType.getPackaging()));
         } else {
             final DeploymentResult result;
-            try (final ModelControllerClient client = createClient()) {
+            try (ModelControllerClient client = createClient()) {
                 if (beforeDeployment != null) {
                     commandExecutor.execute(client, beforeDeployment);
                 }

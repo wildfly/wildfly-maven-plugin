@@ -166,7 +166,7 @@ public class UndeployArtifactMojo extends AbstractServerConnection {
             deploymentName = name;
         }
         final DeploymentResult result;
-        try (final ModelControllerClient client = createClient()) {
+        try (ModelControllerClient client = createClient()) {
             if (beforeDeployment != null) {
                 commandExecutor.execute(client, beforeDeployment);
             }

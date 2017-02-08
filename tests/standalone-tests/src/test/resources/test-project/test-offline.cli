@@ -1,0 +1,8 @@
+embed-server --server-config=standalone.xml --jboss-home=${jboss.home}
+/system-property=offline-property:add(value=true)
+#...
+# Execute
+stop-embedded-server
+embed-server --server-config=standalone.xml --jboss-home=${jboss.home}
+/system-property=offline-property:remove
+stop-embedded-server

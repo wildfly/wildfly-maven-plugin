@@ -124,7 +124,7 @@ public class AddResourceMojo extends AbstractServerConnection {
             getLog().debug(String.format("Skipping add-resource with address %s", address));
             return;
         }
-        try (final ModelControllerClient client = createClient()) {
+        try (ModelControllerClient client = createClient()) {
             if (resources != null && resources.length > 0) {
                 processResources(client, resources);
             } else {

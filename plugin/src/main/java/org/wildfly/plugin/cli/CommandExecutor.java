@@ -44,6 +44,7 @@ import org.jboss.as.controller.client.OperationMessageHandler;
 import org.jboss.as.controller.client.OperationResponse;
 import org.jboss.dmr.ModelNode;
 import org.jboss.threads.AsyncFuture;
+import org.wildfly.common.expression.Expression;
 import org.wildfly.plugin.common.ServerOperations;
 
 /**
@@ -79,8 +80,12 @@ public class CommandExecutor {
      */
     public void execute(final ModelControllerClient client, final Path wildflyHome, final Commands commands) throws IOException {
         if (wildflyHome != null) {
-            System.setProperty("jboss.home.dir", wildflyHome.toString());
-            executeCommands(client, commands);
+            try {
+                System.setProperty("jboss.home.dir", wildflyHome.toString());
+                executeCommands(client, commands);
+            }finally {
+                System.clearProperty("jboss.home.dir");
+            }
         } else {
             executeCommands(client, commands);
         }
@@ -111,7 +116,7 @@ public class CommandExecutor {
             try {
                 ModuleEnvironment.initJaxp();
                 final ModelControllerClient c = new NonClosingModelControllerClient(client);
-                final CommandContext ctx = create(c);
+                final CommandContext ctx = create(commands, c);
                 try {
 
                     if (commands.isBatch()) {
@@ -144,6 +149,8 @@ public class CommandExecutor {
     private static void executeCommands(final CommandContext ctx, final Iterable<String> commands, final boolean failOnError) {
         for (String cmd : commands) {
             try {
+                Expression expression = Expression.compile(cmd, Expression.Flag.LENIENT_SYNTAX);
+                cmd = expression.evaluateWithPropertiesAndEnvironment(false);
                 if (failOnError) {
                     ctx.handle(cmd);
                 } else {
@@ -180,17 +187,24 @@ public class CommandExecutor {
      * <p/>
      * If the client is {@code null}, no client is bound to the context.
      *
+     *
+     * @param commands
      * @param client current connected client
      *
      * @return the command line context
      *
      * @throws IllegalStateException if the context fails to initialize
      */
-    private static CommandContext create(final ModelControllerClient client) {
+    private CommandContext create(Commands commands, final ModelControllerClient client) {
         final CommandContext commandContext;
         try {
             commandContext = CommandContextFactory.getInstance().newCommandContext();
-            commandContext.bindClient(client);
+            if (!commands.isOffline()) {
+                commandContext.bindClient(client);
+            }else{
+                //for offline CLI we skip log manager check
+                System.setProperty("org.wildfly.logging.skipLogManagerCheck", "true");
+            }
         } catch (CliInitializationException e) {
             throw new IllegalStateException("Failed to initialize CLI context", e);
         }

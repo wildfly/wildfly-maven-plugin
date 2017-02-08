@@ -280,7 +280,7 @@ public class StartMojo extends AbstractServerConnection {
             }
             // Create the server and close the client after the start. The process will continue running even after
             // the maven process may have been finished
-            try (final ModelControllerClient client = createClient()) {
+            try (ModelControllerClient client = createClient()) {
                 if (ServerHelper.isStandaloneRunning(client) || ServerHelper.isDomainRunning(client)) {
                     throw new MojoExecutionException(String.format("%s server is already running?", serverType));
                 }
