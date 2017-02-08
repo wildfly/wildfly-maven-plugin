@@ -134,7 +134,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
             getLog().debug(String.format("Skipping deployment of %s:%s", project.getGroupId(), project.getArtifactId()));
             return;
         }
-        try (final ModelControllerClient client = createClient()) {
+        try (ModelControllerClient client = createClient()) {
             final boolean isDomain = ServerHelper.isDomainServer(client);
             validate(isDomain);
             beforeDeployment(client);

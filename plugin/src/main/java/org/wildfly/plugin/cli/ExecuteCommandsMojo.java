@@ -124,6 +124,12 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     @Parameter(alias = "fail-on-error", defaultValue = "true", property = PropertyNames.FAIL_ON_ERROR)
     private boolean failOnError = true;
 
+    /**
+     * Indicates weather or not CLI should be executed in offline mode. This is useful for embedded server / host controller scripts
+     */
+    @Parameter(name = "offline", defaultValue = "false", property = PropertyNames.OFFLINE)
+    private boolean offline = false;
+
     @Inject
     private CommandExecutor commandExecutor;
 
@@ -156,7 +162,7 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
 
             // Set the system properties for executing commands
             System.setProperties(newSystemProperties);
-            try (final ModelControllerClient client = createClient()) {
+            try (ModelControllerClient client = createClient()) {
                 commandExecutor.execute(client, jbossHome, getCommands());
             } catch (IOException e) {
                 throw new MojoExecutionException("Could not execute commands.", e);
@@ -172,11 +178,11 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
         if (executeCommands != null) {
             return executeCommands;
         }
-        return new Commands(batch, commands, scripts, failOnError);
+        return new Commands(batch, commands, scripts, failOnError, offline);
     }
 
     private static void parseProperties(final File file, final Properties properties) throws IOException {
-        try (final BufferedReader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
+        try (BufferedReader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
             properties.load(reader);
         }
     }
