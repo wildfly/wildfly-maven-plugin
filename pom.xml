@@ -83,9 +83,9 @@
         <version.org.wildfly.checkstyle-config>1.0.5.Final</version.org.wildfly.checkstyle-config>
         <version.org.wildfly.client.config>1.0.0.Beta1</version.org.wildfly.client.config>
         <version.org.wildfly.common.wildfly-common>1.2.0.Beta5</version.org.wildfly.common.wildfly-common>
-        <version.org.wildfly.core>3.0.0.Alpha24</version.org.wildfly.core>
+        <version.org.wildfly.core>3.0.0.Beta5</version.org.wildfly.core>
         <version.org.wildfly.dist>10.1.0.Final</version.org.wildfly.dist>
-        <version.org.wildfly.security.wildfly-elytron>1.1.0.Beta23</version.org.wildfly.security.wildfly-elytron>
+        <version.org.wildfly.security.wildfly-elytron>1.1.0.Beta24</version.org.wildfly.security.wildfly-elytron>
 
         <!-- maven dependencies -->
         <version.javax.inject.javax.inject>1</version.javax.inject.javax.inject>
