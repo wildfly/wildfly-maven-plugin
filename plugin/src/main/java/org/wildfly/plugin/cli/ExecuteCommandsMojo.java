@@ -37,6 +37,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
@@ -130,8 +131,14 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     @Parameter(name = "offline", defaultValue = "false", property = PropertyNames.OFFLINE)
     private boolean offline = false;
 
+    @Parameter(readonly = true, defaultValue = "${project}")
+    private MavenProject project;
+
+
     @Inject
     private CommandExecutor commandExecutor;
+
+    @Inject OfflineCLIExecutor offlineCLIExecutor;
 
     @Override
     public String goal() {
@@ -144,33 +151,43 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             getLog().debug("Skipping commands execution");
             return;
         }
-        final Properties currentSystemProperties = System.getProperties();
-        try {
-            getLog().debug("Executing commands");
-            // Create new system properties with the defaults set to the current system properties
-            final Properties newSystemProperties = new Properties(currentSystemProperties);
-
-            if (propertiesFiles != null) {
-                for (File file : propertiesFiles) {
-                    parseProperties(file, newSystemProperties);
-                }
-            }
-
-            if (systemProperties != null) {
-                newSystemProperties.putAll(systemProperties);
-            }
-
-            // Set the system properties for executing commands
-            System.setProperties(newSystemProperties);
-            try (ModelControllerClient client = createClient()) {
-                commandExecutor.execute(client, jbossHome, getCommands());
+        if (offline) {
+            getLog().debug("Executing offline CLI scripts");
+            try {
+                offlineCLIExecutor.execute(jbossHome, scripts, getLog(), project, systemProperties);
             } catch (IOException e) {
-                throw new MojoExecutionException("Could not execute commands.", e);
+                throw new MojoFailureException("Failed to execute scripts.", e);
             }
-        } catch (IOException e) {
-            throw new MojoFailureException("Failed to parse properties.", e);
-        } finally {
-            System.setProperties(currentSystemProperties);
+
+        } else {
+            final Properties currentSystemProperties = System.getProperties();
+            try {
+                getLog().debug("Executing commands");
+                // Create new system properties with the defaults set to the current system properties
+                final Properties newSystemProperties = new Properties(currentSystemProperties);
+
+                if (propertiesFiles != null) {
+                    for (File file : propertiesFiles) {
+                        parseProperties(file, newSystemProperties);
+                    }
+                }
+
+                if (systemProperties != null) {
+                    newSystemProperties.putAll(systemProperties);
+                }
+
+                // Set the system properties for executing commands
+                System.setProperties(newSystemProperties);
+                try (ModelControllerClient client = createClient()) {
+                    commandExecutor.execute(client, jbossHome, getCommands());
+                } catch (IOException e) {
+                    throw new MojoExecutionException("Could not execute commands.", e);
+                }
+            } catch (IOException e) {
+                throw new MojoFailureException("Failed to parse properties.", e);
+            } finally {
+                System.setProperties(currentSystemProperties);
+            }
         }
     }
 

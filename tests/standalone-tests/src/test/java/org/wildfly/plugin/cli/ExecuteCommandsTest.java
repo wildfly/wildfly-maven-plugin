@@ -57,7 +57,7 @@ public class ExecuteCommandsTest extends AbstractWildFlyServerMojoTest {
     public void testExecuteCommandsFromOfflineScript() throws Exception {
 
         final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-offline-script-pom.xml");
-
+        setValue(executeCommandsMojo, "jbossHome", System.getProperty("jboss.home"));
         executeCommandsMojo.execute();
     }
 
