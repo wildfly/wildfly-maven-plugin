@@ -18,22 +18,21 @@
 
 package org.wildfly.plugin.cli;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
-import java.util.Properties;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.project.MavenProject;
 import org.wildfly.core.launcher.CliCommandBuilder;
-import org.wildfly.core.launcher.Launcher;
+import org.wildfly.plugin.core.ServerProcess;
 
 /**
  * Executes CLI commands.
@@ -48,54 +47,73 @@ public class OfflineCLIExecutor {
     /**
      * Executes the commands and scripts provided.
      *
-     * @param wildflyHome the path to WildFly for setting the {@code jboss.home.dir} system property or {@code null} if
-     *                    should not be set
-     * @param scripts     the scripts to execute
+     * @param wildflyHome      the path to WildFly for setting the {@code jboss.home.dir} system property or {@code null} if
+     *                         should not be set
+     * @param commands         the commands to execute
+     * @param log              the logger to use
+     * @param stdout           the output stream to write standard output to
+     * @param systemProperties the system properties to launch the CLI process with
+     *
      * @throws IOException if an error occurs processing the commands
      */
-    public void execute(final String wildflyHome, final List<File> scripts, Log log, MavenProject project, Map<String, String> systemProperties) throws IOException {
-        String target = project.getModel().getBuild().getDirectory();
-        Path pluginDir = Paths.get(target, "wildfly-plugin");
-        Path output = pluginDir.resolve("script-out.log");
-        Path properties = null;
-        Files.deleteIfExists(output);
-        Files.deleteIfExists(pluginDir);
-        Files.createDirectory(pluginDir);
-        if (systemProperties != null && !systemProperties.isEmpty()) {
-            properties = pluginDir.resolve("system.properties");
-            Files.deleteIfExists(properties);
-            Properties props = new Properties();
-            props.putAll(systemProperties);
-            props.store(Files.newBufferedWriter(properties, StandardCharsets.UTF_8), null);
-        }
+    public int execute(final String wildflyHome, final Commands commands, final Log log, final OutputStream stdout,
+                       final Map<String, String> systemProperties) throws IOException {
         try {
-            for (File f : scripts) {
-                final CliCommandBuilder builder = CliCommandBuilder.of(wildflyHome)
-                        .setScriptFile(f.toPath());
-                if (properties != null) {
-                    builder.addCliArgument("--properties=" + properties.toString());
+            if (commands.hasScripts()) {
+                for (File f : commands.getScripts()) {
+                    final Path script = f.toPath();
+                    log.info("Executing script: " + script);
+                    final int exitCode = executeInNewProcess(wildflyHome, script, systemProperties, stdout);
+                    if (exitCode != 0) {
+                        return exitCode;
+                    }
                 }
-                log.info("Executing script: " + f.toPath());
-                //PrintStream out = new PrintStream(Files.newOutputStream(output));
-                Process process = Launcher.of(builder)
-                        // Redirect the output and error stream to a file
-                        .redirectOutput(output)
-                        .addEnvironmentVariable("JBOSS_HOME", wildflyHome)
-                        .launch();
-                int result = process.waitFor();
-                process.destroyForcibly();
-                if (result != 0){
-                    List<String> l = Files.readAllLines(output, StandardCharsets.UTF_8);
-                    StringBuffer err = new StringBuffer();
-                    l.subList(Math.max(l.size() - 3, 0), l.size())
-                            .forEach(s -> err.append(s).append("\n"));
-                    throw new IOException("Script execution failed, last few lines of execution log: \n"+err);
+            }
+            if (commands.hasCommands()) {
+                final Path script = Files.createTempFile("wildfly-maven-plugin-cli-script", ".cli");
+                try {
+                    try (BufferedWriter writer = Files.newBufferedWriter(script, StandardCharsets.UTF_8)) {
+                        if (commands.isBatch()) {
+                            writer.write("batch");
+                            writer.newLine();
+                        }
+                        for (String cmd : commands.getCommands()) {
+                            writer.write(cmd);
+                            writer.newLine();
+                        }
+                        if (commands.isBatch()) {
+                            writer.write("run-batch");
+                            writer.newLine();
+                        }
+                    }
+                    final int exitCode = executeInNewProcess(wildflyHome, script, systemProperties, stdout);
+                    if (exitCode != 0) {
+                        return exitCode;
+                    }
+                } finally {
+                    Files.deleteIfExists(script);
                 }
-                // new Thread(new ConsoleConsumer(process.getInputStream(), out)).start();
-
             }
         } catch (InterruptedException e) {
             //
+        }
+        return 0;
+    }
+
+    private int executeInNewProcess(final String wildflyHome, final Path scriptFile, final Map<String, String> systemProperties, final OutputStream stdout) throws InterruptedException, IOException {
+        final CliCommandBuilder builder = CliCommandBuilder.of(wildflyHome)
+                .setScriptFile(scriptFile);
+        if (systemProperties != null) {
+            systemProperties.forEach((key, value) -> builder.addJavaOption(String.format("-D%s=%s", key, value)));
+        }
+        final Process process = ServerProcess.start(builder, Collections.singletonMap("JBOSS_HOME", wildflyHome), stdout);
+        try {
+            return process.waitFor();
+        } finally {
+            // Be safe and destroy the process to ensure we don't leave rouge processes running
+            if (process.isAlive()) {
+                process.destroyForcibly();
+            }
         }
     }
 

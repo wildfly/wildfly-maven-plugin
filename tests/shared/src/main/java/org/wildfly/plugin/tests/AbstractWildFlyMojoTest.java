@@ -86,7 +86,6 @@ public abstract class AbstractWildFlyMojoTest {
         final Path pom = Paths.get(BASE_CONFIG_DIR, fileName);
         assertTrue(Files.exists(pom));
         MavenProject project = readMavenProject(pom);
-        //project.getProperties().put("jboss.home", System.getProperty("jboss.home"));
         @SuppressWarnings("unchecked")
         T mojo = (T) rule.lookupConfiguredMojo(project, goal);
         assertNotNull(mojo);

@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,10 +38,10 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.MavenProject;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
+import org.wildfly.plugin.common.StandardOutputStream;
 
 /**
  * Execute commands to the running WildFly Application Server.
@@ -121,24 +122,46 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     /**
      * Indicates whether or not subsequent commands should be executed if an error occurs executing a command. A value of
      * {@code false} will continue processing commands even if a previous command execution results in a failure.
+     * <p>
+     * Note that this value is ignored if {@code offline} is set to {@code true}.
+     * </p>
      */
     @Parameter(alias = "fail-on-error", defaultValue = "true", property = PropertyNames.FAIL_ON_ERROR)
     private boolean failOnError = true;
 
     /**
-     * Indicates weather or not CLI should be executed in offline mode. This is useful for embedded server / host controller scripts
+     * Indicates whether or not CLI scrips or commands should be executed in an offline mode. This is useful for using
+     * an embedded server or host controller.
+     *
+     * <p>This does not start an embedded server it instead skips checking if a server is running.</p>
      */
     @Parameter(name = "offline", defaultValue = "false", property = PropertyNames.OFFLINE)
     private boolean offline = false;
 
-    @Parameter(readonly = true, defaultValue = "${project}")
-    private MavenProject project;
-
+    /**
+     * Indicates how {@code stdout} and {@code stderr} should be handled for the spawned CLI process. Currently a new
+     * process is only spawned if {@code offline} is set to {@code true}. Note that {@code stderr} will be redirected to
+     * {@code stdout} if the value is defined unless the value is {@code none}.
+     * <div>
+     * By default {@code stdout} and {@code stderr} are inherited from the current process. You can change the setting
+     * to one of the follow:
+     * <ul>
+     * <li>{@code none} indicates the {@code stdout} and {@code stderr} stream should not be consumed</li>
+     * <li>{@code System.out} or {@code System.err} to redirect to the current processes <em>(use this option if you
+     * see odd behavior from maven with the default value)</em></li>
+     * <li>Any other value is assumed to be the path to a file and the {@code stdout} and {@code stderr} will be
+     * written there</li>
+     * </ul>
+     * </div>
+     */
+    @Parameter(name = "stdout", defaultValue = "System.out", property = PropertyNames.STDOUT)
+    private String stdout;
 
     @Inject
     private CommandExecutor commandExecutor;
 
-    @Inject OfflineCLIExecutor offlineCLIExecutor;
+    @Inject
+    private OfflineCLIExecutor offlineCLIExecutor;
 
     @Override
     public String goal() {
@@ -153,8 +176,31 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
         }
         if (offline) {
             getLog().debug("Executing offline CLI scripts");
-            try {
-                offlineCLIExecutor.execute(jbossHome, scripts, getLog(), project, systemProperties);
+            try (StandardOutputStream out = StandardOutputStream.parse(stdout, false)) {
+                final int exitCode = offlineCLIExecutor.execute(jbossHome, getCommands(), getLog(), out, systemProperties);
+                if (exitCode != 0) {
+                    final StringBuilder msg = new StringBuilder("Failed to execute commands: ");
+                    out.flush();
+                    switch (out.getTarget()) {
+                        case COLLECTING:
+                            msg.append(out);
+                            break;
+                        case FILE:
+                            final Path stdoutPath = out.getStdoutPath();
+                            msg.append("See ").append(stdoutPath).append(" for full details of failure.").append(System.lineSeparator());
+                            final List<String> lines = Files.readAllLines(stdoutPath);
+                            lines.subList(Math.max(lines.size() - 4, 0), lines.size())
+                                    .forEach(line -> msg.append(line).append(System.lineSeparator()));
+                            break;
+                        case SYSTEM_ERR:
+                        case SYSTEM_OUT:
+                            msg.append("See previous messages for failure messages.");
+                            break;
+                        default:
+                            msg.append("Reason unknown");
+                    }
+                    throw new MojoExecutionException(msg.toString());
+                }
             } catch (IOException e) {
                 throw new MojoFailureException("Failed to execute scripts.", e);
             }

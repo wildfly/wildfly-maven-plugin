@@ -89,6 +89,14 @@ public class ExecuteCommandsTest extends AbstractWildFlyServerMojoTest {
     }
 
     @Test
+    public void testExecuteOfflineCommands() throws Exception {
+
+        final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-commands-offline-pom.xml");
+        setValue(executeCommandsMojo, "jbossHome", System.getProperty("jboss.home"));
+        executeCommandsMojo.execute();
+    }
+
+    @Test
     public void testExecuteLocalCommands() throws Exception {
 
         final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-commands-local-pom.xml");
