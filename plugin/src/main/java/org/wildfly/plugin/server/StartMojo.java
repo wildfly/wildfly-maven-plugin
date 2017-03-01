@@ -22,7 +22,6 @@
 
 package org.wildfly.plugin.server;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -30,7 +29,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
-import java.util.Locale;
 import java.util.Map;
 import javax.inject.Inject;
 
@@ -48,6 +46,7 @@ import org.wildfly.core.launcher.DomainCommandBuilder;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
+import org.wildfly.plugin.common.StandardOutputStream;
 import org.wildfly.plugin.core.ServerHelper;
 import org.wildfly.plugin.core.ServerProcess;
 import org.wildfly.plugin.server.ArtifactResolver.ArtifactNameSplitter;
@@ -254,29 +253,11 @@ public class StartMojo extends AbstractServerConnection {
             throw new MojoExecutionException(String.format("JBOSS_HOME '%s' is not a valid directory.", jbossHome));
         }
 
+        // Determine how stdout should be consumed
+        OutputStream out = null;
         try {
-            // Determine how stdout should be consumed
-            OutputStream out = null;
             if (stdout != null) {
-                final String value = stdout.trim().toLowerCase(Locale.ENGLISH);
-                if ("system.out".equals(value)) {
-                    out = System.out;
-                } else if ("system.err".equals(value)) {
-                    out = System.err;
-                } else if ("none".equals(value)) {
-                    out = ServerProcess.DISCARDING;
-                } else {
-                    // Attempt to create a file
-                    final Path path = Paths.get(value);
-                    if (Files.notExists(path)) {
-                        final Path parent = path.getParent();
-                        if (parent != null) {
-                            Files.createDirectories(parent);
-                        }
-                        Files.createFile(path);
-                    }
-                    out = new BufferedOutputStream(Files.newOutputStream(path));
-                }
+                out = StandardOutputStream.parse(stdout, true);
             }
             // Create the server and close the client after the start. The process will continue running even after
             // the maven process may have been finished
@@ -292,9 +273,21 @@ public class StartMojo extends AbstractServerConnection {
                 } else {
                     ServerHelper.waitForStandalone(process, client, startupTimeout);
                 }
+                if (!process.isAlive()) {
+                    throw new MojoExecutionException("The process has been terminated before the start goal has completed.");
+                }
             }
+        } catch (MojoExecutionException e) {
+            throw e;
         } catch (Exception e) {
             throw new MojoExecutionException("The server failed to start", e);
+        } finally {
+            if (out != null) {
+                getLog().debug("Closing stdout " + stdout);
+                try {
+                    out.close();
+                } catch (Exception ignore){}
+            }
         }
 
     }
