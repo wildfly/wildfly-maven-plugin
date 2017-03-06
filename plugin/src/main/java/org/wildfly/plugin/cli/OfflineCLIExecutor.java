@@ -101,10 +101,14 @@ public class OfflineCLIExecutor {
     }
 
     private int executeInNewProcess(final String wildflyHome, final Path scriptFile, final Map<String, String> systemProperties, final OutputStream stdout) throws InterruptedException, IOException {
+
         final CliCommandBuilder builder = CliCommandBuilder.of(wildflyHome)
                 .setScriptFile(scriptFile);
         if (systemProperties != null) {
             systemProperties.forEach((key, value) -> builder.addJavaOption(String.format("-D%s=%s", key, value)));
+            if (systemProperties.containsKey("module.path")) {
+                builder.setModuleDirs(systemProperties.get("module.path"));
+            }
         }
         final Process process = ServerProcess.start(builder, Collections.singletonMap("JBOSS_HOME", wildflyHome), stdout);
         try {
