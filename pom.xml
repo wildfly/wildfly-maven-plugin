@@ -81,11 +81,9 @@
         <version.org.jboss.logging.jboss-logging>3.3.0.Final</version.org.jboss.logging.jboss-logging>
         <version.org.jboss.logmanager>2.0.4.Final</version.org.jboss.logmanager>
         <version.org.wildfly.checkstyle-config>1.0.5.Final</version.org.wildfly.checkstyle-config>
-        <version.org.wildfly.client.config>1.0.0.Beta1</version.org.wildfly.client.config>
-        <version.org.wildfly.common.wildfly-common>1.2.0.Beta5</version.org.wildfly.common.wildfly-common>
-        <version.org.wildfly.core>3.0.0.Beta5</version.org.wildfly.core>
+        <version.org.wildfly.common.wildfly-common>1.2.0.Beta10</version.org.wildfly.common.wildfly-common>
+        <version.org.wildfly.core>3.0.0.Beta21</version.org.wildfly.core>
         <version.org.wildfly.dist>10.1.0.Final</version.org.wildfly.dist>
-        <version.org.wildfly.security.wildfly-elytron>1.1.0.Beta24</version.org.wildfly.security.wildfly-elytron>
 
         <!-- maven dependencies -->
         <version.javax.inject.javax.inject>1</version.javax.inject.javax.inject>
@@ -225,17 +223,6 @@
                 <version>${version.org.jboss.jdf.stacks-client}</version>
             </dependency>
             <dependency>
-                <groupId>org.wildfly.client</groupId>
-                <artifactId>wildfly-client-config</artifactId>
-                <version>${version.org.wildfly.client.config}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>*</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
                 <groupId>org.wildfly.common</groupId>
                 <artifactId>wildfly-common</artifactId>
                 <version>${version.org.wildfly.common.wildfly-common}</version>
@@ -285,12 +272,6 @@
                 <groupId>org.wildfly.core</groupId>
                 <artifactId>wildfly-protocol</artifactId>
                 <version>${version.org.wildfly.core}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.wildfly.security</groupId>
-                <artifactId>wildfly-elytron</artifactId>
-                <version>${version.org.wildfly.security.wildfly-elytron}</version>
             </dependency>
 
             <!-- Test dependencies -->
