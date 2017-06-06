@@ -25,6 +25,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import javax.inject.Named;
@@ -43,7 +44,6 @@ import org.wildfly.plugin.core.ServerProcess;
 @Singleton
 public class OfflineCLIExecutor {
 
-
     /**
      * Executes the commands and scripts provided.
      *
@@ -53,17 +53,18 @@ public class OfflineCLIExecutor {
      * @param log              the logger to use
      * @param stdout           the output stream to write standard output to
      * @param systemProperties the system properties to launch the CLI process with
+     * @param javaOpts         the options to pass to the offline process
      *
      * @throws IOException if an error occurs processing the commands
      */
     public int execute(final String wildflyHome, final Commands commands, final Log log, final OutputStream stdout,
-                       final Map<String, String> systemProperties) throws IOException {
+                       final Map<String, String> systemProperties, final String[] javaOpts) throws IOException {
         try {
             if (commands.hasScripts()) {
                 for (File f : commands.getScripts()) {
                     final Path script = f.toPath();
                     log.info("Executing script: " + script);
-                    final int exitCode = executeInNewProcess(wildflyHome, script, systemProperties, stdout);
+                    final int exitCode = executeInNewProcess(log, wildflyHome, script, systemProperties, stdout, javaOpts);
                     if (exitCode != 0) {
                         return exitCode;
                     }
@@ -86,7 +87,7 @@ public class OfflineCLIExecutor {
                             writer.newLine();
                         }
                     }
-                    final int exitCode = executeInNewProcess(wildflyHome, script, systemProperties, stdout);
+                    final int exitCode = executeInNewProcess(log, wildflyHome, script, systemProperties, stdout, javaOpts);
                     if (exitCode != 0) {
                         return exitCode;
                     }
@@ -100,7 +101,7 @@ public class OfflineCLIExecutor {
         return 0;
     }
 
-    private int executeInNewProcess(final String wildflyHome, final Path scriptFile, final Map<String, String> systemProperties, final OutputStream stdout) throws InterruptedException, IOException {
+    private int executeInNewProcess(Log log, final String wildflyHome, final Path scriptFile, final Map<String, String> systemProperties, final OutputStream stdout, String[] javaOpts) throws InterruptedException, IOException {
 
         final CliCommandBuilder builder = CliCommandBuilder.of(wildflyHome)
                 .setScriptFile(scriptFile);
@@ -109,6 +110,21 @@ public class OfflineCLIExecutor {
             if (systemProperties.containsKey("module.path")) {
                 builder.setModuleDirs(systemProperties.get("module.path"));
             }
+        }
+
+        if (javaOpts != null) {
+            log.debug("java opts: " + Arrays.toString(javaOpts));
+            for (String opt : javaOpts) {
+                opt = opt.replaceAll("\n", "").trim();
+                log.debug(String.format("opt: '%s'", opt));
+                if (!opt.trim().isEmpty()) {
+                    builder.addJavaOption(opt);
+                }
+            }
+
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("process parameters: " + builder.build());
         }
         final Process process = ServerProcess.start(builder, Collections.singletonMap("JBOSS_HOME", wildflyHome), stdout);
         try {
