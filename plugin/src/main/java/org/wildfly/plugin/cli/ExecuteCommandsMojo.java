@@ -157,6 +157,13 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     @Parameter(name = "stdout", defaultValue = "System.out", property = PropertyNames.STDOUT)
     private String stdout;
 
+    /**
+     * The JVM options to pass to the offline process if the {@code offline} configuration parameter is set to
+     * {@code true}.
+     */
+    @Parameter(alias = "java-opts", property = PropertyNames.JAVA_OPTS)
+    private String javaOpts;
+
     @Inject
     private CommandExecutor commandExecutor;
 
@@ -177,7 +184,12 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
         if (offline) {
             getLog().debug("Executing offline CLI scripts");
             try (StandardOutputStream out = StandardOutputStream.parse(stdout, false)) {
-                final int exitCode = offlineCLIExecutor.execute(jbossHome, getCommands(), getLog(), out, systemProperties);
+
+                String[] opts = null;
+                if (javaOpts != null) {
+                    opts = javaOpts.split("[\\n\\s]+");
+                }
+                final int exitCode = offlineCLIExecutor.execute(jbossHome, getCommands(), getLog(), out, systemProperties, opts);
                 if (exitCode != 0) {
                     final StringBuilder msg = new StringBuilder("Failed to execute commands: ");
                     out.flush();
