@@ -44,7 +44,6 @@ import org.jboss.as.controller.client.OperationMessageHandler;
 import org.jboss.as.controller.client.OperationResponse;
 import org.jboss.dmr.ModelNode;
 import org.jboss.threads.AsyncFuture;
-import org.wildfly.common.expression.Expression;
 import org.wildfly.plugin.common.ServerOperations;
 
 /**
@@ -149,8 +148,6 @@ public class CommandExecutor {
     private static void executeCommands(final CommandContext ctx, final Iterable<String> commands, final boolean failOnError) {
         for (String cmd : commands) {
             try {
-                Expression expression = Expression.compile(cmd, Expression.Flag.LENIENT_SYNTAX);
-                cmd = expression.evaluateWithPropertiesAndEnvironment(false);
                 if (failOnError) {
                     ctx.handle(cmd);
                 } else {
