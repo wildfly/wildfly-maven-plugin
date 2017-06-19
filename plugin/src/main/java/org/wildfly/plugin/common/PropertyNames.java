@@ -65,9 +65,9 @@ public interface PropertyNames {
 
     String WILDFLY_ARTIFACT_ID = "wildfly.artifactId";
 
-    String WILDFLY_CLASSIFIER = "wildfly.classifier";
+    String WILDFLY_AUTH_CLIENT_CONFIG = "wildfly.authConfig";
 
-    String WILDFLY_CLIENT_CONFIG = "wildfly.clientConfig";
+    String WILDFLY_CLASSIFIER = "wildfly.classifier";
 
     String WILDFLY_GROUP_ID = "wildfly.groupId";
 

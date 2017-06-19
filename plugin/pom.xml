@@ -186,11 +186,6 @@
             <artifactId>wildfly-plugin-core</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.wildfly.security</groupId>
-            <artifactId>wildfly-elytron</artifactId>
-        </dependency>
-
         <!-- Test dependencies -->
         <dependency>
             <groupId>junit</groupId>
