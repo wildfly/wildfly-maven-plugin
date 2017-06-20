@@ -28,10 +28,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.wildfly.core.launcher.DomainCommandBuilder;
+import org.wildfly.core.launcher.Launcher;
 import org.wildfly.core.launcher.ProcessHelper;
+import org.wildfly.plugin.core.ConsoleConsumer;
 import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.core.ServerHelper;
-import org.wildfly.plugin.core.ServerProcess;
 import org.wildfly.plugin.tests.Environment;
 
 /**
@@ -43,6 +44,7 @@ public class DomainTestServer implements TestServer {
     private static final AtomicBoolean STARTED = new AtomicBoolean(false);
     private volatile Process currentProcess;
     private volatile Thread shutdownThread;
+    private volatile Thread consoleConsumer;
     private volatile DomainClient client;
     private volatile DeploymentManager deploymentManager;
 
@@ -53,7 +55,10 @@ public class DomainTestServer implements TestServer {
                 final DomainCommandBuilder commandBuilder = DomainCommandBuilder.of(Environment.WILDFLY_HOME)
                         .setBindAddressHint("management", Environment.HOSTNAME)
                         .addHostControllerJavaOption("-Djboss.management.http.port=" + Environment.PORT);
-                final Process process = ServerProcess.start(commandBuilder, null, System.out);
+                final Process process = Launcher.of(commandBuilder)
+                        .setRedirectErrorStream(true)
+                        .launch();
+                consoleConsumer = ConsoleConsumer.start(process, System.out);
                 shutdownThread = ProcessHelper.addShutdownHook(process);
                 client = DomainClient.Factory.create(ModelControllerClient.Factory.create(Environment.HOSTNAME, Environment.PORT));
                 currentProcess = process;
@@ -83,6 +88,11 @@ public class DomainTestServer implements TestServer {
             }
             if (STARTED.compareAndSet(true, false)) {
                 ServerHelper.shutdownDomain(client);
+            }
+            final Thread consoleConsumer = this.consoleConsumer;
+            if (consoleConsumer != null) {
+                this.consoleConsumer = null;
+                consoleConsumer.interrupt();
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

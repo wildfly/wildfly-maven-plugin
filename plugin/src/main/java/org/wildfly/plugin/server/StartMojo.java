@@ -24,7 +24,6 @@ package org.wildfly.plugin.server;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -43,12 +42,12 @@ import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.wildfly.core.launcher.CommandBuilder;
 import org.wildfly.core.launcher.DomainCommandBuilder;
+import org.wildfly.core.launcher.Launcher;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
-import org.wildfly.plugin.common.StandardOutputStream;
+import org.wildfly.plugin.common.StandardOutput;
 import org.wildfly.plugin.core.ServerHelper;
-import org.wildfly.plugin.core.ServerProcess;
 import org.wildfly.plugin.server.ArtifactResolver.ArtifactNameSplitter;
 
 /**
@@ -201,12 +200,18 @@ public class StartMojo extends AbstractServerConnection {
      * By default {@code stdout} and {@code stderr} are inherited from the current process. You can change the setting
      * to one of the follow:
      * <ul>
-     * <li>{@code none} indicates the {@code stdout} and {@code stderr} stream should not be consumed</li>
+     * <li>{@code none} indicates the {@code stdout} and {@code stderr} stream should not be consumed. This should
+     * generally only be used if the {@code shutdown} goal is used in the same maven process.</li>
      * <li>{@code System.out} or {@code System.err} to redirect to the current processes <em>(use this option if you
      * see odd behavior from maven with the default value)</em></li>
      * <li>Any other value is assumed to be the path to a file and the {@code stdout} and {@code stderr} will be
      * written there</li>
      * </ul>
+     * </div>
+     * <div>
+     * Note that if this goal is not later followed by a {@code shutdown} goal in the same maven process you should use
+     * a file to redirect the {@code stdout} and {@code stderr} to. Both output streams will be redirected to the same
+     * file.
      * </div>
      */
     @Parameter(property = PropertyNames.STDOUT)
@@ -254,11 +259,8 @@ public class StartMojo extends AbstractServerConnection {
         }
 
         // Determine how stdout should be consumed
-        OutputStream out = null;
         try {
-            if (stdout != null) {
-                out = StandardOutputStream.parse(stdout, true);
-            }
+            final StandardOutput out = StandardOutput.parse(stdout, true);
             // Create the server and close the client after the start. The process will continue running even after
             // the maven process may have been finished
             try (ModelControllerClient client = createClient()) {
@@ -267,7 +269,17 @@ public class StartMojo extends AbstractServerConnection {
                 }
                 final CommandBuilder commandBuilder = createCommandBuilder(jbossHome);
                 log.info(String.format("%s server is starting up.", serverType));
-                final Process process = ServerProcess.start(commandBuilder, env, out);
+                final Launcher launcher = Launcher.of(commandBuilder)
+                        .setRedirectErrorStream(true);
+                if (env != null) {
+                    launcher.addEnvironmentVariables(env);
+                }
+                out.getRedirect().ifPresent(launcher::redirectOutput);
+
+                final Process process = launcher.launch();
+                // Note that if this thread is started and no shutdown goal is executed this stop the stdout and stderr
+                // from being logged any longer. The user was warned in the documentation.
+                out.startConsumer(process);
                 if (serverType == ServerType.DOMAIN) {
                     ServerHelper.waitForDomain(process, DomainClient.Factory.create(client), startupTimeout);
                 } else {
@@ -281,15 +293,7 @@ public class StartMojo extends AbstractServerConnection {
             throw e;
         } catch (Exception e) {
             throw new MojoExecutionException("The server failed to start", e);
-        } finally {
-            if (out != null) {
-                getLog().debug("Closing stdout " + stdout);
-                try {
-                    out.close();
-                } catch (Exception ignore){}
-            }
         }
-
     }
 
     private CommandBuilder createCommandBuilder(final Path jbossHome) throws MojoExecutionException {

@@ -28,18 +28,19 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.wildfly.core.launcher.Launcher;
 import org.wildfly.core.launcher.ProcessHelper;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
+@SuppressWarnings("StaticVariableMayNotBeInitialized")
 public class StandaloneDeploymentManagerIT extends AbstractDeploymentManagerTest {
 
-    @SuppressWarnings("StaticVariableMayNotBeInitialized")
-    private static ServerProcess process;
-    @SuppressWarnings("StaticVariableMayNotBeInitialized")
+    private static Process process;
     private static ModelControllerClient client;
+    private static Thread consoleConsomer;
 
     @BeforeClass
     public static void startServer() throws Exception {
@@ -50,7 +51,8 @@ public class StandaloneDeploymentManagerIT extends AbstractDeploymentManagerTest
                 Assert.fail("A WildFly server is already running: " + ServerHelper.getContainerDescription(client));
             }
             final StandaloneCommandBuilder commandBuilder = StandaloneCommandBuilder.of(Environment.WILDFLY_HOME);
-            process = ServerProcess.start(commandBuilder, null, System.out);
+            process = Launcher.of(commandBuilder).launch();
+            consoleConsomer = ConsoleConsumer.start(process, System.out);
             ServerHelper.waitForStandalone(client, Environment.TIMEOUT);
             ok = true;
         } finally {
