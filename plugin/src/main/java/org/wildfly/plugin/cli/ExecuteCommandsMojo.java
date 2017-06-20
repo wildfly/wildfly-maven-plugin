@@ -41,7 +41,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
-import org.wildfly.plugin.common.StandardOutputStream;
+import org.wildfly.plugin.common.StandardOutput;
 
 /**
  * Execute commands to the running WildFly Application Server.
@@ -183,7 +183,8 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
         }
         if (offline) {
             getLog().debug("Executing offline CLI scripts");
-            try (StandardOutputStream out = StandardOutputStream.parse(stdout, false)) {
+            try {
+                final StandardOutput out = StandardOutput.parse(stdout, false);
 
                 String[] opts = null;
                 if (javaOpts != null) {
@@ -192,7 +193,6 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
                 final int exitCode = offlineCLIExecutor.execute(jbossHome, getCommands(), getLog(), out, systemProperties, opts);
                 if (exitCode != 0) {
                     final StringBuilder msg = new StringBuilder("Failed to execute commands: ");
-                    out.flush();
                     switch (out.getTarget()) {
                         case COLLECTING:
                             msg.append(out);
@@ -206,6 +206,7 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
                             break;
                         case SYSTEM_ERR:
                         case SYSTEM_OUT:
+                        case INHERIT:
                             msg.append("See previous messages for failure messages.");
                             break;
                         default:

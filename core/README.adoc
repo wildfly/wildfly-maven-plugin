@@ -85,12 +85,12 @@ try (final ModelControllerClient client = ModelControllerClient.Factory.create(I
 
 == Server Helper
 
-You can also use the `org.wildfly.plugin.core.ServerHelper` to interact with a running server. If using the WildFly Launcher API, part of WildFly Core, there is a `org.wildfly.plugin.core.ServerProcess` which will use the WildFly Launcher API to launch a new process.
+You can also use the `org.wildfly.plugin.core.ServerHelper` to interact with a running server.
 
 [source,java]
 ----
 final Path wildflyHome = Paths.get(System.getProperty("user.home"), "servers", "wildfly-10.0.0.Final");
-final ServerProcess process = ServerProcess.start(StandaloneCommandBuilder.of(wildflyHome));
+final Process process = Launcher.of(StandaloneCommandBuilder.of(wildflyHome)).launch();
 try (final ModelControllerClient client = ModelControllerClient.Factory.create(InetAddress.getLocalHost(), 9990)) {
     // Wait at the maximum 30 seconds for the server to start
     ServerHelper.waitForStandalone(client, 30);

@@ -43,6 +43,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.core.launcher.CommandBuilder;
+import org.wildfly.core.launcher.Launcher;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.cli.Commands;
@@ -51,7 +52,6 @@ import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.core.Deployment;
 import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.core.ServerHelper;
-import org.wildfly.plugin.core.ServerProcess;
 import org.wildfly.plugin.deployment.PackageType;
 import org.wildfly.plugin.server.ArtifactResolver.ArtifactNameSplitter;
 
@@ -391,7 +391,12 @@ public class RunMojo extends AbstractServerConnection {
     }
 
     private Process startContainer(final CommandBuilder commandBuilder) throws IOException, InterruptedException, TimeoutException {
-        final Process process = ServerProcess.start(commandBuilder, env);
+        final Launcher launcher = Launcher.of(commandBuilder)
+                .inherit();
+        if (env != null) {
+            launcher.addEnvironmentVariables(env);
+        }
+        final Process process = launcher.launch();
         try (ModelControllerClient client = createClient()) {
             ServerHelper.waitForStandalone(process, client, startupTimeout);
         }

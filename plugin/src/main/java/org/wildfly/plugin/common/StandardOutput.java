@@ -1,46 +1,42 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2017, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
  *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
- * the License, or (at your option) any later version.
+ * Copyright 2017 Red Hat, Inc., and individual contributors
+ * as indicated by the @author tags.
  *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.wildfly.plugin.common;
 
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
+import java.util.Optional;
 
-import org.wildfly.common.Assert;
-import org.wildfly.plugin.core.ServerProcess;
+import org.wildfly.plugin.core.ConsoleConsumer;
 
 /**
- * Represents a stream used to consume standard out.
+ * Information on how the {@code stdout} should be consumed.
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-public class StandardOutputStream extends OutputStream implements Closeable {
+public class StandardOutput {
 
     /**
      * The target for the the output stream.
@@ -65,16 +61,23 @@ public class StandardOutputStream extends OutputStream implements Closeable {
         /**
          * The output stream will be redirected to {@link System#out}.
          */
-        SYSTEM_OUT
+        SYSTEM_OUT,
+        /**
+         * The output stream for a process will be inherited from this parent process.
+         */
+        INHERIT
     }
 
-    private final OutputStream delegate;
+    private final OutputStream consumerStream;
+    private final Redirect destination;
     private final Target target;
     private final Path stdoutPath;
 
-    private StandardOutputStream(final OutputStream delegate, final Target target, final Path stdoutPath) {
-        this.delegate = delegate;
+
+    private StandardOutput(final Target target, final OutputStream consumerStream, final Redirect destination, final Path stdoutPath) {
         this.target = target;
+        this.consumerStream = consumerStream;
+        this.destination = destination;
         this.stdoutPath = stdoutPath;
     }
 
@@ -97,28 +100,30 @@ public class StandardOutputStream extends OutputStream implements Closeable {
      *
      * @throws IOException if there is an error creating the stream
      */
-    public static StandardOutputStream parse(final String stdout, final boolean discardNone) throws IOException {
-        Assert.checkNotNullParam("stdout", stdout);
-        Path stdoutPath = null;
+    @SuppressWarnings("UseOfSystemOutOrSystemErr")
+    public static StandardOutput parse(final String stdout, final boolean discardNone) throws IOException {
+        if (stdout == null) {
+            return new StandardOutput(Target.INHERIT, null, Redirect.INHERIT, null);
+        }
         final Target target;
+        Path stdoutPath = null;
         final OutputStream out;
         final String value = stdout.trim().toLowerCase(Locale.ENGLISH);
         if ("system.out".equals(value)) {
-            out = System.out;
             target = Target.SYSTEM_OUT;
+            out = System.out;
         } else if ("system.err".equals(value)) {
-            out = System.err;
             target = Target.SYSTEM_ERR;
+            out = System.err;
         } else if ("none".equals(value)) {
             if (discardNone) {
                 target = Target.DISCARDING;
-                out = ServerProcess.DISCARDING;
+                out = DISCARDING;
             } else {
                 target = Target.COLLECTING;
                 out = new ByteArrayOutputStream();
             }
         } else {
-            target = Target.FILE;
             // Attempt to create a file
             stdoutPath = Paths.get(value);
             if (Files.notExists(stdoutPath)) {
@@ -128,9 +133,38 @@ public class StandardOutputStream extends OutputStream implements Closeable {
                 }
                 Files.createFile(stdoutPath);
             }
-            out = new BufferedOutputStream(Files.newOutputStream(stdoutPath));
+            target = Target.FILE;
+            out = null;
         }
-        return new StandardOutputStream(out, target, stdoutPath);
+        Redirect destination = null;
+        if (stdoutPath != null) {
+            destination = Redirect.to(stdoutPath.toFile());
+        }
+        return new StandardOutput(target, out, destination, stdoutPath);
+    }
+
+    /**
+     * An option redirect for the {@code stdout}.
+     *
+     * @return the optional redirect
+     */
+    public Optional<Redirect> getRedirect() {
+        return Optional.ofNullable(destination);
+    }
+
+    /**
+     * If the processes {@code stdout} should be consumed a thread which consumes it will be started.
+     *
+     * @param process the process to possibly start the thread for
+     *
+     * @return the optional thread
+     */
+    public Optional<Thread> startConsumer(final Process process) {
+        Thread thread = null;
+        if (consumerStream != null) {
+            thread = ConsoleConsumer.start(process, consumerStream);
+        }
+        return Optional.ofNullable(thread);
     }
 
     /**
@@ -152,37 +186,31 @@ public class StandardOutputStream extends OutputStream implements Closeable {
     }
 
     @Override
-    public void write(final int b) throws IOException {
-        delegate.write(b);
-    }
-
-    @Override
-    public void write(final byte[] b) throws IOException {
-        delegate.write(b);
-    }
-
-    @Override
-    public void write(final byte[] b, final int off, final int len) throws IOException {
-        delegate.write(b, off, len);
-    }
-
-    @Override
-    public void flush() throws IOException {
-        delegate.flush();
-    }
-
-    @Override
-    public void close() throws IOException {
-        if (target != Target.SYSTEM_ERR && target != Target.SYSTEM_OUT) {
-            delegate.close();
-        }
-    }
-
-    @Override
     public String toString() {
         if (target == Target.COLLECTING) {
-            return delegate.toString();
+            return consumerStream.toString();
         }
         return super.toString();
     }
+
+    /**
+     * An output stream that discards all written output.
+     */
+    @SuppressWarnings("NullableProblems")
+    private static final OutputStream DISCARDING = new OutputStream() {
+        @Override
+        public void write(final byte[] b) throws IOException {
+            // do nothing
+        }
+
+        @Override
+        public void write(final byte[] b, final int off, final int len) throws IOException {
+            // do nothing
+        }
+
+        @Override
+        public void write(final int b) throws IOException {
+            // do nothing
+        }
+    };
 }

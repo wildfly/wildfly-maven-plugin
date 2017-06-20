@@ -21,19 +21,19 @@ package org.wildfly.plugin.cli;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.maven.plugin.logging.Log;
 import org.wildfly.core.launcher.CliCommandBuilder;
-import org.wildfly.plugin.core.ServerProcess;
+import org.wildfly.core.launcher.Launcher;
+import org.wildfly.plugin.common.StandardOutput;
 
 /**
  * Executes CLI commands.
@@ -57,7 +57,7 @@ public class OfflineCLIExecutor {
      *
      * @throws IOException if an error occurs processing the commands
      */
-    public int execute(final String wildflyHome, final Commands commands, final Log log, final OutputStream stdout,
+    public int execute(final String wildflyHome, final Commands commands, final Log log, final StandardOutput stdout,
                        final Map<String, String> systemProperties, final String[] javaOpts) throws IOException {
         try {
             if (commands.hasScripts()) {
@@ -101,7 +101,7 @@ public class OfflineCLIExecutor {
         return 0;
     }
 
-    private int executeInNewProcess(Log log, final String wildflyHome, final Path scriptFile, final Map<String, String> systemProperties, final OutputStream stdout, String[] javaOpts) throws InterruptedException, IOException {
+    private int executeInNewProcess(Log log, final String wildflyHome, final Path scriptFile, final Map<String, String> systemProperties, final StandardOutput stdout, String[] javaOpts) throws InterruptedException, IOException {
 
         final CliCommandBuilder builder = CliCommandBuilder.of(wildflyHome)
                 .setScriptFile(scriptFile);
@@ -126,7 +126,12 @@ public class OfflineCLIExecutor {
         if (log.isDebugEnabled()) {
             log.debug("process parameters: " + builder.build());
         }
-        final Process process = ServerProcess.start(builder, Collections.singletonMap("JBOSS_HOME", wildflyHome), stdout);
+        final Launcher launcher = Launcher.of(builder)
+                .addEnvironmentVariable("JBOSS_HOME", wildflyHome)
+                .setRedirectErrorStream(true);
+        stdout.getRedirect().ifPresent(launcher::redirectOutput);
+        final Process process = launcher.launch();
+        final Optional<Thread> consoleConsumer = stdout.startConsumer(process);
         try {
             return process.waitFor();
         } finally {
@@ -134,6 +139,7 @@ public class OfflineCLIExecutor {
             if (process.isAlive()) {
                 process.destroyForcibly();
             }
+            consoleConsumer.ifPresent(Thread::interrupt);
         }
     }
 
