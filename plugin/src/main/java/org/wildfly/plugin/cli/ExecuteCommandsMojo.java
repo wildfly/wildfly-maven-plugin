@@ -190,7 +190,7 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
                 if (javaOpts != null) {
                     opts = javaOpts.split("[\\n\\s]+");
                 }
-                final int exitCode = offlineCLIExecutor.execute(jbossHome, getCommands(), getLog(), out, systemProperties, opts);
+                final int exitCode = offlineCLIExecutor.execute(jbossHome, getCommands(), out, systemProperties, opts);
                 if (exitCode != 0) {
                     final StringBuilder msg = new StringBuilder("Failed to execute commands: ");
                     switch (out.getTarget()) {
