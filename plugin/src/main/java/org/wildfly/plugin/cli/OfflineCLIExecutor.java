@@ -30,7 +30,8 @@ import java.util.Optional;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.maven.plugin.logging.Log;
+import org.codehaus.plexus.logging.AbstractLogEnabled;
+import org.codehaus.plexus.logging.Logger;
 import org.wildfly.core.launcher.CliCommandBuilder;
 import org.wildfly.core.launcher.Launcher;
 import org.wildfly.plugin.common.StandardOutput;
@@ -42,7 +43,7 @@ import org.wildfly.plugin.common.StandardOutput;
  */
 @Named
 @Singleton
-public class OfflineCLIExecutor {
+public class OfflineCLIExecutor extends AbstractLogEnabled {
 
     /**
      * Executes the commands and scripts provided.
@@ -50,21 +51,20 @@ public class OfflineCLIExecutor {
      * @param wildflyHome      the path to WildFly for setting the {@code jboss.home.dir} system property or {@code null} if
      *                         should not be set
      * @param commands         the commands to execute
-     * @param log              the logger to use
      * @param stdout           the output stream to write standard output to
      * @param systemProperties the system properties to launch the CLI process with
      * @param javaOpts         the options to pass to the offline process
      *
      * @throws IOException if an error occurs processing the commands
      */
-    public int execute(final String wildflyHome, final Commands commands, final Log log, final StandardOutput stdout,
+    public int execute(final String wildflyHome, final Commands commands, final StandardOutput stdout,
                        final Map<String, String> systemProperties, final String[] javaOpts) throws IOException {
         try {
             if (commands.hasScripts()) {
                 for (File f : commands.getScripts()) {
                     final Path script = f.toPath();
-                    log.info("Executing script: " + script);
-                    final int exitCode = executeInNewProcess(log, wildflyHome, script, systemProperties, stdout, javaOpts);
+                    getLogger().info("Executing script: " + script);
+                    final int exitCode = executeInNewProcess(wildflyHome, script, systemProperties, stdout, javaOpts);
                     if (exitCode != 0) {
                         return exitCode;
                     }
@@ -87,7 +87,7 @@ public class OfflineCLIExecutor {
                             writer.newLine();
                         }
                     }
-                    final int exitCode = executeInNewProcess(log, wildflyHome, script, systemProperties, stdout, javaOpts);
+                    final int exitCode = executeInNewProcess(wildflyHome, script, systemProperties, stdout, javaOpts);
                     if (exitCode != 0) {
                         return exitCode;
                     }
@@ -101,8 +101,9 @@ public class OfflineCLIExecutor {
         return 0;
     }
 
-    private int executeInNewProcess(Log log, final String wildflyHome, final Path scriptFile, final Map<String, String> systemProperties, final StandardOutput stdout, String[] javaOpts) throws InterruptedException, IOException {
+    private int executeInNewProcess(final String wildflyHome, final Path scriptFile, final Map<String, String> systemProperties, final StandardOutput stdout, String[] javaOpts) throws InterruptedException, IOException {
 
+        final Logger log = getLogger();
         final CliCommandBuilder builder = CliCommandBuilder.of(wildflyHome)
                 .setScriptFile(scriptFile);
         if (systemProperties != null) {
