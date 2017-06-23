@@ -62,9 +62,6 @@ public class Commands {
     @Parameter
     private List<File> scripts = new ArrayList<>();
 
-    @Parameter
-    private boolean offline = false;
-
     private final boolean failOnError;
 
     /**
@@ -81,14 +78,12 @@ public class Commands {
      * @param scripts     the scripts to execute
      * @param failOnError {@code false} if commands should continue to be executed even if the command fails,
      *                    {@code true} if to fail if a command fails after execution
-     * @param offline {@code true} if CLI should be running offline
      */
-    Commands(final boolean batch, final List<String> commands, final List<File> scripts, final boolean failOnError, final boolean offline) {
+    Commands(final boolean batch, final List<String> commands, final List<File> scripts, final boolean failOnError) {
         this.batch = batch;
         this.commands = commands;
         this.scripts = scripts;
         this.failOnError = failOnError;
-        this.offline = offline;
     }
 
     /**
@@ -145,14 +140,5 @@ public class Commands {
      */
     public boolean hasScripts() {
         return scripts != null && !scripts.isEmpty();
-    }
-
-    /**
-     * Checks if commands should be executed in offline CLI
-     * useful for embedded server
-     * @return true if offline cli should be used
-     */
-    public boolean isOffline() {
-        return offline;
     }
 }

@@ -40,6 +40,7 @@ import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.cli.Commands;
 import org.wildfly.plugin.common.AbstractServerConnection;
+import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.core.DeploymentDescription;
 import org.wildfly.plugin.core.DeploymentManager;
@@ -155,9 +156,12 @@ public class UndeployMojo extends AbstractServerConnection {
             getLog().debug(String.format("Ignoring packaging type %s.", packageType.getPackaging()));
         } else {
             final DeploymentResult result;
-            try (ModelControllerClient client = createClient()) {
+            try (
+                    ModelControllerClient client = createClient();
+                    MavenModelControllerClientConfiguration configuration = getClientConfiguration()
+            ) {
                 if (beforeDeployment != null) {
-                    commandExecutor.execute(client, beforeDeployment);
+                    commandExecutor.execute(configuration, beforeDeployment);
                 }
                 final boolean failOnMissing = !ignoreMissingDeployment;
                 final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
@@ -175,7 +179,7 @@ public class UndeployMojo extends AbstractServerConnection {
                     result = deploymentManager.undeploy(matchedDeployments);
                 }
                 if (afterDeployment != null) {
-                    commandExecutor.execute(client, afterDeployment);
+                    commandExecutor.execute(configuration, afterDeployment);
                 }
             } catch (IOException e) {
                 throw new MojoFailureException("Failed to execute undeploy goal.", e);

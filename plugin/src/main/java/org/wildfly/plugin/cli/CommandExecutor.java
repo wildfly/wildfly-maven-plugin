@@ -31,19 +31,14 @@ import java.nio.file.Paths;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.jboss.as.cli.CliInitializationException;
 import org.jboss.as.cli.CommandContext;
 import org.jboss.as.cli.CommandContextFactory;
 import org.jboss.as.cli.CommandFormatException;
 import org.jboss.as.cli.CommandLineException;
 import org.jboss.as.cli.batch.Batch;
 import org.jboss.as.cli.batch.BatchManager;
-import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.controller.client.Operation;
-import org.jboss.as.controller.client.OperationMessageHandler;
-import org.jboss.as.controller.client.OperationResponse;
 import org.jboss.dmr.ModelNode;
-import org.jboss.threads.AsyncFuture;
+import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.ServerOperations;
 
 /**
@@ -54,68 +49,73 @@ import org.wildfly.plugin.common.ServerOperations;
 @Named
 @Singleton
 public class CommandExecutor {
+    private static final String WILDFLY_CONFIG_KEY = "wildfly.config.url";
 
     /**
      * Executes the commands and scripts provided.
      *
-     * @param client      the client use
-     * @param commands    the commands to execute
+     * @param configuration the configuration to use when connecting the {@link CommandContext}
+     * @param commands      the commands to execute
      *
      * @throws IOException if an error occurs processing the commands
      */
-    public void execute(final ModelControllerClient client, final Commands commands) throws IOException {
-        execute(client, (Path) null, commands);
+    public void execute(final MavenModelControllerClientConfiguration configuration, final Commands commands) throws IOException {
+        execute(configuration, (Path) null, commands);
     }
 
     /**
      * Executes the commands and scripts provided.
      *
-     * @param client      the client use
-     * @param wildflyHome the path to WildFly for setting the {@code jboss.home.dir} system property or {@code null} if
-     *                    should not be set
-     * @param commands    the commands to execute
+     * @param configuration the configuration to use when connecting the {@link CommandContext}
+     * @param wildflyHome   the path to WildFly for setting the {@code jboss.home.dir} system property or {@code null} if
+     *                      should not be set
+     * @param commands      the commands to execute
      *
      * @throws IOException if an error occurs processing the commands
      */
-    public void execute(final ModelControllerClient client, final Path wildflyHome, final Commands commands) throws IOException {
+    public void execute(final MavenModelControllerClientConfiguration configuration, final Path wildflyHome, final Commands commands) throws IOException {
         if (wildflyHome != null) {
             try {
                 System.setProperty("jboss.home.dir", wildflyHome.toString());
-                executeCommands(client, commands);
-            }finally {
+                executeCommands(configuration, commands);
+            } finally {
                 System.clearProperty("jboss.home.dir");
             }
         } else {
-            executeCommands(client, commands);
+            executeCommands(configuration, commands);
         }
     }
 
     /**
      * Executes the commands and scripts provided.
      *
-     * @param client      the client use
-     * @param wildflyHome the path to WildFly for setting the {@code jboss.home.dir} system property or {@code null} if
-     *                    should not be set
-     * @param commands    the commands to execute
+     * @param configuration the configuration to use when connecting the {@link CommandContext}
+     * @param wildflyHome   the path to WildFly for setting the {@code jboss.home.dir} system property or {@code null} if
+     *                      should not be set
+     * @param commands      the commands to execute
      *
      * @throws IOException if an error occurs processing the commands
      */
-    public void execute(final ModelControllerClient client, final String wildflyHome, final Commands commands) throws IOException {
+    public void execute(final MavenModelControllerClientConfiguration configuration, final String wildflyHome, final Commands commands) throws IOException {
         Path path = null;
         if (wildflyHome != null) {
             path = Paths.get(wildflyHome);
         }
-        execute(client, path, commands);
+        execute(configuration, path, commands);
     }
 
-    private void executeCommands(final ModelControllerClient client, final Commands commands) throws IOException {
+    private void executeCommands(final MavenModelControllerClientConfiguration configuration, final Commands commands) throws IOException {
 
         if (commands.hasCommands() || commands.hasScripts()) {
 
             try {
                 ModuleEnvironment.initJaxp();
-                final ModelControllerClient c = new NonClosingModelControllerClient(client);
-                final CommandContext ctx = create(commands, c);
+                final String currentWildFlyConfUrl = System.getProperty(WILDFLY_CONFIG_KEY);
+                // Configure the authentication config url if defined
+                if (configuration.getAuthenticationConfigUri() != null) {
+                    System.setProperty(WILDFLY_CONFIG_KEY, configuration.getAuthenticationConfigUri().toString());
+                }
+                final CommandContext ctx = create(configuration);
                 try {
 
                     if (commands.isBatch()) {
@@ -126,6 +126,12 @@ public class CommandExecutor {
                     executeScripts(ctx, commands.getScripts(), commands.isFailOnError());
 
                 } finally {
+                    // Reset the authentication config property
+                    if (currentWildFlyConfUrl == null) {
+                        System.clearProperty(WILDFLY_CONFIG_KEY);
+                    } else {
+                        System.setProperty(WILDFLY_CONFIG_KEY, currentWildFlyConfUrl);
+                    }
                     ctx.terminateSession();
                     ctx.bindClient(null);
                 }
@@ -180,89 +186,30 @@ public class CommandExecutor {
     }
 
     /**
-     * Creates the command context and binds the client to the context.
-     * <p/>
-     * If the client is {@code null}, no client is bound to the context.
+     * Creates the command context and connects the context.
      *
-     *
-     * @param commands
-     * @param client current connected client
+     * @param configuration the configuration to use when connecting the {@link CommandContext}
      *
      * @return the command line context
      *
      * @throws IllegalStateException if the context fails to initialize
      */
-    private CommandContext create(Commands commands, final ModelControllerClient client) {
-        final CommandContext commandContext;
+    @SuppressWarnings("UseOfSystemOutOrSystemErr")
+    private CommandContext create(final MavenModelControllerClientConfiguration configuration) {
+        CommandContext commandContext = null;
         try {
-            commandContext = CommandContextFactory.getInstance().newCommandContext();
-            if (!commands.isOffline()) {
-                commandContext.bindClient(client);
-            }else{
-                //for offline CLI we skip log manager check
-                System.setProperty("org.wildfly.logging.skipLogManagerCheck", "true");
+            // Use System.in and System.out to allow prompting for a username and password if required
+            commandContext = CommandContextFactory.getInstance().newCommandContext(configuration.getController(),
+                    configuration.getUsername(), configuration.getPassword(), System.in, System.out);
+            // Connect the controller
+            commandContext.connectController();
+        } catch (CommandLineException e) {
+            // Terminate the session if we've encountered an error
+            if (commandContext != null) {
+                commandContext.terminateSession();
             }
-        } catch (CliInitializationException e) {
             throw new IllegalStateException("Failed to initialize CLI context", e);
         }
         return commandContext;
-    }
-
-    /**
-     * A client the delegates to the client from the constructor, but does nothing in the {@link #close() close}. The
-     * delegate client will not be closed.
-     */
-    private static class NonClosingModelControllerClient implements ModelControllerClient {
-
-        private final ModelControllerClient delegate;
-
-        NonClosingModelControllerClient(final ModelControllerClient delegate) {
-            this.delegate = delegate;
-        }
-
-        @Override
-        public ModelNode execute(final ModelNode operation) throws IOException {
-            return delegate.execute(operation);
-        }
-
-        @Override
-        public ModelNode execute(final Operation operation) throws IOException {
-            return delegate.execute(operation);
-        }
-
-        @Override
-        public ModelNode execute(final ModelNode operation, final OperationMessageHandler messageHandler) throws IOException {
-            return delegate.execute(operation, messageHandler);
-        }
-
-        @Override
-        public ModelNode execute(final Operation operation, final OperationMessageHandler messageHandler) throws IOException {
-            return delegate.execute(operation, messageHandler);
-        }
-
-        @Override
-        public OperationResponse executeOperation(final Operation operation, final OperationMessageHandler messageHandler) throws IOException {
-            return delegate.executeOperation(operation, messageHandler);
-        }
-
-        @Override
-        public AsyncFuture<ModelNode> executeAsync(final ModelNode operation, final OperationMessageHandler messageHandler) {
-            return delegate.executeAsync(operation, messageHandler);
-        }
-
-        @Override
-        public AsyncFuture<ModelNode> executeAsync(final Operation operation, final OperationMessageHandler messageHandler) {
-            return delegate.executeAsync(operation, messageHandler);
-        }
-
-        @Override
-        public AsyncFuture<OperationResponse> executeOperationAsync(final Operation operation, final OperationMessageHandler messageHandler) {
-            return delegate.executeOperationAsync(operation, messageHandler);
-        }
-
-        @Override
-        public void close() throws IOException {
-            // Do nothing
-        }
     }
 }

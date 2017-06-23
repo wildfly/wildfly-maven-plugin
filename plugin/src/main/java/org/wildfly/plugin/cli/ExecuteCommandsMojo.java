@@ -38,8 +38,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.common.AbstractServerConnection;
+import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.StandardOutput;
 
@@ -237,8 +237,8 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
 
                 // Set the system properties for executing commands
                 System.setProperties(newSystemProperties);
-                try (ModelControllerClient client = createClient()) {
-                    commandExecutor.execute(client, jbossHome, getCommands());
+                try (MavenModelControllerClientConfiguration configuration = getClientConfiguration()) {
+                    commandExecutor.execute(configuration, jbossHome, getCommands());
                 } catch (IOException e) {
                     throw new MojoExecutionException("Could not execute commands.", e);
                 }
@@ -254,7 +254,7 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
         if (executeCommands != null) {
             return executeCommands;
         }
-        return new Commands(batch, commands, scripts, failOnError, offline);
+        return new Commands(batch, commands, scripts, failOnError);
     }
 
     private static void parseProperties(final File file, final Properties properties) throws IOException {
