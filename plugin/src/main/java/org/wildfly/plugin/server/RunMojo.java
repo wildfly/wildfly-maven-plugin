@@ -48,6 +48,7 @@ import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.cli.Commands;
 import org.wildfly.plugin.common.AbstractServerConnection;
+import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.core.Deployment;
 import org.wildfly.plugin.core.DeploymentManager;
@@ -290,9 +291,12 @@ public class RunMojo extends AbstractServerConnection {
             // Start the server
             log.info("Server is starting up. Press CTRL + C to stop the server.");
             Process process = startContainer(commandBuilder);
-            try (ModelControllerClient client = createClient()) {
+            try (
+                    ModelControllerClient client = createClient();
+                    MavenModelControllerClientConfiguration configuration = getClientConfiguration();
+            ) {
                 if (beforeDeployment != null) {
-                    commandExecutor.execute(client, wildflyPath, beforeDeployment);
+                    commandExecutor.execute(configuration, wildflyPath, beforeDeployment);
                 }
                 final Deployment deployment = Deployment.of(deploymentContent)
                         .setName(name)
@@ -300,7 +304,7 @@ public class RunMojo extends AbstractServerConnection {
                 final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
                 deploymentManager.forceDeploy(deployment);
                 if (afterDeployment != null) {
-                    commandExecutor.execute(client, wildflyPath, afterDeployment);
+                    commandExecutor.execute(configuration, wildflyPath, afterDeployment);
                 }
             }
             try {

@@ -31,8 +31,6 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.sasl.RealmCallback;
 import javax.security.sasl.RealmChoiceCallback;
 
-import org.apache.maven.plugin.logging.Log;
-
 /**
  * A CallbackHandler implementation to supply the username and password if required when
  * connecting to the server - if these are not available the user will be prompted to
@@ -43,13 +41,11 @@ import org.apache.maven.plugin.logging.Log;
 class ClientCallbackHandler implements CallbackHandler {
 
     private final Console console;
-    private final Log log;
     private boolean promptShown = false;
     private String username;
     private char[] password;
 
-    ClientCallbackHandler(final String username, final String password, final Log log) {
-        this.log = log;
+    ClientCallbackHandler(final String username, final String password) {
         console = System.console();
         this.username = username;
         if (password != null) {
@@ -93,7 +89,6 @@ class ClientCallbackHandler implements CallbackHandler {
     private void prompt(final String realm) {
         if (!promptShown) {
             promptShown = true;
-            log.info("Authenticating against security realm: " + realm);
         }
     }
 

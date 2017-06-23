@@ -38,6 +38,7 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.Property;
 import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.common.AbstractServerConnection;
+import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.core.ServerHelper;
@@ -124,9 +125,12 @@ public class AddResourceMojo extends AbstractServerConnection {
             getLog().debug(String.format("Skipping add-resource with address %s", address));
             return;
         }
-        try (ModelControllerClient client = createClient()) {
+        try (
+                ModelControllerClient client = createClient();
+                MavenModelControllerClientConfiguration configuration = getClientConfiguration();
+        ) {
             if (resources != null && resources.length > 0) {
-                processResources(client, resources);
+                processResources(client, configuration, resources);
             } else {
                 getLog().warn("No resources were provided.");
             }
@@ -135,7 +139,7 @@ public class AddResourceMojo extends AbstractServerConnection {
         }
     }
 
-    private void processResources(final ModelControllerClient client, final Resource... resources) throws IOException {
+    private void processResources(final ModelControllerClient client, final MavenModelControllerClientConfiguration configuration, final Resource... resources) throws IOException {
         final Collection<String> profiles = getProfiles();
         final boolean isDomain = ServerHelper.isDomainServer(client);
         for (Resource resource : resources) {
@@ -151,13 +155,13 @@ public class AddResourceMojo extends AbstractServerConnection {
                     final CompositeOperationBuilder compositeOperationBuilder = CompositeOperationBuilder.create();
                     if (addCompositeResource(profile, client, resource, address, compositeOperationBuilder, true)) {
                         if (resource.hasBeforeAddCommands()) {
-                            commandExecutor.execute(client, jbossHome, resource.getBeforeAdd());
+                            commandExecutor.execute(configuration, jbossHome, resource.getBeforeAdd());
                         }
                         // Execute the add resource operation
                         reportFailure(client.execute(compositeOperationBuilder.build()));
 
                         if (resource.hasAfterAddCommands()) {
-                            commandExecutor.execute(client, jbossHome, resource.getAfterAdd());
+                            commandExecutor.execute(configuration, jbossHome, resource.getAfterAdd());
                         }
                     }
                 }
@@ -165,13 +169,13 @@ public class AddResourceMojo extends AbstractServerConnection {
                 final CompositeOperationBuilder compositeOperationBuilder = CompositeOperationBuilder.create();
                 if (addCompositeResource(null, client, resource, address, compositeOperationBuilder, true)) {
                     if (resource.hasBeforeAddCommands()) {
-                        commandExecutor.execute(client, jbossHome, resource.getBeforeAdd());
+                        commandExecutor.execute(configuration, jbossHome, resource.getBeforeAdd());
                     }
                     // Execute the add resource operation
                     reportFailure(client.execute(compositeOperationBuilder.build()));
 
                     if (resource.hasAfterAddCommands()) {
-                        commandExecutor.execute(client, jbossHome, resource.getAfterAdd());
+                        commandExecutor.execute(configuration, jbossHome, resource.getAfterAdd());
                     }
                 }
             }

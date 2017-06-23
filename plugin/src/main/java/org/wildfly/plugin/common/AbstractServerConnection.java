@@ -139,7 +139,7 @@ public abstract class AbstractServerConnection extends AbstractMojo {
      *
      * @return the configuration to use
      */
-    protected synchronized ModelControllerClientConfiguration getClientConfiguration() {
+    protected synchronized MavenModelControllerClientConfiguration getClientConfiguration() {
         final Log log = getLog();
         String username = this.username;
         String password = this.password;
@@ -173,16 +173,14 @@ public abstract class AbstractServerConnection extends AbstractMojo {
                 .setHostName(hostname)
                 .setPort(port)
                 .setConnectionTimeout(timeout * 1000);
-        if (authenticationConfig == null) {
-            builder.setHandler(new ClientCallbackHandler(username, password, log));
-        } else {
+        if (authenticationConfig != null) {
             try {
                 builder.setAuthenticationConfigUri(authenticationConfig.toURI());
             } catch (URISyntaxException e) {
                 throw new RuntimeException("Failed to create URI from " + authenticationConfig, e);
             }
         }
-        return builder.build();
+        return new MavenModelControllerClientConfiguration(builder.build(), username, password);
     }
 
     private String decrypt(final Server server) {

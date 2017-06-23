@@ -41,6 +41,7 @@ import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.cli.Commands;
 import org.wildfly.plugin.common.AbstractServerConnection;
+import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.core.DeploymentResult;
@@ -166,15 +167,18 @@ public class UndeployArtifactMojo extends AbstractServerConnection {
             deploymentName = name;
         }
         final DeploymentResult result;
-        try (ModelControllerClient client = createClient()) {
+        try (
+                ModelControllerClient client = createClient();
+                MavenModelControllerClientConfiguration configuration = getClientConfiguration();
+        ) {
             if (beforeDeployment != null) {
-                commandExecutor.execute(client, beforeDeployment);
+                commandExecutor.execute(configuration, beforeDeployment);
             }
             final boolean failOnMissing = !ignoreMissingDeployment;
             final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
             result = deploymentManager.undeploy(UndeployDescription.of(deploymentName).addServerGroups(getServerGroups()).setFailOnMissing(failOnMissing));
             if (afterDeployment != null) {
-                commandExecutor.execute(client, afterDeployment);
+                commandExecutor.execute(configuration, afterDeployment);
             }
         } catch (IOException e) {
             throw new MojoFailureException(String.format("Failed to execute %s goal.", goal()), e);

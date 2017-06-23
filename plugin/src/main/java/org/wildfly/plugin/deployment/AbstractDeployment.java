@@ -37,6 +37,7 @@ import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.cli.Commands;
 import org.wildfly.plugin.common.AbstractServerConnection;
+import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.core.Deployment;
 import org.wildfly.plugin.core.DeploymentManager;
@@ -134,10 +135,13 @@ abstract class AbstractDeployment extends AbstractServerConnection {
             getLog().debug(String.format("Skipping deployment of %s:%s", project.getGroupId(), project.getArtifactId()));
             return;
         }
-        try (ModelControllerClient client = createClient()) {
+        try (
+                ModelControllerClient client = createClient();
+                MavenModelControllerClientConfiguration configuration = getClientConfiguration()
+        ) {
             final boolean isDomain = ServerHelper.isDomainServer(client);
             validate(isDomain);
-            beforeDeployment(client);
+            beforeDeployment(configuration);
             // Deploy the deployment
             getLog().debug("Executing deployment");
 
@@ -147,7 +151,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
             if (!result.successful()) {
                 throw new MojoExecutionException(String.format("Failed to execute goal %s: %s", goal(), result.getFailureMessage()));
             }
-            afterDeployment(client);
+            afterDeployment(configuration);
         } catch (IOException e) {
             throw new MojoFailureException(String.format("Failed to execute goal %s.", goal()), e);
         }
@@ -157,19 +161,19 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         return skip;
     }
 
-    protected void beforeDeployment(final ModelControllerClient client) throws MojoExecutionException, MojoFailureException, IOException {
+    protected void beforeDeployment(final MavenModelControllerClientConfiguration configuration) throws MojoExecutionException, MojoFailureException, IOException {
         // Execute before deployment commands
         if (beforeDeployment != null)
-            commandExecutor.execute(client, beforeDeployment);
+            commandExecutor.execute(configuration, beforeDeployment);
     }
 
     protected abstract DeploymentResult executeDeployment(DeploymentManager deploymentManager, Deployment deployment) throws IOException, MojoDeploymentException;
 
-    protected void afterDeployment(final ModelControllerClient client) throws MojoExecutionException, MojoFailureException, IOException {
+    protected void afterDeployment(final MavenModelControllerClientConfiguration configuration) throws MojoExecutionException, MojoFailureException, IOException {
 
         // Execute after deployment commands
         if (afterDeployment != null)
-            commandExecutor.execute(client, afterDeployment);
+            commandExecutor.execute(configuration, afterDeployment);
     }
 
     protected Deployment createDeployment() {
