@@ -27,6 +27,7 @@ import javax.net.ssl.SSLContext;
 import javax.security.auth.callback.CallbackHandler;
 
 import org.jboss.as.controller.client.ModelControllerClientConfiguration;
+import org.wildfly.security.SecurityFactory;
 
 /**
  * A configuration used to connect a {@link org.jboss.as.controller.client.ModelControllerClient} or used to connect a
@@ -83,8 +84,14 @@ public class MavenModelControllerClientConfiguration implements ModelControllerC
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public SSLContext getSSLContext() {
         return delegate.getSSLContext();
+    }
+
+    @Override
+    public SecurityFactory<SSLContext> getSslContextFactory() {
+        return delegate.getSslContextFactory();
     }
 
     @Override
