@@ -37,7 +37,6 @@ import org.jboss.as.controller.client.helpers.domain.ServerStatus;
 import org.jboss.dmr.ModelNode;
 import org.jboss.logging.Logger;
 import org.wildfly.common.Assert;
-import org.wildfly.core.launcher.ProcessHelper;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
@@ -128,7 +127,7 @@ public class ServerHelper {
                 break;
             }
             timeout -= (System.currentTimeMillis() - before);
-            if (process != null && ProcessHelper.processHasDied(process)) {
+            if (process != null && !process.isAlive()) {
                 throw new RuntimeException(String.format("The process has unexpectedly exited with code %d", process.exitValue()));
             }
             TimeUnit.MILLISECONDS.sleep(sleep);
@@ -272,7 +271,7 @@ public class ServerHelper {
             if (isStandaloneRunning(client))
                 break;
             timeout -= (System.currentTimeMillis() - before);
-            if (process != null && ProcessHelper.processHasDied(process)) {
+            if (process != null && !process.isAlive()) {
                 throw new RuntimeException(String.format("The process has unexpectedly exited with code %d", process.exitValue()));
             }
             TimeUnit.MILLISECONDS.sleep(sleep);

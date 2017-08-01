@@ -61,10 +61,6 @@
             <groupId>org.wildfly.core</groupId>
             <artifactId>wildfly-controller-client</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.wildfly.core</groupId>
-            <artifactId>wildfly-launcher</artifactId>
-        </dependency>
         <!-- Seems to be needed as the controller client is transitively bringing it in -->
         <dependency>
             <groupId>org.wildfly.core</groupId>
@@ -72,6 +68,11 @@
         </dependency>
 
         <!-- Test dependencies -->
+        <dependency>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-launcher</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
