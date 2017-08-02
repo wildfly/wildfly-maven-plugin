@@ -51,7 +51,9 @@ public class ModulesPath {
             return Collections.emptyList();
         }
         final Collection<String> result = new ArrayList<>();
-        result.add(modulePath.getAbsolutePath());
+        if (modulePath != null) {
+            result.add(modulePath.getAbsolutePath());
+        }
         if (paths != null) {
             for (File path : paths) {
                 result.add(path.getAbsolutePath());
