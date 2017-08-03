@@ -24,6 +24,8 @@ package org.wildfly.plugin.cli;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -200,7 +202,8 @@ public class CommandExecutor {
         try {
             // Use System.in and System.out to allow prompting for a username and password if required
             commandContext = CommandContextFactory.getInstance().newCommandContext(configuration.getController(),
-                    configuration.getUsername(), configuration.getPassword(), System.in, System.out);
+                    configuration.getUsername(), configuration.getPassword(), new UncloseableInputStream(System.in),
+                    new UncloseableOutputStream(System.out));
             // Connect the controller
             commandContext.connectController();
         } catch (CommandLineException e) {
@@ -211,5 +214,91 @@ public class CommandExecutor {
             throw new IllegalStateException("Failed to initialize CLI context", e);
         }
         return commandContext;
+    }
+
+    private static class UncloseableInputStream extends InputStream {
+        private final InputStream delegate;
+
+        private UncloseableInputStream(final InputStream delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public int read() throws IOException {
+            return delegate.read();
+        }
+
+        @Override
+        public int read(final byte[] b) throws IOException {
+            return delegate.read(b);
+        }
+
+        @Override
+        public int read(final byte[] b, final int off, final int len) throws IOException {
+            return delegate.read(b, off, len);
+        }
+
+        @Override
+        public long skip(final long n) throws IOException {
+            return delegate.skip(n);
+        }
+
+        @Override
+        public int available() throws IOException {
+            return delegate.available();
+        }
+
+        @Override
+        public void close() throws IOException {
+            // nothing to do
+        }
+
+        @Override
+        public void mark(final int readlimit) {
+            delegate.mark(readlimit);
+        }
+
+        @Override
+        public void reset() throws IOException {
+            delegate.reset();
+        }
+
+        @Override
+        public boolean markSupported() {
+            return delegate.markSupported();
+        }
+    }
+
+    private static class UncloseableOutputStream extends OutputStream {
+        private final OutputStream delegate;
+
+        private UncloseableOutputStream(final OutputStream delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public void write(final int b) throws IOException {
+            delegate.write(b);
+        }
+
+        @Override
+        public void write(final byte[] b) throws IOException {
+            delegate.write(b);
+        }
+
+        @Override
+        public void write(final byte[] b, final int off, final int len) throws IOException {
+            delegate.write(b, off, len);
+        }
+
+        @Override
+        public void flush() throws IOException {
+            delegate.flush();
+        }
+
+        @Override
+        public void close() throws IOException {
+            // nothing to do
+        }
     }
 }
