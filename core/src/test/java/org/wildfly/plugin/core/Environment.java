@@ -20,7 +20,6 @@
 package org.wildfly.plugin.core;
 
 import java.net.UnknownHostException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -83,12 +82,8 @@ class Environment {
         return ModelControllerClient.Factory.create(HOSTNAME, PORT);
     }
 
-    private static boolean isValidWildFlyHome(final Path wildflyHome) {
-        return Files.exists(wildflyHome) && Files.isDirectory(wildflyHome) && Files.exists(wildflyHome.resolve("jboss-modules.jar"));
-    }
-
     private static void validateWildFlyHome(final Path wildflyHome) {
-        if (!isValidWildFlyHome(wildflyHome)) {
+        if (!ServerHelper.isValidHomeDirectory(wildflyHome)) {
             throw new RuntimeException("Invalid WildFly home directory: " + wildflyHome);
         }
     }

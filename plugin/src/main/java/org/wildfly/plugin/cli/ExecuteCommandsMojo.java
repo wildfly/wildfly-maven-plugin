@@ -42,6 +42,7 @@ import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.StandardOutput;
+import org.wildfly.plugin.core.ServerHelper;
 
 /**
  * Execute commands to the running WildFly Application Server.
@@ -76,8 +77,11 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     private boolean batch;
 
     /**
-     * The WildFly Application Server's home directory. This is not required, but should be used for commands such as
-     * {@code module add} as they are executed on the local file system.
+     * The WildFly Application Server's home directory.
+     * <p>
+     * This parameter is required when {@code offline} is set to {@code true}. Otherwise this is not required, but
+     * should be used for commands such as {@code module add} as they are executed on the local file system.
+     * </p>
      */
     @Parameter(alias = "jboss-home", property = PropertyNames.JBOSS_HOME)
     private String jbossHome;
@@ -182,6 +186,10 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             return;
         }
         if (offline) {
+            // The jbossHome is required for offline CLI
+            if (!ServerHelper.isValidHomeDirectory(jbossHome)) {
+                throw new MojoFailureException("Invalid JBoss Home directory is not valid: " + jbossHome);
+            }
             getLog().debug("Executing offline CLI scripts");
             try {
                 final StandardOutput out = StandardOutput.parse(stdout, false);
@@ -223,6 +231,10 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             }
 
         } else {
+            // The jbossHome is not required, but if defined should be valid
+            if (jbossHome != null && !ServerHelper.isValidHomeDirectory(jbossHome)) {
+                throw new MojoFailureException("Invalid JBoss Home directory is not valid: " + jbossHome);
+            }
             final Properties currentSystemProperties = System.getProperties();
             try {
                 getLog().debug("Executing commands");

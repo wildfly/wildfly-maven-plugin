@@ -125,6 +125,10 @@ public class AddResourceMojo extends AbstractServerConnection {
             getLog().debug(String.format("Skipping add-resource with address %s", address));
             return;
         }
+        // Validate the home directory if required
+        if (jbossHome != null && !ServerHelper.isValidHomeDirectory(jbossHome)) {
+            throw new MojoFailureException("Invalid JBoss Home directory is not valid: " + jbossHome);
+        }
         try (
                 ModelControllerClient client = createClient();
                 MavenModelControllerClientConfiguration configuration = getClientConfiguration();
