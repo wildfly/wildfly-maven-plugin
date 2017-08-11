@@ -212,7 +212,11 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
                         default:
                             msg.append("Reason unknown");
                     }
-                    throw new MojoExecutionException(msg.toString());
+                    if (failOnError) {
+                        throw new MojoExecutionException(msg.toString());
+                    } else {
+                        getLog().warn(msg);
+                    }
                 }
             } catch (IOException e) {
                 throw new MojoFailureException("Failed to execute scripts.", e);
