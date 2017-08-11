@@ -275,7 +275,7 @@ public class RunMojo extends AbstractServerConnection {
         }
         // Validate the environment
         final Path wildflyPath = extractIfRequired(deploymentContent.getParent());
-        if (!Files.isDirectory(wildflyPath)) {
+        if (!ServerHelper.isValidHomeDirectory(wildflyPath)) {
             throw new MojoExecutionException(String.format("JBOSS_HOME '%s' is not a valid directory.", wildflyPath));
         }
         final StandaloneCommandBuilder commandBuilder = createCommandBuilder(wildflyPath);

@@ -254,7 +254,7 @@ public class StartMojo extends AbstractServerConnection {
         }
         // Validate the environment
         final Path jbossHome = extractIfRequired(targetDir.toPath());
-        if (!Files.isDirectory(jbossHome)) {
+        if (!ServerHelper.isValidHomeDirectory(jbossHome)) {
             throw new MojoExecutionException(String.format("JBOSS_HOME '%s' is not a valid directory.", jbossHome));
         }
 
