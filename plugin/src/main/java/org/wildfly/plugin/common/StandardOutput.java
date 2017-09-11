@@ -125,7 +125,7 @@ public class StandardOutput {
             }
         } else {
             // Attempt to create a file
-            stdoutPath = Paths.get(value);
+            stdoutPath = Paths.get(stdout.trim());
             if (Files.notExists(stdoutPath)) {
                 final Path parent = stdoutPath.getParent();
                 if (parent != null) {
