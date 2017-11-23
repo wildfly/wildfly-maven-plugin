@@ -47,6 +47,7 @@ import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.StandardOutput;
+import org.wildfly.plugin.common.Utils;
 import org.wildfly.plugin.core.ServerHelper;
 import org.wildfly.plugin.server.ArtifactResolver.ArtifactNameSplitter;
 
@@ -132,6 +133,9 @@ public class StartMojo extends AbstractServerConnection {
 
     /**
      * A space delimited list of JVM arguments.
+     * <div>
+     * Note that the {@code java-opts} will overwrite any arguments listed here.
+     * </div>
      *
      * @deprecated use {@link #javaOpts}
      */
@@ -309,9 +313,9 @@ public class StartMojo extends AbstractServerConnection {
                 .addModuleDirs(modulesPath.getModulePaths());
 
         // Set the JVM options
-        if (javaOpts != null) {
+        if (Utils.isNotNullOrEmpty(javaOpts)) {
             commandBuilder.setJavaOptions(javaOpts);
-        } else if (jvmArgs != null) {
+        } else if (Utils.isNotNullOrEmpty(jvmArgs)) {
             commandBuilder.setJavaOptions(jvmArgs.split("\\s+"));
         }
 
@@ -329,8 +333,9 @@ public class StartMojo extends AbstractServerConnection {
 
         // Print some server information
         final Log log = getLog();
-        log.info(String.format("JAVA_HOME=%s", commandBuilder.getJavaHome()));
-        log.info(String.format("JBOSS_HOME=%s%n", commandBuilder.getWildFlyHome()));
+        log.info("JAVA_HOME : " + commandBuilder.getJavaHome());
+        log.info("JBOSS_HOME: " + commandBuilder.getWildFlyHome());
+        log.info("JAVA_OPTS : " + Utils.toString(commandBuilder.getJavaOptions(), " "));
         try {
             addUsers(commandBuilder.getWildFlyHome(), commandBuilder.getJavaHome());
         } catch (IOException e) {
@@ -345,10 +350,10 @@ public class StartMojo extends AbstractServerConnection {
                 .addModuleDirs(modulesPath.getModulePaths());
 
         // Set the JVM options
-        if (javaOpts != null) {
+        if (Utils.isNotNullOrEmpty(javaOpts)) {
             commandBuilder.setProcessControllerJavaOptions(javaOpts)
                     .setHostControllerJavaOptions(javaOpts);
-        } else if (jvmArgs != null) {
+        } else if (Utils.isNotNullOrEmpty(jvmArgs)) {
             final String[] args = jvmArgs.split("\\s+");
             commandBuilder.setProcessControllerJavaOptions(args)
                     .setHostControllerJavaOptions(args);
@@ -372,8 +377,9 @@ public class StartMojo extends AbstractServerConnection {
 
         // Print some server information
         final Log log = getLog();
-        log.info(String.format("JAVA_HOME=%s", commandBuilder.getJavaHome()));
-        log.info(String.format("JBOSS_HOME=%s%n", commandBuilder.getWildFlyHome()));
+        log.info("JAVA_HOME : " + commandBuilder.getJavaHome());
+        log.info("JBOSS_HOME: " + commandBuilder.getWildFlyHome());
+        log.info("JAVA_OPTS : " + Utils.toString(commandBuilder.getHostControllerJavaOptions(), " "));
         try {
             addUsers(commandBuilder.getWildFlyHome(), commandBuilder.getJavaHome());
         } catch (IOException e) {
