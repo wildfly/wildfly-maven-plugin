@@ -50,6 +50,7 @@ import org.wildfly.plugin.cli.Commands;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
+import org.wildfly.plugin.common.Utils;
 import org.wildfly.plugin.core.Deployment;
 import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.core.ServerHelper;
@@ -131,6 +132,9 @@ public class RunMojo extends AbstractServerConnection {
 
     /**
      * A space delimited list of JVM arguments.
+     * <div>
+     * Note that the {@code java-opts} will overwrite any arguments listed here.
+     * </div>
      *
      * @deprecated use {@link #javaOpts}
      */
@@ -281,8 +285,9 @@ public class RunMojo extends AbstractServerConnection {
         final StandaloneCommandBuilder commandBuilder = createCommandBuilder(wildflyPath);
 
         // Print some server information
-        log.info(String.format("JAVA_HOME=%s", commandBuilder.getJavaHome()));
-        log.info(String.format("JBOSS_HOME=%s%n", commandBuilder.getWildFlyHome()));
+        log.info("JAVA_HOME : " + commandBuilder.getJavaHome());
+        log.info("JBOSS_HOME: " + commandBuilder.getWildFlyHome());
+        log.info("JAVA_OPTS : " + Utils.toString(commandBuilder.getJavaOptions(), " "));
         try {
             if (addUser != null && addUser.hasUsers()) {
                 log.info("Adding users: " + addUser);
@@ -337,9 +342,9 @@ public class RunMojo extends AbstractServerConnection {
                 .addModuleDirs(modulesPath.getModulePaths());
 
         // Set the JVM options
-        if (javaOpts != null) {
+        if (Utils.isNotNullOrEmpty(javaOpts)) {
             commandBuilder.setJavaOptions(javaOpts);
-        } else if (jvmArgs != null) {
+        } else if (Utils.isNotNullOrEmpty(jvmArgs)) {
             commandBuilder.setJavaOptions(jvmArgs.split("\\s+"));
         }
 
