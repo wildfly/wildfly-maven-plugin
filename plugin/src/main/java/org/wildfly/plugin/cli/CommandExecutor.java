@@ -40,6 +40,7 @@ import org.jboss.as.cli.CommandLineException;
 import org.jboss.as.cli.batch.Batch;
 import org.jboss.as.cli.batch.BatchManager;
 import org.jboss.dmr.ModelNode;
+import org.jboss.modules.Module;
 import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.ServerOperations;
 
@@ -111,7 +112,7 @@ public class CommandExecutor {
         if (commands.hasCommands() || commands.hasScripts()) {
 
             try {
-                ModuleEnvironment.initJaxp();
+                __redirected.__JAXPRedirected.changeAll("<classpath>", Module.getBootModuleLoader());
                 final String currentWildFlyConfUrl = System.getProperty(WILDFLY_CONFIG_KEY);
                 // Configure the authentication config url if defined
                 if (configuration.getAuthenticationConfigUri() != null) {
@@ -138,7 +139,7 @@ public class CommandExecutor {
                     ctx.bindClient(null);
                 }
             } finally {
-                ModuleEnvironment.restorePlatform();
+                __redirected.__JAXPRedirected.restorePlatformFactory();
             }
         }
     }
