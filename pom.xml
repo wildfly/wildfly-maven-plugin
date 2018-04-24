@@ -27,7 +27,7 @@
     <parent>
         <artifactId>jboss-parent</artifactId>
         <groupId>org.jboss</groupId>
-        <version>24</version>
+        <version>26</version>
     </parent>
     <groupId>org.wildfly.plugins</groupId>
     <artifactId>wildfly-maven-plugin-parent</artifactId>
@@ -79,10 +79,10 @@
         <!-- WildFly/JBoss dependencies -->
         <version.org.jboss.jdf.stacks-client>1.0.3.Final</version.org.jboss.jdf.stacks-client>
         <version.org.jboss.logging.jboss-logging>3.3.1.Final</version.org.jboss.logging.jboss-logging>
-        <version.org.jboss.logmanager>2.0.7.Final</version.org.jboss.logmanager>
+        <version.org.jboss.logmanager>2.0.9.Final</version.org.jboss.logmanager>
         <version.org.wildfly.checkstyle-config>1.0.6.Final</version.org.wildfly.checkstyle-config>
-        <version.org.wildfly.common.wildfly-common>1.2.0.Final</version.org.wildfly.common.wildfly-common>
-        <version.org.wildfly.core>3.0.0.Final</version.org.wildfly.core>
+        <version.org.wildfly.common.wildfly-common>1.3.1.Final</version.org.wildfly.common.wildfly-common>
+        <version.org.wildfly.core>3.1.0.Final</version.org.wildfly.core>
         <version.org.wildfly.dist>10.1.0.Final</version.org.wildfly.dist>
 
         <!-- maven dependencies -->
@@ -90,14 +90,14 @@
         <version.org.apache.maven.maven-core>3.3.1</version.org.apache.maven.maven-core>
         <version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>3.3.0
         </version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>
-        <version.org.apache.maven.plugin-tools>3.5</version.org.apache.maven.plugin-tools>
+        <version.org.apache.maven.plugin-tools>3.5.1</version.org.apache.maven.plugin-tools>
         <version.org.eclipse.aether>1.1.0</version.org.eclipse.aether>
         <version.org.eclipse.sisu>0.3.3</version.org.eclipse.sisu>
 
         <!-- other dependencies -->
         <version.junit.junit>4.12</version.junit.junit>
-        <version.org.apache.commons.compress>1.14</version.org.apache.commons.compress>
-        <version.org.mockito.mockito>2.8.47</version.org.mockito.mockito>
+        <version.org.apache.commons.compress>1.16.1</version.org.apache.commons.compress>
+        <version.org.mockito.mockito>2.18.3</version.org.mockito.mockito>
 
         <!-- plugin versions -->
         <version.plugin.plugin>3.5</version.plugin.plugin>
