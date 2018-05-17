@@ -84,7 +84,7 @@
         <version.org.wildfly.checkstyle-config>1.0.6.Final</version.org.wildfly.checkstyle-config>
         <version.org.wildfly.common.wildfly-common>1.3.1.Final</version.org.wildfly.common.wildfly-common>
         <version.org.wildfly.core>3.1.0.Final</version.org.wildfly.core>
-        <version.org.wildfly.dist>10.1.0.Final</version.org.wildfly.dist>
+        <version.org.wildfly.dist>12.0.0.Final</version.org.wildfly.dist>
 
         <!-- maven dependencies -->
         <version.javax.inject.javax.inject>1</version.javax.inject.javax.inject>
