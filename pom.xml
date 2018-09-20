@@ -78,11 +78,11 @@
     <properties>
         <!-- WildFly/JBoss dependencies -->
         <version.org.jboss.jdf.stacks-client>1.0.3.Final</version.org.jboss.jdf.stacks-client>
-        <version.org.jboss.logging.jboss-logging>3.3.1.Final</version.org.jboss.logging.jboss-logging>
-        <version.org.jboss.logmanager>2.0.9.Final</version.org.jboss.logmanager>
-        <version.org.jboss.modules>1.8.1.Final</version.org.jboss.modules>
-        <version.org.wildfly.checkstyle-config>1.0.6.Final</version.org.wildfly.checkstyle-config>
-        <version.org.wildfly.common.wildfly-common>1.3.1.Final</version.org.wildfly.common.wildfly-common>
+        <version.org.jboss.logging.jboss-logging>3.3.2.Final</version.org.jboss.logging.jboss-logging>
+        <version.org.jboss.logmanager>2.1.4.Final</version.org.jboss.logmanager>
+        <version.org.jboss.modules>1.8.6.Final</version.org.jboss.modules>
+        <version.org.wildfly.checkstyle-config>1.0.7.Final</version.org.wildfly.checkstyle-config>
+        <version.org.wildfly.common.wildfly-common>1.4.0.Final</version.org.wildfly.common.wildfly-common>
         <version.org.wildfly.core>6.0.2.Final</version.org.wildfly.core>
         <version.org.wildfly.dist>10.1.0.Final</version.org.wildfly.dist>
 
