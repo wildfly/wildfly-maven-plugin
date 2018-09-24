@@ -235,7 +235,7 @@ public class ServerHelper {
                     try {
                         TimeUnit.MILLISECONDS.sleep(20L);
                     } catch (InterruptedException e) {
-                        LOGGER.debug("Interrupted during sleep", e);
+                        LOGGER.trace("Interrupted during sleep", e);
                     }
                 } else {
                     break;
@@ -335,7 +335,7 @@ public class ServerHelper {
                         && !CONTROLLER_PROCESS_STATE_STOPPING.equals(state);
             }
         } catch (RuntimeException | IOException e) {
-            LOGGER.debug("Interrupted determining if standalone is running", e);
+            LOGGER.trace("Interrupted determining if standalone is running", e);
         }
         return false;
     }
@@ -370,7 +370,7 @@ public class ServerHelper {
                     try {
                         TimeUnit.MILLISECONDS.sleep(20L);
                     } catch (InterruptedException e) {
-                        LOGGER.debug("Interrupted during sleep", e);
+                        LOGGER.trace("Interrupted during sleep", e);
                     }
                 } else {
                     break;
@@ -417,7 +417,7 @@ public class ServerHelper {
             }
             return statuses.size() == servers.size();
         } catch (Exception e) {
-            LOGGER.debug("Interrupted determining if domain is running", e);
+            LOGGER.trace("Interrupted determining if domain is running", e);
         }
         return false;
     }
