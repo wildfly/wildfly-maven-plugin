@@ -29,7 +29,7 @@ import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
-import org.wildfly.plugin.tests.Environment;
+import org.wildfly.plugin.tests.TestEnvironment;
 
 public class ExecuteCommandsTest extends AbstractWildFlyServerMojoTest {
 
@@ -100,7 +100,7 @@ public class ExecuteCommandsTest extends AbstractWildFlyServerMojoTest {
     public void testExecuteLocalCommands() throws Exception {
 
         final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-commands-local-pom.xml");
-        setValue(executeCommandsMojo, "jbossHome", Environment.WILDFLY_HOME.toString());
+        setValue(executeCommandsMojo, "jbossHome", TestEnvironment.WILDFLY_HOME.toString());
 
         executeCommandsMojo.execute();
 

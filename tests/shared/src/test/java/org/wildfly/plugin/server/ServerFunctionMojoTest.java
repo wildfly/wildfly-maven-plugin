@@ -38,7 +38,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.wildfly.plugin.core.ServerHelper;
 import org.wildfly.plugin.tests.AbstractWildFlyMojoTest;
-import org.wildfly.plugin.tests.Environment;
+import org.wildfly.plugin.tests.TestEnvironment;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
@@ -110,7 +110,7 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
             Assert.assertTrue("The start goal did not start the server.", ServerHelper.isStandaloneRunning(client));
         }
 
-        final Path standaloneConfigDir = Environment.WILDFLY_HOME.resolve("standalone").resolve("configuration");
+        final Path standaloneConfigDir = TestEnvironment.WILDFLY_HOME.resolve("standalone").resolve("configuration");
 
         // Check the management users
         final Path mgmtUsers = standaloneConfigDir.resolve("mgmt-users.properties");
@@ -170,13 +170,13 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
     private StartMojo getStartMojo(final String pomFile) throws Exception {
         // Start up the server and ensure it's running
         final StartMojo startMojo = lookupMojoAndVerify("start", pomFile);
-        setValue(startMojo, "jbossHome", Environment.WILDFLY_HOME.toString());
-        setValue(startMojo, "serverArgs", new String[]{"-Djboss.management.http.port=" + Integer.toString(Environment.PORT)});
+        setValue(startMojo, "jbossHome", TestEnvironment.WILDFLY_HOME.toString());
+        setValue(startMojo, "serverArgs", new String[]{"-Djboss.management.http.port=" + Integer.toString(TestEnvironment.PORT)});
         return startMojo;
     }
 
     private static ModelControllerClient createClient() throws UnknownHostException {
-        return ModelControllerClient.Factory.create(Environment.HOSTNAME, Environment.PORT);
+        return ModelControllerClient.Factory.create(TestEnvironment.HOSTNAME, TestEnvironment.PORT);
     }
 
     private static boolean fileContains(final Path path, final String text) throws IOException {

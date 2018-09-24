@@ -45,6 +45,7 @@ import org.wildfly.core.launcher.DomainCommandBuilder;
 import org.wildfly.core.launcher.Launcher;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.common.AbstractServerConnection;
+import org.wildfly.plugin.common.Environment;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.StandardOutput;
 import org.wildfly.plugin.common.Utils;
@@ -373,6 +374,11 @@ public class StartMojo extends AbstractServerConnection {
 
         if (serverArgs != null) {
             commandBuilder.addServerArguments(serverArgs);
+        }
+
+        // Workaround for WFCORE-4121
+        if (Environment.isModularJvm(javaHome)) {
+            commandBuilder.addHostControllerJavaOptions(Environment.getModularJvmArguments());
         }
 
         // Print some server information

@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.ClientConstants;
@@ -42,6 +44,30 @@ import org.wildfly.core.launcher.ProcessHelper;
 @SuppressWarnings("StaticVariableMayNotBeInitialized")
 public class DomainDeploymentManagerIT extends AbstractDeploymentManagerTest {
     private static final String DEFAULT_SERVER_GROUP = "main-server-group";
+    // Workaround for WFCORE-4121
+    private static final String[] MODULAR_JDK_ARGUMENTS = {
+            "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED",
+            "--add-exports=jdk.unsupported/sun.reflect=ALL-UNNAMED",
+            "--add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED",
+            "--add-modules=java.se",
+    };
+    private static final boolean IS_MODULAR_JDK;
+
+    static {
+        final String javaVersion = System.getProperty("java.specification.version");
+        int vmVersion;
+        try {
+            final Matcher matcher = Pattern.compile("^(?:1\\.)?(\\d+)$").matcher(javaVersion); //match 1.<number> or <number>
+            if (matcher.find()) {
+                vmVersion = Integer.valueOf(matcher.group(1));
+            } else {
+                throw new RuntimeException("Unknown version of jvm " + javaVersion);
+            }
+        } catch (Exception e) {
+            vmVersion = 8;
+        }
+        IS_MODULAR_JDK = vmVersion > 8;
+    }
 
     private static Process process;
     private static DomainClient client;
@@ -56,6 +82,9 @@ public class DomainDeploymentManagerIT extends AbstractDeploymentManagerTest {
                 Assert.fail("A WildFly server is already running: " + ServerHelper.getContainerDescription(client));
             }
             final DomainCommandBuilder commandBuilder = DomainCommandBuilder.of(Environment.WILDFLY_HOME);
+            if (IS_MODULAR_JDK) {
+                commandBuilder.addHostControllerJavaOptions(MODULAR_JDK_ARGUMENTS);
+            }
             process = Launcher.of(commandBuilder).launch();
             consoleConsomer = ConsoleConsumer.start(process, System.out);
             ServerHelper.waitForDomain(client, Environment.TIMEOUT);

@@ -33,7 +33,7 @@ import org.wildfly.core.launcher.ProcessHelper;
 import org.wildfly.plugin.core.ConsoleConsumer;
 import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.core.ServerHelper;
-import org.wildfly.plugin.tests.Environment;
+import org.wildfly.plugin.tests.TestEnvironment;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
@@ -52,17 +52,22 @@ public class DomainTestServer implements TestServer {
     public void start() {
         if (STARTED.compareAndSet(false, true)) {
             try {
-                final DomainCommandBuilder commandBuilder = DomainCommandBuilder.of(Environment.WILDFLY_HOME)
-                        .setBindAddressHint("management", Environment.HOSTNAME)
-                        .addHostControllerJavaOption("-Djboss.management.http.port=" + Environment.PORT);
+                final DomainCommandBuilder commandBuilder = DomainCommandBuilder.of(TestEnvironment.WILDFLY_HOME)
+                        .setBindAddressHint("management", TestEnvironment.HOSTNAME)
+                        .addHostControllerJavaOption("-Djboss.management.http.port=" + TestEnvironment.PORT);
+
+                // Workaround for WFCORE-4121
+                if (TestEnvironment.isModularJvm()) {
+                    commandBuilder.addHostControllerJavaOptions(TestEnvironment.getModularJvmArguments());
+                }
                 final Process process = Launcher.of(commandBuilder)
                         .setRedirectErrorStream(true)
                         .launch();
                 consoleConsumer = ConsoleConsumer.start(process, System.out);
                 shutdownThread = ProcessHelper.addShutdownHook(process);
-                client = DomainClient.Factory.create(ModelControllerClient.Factory.create(Environment.HOSTNAME, Environment.PORT));
+                client = DomainClient.Factory.create(ModelControllerClient.Factory.create(TestEnvironment.HOSTNAME, TestEnvironment.PORT));
                 currentProcess = process;
-                ServerHelper.waitForDomain(process, client, Environment.TIMEOUT);
+                ServerHelper.waitForDomain(process, client, TestEnvironment.TIMEOUT);
                 deploymentManager = DeploymentManager.Factory.create(client);
             } catch (Throwable t) {
                 try {

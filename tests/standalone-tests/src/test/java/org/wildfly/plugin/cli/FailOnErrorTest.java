@@ -31,7 +31,7 @@ import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
-import org.wildfly.plugin.tests.Environment;
+import org.wildfly.plugin.tests.TestEnvironment;
 
 /**
  * @author <a href="mailto:sven-torben@sven-torben.de">Sven-Torben Janus</a>
@@ -65,7 +65,7 @@ public class FailOnErrorTest extends AbstractWildFlyServerMojoTest {
 
         final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-commands-failOnError-pom.xml");
         // Set the JBoss home field so commands will be executed in a new process
-        setValue(executeCommandsMojo, "jbossHome", Environment.WILDFLY_HOME.toString());
+        setValue(executeCommandsMojo, "jbossHome", TestEnvironment.WILDFLY_HOME.toString());
 
         try {
             executeCommandsMojo.execute();
@@ -108,7 +108,7 @@ public class FailOnErrorTest extends AbstractWildFlyServerMojoTest {
 
         final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-commands-continueOnError-pom.xml");
         // Set the JBoss home field so commands will be executed in a new process
-        setValue(executeCommandsMojo, "jbossHome", Environment.WILDFLY_HOME.toString());
+        setValue(executeCommandsMojo, "jbossHome", TestEnvironment.WILDFLY_HOME.toString());
 
         executeCommandsMojo.execute();
 

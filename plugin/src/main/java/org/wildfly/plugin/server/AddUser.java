@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.maven.plugins.annotations.Parameter;
+import org.wildfly.plugin.common.Environment;
 
 /**
  * Used to describe the users that should be added the server.
@@ -74,7 +75,10 @@ public class AddUser {
 
     private void addUser(final Path wildflyHome, final User user, final Path javaHome) throws IOException {
         final List<String> cmd = new ArrayList<>();
-        cmd.add(javaHome == null ? "java" : javaHome.resolve("bin").resolve("java").toString());
+        cmd.add(Environment.getJavaCommand(javaHome));
+        if (Environment.isModularJvm(javaHome)) {
+            Collections.addAll(cmd, Environment.getModularJvmArguments());
+        }
         cmd.add("-jar");
         cmd.add(wildflyHome.resolve("jboss-modules.jar").toString());
         cmd.add("-mp");

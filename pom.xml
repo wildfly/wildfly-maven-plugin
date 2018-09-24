@@ -347,5 +347,14 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>java9</id>
+            <activation>
+                <jdk>[9,)</jdk>
+            </activation>
+            <properties>
+                <version.org.wildfly.dist>14.0.1.Final</version.org.wildfly.dist>
+            </properties>
+        </profile>
     </profiles>
 </project>
