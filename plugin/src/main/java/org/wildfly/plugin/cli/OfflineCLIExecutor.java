@@ -34,6 +34,7 @@ import org.codehaus.plexus.logging.AbstractLogEnabled;
 import org.codehaus.plexus.logging.Logger;
 import org.wildfly.core.launcher.CliCommandBuilder;
 import org.wildfly.core.launcher.Launcher;
+import org.wildfly.plugin.common.Environment;
 import org.wildfly.plugin.common.StandardOutput;
 
 /**
@@ -106,6 +107,10 @@ public class OfflineCLIExecutor extends AbstractLogEnabled {
         final Logger log = getLogger();
         final CliCommandBuilder builder = CliCommandBuilder.of(wildflyHome)
                 .setScriptFile(scriptFile);
+        // Workaround for WFCORE-4121
+        if (Environment.isModularJvm(builder.getJavaHome())) {
+            builder.addJavaOptions(Environment.getModularJvmArguments());
+        }
         if (systemProperties != null) {
             systemProperties.forEach((key, value) -> builder.addJavaOption(String.format("-D%s=%s", key, value)));
             if (systemProperties.containsKey("module.path")) {

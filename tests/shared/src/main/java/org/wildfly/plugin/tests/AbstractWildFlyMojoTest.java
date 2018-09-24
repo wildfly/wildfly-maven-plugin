@@ -105,8 +105,8 @@ public abstract class AbstractWildFlyMojoTest {
     }
 
     protected static void setDefaultEnvironment(final Mojo instance) throws NoSuchFieldException, IllegalAccessException {
-        setValue(instance, "port", Environment.PORT);
-        setValue(instance, "hostname", Environment.HOSTNAME);
+        setValue(instance, "port", TestEnvironment.PORT);
+        setValue(instance, "hostname", TestEnvironment.HOSTNAME);
     }
 
     protected static void setValue(final Object instance, final String name, final Object value) throws NoSuchFieldException, IllegalAccessException {

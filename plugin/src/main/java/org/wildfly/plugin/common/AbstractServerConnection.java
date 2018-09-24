@@ -36,6 +36,7 @@ import org.apache.maven.settings.crypto.SettingsDecrypter;
 import org.apache.maven.settings.crypto.SettingsDecryptionResult;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.ModelControllerClientConfiguration;
+import org.wildfly.security.manager.WildFlySecurityManager;
 
 /**
  * The default implementation for connecting to a running WildFly instance
@@ -52,6 +53,11 @@ public abstract class AbstractServerConnection extends AbstractMojo {
     public static final String DEBUG_MESSAGE_POM_HAS_CREDS = "Getting credentials from the POM";
     public static final String DEBUG_MESSAGE_SETTINGS_HAS_CREDS = "Found username and password in the settings.xml file";
     public static final String DEBUG_MESSAGE_SETTINGS_HAS_ID = "Found the server's id in the settings.xml file";
+
+    static {
+        // Ensure jboss-logging binds to slf4j
+        WildFlySecurityManager.setPropertyPrivileged("org.jboss.logging.provider", "slf4j");
+    }
 
     /**
      * The protocol used to connect to the server for management.

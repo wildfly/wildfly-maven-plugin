@@ -32,7 +32,7 @@ import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.core.ConsoleConsumer;
 import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.core.ServerHelper;
-import org.wildfly.plugin.tests.Environment;
+import org.wildfly.plugin.tests.TestEnvironment;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
@@ -49,18 +49,18 @@ public class StandaloneTestServer implements TestServer {
     public void start() {
         if (STARTED.compareAndSet(false, true)) {
             try {
-                final StandaloneCommandBuilder commandBuilder = StandaloneCommandBuilder.of(Environment.WILDFLY_HOME)
-                        .setBindAddressHint("management", Environment.HOSTNAME)
-                        .addJavaOption("-Djboss.management.http.port=" + Environment.PORT);
+                final StandaloneCommandBuilder commandBuilder = StandaloneCommandBuilder.of(TestEnvironment.WILDFLY_HOME)
+                        .setBindAddressHint("management", TestEnvironment.HOSTNAME)
+                        .addJavaOption("-Djboss.management.http.port=" + TestEnvironment.PORT);
                 final Process process = Launcher.of(commandBuilder)
                         .setRedirectErrorStream(true)
                         .launch();
                 consoleConsumer = ConsoleConsumer.start(process, System.out);
 
                 shutdownThread = ProcessHelper.addShutdownHook(process);
-                client = ModelControllerClient.Factory.create(Environment.HOSTNAME, Environment.PORT);
+                client = ModelControllerClient.Factory.create(TestEnvironment.HOSTNAME, TestEnvironment.PORT);
                 currentProcess = process;
-                ServerHelper.waitForStandalone(process, client, Environment.TIMEOUT);
+                ServerHelper.waitForStandalone(process, client, TestEnvironment.TIMEOUT);
                 deploymentManager = DeploymentManager.Factory.create(client);
             } catch (Throwable t) {
                 try {
