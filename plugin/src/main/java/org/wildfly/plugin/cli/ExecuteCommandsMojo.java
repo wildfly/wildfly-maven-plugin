@@ -166,7 +166,7 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
      * {@code true}.
      */
     @Parameter(alias = "java-opts", property = PropertyNames.JAVA_OPTS)
-    private String javaOpts;
+    private String[] javaOpts;
 
     @Inject
     private CommandExecutor commandExecutor;
@@ -194,11 +194,7 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             try {
                 final StandardOutput out = StandardOutput.parse(stdout, false);
 
-                String[] opts = null;
-                if (javaOpts != null) {
-                    opts = javaOpts.split("[\\n\\s]+");
-                }
-                final int exitCode = offlineCLIExecutor.execute(jbossHome, getCommands(), out, systemProperties, opts);
+                final int exitCode = offlineCLIExecutor.execute(jbossHome, getCommands(), out, systemProperties, javaOpts);
                 if (exitCode != 0) {
                     final StringBuilder msg = new StringBuilder("Failed to execute commands: ");
                     switch (out.getTarget()) {
@@ -263,6 +259,18 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             } finally {
                 System.setProperties(currentSystemProperties);
             }
+        }
+    }
+
+    /**
+     * Allows the {@link #javaOpts} to be set as a string. The string is assumed to be space delimited.
+     *
+     * @param value a spaced delimited value of JVM options
+     */
+    @SuppressWarnings("unused")
+    public void setJavaOpts(final String value) {
+        if (value != null) {
+            javaOpts = value.split("\\s+");
         }
     }
 

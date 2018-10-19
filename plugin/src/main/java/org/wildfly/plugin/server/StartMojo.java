@@ -301,6 +301,18 @@ public class StartMojo extends AbstractServerConnection {
         }
     }
 
+    /**
+     * Allows the {@link #javaOpts} to be set as a string. The string is assumed to be space delimited.
+     *
+     * @param value a spaced delimited value of JVM options
+     */
+    @SuppressWarnings("unused")
+    public void setJavaOpts(final String value) {
+        if (value != null) {
+            javaOpts = value.split("\\s+");
+        }
+    }
+
     private CommandBuilder createCommandBuilder(final Path jbossHome) throws MojoExecutionException {
         if (serverType == ServerType.DOMAIN) {
             return createDomainCommandBuilder(jbossHome);
