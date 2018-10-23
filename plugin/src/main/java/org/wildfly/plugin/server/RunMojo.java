@@ -336,6 +336,18 @@ public class RunMojo extends AbstractServerConnection {
         }
     }
 
+    /**
+     * Allows the {@link #javaOpts} to be set as a string. The string is assumed to be space delimited.
+     *
+     * @param value a spaced delimited value of JVM options
+     */
+    @SuppressWarnings("unused")
+    public void setJavaOpts(final String value) {
+        if (value != null) {
+            javaOpts = value.split("\\s+");
+        }
+    }
+
     private StandaloneCommandBuilder createCommandBuilder(final Path wildflyPath) {
         final StandaloneCommandBuilder commandBuilder = StandaloneCommandBuilder.of(wildflyPath)
                 .setJavaHome(javaHome)

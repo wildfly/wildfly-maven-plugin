@@ -84,7 +84,54 @@ run-batch
 
 * Execute offline embedded CLI scripts
 
-  The example below shows how to execute commands offline from a CLI script, which is useful for running scripts that embed server or host controller.
+  The example below shows how to execute commands offline from a CLI script, which is useful for running scripts that
+  embed server or host controller.
+
+----------
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <version>${version.org.wildfly.plugin}</version>
+                <configuration>
+                    <!-- Tells plugin to start in offline mode, to not try to connect to server or start it-->
+                    <offline>true</offline>
+                    <commands>
+                        <command>/system-property=org.jboss.example.runtime:write-attribute(name=dev)</command>
+                    </commands>
+                    <jboss-home>${wildfly.dir}</jboss-home>
+                    <!-- where to out log-->
+                    <stdout>${project.build.directory}/wildfly-plugin.log</stdout>
+                    <!-- java opts with which CLI is started with -->
+                    <java-opts>
+                        <java-opt>--add-modules=javax.se</java-opt>
+                        <java-opt>-Xmx256m</java-opt>
+                    </java-opts>
+                    <!-- system properties that can than be referenced in CLI script-->
+                    <system-properties>
+                        <public.ip>${node0}</public.ip>
+                    </system-properties>
+                </configuration>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+    ...
+</project>
+----------
+
+
+* Execute offline embedded CLI scripts
+
+  The example below shows how to execute commands offline from a CLI script, which is useful for running scripts that
+  embed server or host controller. Note that the <<<java-opts>>> in this example shows how to set JVM options with a
+  space delimited set of options rather than an array.
 
 ----------
 <project>
