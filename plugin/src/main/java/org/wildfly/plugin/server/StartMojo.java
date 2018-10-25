@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 
@@ -37,7 +38,8 @@ import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.wildfly.core.launcher.CommandBuilder;
@@ -45,12 +47,15 @@ import org.wildfly.core.launcher.DomainCommandBuilder;
 import org.wildfly.core.launcher.Launcher;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.common.AbstractServerConnection;
+import org.wildfly.plugin.common.Archives;
 import org.wildfly.plugin.common.Environment;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.StandardOutput;
 import org.wildfly.plugin.common.Utils;
 import org.wildfly.plugin.core.ServerHelper;
-import org.wildfly.plugin.server.ArtifactResolver.ArtifactNameSplitter;
+import org.wildfly.plugin.repository.ArtifactNameBuilder;
+import org.wildfly.plugin.repository.ArtifactResolver;
+import org.wildfly.plugin.repository.ArtifactName;
 
 /**
  * Starts a standalone instance of WildFly Application Server.
@@ -64,11 +69,11 @@ public class StartMojo extends AbstractServerConnection {
 
     public static final String WILDFLY_DIR = "wildfly-run";
 
-    /**
-     * The project
-     */
-    @Parameter(defaultValue = "${project}", readonly = true, required = true)
-    protected MavenProject project;
+    @Parameter(defaultValue = "${repositorySystemSession}", readonly = true, required = true)
+    private RepositorySystemSession session;
+
+    @Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true, required = true)
+    private List<RemoteRepository> repositories;
 
     /**
      * The target directory the application to be deployed is located.
@@ -95,14 +100,14 @@ public class StartMojo extends AbstractServerConnection {
     /**
      * The {@code groupId} of the artifact to download. Ignored if {@link #artifact} {@code groupId} portion is used.
      */
-    @Parameter(defaultValue = Defaults.WILDFLY_GROUP_ID, property = PropertyNames.WILDFLY_GROUP_ID)
+    @Parameter(defaultValue = ArtifactNameBuilder.WILDFLY_GROUP_ID, property = PropertyNames.WILDFLY_GROUP_ID)
     private String groupId;
 
     /**
      * The {@code artifactId} of the artifact to download. Ignored if {@link #artifact} {@code artifactId} portion is
      * used.
      */
-    @Parameter(defaultValue = Defaults.WILDFLY_ARTIFACT_ID, property = PropertyNames.WILDFLY_ARTIFACT_ID)
+    @Parameter(defaultValue = ArtifactNameBuilder.WILDFLY_ARTIFACT_ID, property = PropertyNames.WILDFLY_ARTIFACT_ID)
     private String artifactId;
 
     /**
@@ -115,7 +120,7 @@ public class StartMojo extends AbstractServerConnection {
     /**
      * The {@code packaging} of the artifact to download. Ignored if {@link #artifact} {@code packing} portion is used.
      */
-    @Parameter(property = PropertyNames.WILDFLY_PACKAGING, defaultValue = Defaults.WILDFLY_PACKAGING)
+    @Parameter(property = PropertyNames.WILDFLY_PACKAGING, defaultValue = ArtifactNameBuilder.WILDFLY_PACKAGING)
     private String packaging;
 
     /**
@@ -171,7 +176,7 @@ public class StartMojo extends AbstractServerConnection {
     /**
      * The timeout value to use when starting the server.
      */
-    @Parameter(alias = "startup-timeout", defaultValue = Defaults.TIMEOUT, property = PropertyNames.STARTUP_TIMEOUT)
+    @Parameter(alias = "startup-timeout", defaultValue = "60", property = PropertyNames.STARTUP_TIMEOUT)
     private long startupTimeout;
 
     /**
@@ -393,14 +398,14 @@ public class StartMojo extends AbstractServerConnection {
             //we do not need to download WildFly
             return Paths.get(jbossHome);
         }
-        final String artifact = ArtifactNameSplitter.of(this.artifact)
+        final ArtifactName artifact = ArtifactNameBuilder.forRuntime(this.artifact)
                 .setArtifactId(artifactId)
                 .setClassifier(classifier)
                 .setGroupId(groupId)
                 .setPackaging(packaging)
                 .setVersion(version)
-                .asString();
-        final Path result = artifactResolver.resolve(project, artifact).toPath();
+                .build();
+        final Path result = artifactResolver.resolve(session, repositories, artifact);
         final Path target = buildDir.resolve(WILDFLY_DIR);
         // Delete the target if it exists
         if (Files.exists(target)) {
