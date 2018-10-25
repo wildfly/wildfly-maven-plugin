@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2013, Red Hat, Inc., and individual contributors
+ * Copyright 2018, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -20,35 +20,47 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.wildfly.plugin.server;
+package org.wildfly.plugin.repository;
 
 /**
+ * A Maven artifact name.
+ *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-interface Defaults {
+public interface ArtifactName {
 
     /**
-     * The default group id
+     * The group name for the artifact.
+     *
+     * @return the group name
      */
-    String WILDFLY_GROUP_ID = "org.wildfly";
+    String getGroupId();
 
     /**
-     * The default artifact id
+     * The artifact id for the artifact.
+     *
+     * @return the artifact id
      */
-    String WILDFLY_ARTIFACT_ID = "wildfly-dist";
-
-    /*
-     * The default packaging type
-     */
-    String WILDFLY_PACKAGING = "zip";
+    String getArtifactId();
 
     /**
-     * The default WildFly version.
+     * The classier for the artifact.
+     *
+     * @return the classifier
      */
-    String WILDFLY_TARGET_VERSION = "8.0.0.Final";
+    String getClassifier();
 
     /**
-     * The default startup timeout.
+     * The packaging for the artifact.
+     *
+     * @return the packaging
      */
-    String TIMEOUT = "60";
+    String getPackaging();
+
+    /**
+     * The version for the artifact.
+     *
+     * @return the version
+     */
+    String getVersion();
 }

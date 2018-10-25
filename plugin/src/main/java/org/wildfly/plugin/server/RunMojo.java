@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import javax.inject.Inject;
@@ -41,11 +40,13 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.eclipse.aether.RepositorySystemSession;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.core.launcher.CommandBuilder;
 import org.wildfly.core.launcher.Launcher;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
 import org.wildfly.plugin.common.AbstractServerConnection;
+import org.wildfly.plugin.common.Archives;
 import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.Utils;
@@ -53,7 +54,9 @@ import org.wildfly.plugin.core.Deployment;
 import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.core.ServerHelper;
 import org.wildfly.plugin.deployment.PackageType;
-import org.wildfly.plugin.server.ArtifactResolver.ArtifactNameSplitter;
+import org.wildfly.plugin.repository.ArtifactName;
+import org.wildfly.plugin.repository.ArtifactNameBuilder;
+import org.wildfly.plugin.repository.ArtifactResolver;
 
 /**
  * Starts a standalone instance of WildFly and deploys the application to the server.
@@ -67,10 +70,11 @@ import org.wildfly.plugin.server.ArtifactResolver.ArtifactNameSplitter;
 @Execute(phase = LifecyclePhase.PACKAGE)
 public class RunMojo extends AbstractServerConnection {
 
-    public static final String WILDFLY_DIR = "wildfly-run";
-
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     private MavenProject project;
+
+    @Parameter(defaultValue = "${repositorySystemSession}", readonly = true)
+    private RepositorySystemSession session;
 
     @Inject
     private ArtifactResolver artifactResolver;
@@ -91,14 +95,14 @@ public class RunMojo extends AbstractServerConnection {
     /**
      * The {@code groupId} of the artifact to download. Ignored if {@link #artifact} {@code groupId} portion is used.
      */
-    @Parameter(defaultValue = Defaults.WILDFLY_GROUP_ID, property = PropertyNames.WILDFLY_GROUP_ID)
+    @Parameter(defaultValue = ArtifactNameBuilder.WILDFLY_GROUP_ID, property = PropertyNames.WILDFLY_GROUP_ID)
     private String groupId;
 
     /**
      * The {@code artifactId} of the artifact to download. Ignored if {@link #artifact} {@code artifactId} portion is
      * used.
      */
-    @Parameter(defaultValue = Defaults.WILDFLY_ARTIFACT_ID, property = PropertyNames.WILDFLY_ARTIFACT_ID)
+    @Parameter(defaultValue = ArtifactNameBuilder.WILDFLY_ARTIFACT_ID, property = PropertyNames.WILDFLY_ARTIFACT_ID)
     private String artifactId;
 
     /**
@@ -111,7 +115,7 @@ public class RunMojo extends AbstractServerConnection {
     /**
      * The {@code packaging} of the artifact to download. Ignored if {@link #artifact} {@code packing} portion is used.
      */
-    @Parameter(property = PropertyNames.WILDFLY_PACKAGING, defaultValue = Defaults.WILDFLY_PACKAGING)
+    @Parameter(property = PropertyNames.WILDFLY_PACKAGING, defaultValue = ArtifactNameBuilder.WILDFLY_PACKAGING)
     private String packaging;
 
     /**
@@ -155,7 +159,7 @@ public class RunMojo extends AbstractServerConnection {
     /**
      * The timeout value to use when starting the server.
      */
-    @Parameter(alias = "startup-timeout", defaultValue = Defaults.TIMEOUT, property = PropertyNames.STARTUP_TIMEOUT)
+    @Parameter(alias = "startup-timeout", defaultValue = "60", property = PropertyNames.STARTUP_TIMEOUT)
     private long startupTimeout;
 
     /**
@@ -331,36 +335,24 @@ public class RunMojo extends AbstractServerConnection {
         return commandBuilder;
     }
 
-    private Path extractIfRequired(final Path buildDir) throws MojoFailureException, MojoExecutionException {
+    private Path extractIfRequired(final Path buildDir) throws MojoFailureException {
         if (jbossHome != null) {
             //we do not need to download WildFly
             return Paths.get(jbossHome);
         }
-        final String artifact = ArtifactNameSplitter.of(this.artifact)
+        final ArtifactName artifact = ArtifactNameBuilder.forRuntime(this.artifact)
                 .setArtifactId(artifactId)
                 .setClassifier(classifier)
                 .setGroupId(groupId)
                 .setPackaging(packaging)
                 .setVersion(version)
-                .asString();
-        final Path result = artifactResolver.resolve(project, artifact).toPath();
-        final Path target = buildDir.resolve(WILDFLY_DIR);
-        // Delete the target if it exists
-        if (Files.exists(target)) {
-            try {
-                Archives.deleteDirectory(target);
-            } catch (IOException e) {
-                throw new MojoFailureException("Could not delete target directory: " + target, e);
-            }
-        }
+                .build();
+        final Path result = artifactResolver.resolve(session, project.getRemotePluginRepositories(), artifact);
         try {
-            Archives.unzip(result, target);
-            final Iterator<Path> iterator = Files.newDirectoryStream(target).iterator();
-            if (iterator.hasNext()) return iterator.next();
+            return Archives.uncompress(result, buildDir);
         } catch (IOException e) {
             throw new MojoFailureException("Artifact was not successfully extracted: " + result, e);
         }
-        throw new MojoFailureException("Artifact was not successfully extracted: " + result);
     }
 
     @Override

@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2013, Red Hat, Inc., and individual contributors
+ * Copyright 2018, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -20,17 +20,16 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.wildfly.plugin.server;
+package org.wildfly.plugin.repository;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.ProjectBuildingRequest;
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -48,21 +47,25 @@ class EclipseAetherArtifactResolver implements ArtifactResolver {
     private RepositorySystem repoSystem;
 
     @Override
-    public File resolve(final MavenProject project, final String artifact) {
+    public Path resolve(final RepositorySystemSession session, final List<RemoteRepository> repositories, final ArtifactName name) {
         final ArtifactResult result;
         try {
-            final ProjectBuildingRequest projectBuildingRequest = project.getProjectBuildingRequest();
-
             final ArtifactRequest request = new ArtifactRequest();
-            final ArtifactNameSplitter splitter = ArtifactNameSplitter.of(artifact).split();
-            final Artifact defaultArtifact = new DefaultArtifact(splitter.getGroupId(), splitter.getArtifactId(), splitter.getClassifier(), splitter.getPackaging(), splitter.getVersion());
+            final Artifact defaultArtifact = new DefaultArtifact(name.getGroupId(), name.getArtifactId(), name.getClassifier(), name.getPackaging(), name.getVersion());
             request.setArtifact(defaultArtifact);
-            final List<RemoteRepository> repos = project.getRemoteProjectRepositories();
-            request.setRepositories(repos);
-            result = repoSystem.resolveArtifact(projectBuildingRequest.getRepositorySession(), request);
+            request.setRepositories(repositories);
+            result = repoSystem.resolveArtifact(session, request);
         } catch (ArtifactResolutionException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-        return result.getArtifact().getFile();
+        if (!result.isResolved()) {
+            throw new RuntimeException("Failed to resolve artifact " + name);
+        }
+        final Artifact artifact = result.getArtifact();
+        final File artifactFile;
+        if (artifact == null || (artifactFile = artifact.getFile()) == null) {
+            throw new RuntimeException("Failed to resolve artifact " + name);
+        }
+        return artifactFile.toPath();
     }
 }
