@@ -125,42 +125,6 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
     }
 
     @Test
-    public void testDeployWithCommands() throws Exception {
-
-        // Make sure the archive is not deployed
-        if (deploymentManager.hasDeployment(DEPLOYMENT_NAME)) {
-            deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME));
-        }
-
-        final AbstractDeployment deployMojo = lookupMojoAndVerify("deploy", "deploy-webarchive-with-commands-pom.xml");
-
-        deployMojo.execute();
-
-        // /deployment=test.war :read-attribute(name=status)
-        ModelNode address = ServerOperations.createAddress("deployment", DEPLOYMENT_NAME);
-        ModelNode op = ServerOperations.createReadAttributeOperation(address, "status");
-        ModelNode result = executeOperation(op);
-
-        assertEquals("OK", ServerOperations.readResultAsString(result));
-
-        // Ensure that org.jboss.as.logging exists and foo does not
-        address = ServerOperations.createAddress("subsystem", "logging", "logger", "foo");
-        op = ServerOperations.createReadResourceOperation(address);
-        result = client.execute(op);
-        assertFalse("Logger foo was not removed", ServerOperations.isSuccessfulOutcome(result));
-
-        address = ServerOperations.createAddress("subsystem", "logging", "logger", "org.jboss.as.logging");
-        op = ServerOperations.createReadResourceOperation(address);
-        result = client.execute(op);
-        assertTrue("Logger org.jboss.as.logging was not added", ServerOperations.isSuccessfulOutcome(result));
-
-        // Remove the logger to clean-up
-        op = ServerOperations.createRemoveOperation(address);
-        executeOperation(op);
-        deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME));
-    }
-
-    @Test
     public void testRedeploy() throws Exception {
 
         // Make sure the archive is deployed

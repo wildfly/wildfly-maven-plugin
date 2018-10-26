@@ -27,15 +27,12 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
-import javax.inject.Inject;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.wildfly.plugin.cli.CommandExecutor;
-import org.wildfly.plugin.cli.Commands;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
@@ -89,31 +86,10 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     private String runtimeName;
 
     /**
-     * Commands to run before the deployment
-     *
-     * @deprecated use the {@code execute-commands} goal
-     */
-    @Parameter(alias = "before-deployment")
-    @Deprecated
-    private Commands beforeDeployment;
-
-    /**
-     * Executions to run after the deployment
-     *
-     * @deprecated use the {@code execute-commands} goal
-     */
-    @Parameter(alias = "after-deployment")
-    @Deprecated
-    private Commands afterDeployment;
-
-    /**
      * Set to {@code true} if you want the deployment to be skipped, otherwise {@code false}.
      */
     @Parameter(defaultValue = "false", property = PropertyNames.SKIP)
     private boolean skip;
-
-    @Inject
-    private CommandExecutor commandExecutor;
 
     /**
      * The archive file.
@@ -141,7 +117,6 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         ) {
             final boolean isDomain = ServerHelper.isDomainServer(client);
             validate(isDomain);
-            beforeDeployment(configuration);
             // Deploy the deployment
             getLog().debug("Executing deployment");
 
@@ -151,7 +126,6 @@ abstract class AbstractDeployment extends AbstractServerConnection {
             if (!result.successful()) {
                 throw new MojoExecutionException(String.format("Failed to execute goal %s: %s", goal(), result.getFailureMessage()));
             }
-            afterDeployment(configuration);
         } catch (IOException e) {
             throw new MojoFailureException(String.format("Failed to execute goal %s.", goal()), e);
         }
@@ -161,20 +135,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         return skip;
     }
 
-    protected void beforeDeployment(final MavenModelControllerClientConfiguration configuration) throws MojoExecutionException, MojoFailureException, IOException {
-        // Execute before deployment commands
-        if (beforeDeployment != null)
-            commandExecutor.execute(configuration, beforeDeployment);
-    }
-
     protected abstract DeploymentResult executeDeployment(DeploymentManager deploymentManager, Deployment deployment) throws IOException, MojoDeploymentException;
-
-    protected void afterDeployment(final MavenModelControllerClientConfiguration configuration) throws MojoExecutionException, MojoFailureException, IOException {
-
-        // Execute after deployment commands
-        if (afterDeployment != null)
-            commandExecutor.execute(configuration, afterDeployment);
-    }
 
     protected Deployment createDeployment() {
         return Deployment.of(file());

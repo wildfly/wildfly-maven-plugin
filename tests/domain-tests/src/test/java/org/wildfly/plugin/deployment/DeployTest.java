@@ -92,60 +92,6 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
     }
 
     @Test
-    public void testDeployWithCommands() throws Exception {
-
-        // Make sure the archive is not deployed
-        if (deploymentManager.hasDeployment(DEPLOYMENT_NAME, DEFAULT_SERVER_GROUP)) {
-            deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
-        }
-
-        executeAndVerifyDeploymentExists("deploy", "deploy-webarchive-with-commands-pom.xml");
-
-        // Ensure that org.jboss.as.logging exists and foo does not
-        ModelNode address = ServerOperations.createAddress("profile", "full", "subsystem", "logging", "logger", "foo");
-        ModelNode op = ServerOperations.createReadResourceOperation(address);
-        ModelNode result = client.execute(op);
-        assertFalse("Logger foo was not removed", ServerOperations.isSuccessfulOutcome(result));
-
-        address = ServerOperations.createAddress("profile", "full", "subsystem", "logging", "logger", "org.jboss.as.logging");
-        op = ServerOperations.createReadResourceOperation(address);
-        result = client.execute(op);
-        assertTrue("Logger org.jboss.as.logging was not added", ServerOperations.isSuccessfulOutcome(result));
-
-        // Remove the logger to clean-up
-        op = ServerOperations.createRemoveOperation(address);
-        executeOperation(op);
-        deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
-    }
-
-    @Test
-    public void testDeployOnlyWithCommands() throws Exception {
-
-        // Make sure the archive is not deployed
-        if (deploymentManager.hasDeployment(DEPLOYMENT_NAME, DEFAULT_SERVER_GROUP)) {
-            deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
-        }
-
-        executeAndVerifyDeploymentExists("deploy-only", "deploy-webarchive-with-commands-pom.xml");
-
-        // Ensure that org.jboss.as.logging exists and foo does not
-        ModelNode address = ServerOperations.createAddress("profile", "full", "subsystem", "logging", "logger", "foo");
-        ModelNode op = ServerOperations.createReadResourceOperation(address);
-        ModelNode result = client.execute(op);
-        assertFalse("Logger foo was not removed", ServerOperations.isSuccessfulOutcome(result));
-
-        address = ServerOperations.createAddress("profile", "full", "subsystem", "logging", "logger", "org.jboss.as.logging");
-        op = ServerOperations.createReadResourceOperation(address);
-        result = client.execute(op);
-        assertTrue("Logger org.jboss.as.logging was not added", ServerOperations.isSuccessfulOutcome(result));
-
-        // Remove the logger to clean-up
-        op = ServerOperations.createRemoveOperation(address);
-        executeOperation(op);
-        deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
-    }
-
-    @Test
     public void testDeployWithStoppedServer() throws Exception {
         // Make sure the archive is not deployed
         if (deploymentManager.hasDeployment(DEPLOYMENT_NAME, DEFAULT_SERVER_GROUP)) {
