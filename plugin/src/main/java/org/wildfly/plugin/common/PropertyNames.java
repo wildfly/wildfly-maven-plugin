@@ -77,8 +77,6 @@ public interface PropertyNames {
 
     String WILDFLY_VERSION = "wildfly.version";
 
-    String JVM_ARGS = "wildfly.jvmArgs";
-
     String JAVA_OPTS = "wildfly.javaOpts";
 
     String MODULES_PATH = "wildfly.modulesPath";

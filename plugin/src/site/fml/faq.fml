@@ -31,7 +31,7 @@
         <faq id="maven31">
             <question>What versions of maven will the plugin work with?</question>
             <answer>
-                <p>The plugin requires maven 3.1.1 or higher.</p>
+                <p>The plugin requires maven 3.3.1 or higher.</p>
             </answer>
         </faq>
         <faq id="startProc">
@@ -80,6 +80,29 @@
                 <p>
                     To migrate from a previous version of the plugin simply remove the wrapping <code>&lt;domain/&gt;</code>
                     object.
+                </p>
+            </answer>
+        </faq>
+        <faq id="jvmArgs">
+            <question>Why the <code>&lt;jvm-args/&gt;</code> configuration option removed for the <code>run</code> and
+                <code>start</code>?</question>
+            <answer>
+                <p>
+                    The <code>&lt;jvm-args/&gt;</code> configuration string was removed in favor of the
+                    <code>&lt;java-opts/&gt;</code> configuration array. The <code>&lt;jvm-args/&gt;</code> required
+                    a space delimited string which could cause issues if options had a space in them. The new option
+                    is an array and allows spaces. However you can still use a space delimited set of arguments by
+                    using <code>&lt;jvm-args&gt;-Dkey1=value1 -Dkey2=value2&lt;/jvm-args&gt;</code>.
+                </p>
+                <p>
+                    To migrate from a previous version of the plugin simply change <code>&lt;jvm-args/&gt;</code> to
+                    <code>&lt;java-opts/&gt;</code>. Optionally you can use an array:
+                    <source>
+&lt;java-opts&gt;
+    &lt;java-opt&gt;-Dkey1=value1&lt;/java-opt&gt;
+    &lt;java-opt&gt;-Dkey2=value2&lt;/java-opt&gt;
+&lt;/java-opts&gt;
+                    </source>
                 </p>
             </answer>
         </faq>

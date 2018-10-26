@@ -133,18 +133,6 @@ public class StartMojo extends AbstractServerConnection {
     private ModulesPath modulesPath;
 
     /**
-     * A space delimited list of JVM arguments.
-     * <div>
-     * Note that the {@code java-opts} will overwrite any arguments listed here.
-     * </div>
-     *
-     * @deprecated use {@link #javaOpts}
-     */
-    @Parameter(alias = "jvm-args", property = PropertyNames.JVM_ARGS)
-    @Deprecated
-    private String jvmArgs;
-
-    /**
      * The JVM options to use.
      */
     @Parameter(alias = "java-opts", property = PropertyNames.JAVA_OPTS)
@@ -328,8 +316,6 @@ public class StartMojo extends AbstractServerConnection {
         // Set the JVM options
         if (Utils.isNotNullOrEmpty(javaOpts)) {
             commandBuilder.setJavaOptions(javaOpts);
-        } else if (Utils.isNotNullOrEmpty(jvmArgs)) {
-            commandBuilder.setJavaOptions(jvmArgs.split("\\s+"));
         }
 
         if (serverConfig != null) {
@@ -366,10 +352,6 @@ public class StartMojo extends AbstractServerConnection {
         if (Utils.isNotNullOrEmpty(javaOpts)) {
             commandBuilder.setProcessControllerJavaOptions(javaOpts)
                     .setHostControllerJavaOptions(javaOpts);
-        } else if (Utils.isNotNullOrEmpty(jvmArgs)) {
-            final String[] args = jvmArgs.split("\\s+");
-            commandBuilder.setProcessControllerJavaOptions(args)
-                    .setHostControllerJavaOptions(args);
         }
 
         if (domainConfig != null) {
