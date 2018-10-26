@@ -45,7 +45,8 @@
             </answer>
         </faq>
         <faq id="beforeAfterCommands">
-            <question>Why were the <code>&lt;beforeDeployment/&gt;</code> and <code>&lt;afterDeployment/&gt;</code> options removed?</question>
+            <question>Why were the <code>&lt;beforeDeployment/&gt;</code>, <code>&lt;afterDeployment/&gt;</code>,
+                <code>&lt;beforeAdd/&gt;</code>, <code>&lt;afterAdd/&gt;</code> options removed?</question>
             <answer>
                 <p>
                     These options are redundant since the <code>execute-commands</code> goal could be run before and/or
