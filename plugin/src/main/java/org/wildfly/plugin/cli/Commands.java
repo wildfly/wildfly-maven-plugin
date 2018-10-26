@@ -65,14 +65,6 @@ public class Commands {
     private final boolean failOnError;
 
     /**
-     * @deprecated Used only for MOJO injection
-     */
-    @Deprecated
-    public Commands() {
-        failOnError = true;
-    }
-
-    /**
      * @param batch       {@code true} if commands should be executed in a batch
      * @param commands    the commands to execute
      * @param scripts     the scripts to execute
