@@ -25,7 +25,7 @@ package org.wildfly.plugin.deployment;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.LinkedHashSet;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -40,7 +40,6 @@ import org.wildfly.plugin.core.Deployment;
 import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.core.DeploymentResult;
 import org.wildfly.plugin.core.ServerHelper;
-import org.wildfly.plugin.deployment.domain.Domain;
 
 /**
  * The default implementation for executing build plans on the server.
@@ -52,15 +51,6 @@ abstract class AbstractDeployment extends AbstractServerConnection {
 
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     protected MavenProject project;
-
-    /**
-     * Specifies the configuration for a domain server.
-     *
-     * @deprecated use {@code <server-groups/>} property
-     */
-    @Parameter
-    @Deprecated
-    private Domain domain;
 
     /**
      * The server groups the content should be deployed to.
@@ -167,24 +157,10 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     }
 
     private Collection<String> getServerGroups() {
-        final Collection<String> result = new LinkedHashSet<>();
-        if (domain != null) {
-            result.addAll(domain.getServerGroups());
-        }
-        if (serverGroups != null) {
-            result.addAll(serverGroups);
-        }
-        return result;
+        return serverGroups == null ? Collections.emptyList() : serverGroups;
     }
 
     private boolean hasServerGroups() {
-        int count = 0;
-        if (domain != null) {
-            count += domain.getServerGroups().size();
-        }
-        if (serverGroups != null) {
-            count += serverGroups.size();
-        }
-        return count > 0;
+        return serverGroups != null && !serverGroups.isEmpty();
     }
 }

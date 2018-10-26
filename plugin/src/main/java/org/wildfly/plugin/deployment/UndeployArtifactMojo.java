@@ -24,7 +24,7 @@ package org.wildfly.plugin.deployment;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.LinkedHashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -43,7 +43,6 @@ import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.core.DeploymentResult;
 import org.wildfly.plugin.core.UndeployDescription;
-import org.wildfly.plugin.deployment.domain.Domain;
 
 /**
  * Undeploys (removes) an arbitrary artifact to the WildFly application server
@@ -83,15 +82,6 @@ public class UndeployArtifactMojo extends AbstractServerConnection {
      */
     @Parameter(property = PropertyNames.DEPLOYMENT_NAME)
     private String name;
-
-    /**
-     * Specifies the configuration for a domain server.
-     *
-     * @deprecated use {@code <server-groups/>} property
-     */
-    @Parameter
-    @Deprecated
-    private Domain domain;
 
     /**
      * The server groups the content should be deployed to.
@@ -164,13 +154,6 @@ public class UndeployArtifactMojo extends AbstractServerConnection {
     }
 
     private Collection<String> getServerGroups() {
-        final Collection<String> result = new LinkedHashSet<>();
-        if (domain != null) {
-            result.addAll(domain.getServerGroups());
-        }
-        if (serverGroups != null) {
-            result.addAll(serverGroups);
-        }
-        return result;
+        return serverGroups == null ? Collections.emptyList() : serverGroups;
     }
 }

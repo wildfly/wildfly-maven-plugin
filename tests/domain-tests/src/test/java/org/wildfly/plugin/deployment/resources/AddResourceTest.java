@@ -61,13 +61,6 @@ public class AddResourceTest extends AbstractWildFlyServerMojoTest {
             fail(ex.getMessage());
         }
 
-        addResourceMojo = lookupMojoAndVerify("add-resource", "legacy-add-resource-pom.xml");
-        try {
-            addResourceMojo.execute();
-        } catch (Exception ex) {
-            fail(ex.getMessage());
-        }
-
     }
 
     @Test

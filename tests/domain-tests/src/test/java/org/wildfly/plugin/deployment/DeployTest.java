@@ -65,9 +65,6 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         }
         executeAndVerifyDeploymentExists("deploy", "deploy-webarchive-pom.xml");
         deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
-
-        executeAndVerifyDeploymentExists("deploy", "legacy-deploy-webarchive-pom.xml");
-        deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
     }
 
     @Test

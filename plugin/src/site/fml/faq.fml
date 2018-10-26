@@ -68,5 +68,20 @@
                 </p>
             </answer>
         </faq>
+        <faq id="domainObject">
+            <question>Why the <code>&lt;domain/&gt;</code> configuration option removed?</question>
+            <answer>
+                <p>
+                    The complex <code>&lt;domain/&gt;</code> configuration object was used to indicate which
+                    server group or profile a specific goals should be executed on. However it made more since for goals
+                    that use server groups to use a <code>server-group</code> array and goals that use profiles use a
+                    to use a <code>profile</code> array.
+                </p>
+                <p>
+                    To migrate from a previous version of the plugin simply remove the wrapping <code>&lt;domain/&gt;</code>
+                    object.
+                </p>
+            </answer>
+        </faq>
     </part>
 </faqs>
