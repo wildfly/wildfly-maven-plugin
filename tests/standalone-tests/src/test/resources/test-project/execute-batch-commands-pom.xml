@@ -33,12 +33,10 @@
                 <groupId>org.wildfly.plugins</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
-                    <execute-commands>
-                        <batch>true</batch>
-                        <commands>
-                            <command>/system-property=org.wildfly.maven.plugin-batch:add(value=true)</command>
-                        </commands>
-                    </execute-commands>
+                    <batch>true</batch>
+                    <commands>
+                        <command>/system-property=org.wildfly.maven.plugin-batch:add(value=true)</command>
+                    </commands>
                 </configuration>
 
             </plugin>

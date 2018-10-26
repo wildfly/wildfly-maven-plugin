@@ -99,19 +99,6 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     private List<File> propertiesFiles = new ArrayList<>();
 
     /**
-     * The commands to execute.
-     * <p>
-     * Note that if defined the {@link #commands commands}, {@link #scripts scripts} and {@link #failOnError fail-on-error}
-     * parameters outside of this configuration property are ignored.
-     * </p>
-     *
-     * @deprecated Use the {@code <commands/>}, {@code <scripts/>} and {@code <batch/>} configuration parameters
-     */
-    @Parameter(alias = "execute-commands")
-    @Deprecated
-    private Commands executeCommands;
-
-    /**
      * The CLI commands to execute.
      */
     @Parameter(property = PropertyNames.COMMANDS)
@@ -275,9 +262,6 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     }
 
     private Commands getCommands() {
-        if (executeCommands != null) {
-            return executeCommands;
-        }
         return new Commands(batch, commands, scripts, failOnError);
     }
 

@@ -54,7 +54,7 @@
             </answer>
         </faq>
         <faq id="executeCommands">
-            <question>Why was the <code>&lt;executeCommands/&gt;</code> option deprecated?</question>
+            <question>Why was the <code>&lt;executeCommands/&gt;</code> option removed?</question>
             <answer>
                 <p>
                     The complex <code>&lt;executeCommands/&gt;</code> configuration parameter has been deprecated in favor
