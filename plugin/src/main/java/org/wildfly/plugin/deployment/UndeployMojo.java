@@ -24,7 +24,7 @@ package org.wildfly.plugin.deployment;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.LinkedHashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -43,7 +43,6 @@ import org.wildfly.plugin.core.DeploymentDescription;
 import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.core.DeploymentResult;
 import org.wildfly.plugin.core.UndeployDescription;
-import org.wildfly.plugin.deployment.domain.Domain;
 
 /**
  * Undeploys the application to the WildFly Application Server.
@@ -55,15 +54,6 @@ public class UndeployMojo extends AbstractServerConnection {
 
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     private MavenProject project;
-
-    /**
-     * Specifies the configuration for a domain server.
-     *
-     * @deprecated use {@code <server-groups/>} property
-     */
-    @Parameter
-    @Deprecated
-    private Domain domain;
 
     /**
      * The server groups the content should be deployed to.
@@ -223,13 +213,6 @@ public class UndeployMojo extends AbstractServerConnection {
     }
 
     private Collection<String> getServerGroups() {
-        final Collection<String> result = new LinkedHashSet<>();
-        if (domain != null) {
-            result.addAll(domain.getServerGroups());
-        }
-        if (serverGroups != null) {
-            result.addAll(serverGroups);
-        }
-        return result;
+        return serverGroups == null ? Collections.emptyList() : serverGroups;
     }
 }

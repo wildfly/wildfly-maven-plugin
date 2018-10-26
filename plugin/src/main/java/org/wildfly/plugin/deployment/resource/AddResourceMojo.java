@@ -23,7 +23,7 @@ package org.wildfly.plugin.deployment.resource;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.LinkedHashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
@@ -42,7 +42,6 @@ import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.core.ServerHelper;
-import org.wildfly.plugin.deployment.domain.Domain;
 
 /**
  * Adds a resource
@@ -58,15 +57,6 @@ import org.wildfly.plugin.deployment.domain.Domain;
 public class AddResourceMojo extends AbstractServerConnection {
 
     public static final String GOAL = "add-resource";
-
-    /**
-     * Specifies the configuration for a domain server.
-     *
-     * @deprecated use {@code <profiles/>} property
-     */
-    @Parameter
-    @Deprecated
-    private Domain domain;
 
     /**
      * The profiles where resources should be added to.
@@ -336,13 +326,6 @@ public class AddResourceMojo extends AbstractServerConnection {
     }
 
     private Collection<String> getProfiles() {
-        final Collection<String> result = new LinkedHashSet<>();
-        if (domain != null) {
-            result.addAll(domain.getProfiles());
-        }
-        if (profiles != null) {
-            result.addAll(profiles);
-        }
-        return result;
+        return profiles == null ? Collections.emptyList() : profiles;
     }
 }
