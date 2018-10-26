@@ -28,7 +28,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import javax.inject.Inject;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -38,8 +37,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.wildfly.plugin.cli.CommandExecutor;
-import org.wildfly.plugin.cli.Commands;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
@@ -103,24 +100,6 @@ public class UndeployArtifactMojo extends AbstractServerConnection {
     private List<String> serverGroups;
 
     /**
-     * Commands to run before the deployment
-     *
-     * @deprecated use the {@code execute-commands} goal
-     */
-    @Parameter(alias = "before-deployment")
-    @Deprecated
-    private Commands beforeDeployment;
-
-    /**
-     * Executions to run after the deployment
-     *
-     * @deprecated use the {@code execute-commands} goal
-     */
-    @Parameter(alias = "after-deployment")
-    @Deprecated
-    private Commands afterDeployment;
-
-    /**
      * Indicates whether undeploy should ignore the undeploy operation if the deployment does not exist.
      */
     @Parameter(defaultValue = "true", property = PropertyNames.IGNORE_MISSING_DEPLOYMENT)
@@ -131,9 +110,6 @@ public class UndeployArtifactMojo extends AbstractServerConnection {
      */
     @Parameter(defaultValue = "false", property = PropertyNames.SKIP)
     private boolean skip;
-
-    @Inject
-    private CommandExecutor commandExecutor;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -171,15 +147,9 @@ public class UndeployArtifactMojo extends AbstractServerConnection {
                 ModelControllerClient client = createClient();
                 MavenModelControllerClientConfiguration configuration = getClientConfiguration();
         ) {
-            if (beforeDeployment != null) {
-                commandExecutor.execute(configuration, beforeDeployment);
-            }
             final boolean failOnMissing = !ignoreMissingDeployment;
             final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
             result = deploymentManager.undeploy(UndeployDescription.of(deploymentName).addServerGroups(getServerGroups()).setFailOnMissing(failOnMissing));
-            if (afterDeployment != null) {
-                commandExecutor.execute(configuration, afterDeployment);
-            }
         } catch (IOException e) {
             throw new MojoFailureException(String.format("Failed to execute %s goal.", goal()), e);
         }

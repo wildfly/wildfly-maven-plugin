@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
-import javax.inject.Inject;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -37,8 +36,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.wildfly.plugin.cli.CommandExecutor;
-import org.wildfly.plugin.cli.Commands;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
@@ -84,24 +81,6 @@ public class UndeployMojo extends AbstractServerConnection {
     private String name;
 
     /**
-     * Commands to run before the deployment
-     *
-     * @deprecated use the {@code execute-commands} goal
-     */
-    @Parameter(alias = "before-deployment")
-    @Deprecated
-    private Commands beforeDeployment;
-
-    /**
-     * Executions to run after the deployment
-     *
-     * @deprecated use the {@code execute-commands} goal
-     */
-    @Parameter(alias = "after-deployment")
-    @Deprecated
-    private Commands afterDeployment;
-
-    /**
      * By default certain package types are ignored when processing, e.g. {@code maven-project} and {@code pom}. Set
      * this value to {@code false} if this check should be bypassed.
      */
@@ -138,9 +117,6 @@ public class UndeployMojo extends AbstractServerConnection {
     @Parameter(defaultValue = "false", property = PropertyNames.SKIP)
     private boolean skip;
 
-    @Inject
-    private CommandExecutor commandExecutor;
-
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (skip) {
@@ -160,9 +136,6 @@ public class UndeployMojo extends AbstractServerConnection {
                     ModelControllerClient client = createClient();
                     MavenModelControllerClientConfiguration configuration = getClientConfiguration()
             ) {
-                if (beforeDeployment != null) {
-                    commandExecutor.execute(configuration, beforeDeployment);
-                }
                 final boolean failOnMissing = !ignoreMissingDeployment;
                 final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
                 if (matchPattern == null) {
@@ -177,9 +150,6 @@ public class UndeployMojo extends AbstractServerConnection {
                         return;
                     }
                     result = deploymentManager.undeploy(matchedDeployments);
-                }
-                if (afterDeployment != null) {
-                    commandExecutor.execute(configuration, afterDeployment);
                 }
             } catch (IOException e) {
                 throw new MojoFailureException("Failed to execute undeploy goal.", e);

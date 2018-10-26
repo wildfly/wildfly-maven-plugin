@@ -45,8 +45,6 @@ import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.core.launcher.CommandBuilder;
 import org.wildfly.core.launcher.Launcher;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
-import org.wildfly.plugin.cli.CommandExecutor;
-import org.wildfly.plugin.cli.Commands;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
@@ -240,31 +238,10 @@ public class RunMojo extends AbstractServerConnection {
     private boolean checkPackaging;
 
     /**
-     * Commands to run before the deployment
-     *
-     * @deprecated use the {@code execute-commands} goal
-     */
-    @Parameter(alias = "before-deployment")
-    @Deprecated
-    private Commands beforeDeployment;
-
-    /**
-     * Executions to run after the deployment
-     *
-     * @deprecated use the {@code execute-commands} goal
-     */
-    @Parameter(alias = "after-deployment")
-    @Deprecated
-    private Commands afterDeployment;
-
-    /**
      * Set to {@code true} if you want the deployment to be skipped, otherwise {@code false}.
      */
     @Parameter(defaultValue = "false", property = PropertyNames.SKIP)
     private boolean skip;
-
-    @Inject
-    private CommandExecutor commandExecutor;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -300,17 +277,11 @@ public class RunMojo extends AbstractServerConnection {
                     ModelControllerClient client = createClient();
                     MavenModelControllerClientConfiguration configuration = getClientConfiguration();
             ) {
-                if (beforeDeployment != null) {
-                    commandExecutor.execute(configuration, wildflyPath, beforeDeployment);
-                }
                 final Deployment deployment = Deployment.of(deploymentContent)
                         .setName(name)
                         .setRuntimeName(runtimeName);
                 final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
                 deploymentManager.forceDeploy(deployment);
-                if (afterDeployment != null) {
-                    commandExecutor.execute(configuration, wildflyPath, afterDeployment);
-                }
             }
             try {
                 // Wait for the process to die
