@@ -129,18 +129,6 @@ public class RunMojo extends AbstractServerConnection {
     private ModulesPath modulesPath;
 
     /**
-     * A space delimited list of JVM arguments.
-     * <div>
-     * Note that the {@code java-opts} will overwrite any arguments listed here.
-     * </div>
-     *
-     * @deprecated use {@link #javaOpts}
-     */
-    @Parameter(alias = "jvm-args", property = PropertyNames.JVM_ARGS)
-    @Deprecated
-    private String jvmArgs;
-
-    /**
      * The JVM options to use.
      */
     @Parameter(alias = "java-opts", property = PropertyNames.JAVA_OPTS)
@@ -327,8 +315,6 @@ public class RunMojo extends AbstractServerConnection {
         // Set the JVM options
         if (Utils.isNotNullOrEmpty(javaOpts)) {
             commandBuilder.setJavaOptions(javaOpts);
-        } else if (Utils.isNotNullOrEmpty(jvmArgs)) {
-            commandBuilder.setJavaOptions(jvmArgs.split("\\s+"));
         }
 
         if (serverConfig != null) {
