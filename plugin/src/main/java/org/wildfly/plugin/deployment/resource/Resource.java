@@ -56,13 +56,19 @@ public class Resource {
 
     /**
      * Commands to run before the deployment
+     *
+     * @deprecated use the {@code execute-commands} goal
      */
+    @Deprecated
     @Parameter(alias = "before-add")
     private Commands beforeAdd;
 
     /**
      * Executions to run after the deployment
+     *
+     * @deprecated use the {@code execute-commands} goal
      */
+    @Deprecated
     @Parameter(alias = "after-add")
     private Commands afterAdd;
 
