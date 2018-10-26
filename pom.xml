@@ -84,7 +84,7 @@
         <version.org.wildfly.checkstyle-config>1.0.7.Final</version.org.wildfly.checkstyle-config>
         <version.org.wildfly.common.wildfly-common>1.4.0.Final</version.org.wildfly.common.wildfly-common>
         <version.org.wildfly.core>6.0.2.Final</version.org.wildfly.core>
-        <version.org.wildfly.dist>10.1.0.Final</version.org.wildfly.dist>
+        <version.org.wildfly.dist>14.0.1.Final</version.org.wildfly.dist>
 
         <!-- maven dependencies -->
         <version.javax.inject.javax.inject>1</version.javax.inject.javax.inject>
@@ -346,15 +346,6 @@
                     </plugin>
                 </plugins>
             </build>
-        </profile>
-        <profile>
-            <id>java9</id>
-            <activation>
-                <jdk>[9,)</jdk>
-            </activation>
-            <properties>
-                <version.org.wildfly.dist>14.0.1.Final</version.org.wildfly.dist>
-            </properties>
         </profile>
     </profiles>
 </project>
