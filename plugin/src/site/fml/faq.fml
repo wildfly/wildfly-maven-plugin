@@ -31,7 +31,7 @@
         <faq id="maven31">
             <question>What versions of maven will the plugin work with?</question>
             <answer>
-                <p>The plugin requires maven 3.1.1 or higher.</p>
+                <p>The plugin requires maven 3.3.1 or higher.</p>
             </answer>
         </faq>
         <faq id="startProc">
