@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.apache.maven.plugins.annotations.Parameter;
-import org.wildfly.plugin.cli.Commands;
 
 /**
  * Defines a resource.
@@ -53,24 +52,6 @@ public class Resource {
      */
     @Parameter
     private Map<String, String> properties;
-
-    /**
-     * Commands to run before the deployment
-     *
-     * @deprecated use the {@code execute-commands} goal
-     */
-    @Deprecated
-    @Parameter(alias = "before-add")
-    private Commands beforeAdd;
-
-    /**
-     * Executions to run after the deployment
-     *
-     * @deprecated use the {@code execute-commands} goal
-     */
-    @Deprecated
-    @Parameter(alias = "after-add")
-    private Commands afterAdd;
 
     /**
      * An array of resources that rely on this resource.
@@ -127,43 +108,5 @@ public class Resource {
      */
     public Resource[] getResources() {
         return resources;
-    }
-
-    /**
-     * Checks if there are commands that should be executed before the deployment.
-     *
-     * @return {@code true} if there are commands that need to be executed before the deployment, otherwise {@code
-     * false}
-     */
-    public boolean hasBeforeAddCommands() {
-        return beforeAdd != null && beforeAdd.hasCommands();
-    }
-
-    /**
-     * Returns the commands that should be executed before the resource is deployed.
-     *
-     * @return the commands to execute
-     */
-    public Commands getBeforeAdd() {
-        return beforeAdd;
-    }
-
-    /**
-     * Checks if there are commands that should be executed after the deployment.
-     *
-     * @return {@code true} if there are commands that need to be executed after the deployment, otherwise {@code
-     * false}
-     */
-    public boolean hasAfterAddCommands() {
-        return afterAdd != null && afterAdd.hasCommands();
-    }
-
-    /**
-     * Returns the commands that should be executed after the resource is deployed.
-     *
-     * @return the commands to execute
-     */
-    public Commands getAfterAdd() {
-        return afterAdd;
     }
 }

@@ -148,29 +148,15 @@ public class AddResourceMojo extends AbstractServerConnection {
                 for (String profile : profiles) {
                     final CompositeOperationBuilder compositeOperationBuilder = CompositeOperationBuilder.create();
                     if (addCompositeResource(profile, client, resource, address, compositeOperationBuilder, true)) {
-                        if (resource.hasBeforeAddCommands()) {
-                            commandExecutor.execute(configuration, jbossHome, resource.getBeforeAdd());
-                        }
                         // Execute the add resource operation
                         reportFailure(client.execute(compositeOperationBuilder.build()));
-
-                        if (resource.hasAfterAddCommands()) {
-                            commandExecutor.execute(configuration, jbossHome, resource.getAfterAdd());
-                        }
                     }
                 }
             } else {
                 final CompositeOperationBuilder compositeOperationBuilder = CompositeOperationBuilder.create();
                 if (addCompositeResource(null, client, resource, address, compositeOperationBuilder, true)) {
-                    if (resource.hasBeforeAddCommands()) {
-                        commandExecutor.execute(configuration, jbossHome, resource.getBeforeAdd());
-                    }
                     // Execute the add resource operation
                     reportFailure(client.execute(compositeOperationBuilder.build()));
-
-                    if (resource.hasAfterAddCommands()) {
-                        commandExecutor.execute(configuration, jbossHome, resource.getAfterAdd());
-                    }
                 }
             }
         }

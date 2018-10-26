@@ -26,8 +26,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.maven.plugins.annotations.Parameter;
-
 /**
  * CLI commands to run.
  * <p/>
@@ -41,26 +39,23 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  * @author <a href="mailto:heinz.wilming@akquinet.de">Heinz Wilming</a>
  */
-public class Commands {
+class Commands {
 
     /**
      * {@code true} if commands should be executed in a batch or {@code false} if they should be executed one at a
      * time.
      */
-    @Parameter
     private boolean batch;
 
     /**
      * The CLI commands to execute.
      */
-    @Parameter
-    private List<String> commands = new ArrayList<>();
+    private List<String> commands;
 
     /**
      * The CLI script files to execute.
      */
-    @Parameter
-    private List<File> scripts = new ArrayList<>();
+    private List<File> scripts;
 
     private final boolean failOnError;
 
@@ -84,7 +79,7 @@ public class Commands {
      * @return {@code true} if commands should be executed in a batch, otherwise
      * {@code false}
      */
-    public boolean isBatch() {
+    boolean isBatch() {
         return batch;
     }
 
@@ -93,7 +88,7 @@ public class Commands {
      *
      * @return the defined commands or an empty list
      */
-    protected List<String> getCommands() {
+    List<String> getCommands() {
         return new ArrayList<>(commands);
     }
 
@@ -102,7 +97,7 @@ public class Commands {
      *
      * @return the defined script files or an empty list
      */
-    protected List<File> getScripts() {
+    List<File> getScripts() {
         return new ArrayList<>(scripts);
     }
 
@@ -112,7 +107,7 @@ public class Commands {
      * @return {@code true} if subsequent commands should not be executed if there was a failed command, {@code false}
      * if subsequent command should continue to run.
      */
-    protected boolean isFailOnError() {
+    boolean isFailOnError() {
         return failOnError;
     }
 
@@ -121,7 +116,7 @@ public class Commands {
      *
      * @return {@code true} if there are commands to be processed, otherwise {@code false}
      */
-    public boolean hasCommands() {
+    boolean hasCommands() {
         return commands != null && !commands.isEmpty();
     }
 
@@ -130,7 +125,7 @@ public class Commands {
      *
      * @return {@code true} if there are CLI script files to be processed, otherwise {@code false}
      */
-    public boolean hasScripts() {
+    boolean hasScripts() {
         return scripts != null && !scripts.isEmpty();
     }
 }
