@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import org.apache.maven.plugin.Mojo;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.jboss.as.cli.CommandLineException;
 import org.jboss.dmr.ModelNode;
 import org.junit.Test;
@@ -45,8 +46,8 @@ public class FailOnErrorTest extends AbstractWildFlyServerMojoTest {
 
         try {
             executeCommandsMojo.execute();
-            fail("IllegalArgumentException expected.");
-        } catch (IllegalArgumentException e) {
+            fail("MojoExecutionException expected.");
+        } catch (MojoExecutionException e) {
             assertEquals(CommandLineException.class, e.getCause().getClass());
         }
         final ModelNode address = ServerOperations.createAddress("system-property", "propertyFailOnError");
@@ -69,8 +70,8 @@ public class FailOnErrorTest extends AbstractWildFlyServerMojoTest {
 
         try {
             executeCommandsMojo.execute();
-            fail("IllegalArgumentException expected.");
-        } catch (IllegalArgumentException ignore) {
+            fail("MojoExecutionException expected.");
+        } catch (MojoExecutionException ignore) {
         }
         final ModelNode address = ServerOperations.createAddress("system-property", "propertyFailOnError");
         final ModelNode op = ServerOperations.createReadAttributeOperation(address, "value");
@@ -132,10 +133,9 @@ public class FailOnErrorTest extends AbstractWildFlyServerMojoTest {
 
         try {
             executeCommandsMojo.execute();
-            fail("IllegalArgumentException expected.");
-        } catch (IllegalArgumentException e) {
-            assertEquals(IllegalArgumentException.class, e.getCause().getClass());
-            assertEquals(CommandLineException.class, e.getCause().getCause().getClass());
+            fail("MojoExecutionException expected.");
+        } catch (MojoExecutionException e) {
+            assertEquals(CommandLineException.class, e.getCause().getClass());
         }
         final ModelNode address = ServerOperations.createAddress("system-property", "scriptFailOnError");
         final ModelNode op = ServerOperations.createReadAttributeOperation(address, "value");

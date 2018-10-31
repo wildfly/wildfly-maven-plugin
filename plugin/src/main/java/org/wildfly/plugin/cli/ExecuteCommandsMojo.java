@@ -38,9 +38,17 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.jboss.as.cli.CommandContext;
+import org.jboss.as.cli.CommandContextFactory;
+import org.jboss.as.cli.CommandFormatException;
+import org.jboss.as.cli.CommandLineException;
+import org.jboss.as.cli.batch.Batch;
+import org.jboss.as.cli.batch.BatchManager;
+import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.dmr.ModelNode;
 import org.wildfly.plugin.common.AbstractServerConnection;
-import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
+import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.common.StandardOutput;
 import org.wildfly.plugin.core.ServerHelper;
 
@@ -156,9 +164,6 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     private String[] javaOpts;
 
     @Inject
-    private CommandExecutor commandExecutor;
-
-    @Inject
     private OfflineCLIExecutor offlineCLIExecutor;
 
     @Override
@@ -214,38 +219,7 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             }
 
         } else {
-            // The jbossHome is not required, but if defined should be valid
-            if (jbossHome != null && !ServerHelper.isValidHomeDirectory(jbossHome)) {
-                throw new MojoFailureException("Invalid JBoss Home directory is not valid: " + jbossHome);
-            }
-            final Properties currentSystemProperties = System.getProperties();
-            try {
-                getLog().debug("Executing commands");
-                // Create new system properties with the defaults set to the current system properties
-                final Properties newSystemProperties = new Properties(currentSystemProperties);
-
-                if (propertiesFiles != null) {
-                    for (File file : propertiesFiles) {
-                        parseProperties(file, newSystemProperties);
-                    }
-                }
-
-                if (systemProperties != null) {
-                    newSystemProperties.putAll(systemProperties);
-                }
-
-                // Set the system properties for executing commands
-                System.setProperties(newSystemProperties);
-                try (MavenModelControllerClientConfiguration configuration = getClientConfiguration()) {
-                    commandExecutor.execute(configuration, jbossHome, getCommands());
-                } catch (IOException e) {
-                    throw new MojoExecutionException("Could not execute commands.", e);
-                }
-            } catch (IOException e) {
-                throw new MojoFailureException("Failed to parse properties.", e);
-            } finally {
-                System.setProperties(currentSystemProperties);
-            }
+            executeInProcess();
         }
     }
 
@@ -259,6 +233,114 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
         if (value != null) {
             javaOpts = value.split("\\s+");
         }
+    }
+
+    private void executeInProcess() throws MojoExecutionException, MojoFailureException {
+        // The jbossHome is not required, but if defined should be valid
+        if (jbossHome != null && !ServerHelper.isValidHomeDirectory(jbossHome)) {
+            throw new MojoFailureException("Invalid JBoss Home directory is not valid: " + jbossHome);
+        }
+        final Properties currentSystemProperties = System.getProperties();
+        try {
+            getLog().debug("Executing commands");
+            // Create new system properties with the defaults set to the current system properties
+            final Properties newSystemProperties = new Properties(currentSystemProperties);
+
+            if (propertiesFiles != null) {
+                for (File file : propertiesFiles) {
+                    parseProperties(file, newSystemProperties);
+                }
+            }
+
+            if (systemProperties != null) {
+                newSystemProperties.putAll(systemProperties);
+            }
+
+            // Set the system properties for executing commands
+            System.setProperties(newSystemProperties);
+            CommandContext commandContext = null;
+            try (ModelControllerClient client = createClient()) {
+                commandContext = createCommandContext(client);
+                if (commands != null && !commands.isEmpty()) {
+                    if (batch) {
+                        executeBatch(commandContext, commands);
+                    } else {
+                        executeCommands(commandContext, commands, failOnError);
+                    }
+                }
+                if (scripts != null && !scripts.isEmpty()) {
+                    for (File scriptFile : scripts) {
+                        final List<String> commands = Files.readAllLines(scriptFile.toPath(), StandardCharsets.UTF_8);
+                        if (batch) {
+                            executeBatch(commandContext, commands);
+                        } else {
+                            executeCommands(commandContext, commands, failOnError);
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                throw new MojoExecutionException("Could not execute commands.", e);
+            } finally {
+                if (commandContext != null) {
+                    commandContext.terminateSession();
+                }
+            }
+        } catch (IOException e) {
+            throw new MojoFailureException("Failed to parse properties.", e);
+        } finally {
+            System.setProperties(currentSystemProperties);
+        }
+    }
+
+    private static void executeCommands(final CommandContext ctx, final Iterable<String> commands, final boolean failOnError) throws MojoExecutionException {
+        for (String cmd : commands) {
+            try {
+                if (failOnError) {
+                    ctx.handle(cmd);
+                } else {
+                    ctx.handleSafe(cmd);
+                }
+            } catch (CommandFormatException e) {
+                throw new MojoExecutionException(String.format("Command '%s' is invalid. %s", cmd, e.getLocalizedMessage()), e);
+            } catch (CommandLineException e) {
+                throw new MojoExecutionException(String.format("Command execution failed for command '%s'. %s", cmd, e.getLocalizedMessage()), e);
+            }
+        }
+    }
+
+    private static void executeBatch(final CommandContext ctx, final Iterable<String> commands) throws IOException, MojoExecutionException {
+        final BatchManager batchManager = ctx.getBatchManager();
+        if (batchManager.activateNewBatch()) {
+            final Batch batch = batchManager.getActiveBatch();
+            for (String cmd : commands) {
+                try {
+                    batch.add(ctx.toBatchedCommand(cmd));
+                } catch (CommandFormatException e) {
+                    throw new MojoExecutionException(String.format("Command '%s' is invalid. %s", cmd, e.getLocalizedMessage()), e);
+                }
+            }
+            final ModelNode result = ctx.getModelControllerClient().execute(batch.toRequest());
+            if (!ServerOperations.isSuccessfulOutcome(result)) {
+                throw new MojoExecutionException(ServerOperations.getFailureDescriptionAsString(result));
+            }
+        }
+    }
+
+    private CommandContext createCommandContext(final ModelControllerClient client) {
+        CommandContext commandContext = null;
+        try {
+            commandContext = CommandContextFactory.getInstance().newCommandContext();
+            commandContext.bindClient(client);
+        } catch (CommandLineException e) {
+            throw new IllegalStateException("Failed to initialize CLI context", e);
+        } catch (Exception e) {
+            // Terminate the session if we've encountered an error
+            if (commandContext != null) {
+                commandContext.terminateSession();
+            }
+            throw new IllegalStateException("Failed to initialize CLI context", e);
+        }
+        return commandContext;
     }
 
     private Commands getCommands() {
