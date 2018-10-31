@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -36,7 +35,6 @@ import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.Operations.CompositeOperationBuilder;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.Property;
-import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
@@ -100,9 +98,6 @@ public class AddResourceMojo extends AbstractServerConnection {
      */
     @Parameter(alias = "jboss-home", property = PropertyNames.JBOSS_HOME)
     private String jbossHome;
-
-    @Inject
-    private CommandExecutor commandExecutor;
 
     @Override
     public String goal() {
