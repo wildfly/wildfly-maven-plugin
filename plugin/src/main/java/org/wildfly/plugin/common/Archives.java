@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2014, Red Hat, Inc., and individual contributors
+ * Copyright 2018, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -20,18 +20,13 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.wildfly.plugin.server;
-
-import static java.nio.file.FileVisitResult.CONTINUE;
+package org.wildfly.plugin.common;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Locale;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
@@ -45,57 +40,68 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory;
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-class Archives {
+public class Archives {
 
     /**
-     * Recursively deletes a directory. If the directory does not exist it's ignored.
+     * Unzips the zip file to the target directory.
+     * <p>
+     * Note this is specific to how WildFly is archived. The first directory is assumed to be the base home directory
+     * and will returned.
+     * </p>
      *
-     * @param dir the directory
+     * @param archiveFile the archive to uncompress, can be a {@code .zip} or {@code .tar.gz}
+     * @param targetDir   the directory to extract the zip file to
      *
-     * @throws java.lang.IllegalArgumentException if the argument is not a directory
+     * @return the path to the extracted directory
+     *
+     * @throws java.io.IOException if an I/O error occurs
      */
-    public static void deleteDirectory(final Path dir) throws IOException {
-        if (Files.notExists(dir)) return;
-        if (!Files.isDirectory(dir)) {
-            throw new IllegalArgumentException(String.format("Path '%s' is not a directory.", dir));
-        }
-        Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
-                Files.delete(file);
-                return CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(final Path dir, final IOException exc) throws IOException {
-                Files.delete(dir);
-                return CONTINUE;
-            }
-        });
+    public static Path uncompress(final Path archiveFile, final Path targetDir) throws IOException {
+        return uncompress(archiveFile, targetDir, false);
     }
 
     /**
      * Unzips the zip file to the target directory.
+     * <p>
+     * Note this is specific to how WildFly is archived. The first directory is assumed to be the base home directory
+     * and will returned.
+     * </p>
      *
-     * @param zipFile   the zip file to unzip
-     * @param targetDir the directory to extract the zip file to
+     * @param archiveFile     the archive to uncompress, can be a {@code .zip} or {@code .tar.gz}
+     * @param targetDir       the directory to extract the zip file to
+     * @param replaceIfExists if {@code true} replace the existing files if they exist
+     *
+     * @return the path to the extracted directory
      *
      * @throws java.io.IOException if an I/O error occurs
      */
-    public static void unzip(final Path zipFile, final Path targetDir) throws IOException {
-        final Path archive = getArchive(zipFile);
+    @SuppressWarnings("WeakerAccess")
+    public static Path uncompress(final Path archiveFile, final Path targetDir, final boolean replaceIfExists) throws IOException {
+        final Path archive = getArchive(archiveFile);
+
+        Path firstDir = null;
 
         try (ArchiveInputStream in = new ArchiveStreamFactory().createArchiveInputStream(new BufferedInputStream(Files.newInputStream(archive)))) {
             ArchiveEntry entry;
             while ((entry = in.getNextEntry()) != null) {
                 final Path extractTarget = targetDir.resolve(entry.getName());
+                if (!replaceIfExists && Files.exists(extractTarget)) {
+                    if (entry.isDirectory() && firstDir == null) {
+                        firstDir = extractTarget;
+                    }
+                    continue;
+                }
                 if (entry.isDirectory()) {
-                    Files.createDirectories(extractTarget);
+                    final Path dir = Files.createDirectories(extractTarget);
+                    if (firstDir == null) {
+                        firstDir = dir;
+                    }
                 } else {
                     Files.createDirectories(extractTarget.getParent());
                     Files.copy(in, extractTarget);
                 }
             }
+            return firstDir == null ? targetDir : firstDir;
         } catch (ArchiveException e) {
             throw new IOException(e);
         }
@@ -110,7 +116,7 @@ class Archives {
             String tempFileName = fileName.substring(0, loweredFileName.indexOf(".gz"));
             final int index = tempFileName.lastIndexOf('.');
             if (index > 0) {
-                result = Files.createTempFile(tempFileName.substring(0, index), tempFileName.substring(index, tempFileName.length()));
+                result = Files.createTempFile(tempFileName.substring(0, index), tempFileName.substring(index));
             } else {
                 result = Files.createTempFile(tempFileName.substring(0, index), "");
             }
