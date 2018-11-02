@@ -26,7 +26,7 @@
     <skin>
         <groupId>org.apache.maven.skins</groupId>
         <artifactId>maven-fluido-skin</artifactId>
-        <version>1.5</version>
+        <version>1.7</version>
     </skin>
     <bannerLeft>
         <name>WildFly Maven Plugin</name>
@@ -52,7 +52,7 @@
 
         <menu name="Project Documentation">
             <item name="JavaDoc" href="apidocs/index.html"/>
-            <item name="WildFly" href="https://docs.jboss.org/author/display/WFLY10/Documentation"/>
+            <item name="WildFly" href="https://docs.wildfly.org"/>
         </menu>
 
         <menu ref="reports"/>

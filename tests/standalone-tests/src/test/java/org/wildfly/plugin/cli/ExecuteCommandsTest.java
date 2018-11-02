@@ -22,7 +22,12 @@
 
 package org.wildfly.plugin.cli;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.apache.maven.plugin.Mojo;
 import org.jboss.dmr.ModelNode;
@@ -97,31 +102,40 @@ public class ExecuteCommandsTest extends AbstractWildFlyServerMojoTest {
     }
 
     @Test
-    public void testExecuteLocalCommands() throws Exception {
+    public void testExecuteForkCommands() throws Exception {
 
-        final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-commands-local-pom.xml");
+        final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-commands-fork-pom.xml");
         setValue(executeCommandsMojo, "jbossHome", TestEnvironment.WILDFLY_HOME.toString());
 
         executeCommandsMojo.execute();
 
         // Read the attribute
-        ModelNode address = ServerOperations.createAddress("system-property", "org.wildfly.maven.plugin-local-cmd");
+        ModelNode address = ServerOperations.createAddress("system-property", "org.wildfly.maven.plugin-fork-cmd");
         ModelNode op = ServerOperations.createReadAttributeOperation(address, "value");
         ModelNode result = executeOperation(op);
         assertEquals("true", ServerOperations.readResultAsString(result));
+
+        // Ensure the module has been added
+        final Path moduleDir = Paths.get(TestEnvironment.WILDFLY_HOME.toString(), "modules", "org", "wildfly", "plugin", "tests", "main");
+        assertTrue(String.format("Expected %s to exist.", moduleDir), Files.exists(moduleDir));
+        assertTrue("Expected the module.xml to exist in " + moduleDir, Files.exists(moduleDir.resolve("module.xml")));
+        assertTrue("Expected the test.jar to exist in " + moduleDir, Files.exists(moduleDir.resolve("test.jar")));
 
         // Clean up the property
         executeOperation(ServerOperations.createRemoveOperation(address));
 
 
         // Read the attribute
-        address = ServerOperations.createAddress("system-property", "local-command");
+        address = ServerOperations.createAddress("system-property", "fork-command");
         op = ServerOperations.createReadAttributeOperation(address, "value");
         result = executeOperation(op);
         assertEquals("set", ServerOperations.readResultAsString(result));
 
         // Clean up the property
         executeOperation(ServerOperations.createRemoveOperation(address));
+
+        // Remove the module
+        deleteRecursively(TestEnvironment.WILDFLY_HOME.resolve("modules").resolve("org"));
     }
 
     @Test
