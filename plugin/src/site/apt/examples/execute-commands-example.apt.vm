@@ -74,11 +74,45 @@ Execute Commands Examples
 ----------
 batch
 # set default transaction timeout
-/subsystem=transactions :write-attribute(name=default-timeout, value=600)
+/subsystem=transactions:write-attribute(name=default-timeout, value=600)
 #...
 # Execute and reload
 run-batch
 :reload
+----------
+
+
+* Execute CLI commands in a new process
+
+  The example below shows how to execute commands in a forked process. This allows for CLI commands, such as
+  <<<module add>>>, to be used.
+
+----------
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <version>${version.org.wildfly.plugin}</version>
+                <executions>
+                ....
+                </executions>
+                <configuration>
+                    <fork>true</fork>
+                    <jboss-home>${wildfly.dir}</jboss-home>
+                    <command>module add --name=org.wildfly.plugin.example --dependencies=org.jboss.logging --resources=\${project.build.directory}${file.separator}example.jar</command>
+                </configuration>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+    ...
+</project>
 ----------
 
 
@@ -106,7 +140,7 @@ run-batch
                     </commands>
                     <jboss-home>${wildfly.dir}</jboss-home>
                     <!-- where to out log-->
-                    <stdout>${project.build.directory}/wildfly-plugin.log</stdout>
+                    <stdout>\${project.build.directory}/wildfly-plugin.log</stdout>
                     <!-- java opts with which CLI is started with -->
                     <java-opts>
                         <java-opt>--add-modules=javax.se</java-opt>
@@ -155,7 +189,7 @@ run-batch
                     </scripts>
                     <jboss-home>${wildfly.dir}</jboss-home>
                     <!-- where to out log-->
-                    <stdout>${project.build.directory}/wildfly-plugin.log</stdout>
+                    <stdout>\${project.build.directory}/wildfly-plugin.log</stdout>
                     <!-- java opts with which CLI is started with -->
                     <java-opts>${modular.jdk.args}</java-opts>
                     <!-- system properties that can than be referenced in CLI script-->

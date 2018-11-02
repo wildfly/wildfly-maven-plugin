@@ -28,16 +28,22 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import javax.inject.Inject;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.jboss.as.cli.CommandContext;
 import org.jboss.as.cli.CommandContextFactory;
 import org.jboss.as.cli.CommandFormatException;
@@ -46,11 +52,18 @@ import org.jboss.as.cli.batch.Batch;
 import org.jboss.as.cli.batch.BatchManager;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.dmr.ModelNode;
+import org.wildfly.core.launcher.CliCommandBuilder;
+import org.wildfly.core.launcher.Launcher;
 import org.wildfly.plugin.common.AbstractServerConnection;
+import org.wildfly.plugin.common.Archives;
+import org.wildfly.plugin.common.Environment;
+import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.common.StandardOutput;
 import org.wildfly.plugin.core.ServerHelper;
+import org.wildfly.plugin.repository.ArtifactNameBuilder;
+import org.wildfly.plugin.repository.ArtifactResolver;
 
 /**
  * Execute commands to the running WildFly Application Server.
@@ -129,6 +142,18 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     private boolean failOnError = true;
 
     /**
+     * Indicates the commands should be run in a new process. If the {@code jboss-home} property is not set an attempt
+     * will be made to download a version of WildFly to execute commands on. However it's generally considered best
+     * practice to set the {@code jboss-home} property if setting this value to {@code true}.
+     * <p>
+     * Note that if {@code offline} is set to {@code true} this setting really has no effect.
+     * </p>
+     * @since 2.0.0
+     */
+    @Parameter(defaultValue = "false", property = "wildfly.fork")
+    private boolean fork;
+
+    /**
      * Indicates whether or not CLI scrips or commands should be executed in an offline mode. This is useful for using
      * an embedded server or host controller.
      *
@@ -139,8 +164,9 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
 
     /**
      * Indicates how {@code stdout} and {@code stderr} should be handled for the spawned CLI process. Currently a new
-     * process is only spawned if {@code offline} is set to {@code true}. Note that {@code stderr} will be redirected to
-     * {@code stdout} if the value is defined unless the value is {@code none}.
+     * process is only spawned if {@code offline} is set to {@code true} or {@code fork} is set to {@code true}. Note
+     * that {@code stderr} will be redirected to {@code stdout} if the value is defined unless the value is
+     * {@code none}.
      * <div>
      * By default {@code stdout} and {@code stderr} are inherited from the current process. You can change the setting
      * to one of the follow:
@@ -163,8 +189,17 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     @Parameter(alias = "java-opts", property = PropertyNames.JAVA_OPTS)
     private String[] javaOpts;
 
+    @Parameter(defaultValue = "${repositorySystemSession}", readonly = true, required = true)
+    private RepositorySystemSession session;
+
+    @Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true, required = true)
+    private List<RemoteRepository> repositories;
+
+    @Parameter(defaultValue = "${project.build.directory}", readonly = true, required = true)
+    private File buildDir;
+
     @Inject
-    private OfflineCLIExecutor offlineCLIExecutor;
+    private ArtifactResolver artifactResolver;
 
     @Override
     public String goal() {
@@ -182,44 +217,14 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             if (!ServerHelper.isValidHomeDirectory(jbossHome)) {
                 throw new MojoFailureException("Invalid JBoss Home directory is not valid: " + jbossHome);
             }
-            getLog().debug("Executing offline CLI scripts");
-            try {
-                final StandardOutput out = StandardOutput.parse(stdout, false);
-
-                final int exitCode = offlineCLIExecutor.execute(jbossHome, getCommands(), out, systemProperties, javaOpts);
-                if (exitCode != 0) {
-                    final StringBuilder msg = new StringBuilder("Failed to execute commands: ");
-                    switch (out.getTarget()) {
-                        case COLLECTING:
-                            msg.append(out);
-                            break;
-                        case FILE:
-                            final Path stdoutPath = out.getStdoutPath();
-                            msg.append("See ").append(stdoutPath).append(" for full details of failure.").append(System.lineSeparator());
-                            final List<String> lines = Files.readAllLines(stdoutPath);
-                            lines.subList(Math.max(lines.size() - 4, 0), lines.size())
-                                    .forEach(line -> msg.append(line).append(System.lineSeparator()));
-                            break;
-                        case SYSTEM_ERR:
-                        case SYSTEM_OUT:
-                        case INHERIT:
-                            msg.append("See previous messages for failure messages.");
-                            break;
-                        default:
-                            msg.append("Reason unknown");
-                    }
-                    if (failOnError) {
-                        throw new MojoExecutionException(msg.toString());
-                    } else {
-                        getLog().warn(msg);
-                    }
-                }
-            } catch (IOException e) {
-                throw new MojoFailureException("Failed to execute scripts.", e);
-            }
-
+            executeInNewProcess(Paths.get(jbossHome));
         } else {
-            executeInProcess();
+            if (fork) {
+                // Check the jbossHome and if not found download it
+                executeInNewProcess(extractIfRequired());
+            } else {
+                executeInProcess();
+            }
         }
     }
 
@@ -235,6 +240,138 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
         }
     }
 
+    private void executeInNewProcess(final Path wildflyHome) throws MojoExecutionException {
+        // If we have commands create a script file and execute
+        if (commands != null && !commands.isEmpty()) {
+            Path scriptFile = null;
+            try {
+                scriptFile = ScriptWriter.create(commands, batch, failOnError);
+                executeInNewProcess(wildflyHome, scriptFile);
+            } catch (IOException e) {
+                throw new MojoExecutionException("Failed execute commands.", e);
+            } finally {
+                if (scriptFile != null) {
+                    try {
+                        Files.deleteIfExists(scriptFile);
+                    } catch (IOException e) {
+                        getLog().debug("Failed to deleted CLI script file: " + scriptFile, e);
+                    }
+                }
+            }
+        }
+        if (scripts != null && !scripts.isEmpty()) {
+            for (File script : scripts) {
+                executeInNewProcess(wildflyHome, script.toPath());
+            }
+        }
+    }
+
+    private void executeInNewProcess(final Path wildflyHome, final Path scriptFile) throws MojoExecutionException {
+        getLog().debug("Executing CLI scripts");
+        try {
+            final StandardOutput out = StandardOutput.parse(stdout, false);
+
+            final int exitCode = executeInNewProcess(wildflyHome, scriptFile, out);
+            if (exitCode != 0) {
+                final StringBuilder msg = new StringBuilder("Failed to execute commands: ");
+                switch (out.getTarget()) {
+                    case COLLECTING:
+                        msg.append(out);
+                        break;
+                    case FILE:
+                        final Path stdoutPath = out.getStdoutPath();
+                        msg.append("See ").append(stdoutPath).append(" for full details of failure.").append(System.lineSeparator());
+                        final List<String> lines = Files.readAllLines(stdoutPath);
+                        lines.subList(Math.max(lines.size() - 4, 0), lines.size())
+                                .forEach(line -> msg.append(line).append(System.lineSeparator()));
+                        break;
+                    case SYSTEM_ERR:
+                    case SYSTEM_OUT:
+                    case INHERIT:
+                        msg.append("See previous messages for failure messages.");
+                        break;
+                    default:
+                        msg.append("Reason unknown");
+                }
+                if (failOnError) {
+                    throw new MojoExecutionException(msg.toString());
+                } else {
+                    getLog().warn(msg);
+                }
+            }
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to execute scripts.", e);
+        }
+    }
+
+    private int executeInNewProcess(final Path wildflyHome, final Path scriptFile, final StandardOutput stdout) throws MojoExecutionException, IOException {
+        final Log log = getLog();
+        try (MavenModelControllerClientConfiguration clientConfiguration = getClientConfiguration()) {
+
+            final CliCommandBuilder builder = CliCommandBuilder.of(wildflyHome)
+                    .setScriptFile(scriptFile);
+            if (!offline) {
+                builder.setConnection(clientConfiguration.getController());
+            }
+            // Configure the authentication config url if defined
+            if (clientConfiguration.getAuthenticationConfigUri() != null) {
+                builder.addJavaOption("-Dwildfly.config.url=" + clientConfiguration.getAuthenticationConfigUri().toString());
+            }
+            // Workaround for WFCORE-4121
+            if (Environment.isModularJvm(builder.getJavaHome())) {
+                builder.addJavaOptions(Environment.getModularJvmArguments());
+            }
+            if (systemProperties != null) {
+                systemProperties.forEach((key, value) -> builder.addJavaOption(String.format("-D%s=%s", key, value)));
+                if (systemProperties.containsKey("module.path")) {
+                    builder.setModuleDirs(systemProperties.get("module.path"));
+                }
+            }
+
+            if (propertiesFiles != null) {
+                final Properties properties = new Properties();
+                for (File file : propertiesFiles) {
+                    parseProperties(file, properties);
+                }
+                for (String key : properties.stringPropertyNames()) {
+                    builder.addJavaOption(String.format("-D%s=%s", key, properties.getProperty(key)));
+                }
+            }
+
+            if (javaOpts != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug("java opts: " + Arrays.toString(javaOpts));
+                }
+                for (String opt : javaOpts) {
+                    if (!opt.trim().isEmpty()) {
+                        builder.addJavaOption(opt);
+                    }
+                }
+
+            }
+            if (log.isDebugEnabled()) {
+                log.debug("process parameters: " + builder.build());
+            }
+            final Launcher launcher = Launcher.of(builder)
+                    .addEnvironmentVariable("JBOSS_HOME", wildflyHome.toString())
+                    .setRedirectErrorStream(true);
+            stdout.getRedirect().ifPresent(launcher::redirectOutput);
+            final Process process = launcher.launch();
+            final Optional<Thread> consoleConsumer = stdout.startConsumer(process);
+            try {
+                return process.waitFor();
+            } catch (InterruptedException e) {
+                throw new MojoExecutionException("Failed to run goal execute-commands in forked process.", e);
+            } finally {
+                // Be safe and destroy the process to ensure we don't leave rouge processes running
+                if (process.isAlive()) {
+                    process.destroyForcibly();
+                }
+                consoleConsumer.ifPresent(Thread::interrupt);
+            }
+        }
+    }
+
     private void executeInProcess() throws MojoExecutionException, MojoFailureException {
         // The jbossHome is not required, but if defined should be valid
         if (jbossHome != null && !ServerHelper.isValidHomeDirectory(jbossHome)) {
@@ -245,6 +382,12 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             getLog().debug("Executing commands");
             // Create new system properties with the defaults set to the current system properties
             final Properties newSystemProperties = new Properties(currentSystemProperties);
+
+            // Add the JBoss Home if defined
+            if (jbossHome != null) {
+                newSystemProperties.setProperty("jboss.home", jbossHome);
+                newSystemProperties.setProperty("jboss.home.dir", jbossHome);
+            }
 
             if (propertiesFiles != null) {
                 for (File file : propertiesFiles) {
@@ -343,8 +486,17 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
         return commandContext;
     }
 
-    private Commands getCommands() {
-        return new Commands(batch, commands, scripts, failOnError);
+    private Path extractIfRequired() throws MojoFailureException {
+        if (jbossHome != null) {
+            //we do not need to download WildFly
+            return Paths.get(jbossHome);
+        }
+        final Path result = artifactResolver.resolve(session, repositories, ArtifactNameBuilder.forRuntime(null).build());
+        try {
+            return Archives.uncompress(result, buildDir.toPath());
+        } catch (IOException e) {
+            throw new MojoFailureException("Artifact was not successfully extracted: " + result, e);
+        }
     }
 
     private static void parseProperties(final File file, final Properties properties) throws IOException {
