@@ -19,6 +19,8 @@
 
 package org.wildfly.plugin.core;
 
+import org.wildfly.common.Assert;
+
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
@@ -29,8 +31,6 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
-
-import org.wildfly.common.Assert;
 
 /**
  * Represents a deployment to be deployed or redeployed to a server.
@@ -47,6 +47,7 @@ public class Deployment implements DeploymentDescription, Comparable<Deployment>
     private final Set<String> serverGroups;
     private String name;
     private String runtimeName;
+    private boolean unmanaged = false;
     private boolean enabled = true;
 
     private Deployment(final DeploymentContent content, final String name) {
@@ -260,6 +261,15 @@ public class Deployment implements DeploymentDescription, Comparable<Deployment>
      */
     public Deployment setRuntimeName(final String runtimeName) {
         this.runtimeName = runtimeName;
+        return this;
+    }
+
+    public boolean isUnmanaged() {
+        return unmanaged;
+    }
+
+    public Deployment setUnmanaged(boolean unmanaged) {
+        this.unmanaged = unmanaged;
         return this;
     }
 

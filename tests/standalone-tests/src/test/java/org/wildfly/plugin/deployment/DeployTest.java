@@ -22,13 +22,6 @@
 
 package org.wildfly.plugin.deployment;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import javax.inject.Inject;
-
 import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.dmr.ModelNode;
 import org.junit.Test;
@@ -36,6 +29,15 @@ import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.core.UndeployDescription;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
+
+import javax.inject.Inject;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * deploy mojo testcase.
@@ -68,6 +70,38 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         final ModelNode result = executeOperation(op);
 
         assertEquals("OK", ServerOperations.readResultAsString(result));
+        deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME));
+    }
+
+    @Test
+    public void testUnmanagedArchiveDeploy() throws Exception {
+
+        // Make sure the archive is not deployed
+        if (deploymentManager.hasDeployment(DEPLOYMENT_NAME)) {
+            deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME));
+        }
+
+        final AbstractDeployment deployMojo = lookupMojoAndVerify("deploy", "deploy-webarchive-unmanaged-pom.xml");
+
+        deployMojo.execute();
+
+        // Verify deployed
+        assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed", deploymentManager.hasDeployment(DEPLOYMENT_NAME));
+
+        // /deployment=test.war :read-attribute(name=status)
+        final ModelNode address = ServerOperations.createAddress("deployment", DEPLOYMENT_NAME);
+        final ModelNode op = ServerOperations.createReadAttributeOperation(address, "content");
+        final ModelNode result = executeOperation(op);
+
+        if (!ServerOperations.isSuccessfulOutcome(result)) {
+            fail(ServerOperations.getFailureDescriptionAsString(result));
+        }
+        List<ModelNode> list = ServerOperations.readResult(result).asList();
+        assertEquals(1, list.size());
+        ModelNode first = list.iterator().next();
+
+        assertNotNull(first.get("path"));
+        assertTrue(first.get("archive").asBoolean());
         deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME));
     }
 

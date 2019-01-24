@@ -22,12 +22,6 @@
 
 package org.wildfly.plugin.deployment;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -40,6 +34,12 @@ import org.wildfly.plugin.core.Deployment;
 import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.core.DeploymentResult;
 import org.wildfly.plugin.core.ServerHelper;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * The default implementation for executing build plans on the server.
@@ -74,6 +74,9 @@ abstract class AbstractDeployment extends AbstractServerConnection {
      */
     @Parameter(alias = "runtime-name", property = PropertyNames.DEPLOYMENT_RUNTIME_NAME)
     private String runtimeName;
+
+    @Parameter(defaultValue = "false", property = PropertyNames.DEPLOY_UNMANAGED)
+    private boolean unmanaged;
 
     /**
      * Set to {@code true} if you want the deployment to be skipped, otherwise {@code false}.
@@ -153,6 +156,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
     private Deployment configureDeployment(final Deployment deployment) {
         return deployment.setName(name)
                 .setRuntimeName(runtimeName)
+                .setUnmanaged(unmanaged)
                 .addServerGroups(getServerGroups());
     }
 

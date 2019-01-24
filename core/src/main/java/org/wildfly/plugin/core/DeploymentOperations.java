@@ -19,6 +19,17 @@
 
 package org.wildfly.plugin.core;
 
+import org.jboss.as.controller.client.Operation;
+import org.jboss.as.controller.client.helpers.Operations.CompositeOperationBuilder;
+import org.jboss.dmr.ModelNode;
+import org.jboss.dmr.ModelType;
+import org.wildfly.common.Assert;
+
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT;
 import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_DEPLOY_OPERATION;
 import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_FULL_REPLACE_OPERATION;
@@ -30,17 +41,6 @@ import static org.jboss.as.controller.client.helpers.ClientConstants.SERVER_GROU
 import static org.jboss.as.controller.client.helpers.Operations.createAddOperation;
 import static org.jboss.as.controller.client.helpers.Operations.createOperation;
 import static org.jboss.as.controller.client.helpers.Operations.createRemoveOperation;
-
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
-import org.jboss.as.controller.client.Operation;
-import org.jboss.as.controller.client.helpers.Operations.CompositeOperationBuilder;
-import org.jboss.dmr.ModelNode;
-import org.jboss.dmr.ModelType;
-import org.wildfly.common.Assert;
 
 /**
  * A helper to create deployment operations.
@@ -59,6 +59,7 @@ import org.wildfly.common.Assert;
 @SuppressWarnings({"unused", "StaticMethodOnlyUsedInOneClass", "WeakerAccess"})
 public class DeploymentOperations {
     static final String ENABLED = "enabled";
+    static final String UNMANAGED = "unmanaged";
     static final ModelNode EMPTY_ADDRESS = new ModelNode().setEmptyList();
 
     static {
@@ -308,7 +309,7 @@ public class DeploymentOperations {
             addOperation.get(RUNTIME_NAME).set(runtimeName);
         }
         addOperation.get(ENABLED).set(deployment.isEnabled());
-        addContent(builder, addOperation, deployment);
+        addContent(builder, addOperation, deployment, deployment.isUnmanaged());
         builder.addStep(addOperation);
 
         final Set<String> serverGroups = deployment.getServerGroups();
@@ -389,7 +390,7 @@ public class DeploymentOperations {
         if (runtimeName != null) {
             op.get(RUNTIME_NAME).set(runtimeName);
         }
-        addContent(builder, op, deployment);
+        addContent(builder, op, deployment, false);
         op.get(ENABLED).set(deployment.isEnabled());
         builder.addStep(op);
     }
@@ -408,7 +409,7 @@ public class DeploymentOperations {
         if (runtimeName != null) {
             op.get(RUNTIME_NAME).set(runtimeName);
         }
-        addContent(builder, op, deployment);
+        addContent(builder, op, deployment, false);
         op.get(ENABLED).set(deployment.isEnabled());
         builder.addStep(op);
     }
@@ -455,7 +456,7 @@ public class DeploymentOperations {
         }
     }
 
-    private static void addContent(final CompositeOperationBuilder builder, final ModelNode op, final Deployment deployment) {
-        deployment.getContent().addContentToOperation(builder, op);
+    private static void addContent(final CompositeOperationBuilder builder, final ModelNode op, final Deployment deployment, boolean unmanaged) {
+        deployment.getContent().addContentToOperation(builder, op, unmanaged);
     }
 }

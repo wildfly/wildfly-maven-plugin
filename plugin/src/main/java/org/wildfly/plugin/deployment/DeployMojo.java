@@ -22,8 +22,6 @@
 
 package org.wildfly.plugin.deployment;
 
-import java.io.IOException;
-
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -33,6 +31,8 @@ import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.core.Deployment;
 import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.core.DeploymentResult;
+
+import java.io.IOException;
 
 /**
  * Deploys the application to the WildFly Application Server.
