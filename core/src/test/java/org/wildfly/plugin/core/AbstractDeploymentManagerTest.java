@@ -194,7 +194,7 @@ abstract class AbstractDeploymentManagerTest {
         Assert.assertTrue(first.keySet().containsAll(second.keySet()));
 
         // Skip time checks on domain until WFCORE-1667 is fixed
-        final boolean checkTime = !ServerHelper.isDomainServer(getClient());
+        final boolean checkTime = !ServerHelper.getContainerDescription(getClient()).isDomain();
         // Get the current hash
         for (Deployment deployment : deployments) {
             final byte[] hash = first.get(deployment).hash;
@@ -299,7 +299,7 @@ abstract class AbstractDeploymentManagerTest {
         Assert.assertTrue(deployResults.keySet().containsAll(currentDeployResults.keySet()));
 
         // Skip time checks on domain until WFCORE-1667 is fixed
-        final boolean checkTime = !ServerHelper.isDomainServer(getClient());
+        final boolean checkTime = !ServerHelper.getContainerDescription(getClient()).isDomain();
 
         for (Deployment deployment : allDeployments) {
             final DeployResult deployResult = deployResults.get(deployment);
@@ -395,7 +395,7 @@ abstract class AbstractDeploymentManagerTest {
         Assert.assertTrue(deployResults.keySet().containsAll(currentDeployResults.keySet()));
 
         // Skip time checks on domain until WFCORE-1667 is fixed
-        final boolean checkTime = !ServerHelper.isDomainServer(getClient());
+        final boolean checkTime = !ServerHelper.getContainerDescription(getClient()).isDomain();
 
         for (Deployment deployment : allDeployments) {
             final DeployResult deployResult = deployResults.get(deployment);

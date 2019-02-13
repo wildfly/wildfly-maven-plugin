@@ -130,7 +130,7 @@ public class AddResourceMojo extends AbstractServerConnection {
 
     private void processResources(final ModelControllerClient client, final MavenModelControllerClientConfiguration configuration, final Resource... resources) throws IOException {
         final Collection<String> profiles = getProfiles();
-        final boolean isDomain = ServerHelper.isDomainServer(client);
+        final boolean isDomain = ServerHelper.getContainerDescription(client).isDomain();
         for (Resource resource : resources) {
             if (isDomain && profiles.isEmpty()) {
                 throw new IllegalStateException("Cannot add resources when no profiles were defined.");
