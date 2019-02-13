@@ -331,6 +331,11 @@ public class StartMojo extends AbstractServerConnection {
             commandBuilder.addServerArguments(serverArgs);
         }
 
+        final Path javaHomePath = (this.javaHome == null ? Paths.get(System.getProperty("java.home")) : Paths.get(this.javaHome));
+        if (Environment.isModularJvm(javaHomePath)) {
+            commandBuilder.addJavaOptions(Environment.getModularJvmArguments());
+        }
+
         // Print some server information
         final Log log = getLog();
         log.info("JAVA_HOME : " + commandBuilder.getJavaHome());
@@ -374,6 +379,7 @@ public class StartMojo extends AbstractServerConnection {
         // Workaround for WFCORE-4121
         if (Environment.isModularJvm(javaHome)) {
             commandBuilder.addHostControllerJavaOptions(Environment.getModularJvmArguments());
+            commandBuilder.addProcessControllerJavaOptions(Environment.getModularJvmArguments());
         }
 
         // Print some server information
