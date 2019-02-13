@@ -100,13 +100,22 @@ public class ServerHelper {
 
     /**
      * Checks the running server to determine if it is a managed domain server.
+     * <p>
+     * Note that if the operation fails this will return {@code false}. It's better to use the
+     * {@link ContainerDescription#isDomain()} which can be queried via the
+     * {@link #getContainerDescription(ModelControllerClient)}. This will throw a {@link OperationExecutionException}
+     * if the operation fails.
+     * </p>
      *
      * @param client the client used to query the server
      *
      * @return {@code true} if the running server is a managed domain, otherwise {@code false}
      *
      * @throws IOException if an error occurs communicating with the server
+     * @see #getContainerDescription(ModelControllerClient)
+     * @deprecated use {@link ContainerDescription#isDomain()}
      */
+    @Deprecated
     public static boolean isDomainServer(final ModelControllerClient client) throws IOException {
         boolean result = false;
         // Check this is really a domain server

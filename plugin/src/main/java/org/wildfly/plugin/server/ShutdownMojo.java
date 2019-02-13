@@ -68,7 +68,7 @@ public class ShutdownMojo extends AbstractServerConnection {
             return;
         }
         try (ModelControllerClient client = createClient()) {
-            if (ServerHelper.isDomainServer(client)) {
+            if (ServerHelper.getContainerDescription(client).isDomain()) {
                 if (reload) {
                     client.execute(ServerOperations.createOperation("reload-servers"));
                     ServerHelper.waitForDomain(client, timeout);

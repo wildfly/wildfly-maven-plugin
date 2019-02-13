@@ -26,6 +26,7 @@ import static org.jboss.as.controller.client.helpers.ClientConstants.SERVER_GROU
 import static org.wildfly.plugin.core.DeploymentOperations.createAddress;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -33,7 +34,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.Operation;
@@ -52,7 +52,7 @@ import org.wildfly.common.Assert;
 class DefaultDeploymentManager implements DeploymentManager {
 
     private final ModelControllerClient client;
-    private final LazyDomainCheck domainCheck = new LazyDomainCheck();
+    private final ContainerDescription containerDescription = new LazyContainerDescription();
 
     DefaultDeploymentManager(final ModelControllerClient client) {
         this.client = client;
@@ -84,7 +84,7 @@ class DefaultDeploymentManager implements DeploymentManager {
         }
         if (hasDeployment(deployment.getName())) {
             // Special handling for domains if the deployment is already in the content repository
-            if (isDomain()) {
+            if (containerDescription.isDomain()) {
                 // Retrieve the currently deployment content description
                 final DeploymentDescription current = getServerGroupDeployment(deployment.getName());
                 final CompositeOperationBuilder builder = CompositeOperationBuilder.create(true);
@@ -124,7 +124,7 @@ class DefaultDeploymentManager implements DeploymentManager {
         }
         // Add all the redeploy steps
         for (Deployment deployment : toRedeploy.keySet()) {
-            if (isDomain()) {
+            if (containerDescription.isDomain()) {
                 // Adds the full-replace-deployment operation for domains as well as adds missing deployments on server
                 // groups
                 DeploymentOperations.addReplaceOperationSteps(builder, deployment, toRedeploy.get(deployment), true);
@@ -236,7 +236,7 @@ class DefaultDeploymentManager implements DeploymentManager {
     public Set<DeploymentDescription> getDeployments() throws IOException {
         final ModelNode readDeployments = Operations.createOperation(READ_CHILDREN_NAMES_OPERATION);
         readDeployments.get(CHILD_TYPE).set(DEPLOYMENT);
-        if (isDomain()) {
+        if (containerDescription.isDomain()) {
             // Represents the deployment and each server-group the deployment belongs to
             final Map<String, Set<String>> serverGroupDeployments = new LinkedHashMap<>();
             final CompositeOperationBuilder builder = CompositeOperationBuilder.create();
@@ -296,8 +296,8 @@ class DefaultDeploymentManager implements DeploymentManager {
     @Override
     public Set<DeploymentDescription> getDeployments(final String serverGroup) throws IOException {
         Assertions.requiresNotNullOrNotEmptyParameter("serverGroup", serverGroup);
-        if (!isDomain()) {
-            throw new IllegalStateException("Server is not a managed domain. Running container: " + ServerHelper.getContainerDescription(client));
+        if (!containerDescription.isDomain()) {
+            throw new IllegalStateException("Server is not a managed domain. Running container: " + containerDescription);
         }
         // Get all the current deployments and filter them to only return deployments located on this server group
         final Set<DeploymentDescription> deployments = new LinkedHashSet<>();
@@ -327,7 +327,7 @@ class DefaultDeploymentManager implements DeploymentManager {
     }
 
     @Override
-    public boolean hasDeployment(final String name) throws IOException {
+    public boolean hasDeployment(final String name) {
         return hasDeployment(DeploymentOperations.EMPTY_ADDRESS, Assertions.requiresNotNullOrNotEmptyParameter("name", name));
     }
 
@@ -338,12 +338,12 @@ class DefaultDeploymentManager implements DeploymentManager {
     }
 
     @Override
-    public boolean isEnabled(final String name) throws IOException {
+    public boolean isEnabled(final String name) {
         return isEnabled(DeploymentOperations.createAddress(DEPLOYMENT, Assertions.requiresNotNullOrNotEmptyParameter("name", name)));
     }
 
     @Override
-    public boolean isEnabled(final String name, final String serverGroup) throws IOException {
+    public boolean isEnabled(final String name, final String serverGroup) {
         return isEnabled(DeploymentOperations.createAddress(
                 SERVER_GROUP,
                 Assertions.requiresNotNullOrNotEmptyParameter("serverGroup", serverGroup),
@@ -418,18 +418,18 @@ class DefaultDeploymentManager implements DeploymentManager {
         throw new RuntimeException("Failed to get listing of deployments. Reason: " + Operations.getFailureDescription(result).asString());
     }
 
-    private DeploymentResult validateDeployment(final DeploymentDescription deployment) throws IOException {
+    private DeploymentResult validateDeployment(final DeploymentDescription deployment) {
         Assert.checkNotNullParam("deployment", deployment);
         final Set<String> serverGroups = deployment.getServerGroups();
-        if (isDomain() && serverGroups.isEmpty()) {
+        if (containerDescription.isDomain() && serverGroups.isEmpty()) {
             return new DeploymentResult("No server groups were defined for the deployment operation. Deployment: %s", deployment);
-        } else if (!isDomain() && !serverGroups.isEmpty()) {
+        } else if (!containerDescription.isDomain() && !serverGroups.isEmpty()) {
             return new DeploymentResult("Server is not a managed domain, but server groups were defined. Deployment: %s", deployment);
         }
         return null;
     }
 
-    private DeploymentResult validateDeployment(final Set<? extends DeploymentDescription> deployments) throws IOException {
+    private DeploymentResult validateDeployment(final Set<? extends DeploymentDescription> deployments) {
         Assertions.requiresNotNullOrNotEmptyParameter("deployments", deployments);
 
         final Collection<DeploymentDescription> missingServerGroups = new LinkedHashSet<>();
@@ -437,10 +437,10 @@ class DefaultDeploymentManager implements DeploymentManager {
         boolean error = false;
         for (DeploymentDescription deployment : deployments) {
             final Set<String> serverGroups = deployment.getServerGroups();
-            if (isDomain() && serverGroups.isEmpty()) {
+            if (containerDescription.isDomain() && serverGroups.isEmpty()) {
                 error = true;
                 missingServerGroups.add(deployment);
-            } else if (!isDomain() && !serverGroups.isEmpty()) {
+            } else if (!containerDescription.isDomain() && !serverGroups.isEmpty()) {
                 error = true;
                 standaloneWithServerGroups.add(deployment);
             }
@@ -458,10 +458,6 @@ class DefaultDeploymentManager implements DeploymentManager {
             return new DeploymentResult(message);
         }
         return null;
-    }
-
-    private boolean isDomain() throws IOException {
-        return domainCheck.get();
     }
 
     private static DeploymentDescription findDeployment(final Iterable<DeploymentDescription> deployments, final DeploymentDescription deployment) {
@@ -489,23 +485,52 @@ class DefaultDeploymentManager implements DeploymentManager {
                 .setRemoveContent(undeployDescription.isRemoveContent());
     }
 
-    private class LazyDomainCheck {
-        private final AtomicBoolean set = new AtomicBoolean(false);
-        private Boolean value = null;
+    private class LazyContainerDescription implements ContainerDescription {
+        private volatile ContainerDescription containerDescription;
 
-        public boolean get() throws IOException {
-            while (value == null) {
-                if (set.compareAndSet(false, true)) {
-                    try {
-                        value = ServerHelper.isDomainServer(client);
-                    } catch (Throwable e) {
-                        // Reset the setting and throw the exception
-                        set.set(false);
-                        throw e;
+        @Override
+        public String getProductName() {
+            return get().getProductName();
+        }
+
+        @Override
+        public String getProductVersion() {
+            return get().getProductVersion();
+        }
+
+        @Override
+        public String getReleaseVersion() {
+            return get().getReleaseVersion();
+        }
+
+        @Override
+        public String getLaunchType() {
+            return get().getLaunchType();
+        }
+
+        @Override
+        public boolean isDomain() {
+            return get().isDomain();
+        }
+
+        @Override
+        public String toString() {
+            return get().toString();
+        }
+
+        private ContainerDescription get() {
+            if (containerDescription == null) {
+                synchronized (this) {
+                    if (containerDescription == null) {
+                        try {
+                            containerDescription = ServerHelper.getContainerDescription(client);
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
                     }
                 }
             }
-            return value;
+            return containerDescription;
         }
     }
 }

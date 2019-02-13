@@ -105,7 +105,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
                 ModelControllerClient client = createClient();
                 MavenModelControllerClientConfiguration configuration = getClientConfiguration()
         ) {
-            final boolean isDomain = ServerHelper.isDomainServer(client);
+            final boolean isDomain = ServerHelper.getContainerDescription(client).isDomain();
             validate(isDomain);
             // Deploy the deployment
             getLog().debug("Executing deployment");

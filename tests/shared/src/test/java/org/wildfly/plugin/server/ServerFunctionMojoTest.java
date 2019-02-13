@@ -51,7 +51,7 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
         try (ModelControllerClient client = createClient()) {
             boolean isDomain;
             try {
-                isDomain = ServerHelper.isDomainServer(client);
+                isDomain = ServerHelper.getContainerDescription(client).isDomain();
             } catch (Exception ignore) {
                 isDomain = false;
             }
@@ -75,7 +75,7 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
         try (ModelControllerClient client = createClient()) {
             // Verify the server is running
             Assert.assertTrue("The start goal did not start the server.", ServerHelper.isStandaloneRunning(client));
-            Assert.assertFalse("This should be a standalone server, but found a domain server.", ServerHelper.isDomainServer(client));
+            Assert.assertFalse("This should be a standalone server, but found a domain server.", ServerHelper.getContainerDescription(client).isDomain());
         }
     }
 
@@ -140,7 +140,7 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
         try (DomainClient client = DomainClient.Factory.create(createClient())) {
             // Verify the server is running
             Assert.assertTrue("The start goal did not start the server.", ServerHelper.isDomainRunning(client));
-            Assert.assertTrue("This should be a domain server server, but found a standalone server.", ServerHelper.isDomainServer(client));
+            Assert.assertTrue("This should be a domain server server, but found a standalone server.", ServerHelper.getContainerDescription(client).isDomain());
         }
     }
 
