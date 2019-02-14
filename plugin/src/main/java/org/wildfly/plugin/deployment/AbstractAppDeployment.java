@@ -23,6 +23,8 @@
 package org.wildfly.plugin.deployment;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.maven.plugins.annotations.Parameter;
 import org.wildfly.plugin.common.PropertyNames;
@@ -31,7 +33,6 @@ import org.wildfly.plugin.common.PropertyNames;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 abstract class AbstractAppDeployment extends AbstractDeployment {
-
 
     /**
      * The target directory the application to be deployed is located.
@@ -42,32 +43,53 @@ abstract class AbstractAppDeployment extends AbstractDeployment {
     /**
      * The file name of the application to be deployed.
      * <p>
-     * The {@code filename} property does have a default of <code>${project.build.finalName}.${project.packaging}</code>.
-     * The default value is not injected as it normally would be due to packaging types like {@code ejb} that result in
-     * a file with a {@code .jar} extension rather than an {@code .ejb} extension.
+     * The {@code filename} property does have a default of
+     * <code>${project.build.finalName}.${project.packaging}</code>. The default
+     * value is not injected as it normally would be due to packaging types like
+     * {@code ejb} that result in a file with a {@code .jar} extension rather than
+     * an {@code .ejb} extension.
      * </p>
      */
     @Parameter(property = PropertyNames.DEPLOYMENT_FILENAME)
     private String filename;
 
     /**
-     * By default certain package types are ignored when processing, e.g. {@code maven-project} and {@code pom}. Set
-     * this value to {@code false} if this check should be bypassed.
+     * By default certain package types are ignored when processing, e.g.
+     * {@code maven-project} and {@code pom}. Set this value to {@code false} if
+     * this check should be bypassed.
      */
     @Parameter(alias = "check-packaging", property = PropertyNames.CHECK_PACKAGING, defaultValue = "true")
     private boolean checkPackaging;
+
+    /**
+     * A comma separated list of packaging types that should be considered when
+     * processing. If the given String is empty, this parameter is ignored.
+     */
+    @Parameter(alias = "include-packagings", property = PropertyNames.INCLUDE_PACKAGINGS)
+    private String includePackagings;
 
     @Override
     protected boolean skipExecution() {
         boolean skip = super.skipExecution();
         if (!skip) {
             final PackageType packageType = PackageType.resolve(project);
-            if (checkPackaging && packageType.isIgnored()) {
-                getLog().debug(String.format("Ignoring packaging type %s.", packageType.getPackaging()));
+            if (checkPackaging && isSkipPackaging(packageType)) {
                 skip = true;
+                getLog().debug(String.format("Ignoring packaging type %s.", packageType.getPackaging()));
             }
         }
         return skip;
+    }
+
+    private boolean isSkipPackaging(PackageType packageType) {
+        if (packageType.isIgnored()) {
+            return packageType.isIgnored();
+        } else if (includePackagings != null && !includePackagings.isEmpty()) {
+            final List<String> includePackagingsList = Arrays.asList(includePackagings.split(","));
+            return includePackagingsList.size() > 0 && !includePackagingsList.contains(packageType.getPackaging());
+        }else {
+            return false;
+        }
     }
 
     @Override

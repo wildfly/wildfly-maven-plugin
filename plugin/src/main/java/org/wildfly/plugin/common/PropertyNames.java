@@ -57,6 +57,8 @@ public interface PropertyNames {
 
     String ID = "wildfly.id";
 
+    String INCLUDE_PACKAGINGS = "wildfly.includePackagings";
+
     String IGNORE_MISSING_DEPLOYMENT = "undeploy.ignoreMissingDeployment";
 
     String JAVA_HOME = "java.home";
