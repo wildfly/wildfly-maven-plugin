@@ -309,7 +309,8 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
         try (MavenModelControllerClientConfiguration clientConfiguration = getClientConfiguration()) {
 
             final CliCommandBuilder builder = CliCommandBuilder.of(wildflyHome)
-                    .setScriptFile(scriptFile);
+                    .setScriptFile(scriptFile)
+                    .setTimeout(timeout * 1000);
             if (!offline) {
                 builder.setConnection(clientConfiguration.getController());
             }
