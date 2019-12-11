@@ -22,46 +22,24 @@
 
 package org.wildfly.plugin.cli;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
 import javax.inject.Inject;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.jboss.as.cli.CommandContext;
-import org.jboss.as.cli.CommandContextFactory;
-import org.jboss.as.cli.CommandFormatException;
-import org.jboss.as.cli.CommandLineException;
-import org.jboss.as.cli.batch.Batch;
-import org.jboss.as.cli.batch.BatchManager;
-import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.dmr.ModelNode;
-import org.wildfly.core.launcher.CliCommandBuilder;
-import org.wildfly.core.launcher.Launcher;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.Archives;
-import org.wildfly.plugin.common.Environment;
-import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
-import org.wildfly.plugin.common.ServerOperations;
-import org.wildfly.plugin.common.StandardOutput;
-import org.wildfly.plugin.core.ServerHelper;
 import org.wildfly.plugin.repository.ArtifactNameBuilder;
 import org.wildfly.plugin.repository.ArtifactResolver;
 
@@ -148,6 +126,7 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
      * <p>
      * Note that if {@code offline} is set to {@code true} this setting really has no effect.
      * </p>
+     *
      * @since 2.0.0
      */
     @Parameter(defaultValue = "false", property = "wildfly.fork")
@@ -201,6 +180,9 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     @Inject
     private ArtifactResolver artifactResolver;
 
+    @Inject
+    private CommandExecutor commandExecutor;
+
     @Override
     public String goal() {
         return "execute-commands";
@@ -212,20 +194,23 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             getLog().debug("Skipping commands execution");
             return;
         }
-        if (offline) {
-            // The jbossHome is required for offline CLI
-            if (!ServerHelper.isValidHomeDirectory(jbossHome)) {
-                throw new MojoFailureException("Invalid JBoss Home directory is not valid: " + jbossHome);
-            }
-            executeInNewProcess(Paths.get(jbossHome));
-        } else {
-            if (fork) {
-                // Check the jbossHome and if not found download it
-                executeInNewProcess(extractIfRequired());
-            } else {
-                executeInProcess();
-            }
+        final CommandConfiguration cmdConfig = CommandConfiguration.of(this::createClient, this::getClientConfiguration)
+                .addCommands(commands)
+                .addJvmOptions(javaOpts)
+                .addPropertiesFiles(propertiesFiles)
+                .addScripts(scripts)
+                .addSystemProperties(systemProperties)
+                .setBatch(batch)
+                .setFailOnError(failOnError)
+                .setFork(fork)
+                .setJBossHome(jbossHome)
+                .setOffline(offline)
+                .setStdout(stdout)
+                .setTimeout(timeout);
+        if (fork) {
+            cmdConfig.setJBossHome(extractIfRequired());
         }
+        commandExecutor.execute(cmdConfig);
     }
 
     /**
@@ -240,253 +225,6 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
         }
     }
 
-    private void executeInNewProcess(final Path wildflyHome) throws MojoExecutionException {
-        // If we have commands create a script file and execute
-        if (commands != null && !commands.isEmpty()) {
-            Path scriptFile = null;
-            try {
-                scriptFile = ScriptWriter.create(commands, batch, failOnError);
-                executeInNewProcess(wildflyHome, scriptFile);
-            } catch (IOException e) {
-                throw new MojoExecutionException("Failed execute commands.", e);
-            } finally {
-                if (scriptFile != null) {
-                    try {
-                        Files.deleteIfExists(scriptFile);
-                    } catch (IOException e) {
-                        getLog().debug("Failed to deleted CLI script file: " + scriptFile, e);
-                    }
-                }
-            }
-        }
-        if (scripts != null && !scripts.isEmpty()) {
-            for (File script : scripts) {
-                executeInNewProcess(wildflyHome, script.toPath());
-            }
-        }
-    }
-
-    private void executeInNewProcess(final Path wildflyHome, final Path scriptFile) throws MojoExecutionException {
-        getLog().debug("Executing CLI scripts");
-        try {
-            final StandardOutput out = StandardOutput.parse(stdout, false);
-
-            final int exitCode = executeInNewProcess(wildflyHome, scriptFile, out);
-            if (exitCode != 0) {
-                final StringBuilder msg = new StringBuilder("Failed to execute commands: ");
-                switch (out.getTarget()) {
-                    case COLLECTING:
-                        msg.append(out);
-                        break;
-                    case FILE:
-                        final Path stdoutPath = out.getStdoutPath();
-                        msg.append("See ").append(stdoutPath).append(" for full details of failure.").append(System.lineSeparator());
-                        final List<String> lines = Files.readAllLines(stdoutPath);
-                        lines.subList(Math.max(lines.size() - 4, 0), lines.size())
-                                .forEach(line -> msg.append(line).append(System.lineSeparator()));
-                        break;
-                    case SYSTEM_ERR:
-                    case SYSTEM_OUT:
-                    case INHERIT:
-                        msg.append("See previous messages for failure messages.");
-                        break;
-                    default:
-                        msg.append("Reason unknown");
-                }
-                if (failOnError) {
-                    throw new MojoExecutionException(msg.toString());
-                } else {
-                    getLog().warn(msg);
-                }
-            }
-        } catch (IOException e) {
-            throw new MojoExecutionException("Failed to execute scripts.", e);
-        }
-    }
-
-    private int executeInNewProcess(final Path wildflyHome, final Path scriptFile, final StandardOutput stdout) throws MojoExecutionException, IOException {
-        final Log log = getLog();
-        try (MavenModelControllerClientConfiguration clientConfiguration = getClientConfiguration()) {
-
-            final CliCommandBuilder builder = CliCommandBuilder.of(wildflyHome)
-                    .setScriptFile(scriptFile)
-                    .setTimeout(timeout * 1000);
-            if (!offline) {
-                builder.setConnection(clientConfiguration.getController());
-            }
-            // Configure the authentication config url if defined
-            if (clientConfiguration.getAuthenticationConfigUri() != null) {
-                builder.addJavaOption("-Dwildfly.config.url=" + clientConfiguration.getAuthenticationConfigUri().toString());
-            }
-            // Workaround for WFCORE-4121
-            if (Environment.isModularJvm(builder.getJavaHome())) {
-                builder.addJavaOptions(Environment.getModularJvmArguments());
-            }
-            if (systemProperties != null) {
-                systemProperties.forEach((key, value) -> builder.addJavaOption(String.format("-D%s=%s", key, value)));
-                if (systemProperties.containsKey("module.path")) {
-                    builder.setModuleDirs(systemProperties.get("module.path"));
-                }
-            }
-
-            if (propertiesFiles != null) {
-                final Properties properties = new Properties();
-                for (File file : propertiesFiles) {
-                    parseProperties(file, properties);
-                }
-                for (String key : properties.stringPropertyNames()) {
-                    builder.addJavaOption(String.format("-D%s=%s", key, properties.getProperty(key)));
-                }
-            }
-
-            if (javaOpts != null) {
-                if (log.isDebugEnabled()) {
-                    log.debug("java opts: " + Arrays.toString(javaOpts));
-                }
-                for (String opt : javaOpts) {
-                    if (!opt.trim().isEmpty()) {
-                        builder.addJavaOption(opt);
-                    }
-                }
-
-            }
-            if (log.isDebugEnabled()) {
-                log.debug("process parameters: " + builder.build());
-            }
-            final Launcher launcher = Launcher.of(builder)
-                    .addEnvironmentVariable("JBOSS_HOME", wildflyHome.toString())
-                    .setRedirectErrorStream(true);
-            stdout.getRedirect().ifPresent(launcher::redirectOutput);
-            final Process process = launcher.launch();
-            final Optional<Thread> consoleConsumer = stdout.startConsumer(process);
-            try {
-                return process.waitFor();
-            } catch (InterruptedException e) {
-                throw new MojoExecutionException("Failed to run goal execute-commands in forked process.", e);
-            } finally {
-                // Be safe and destroy the process to ensure we don't leave rouge processes running
-                if (process.isAlive()) {
-                    process.destroyForcibly();
-                }
-                consoleConsumer.ifPresent(Thread::interrupt);
-            }
-        }
-    }
-
-    private void executeInProcess() throws MojoExecutionException, MojoFailureException {
-        // The jbossHome is not required, but if defined should be valid
-        if (jbossHome != null && !ServerHelper.isValidHomeDirectory(jbossHome)) {
-            throw new MojoFailureException("Invalid JBoss Home directory is not valid: " + jbossHome);
-        }
-        final Properties currentSystemProperties = System.getProperties();
-        try {
-            getLog().debug("Executing commands");
-            // Create new system properties with the defaults set to the current system properties
-            final Properties newSystemProperties = new Properties(currentSystemProperties);
-
-            // Add the JBoss Home if defined
-            if (jbossHome != null) {
-                newSystemProperties.setProperty("jboss.home", jbossHome);
-                newSystemProperties.setProperty("jboss.home.dir", jbossHome);
-            }
-
-            if (propertiesFiles != null) {
-                for (File file : propertiesFiles) {
-                    parseProperties(file, newSystemProperties);
-                }
-            }
-
-            if (systemProperties != null) {
-                newSystemProperties.putAll(systemProperties);
-            }
-
-            // Set the system properties for executing commands
-            System.setProperties(newSystemProperties);
-            CommandContext commandContext = null;
-            try (ModelControllerClient client = createClient()) {
-                commandContext = createCommandContext(client);
-                if (commands != null && !commands.isEmpty()) {
-                    if (batch) {
-                        executeBatch(commandContext, commands);
-                    } else {
-                        executeCommands(commandContext, commands, failOnError);
-                    }
-                }
-                if (scripts != null && !scripts.isEmpty()) {
-                    for (File scriptFile : scripts) {
-                        final List<String> commands = Files.readAllLines(scriptFile.toPath(), StandardCharsets.UTF_8);
-                        if (batch) {
-                            executeBatch(commandContext, commands);
-                        } else {
-                            executeCommands(commandContext, commands, failOnError);
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                throw new MojoExecutionException("Could not execute commands.", e);
-            } finally {
-                if (commandContext != null) {
-                    commandContext.terminateSession();
-                }
-            }
-        } catch (IOException e) {
-            throw new MojoFailureException("Failed to parse properties.", e);
-        } finally {
-            System.setProperties(currentSystemProperties);
-        }
-    }
-
-    private static void executeCommands(final CommandContext ctx, final Iterable<String> commands, final boolean failOnError) throws MojoExecutionException {
-        for (String cmd : commands) {
-            try {
-                if (failOnError) {
-                    ctx.handle(cmd);
-                } else {
-                    ctx.handleSafe(cmd);
-                }
-            } catch (CommandFormatException e) {
-                throw new MojoExecutionException(String.format("Command '%s' is invalid. %s", cmd, e.getLocalizedMessage()), e);
-            } catch (CommandLineException e) {
-                throw new MojoExecutionException(String.format("Command execution failed for command '%s'. %s", cmd, e.getLocalizedMessage()), e);
-            }
-        }
-    }
-
-    private static void executeBatch(final CommandContext ctx, final Iterable<String> commands) throws IOException, MojoExecutionException {
-        final BatchManager batchManager = ctx.getBatchManager();
-        if (batchManager.activateNewBatch()) {
-            final Batch batch = batchManager.getActiveBatch();
-            for (String cmd : commands) {
-                try {
-                    batch.add(ctx.toBatchedCommand(cmd));
-                } catch (CommandFormatException e) {
-                    throw new MojoExecutionException(String.format("Command '%s' is invalid. %s", cmd, e.getLocalizedMessage()), e);
-                }
-            }
-            final ModelNode result = ctx.getModelControllerClient().execute(batch.toRequest());
-            if (!ServerOperations.isSuccessfulOutcome(result)) {
-                throw new MojoExecutionException(ServerOperations.getFailureDescriptionAsString(result));
-            }
-        }
-    }
-
-    private CommandContext createCommandContext(final ModelControllerClient client) {
-        CommandContext commandContext = null;
-        try {
-            commandContext = CommandContextFactory.getInstance().newCommandContext();
-            commandContext.bindClient(client);
-        } catch (CommandLineException e) {
-            throw new IllegalStateException("Failed to initialize CLI context", e);
-        } catch (Exception e) {
-            // Terminate the session if we've encountered an error
-            if (commandContext != null) {
-                commandContext.terminateSession();
-            }
-            throw new IllegalStateException("Failed to initialize CLI context", e);
-        }
-        return commandContext;
-    }
-
     private Path extractIfRequired() throws MojoFailureException {
         if (jbossHome != null) {
             //we do not need to download WildFly
@@ -497,12 +235,6 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             return Archives.uncompress(result, buildDir.toPath());
         } catch (IOException e) {
             throw new MojoFailureException("Artifact was not successfully extracted: " + result, e);
-        }
-    }
-
-    private static void parseProperties(final File file, final Properties properties) throws IOException {
-        try (BufferedReader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
-            properties.load(reader);
         }
     }
 }

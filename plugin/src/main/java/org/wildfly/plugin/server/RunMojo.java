@@ -27,7 +27,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.inject.Inject;
 
@@ -45,9 +48,10 @@ import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.core.launcher.CommandBuilder;
 import org.wildfly.core.launcher.Launcher;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
+import org.wildfly.plugin.cli.CommandConfiguration;
+import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.Archives;
-import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.Utils;
 import org.wildfly.plugin.core.Deployment;
@@ -78,6 +82,9 @@ public class RunMojo extends AbstractServerConnection {
 
     @Inject
     private ArtifactResolver artifactResolver;
+
+    @Inject
+    private CommandExecutor commandExecutor;
 
     /**
      * The WildFly Application Server's home directory. If not used, WildFly will be downloaded.
@@ -143,6 +150,18 @@ public class RunMojo extends AbstractServerConnection {
      */
     @Parameter(alias = "java-home", property = PropertyNames.JAVA_HOME)
     private String javaHome;
+
+    /**
+     * The CLI commands to execute before the deployment is deployed.
+     */
+    @Parameter(property = PropertyNames.COMMANDS)
+    private List<String> commands = new ArrayList<>();
+
+    /**
+     * The CLI script files to execute before the deployment is deployed.
+     */
+    @Parameter(property = PropertyNames.SCRIPTS)
+    private List<File> scripts = new ArrayList<>();
 
     /**
      * The path to the server configuration to use.
@@ -265,15 +284,27 @@ public class RunMojo extends AbstractServerConnection {
             // Start the server
             log.info("Server is starting up. Press CTRL + C to stop the server.");
             Process process = startContainer(commandBuilder);
-            try (
-                    ModelControllerClient client = createClient();
-                    MavenModelControllerClientConfiguration configuration = getClientConfiguration();
-            ) {
+            try (ModelControllerClient client = createClient()) {
+                // Execute commands before the deployment is done
+                final CommandConfiguration cmdConfig = CommandConfiguration.of(this::createClient, this::getClientConfiguration)
+                        .addCommands(commands)
+                        .addScripts(scripts)
+                        .setJBossHome(commandBuilder.getWildFlyHome())
+                        .setFork(true)
+                        .setStdout("none")
+                        .setTimeout(timeout);
+                commandExecutor.execute(cmdConfig);
+                // Create the deployment and deploy
                 final Deployment deployment = Deployment.of(deploymentContent)
                         .setName(name)
                         .setRuntimeName(runtimeName);
                 final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
                 deploymentManager.forceDeploy(deployment);
+            } catch (MojoExecutionException | MojoFailureException e) {
+                if (process != null) {
+                    process.destroyForcibly().waitFor(10L, TimeUnit.SECONDS);
+                }
+                throw e;
             }
             try {
                 // Wait for the process to die

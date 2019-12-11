@@ -34,26 +34,24 @@ class ScriptWriter {
      * Creates a script file for the commands. If {@code failOnError} is {@code false} the command will be wrapped in a
      * {@code try-catch} command.
      *
-     * @param commands    the commands to write to the scripts
-     * @param batch       {@code true} if the batch command should be added
-     * @param failOnError {@code false} to wrap commands in a {@code try-catch}
+     * @param config the command configuration being used
      *
      * @return the script file
      *
      * @throws IOException if an error occurs creating the script file
      */
-    static Path create(final Iterable<String> commands, final boolean batch, final boolean failOnError) throws IOException {
+    static Path create(final CommandConfiguration config) throws IOException {
         final Path tempScript = Files.createTempFile("cli-scrpts", ".cli");
         try (BufferedWriter writer = Files.newBufferedWriter(tempScript, StandardCharsets.UTF_8)) {
-            if (batch) {
+            if (config.isBatch()) {
                 writer.write("batch");
                 writer.newLine();
             }
 
             boolean inTry = false;
 
-            for (String cmd : commands) {
-                if (failOnError) {
+            for (String cmd : config.getCommands()) {
+                if (config.isFailOnError()) {
                     writeCommand(writer, cmd);
                 } else {
                     if ("try".equals(cmd.trim())) {
@@ -70,7 +68,7 @@ class ScriptWriter {
                 }
             }
 
-            if (batch) {
+            if (config.isBatch()) {
                 writer.write("run-batch");
                 writer.newLine();
             }
