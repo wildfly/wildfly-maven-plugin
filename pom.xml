@@ -95,7 +95,7 @@
         <version.org.eclipse.sisu>0.3.3</version.org.eclipse.sisu>
 
         <!-- other dependencies -->
-        <version.junit.junit>4.12</version.junit.junit>
+        <version.junit.junit>4.13.1</version.junit.junit>
         <version.org.apache.commons.compress>1.19</version.org.apache.commons.compress>
         <version.org.mockito.mockito>2.18.3</version.org.mockito.mockito>
 
