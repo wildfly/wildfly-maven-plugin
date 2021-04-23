@@ -19,8 +19,9 @@
 
 package org.wildfly.plugin.core;
 
-import static org.jboss.as.controller.client.helpers.ClientConstants.CONTENT;
-import static org.jboss.as.controller.client.helpers.ClientConstants.PATH;
+import org.jboss.as.controller.client.OperationBuilder;
+import org.jboss.as.controller.client.helpers.ClientConstants;
+import org.jboss.dmr.ModelNode;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -31,9 +32,8 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import org.jboss.as.controller.client.OperationBuilder;
-import org.jboss.as.controller.client.helpers.ClientConstants;
-import org.jboss.dmr.ModelNode;
+import static org.jboss.as.controller.client.helpers.ClientConstants.CONTENT;
+import static org.jboss.as.controller.client.helpers.ClientConstants.PATH;
 
 /**
  * Allows content to be added to an operation. The content will be attached to an {@link OperationBuilder} with either
@@ -51,7 +51,7 @@ abstract class DeploymentContent {
      * @param op      the deployment operation to be modified with the information required to represent the content
      *                being deployed
      */
-    abstract void addContentToOperation(OperationBuilder builder, ModelNode op);
+    abstract void addContentToOperation(OperationBuilder builder, ModelNode op, boolean unmanaged);
 
     /**
      * If a name can be resolved from the content that name will be used, otherwise {@code null} will be returned.
@@ -76,13 +76,16 @@ abstract class DeploymentContent {
         return new DeploymentContent() {
 
             @Override
-            void addContentToOperation(final OperationBuilder builder, final ModelNode op) {
+            void addContentToOperation(final OperationBuilder builder, final ModelNode op, boolean unmanaged) {
                 final ModelNode contentNode = op.get(CONTENT);
                 final ModelNode contentItem = contentNode.get(0);
                 // If the content points to a directory we are deploying exploded content
                 if (Files.isDirectory(content)) {
                     contentItem.get(PATH).set(content.toAbsolutePath().toString());
                     contentItem.get("archive").set(false);
+                } else if (unmanaged) {
+                    contentItem.get(PATH).set(content.toAbsolutePath().toString());
+                    contentItem.get("archive").set(true);
                 } else {
                     // The index is 0 based so use the input stream count before adding the input stream
                     contentItem.get(ClientConstants.INPUT_STREAM_INDEX).set(builder.getInputStreamCount());
@@ -114,7 +117,7 @@ abstract class DeploymentContent {
         final ByteArrayInputStream copiedContent = copy(content);
         return new DeploymentContent() {
             @Override
-            void addContentToOperation(final OperationBuilder builder, final ModelNode op) {
+            void addContentToOperation(final OperationBuilder builder, final ModelNode op, boolean unmanaged) {
                 copiedContent.reset();
                 final ModelNode contentNode = op.get(CONTENT);
                 final ModelNode contentItem = contentNode.get(0);
@@ -140,7 +143,7 @@ abstract class DeploymentContent {
     static DeploymentContent of(final URL url) {
         return new DeploymentContent() {
             @Override
-            void addContentToOperation(final OperationBuilder builder, final ModelNode op) {
+            void addContentToOperation(final OperationBuilder builder, final ModelNode op, boolean unmanaged) {
                 final ModelNode contentNode = op.get(CONTENT);
                 final ModelNode contentItem = contentNode.get(0);
                 contentItem.get("url").set(url.toExternalForm());
