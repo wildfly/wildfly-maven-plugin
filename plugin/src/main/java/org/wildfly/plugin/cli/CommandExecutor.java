@@ -114,7 +114,7 @@ public class CommandExecutor extends AbstractLogEnabled {
     private void executeInNewProcess(final CommandConfiguration config, final Path scriptFile) throws MojoExecutionException {
         getLogger().debug("Executing CLI scripts");
         try {
-            final StandardOutput out = StandardOutput.parse(config.getStdout(), false);
+            final StandardOutput out = StandardOutput.parse(config.getStdout(), false, config.isAppend());
 
             final int exitCode = executeInNewProcess(config, scriptFile, out);
             if (exitCode != 0) {
@@ -155,12 +155,13 @@ public class CommandExecutor extends AbstractLogEnabled {
 
             final CliCommandBuilder builder = CliCommandBuilder.of(config.getJBossHome())
                     .setScriptFile(scriptFile)
+                    .addCliArguments(config.getCLIArguments())
                     .setTimeout(config.getTimeout() * 1000);
             if (!config.isOffline()) {
                 builder.setConnection(clientConfiguration.getController());
             }
             // Configure the authentication config url if defined
-            if (clientConfiguration.getAuthenticationConfigUri() != null) {
+            if (clientConfiguration != null && clientConfiguration.getAuthenticationConfigUri() != null) {
                 builder.addJavaOption("-Dwildfly.config.url=" + clientConfiguration.getAuthenticationConfigUri().toString());
             }
             // Workaround for WFCORE-4121

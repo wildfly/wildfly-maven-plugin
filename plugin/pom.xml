@@ -144,14 +144,8 @@
             <artifactId>aether-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.jboss.jdf</groupId>
-            <artifactId>stacks-client</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.jboss.logging</groupId>
-                    <artifactId>jboss-logging</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>org.jboss.galleon</groupId>
+            <artifactId>galleon-maven-plugin</artifactId>
         </dependency>
         <dependency>
             <groupId>org.wildfly.core</groupId>

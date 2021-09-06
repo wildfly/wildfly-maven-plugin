@@ -37,7 +37,7 @@
     <properties>
         <version.org.jboss.shrinkwrap.shrinkwrap>1.2.6</version.org.jboss.shrinkwrap.shrinkwrap>
 
-        <jboss.home>${project.build.directory}${file.separator}wildfly-${version.org.wildfly.dist}</jboss.home>
+        <jboss.home>${project.build.directory}${file.separator}wildfly</jboss.home>
     </properties>
 
     <licenses>
@@ -49,6 +49,10 @@
     </licenses>
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-core</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.jboss.logging</groupId>
             <artifactId>jboss-logging</artifactId>
@@ -66,7 +70,10 @@
             <groupId>org.wildfly.core</groupId>
             <artifactId>wildfly-protocol</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.jboss.galleon</groupId>
+            <artifactId>galleon-maven-plugin</artifactId>
+        </dependency>
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.wildfly.core</groupId>
@@ -107,26 +114,25 @@
                 </configuration>
             </plugin>
             <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
+                <groupId>org.jboss.galleon</groupId>
+                <artifactId>galleon-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>unpack-wildfly</id>
+                        <id>provision-wildfly</id>
                         <phase>pre-integration-test</phase>
                         <goals>
-                            <goal>unpack</goal>
+                            <goal>provision</goal>
                         </goals>
                         <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.wildfly</groupId>
-                                    <artifactId>wildfly-dist</artifactId>
-                                    <version>${version.org.wildfly.dist}</version>
-                                    <type>zip</type>
-                                    <!-- overwrite to clean any previous deployments -->
-                                    <overWrite>true</overWrite>
-                                    <outputDirectory>${project.build.directory}</outputDirectory>
-                                </artifactItem>
-                            </artifactItems>
+                            <feature-packs>
+                                <feature-pack>
+                                    <location>wildfly@maven(org.jboss.universe:community-universe)</location>
+                                </feature-pack>
+                            </feature-packs>
+                            <install-dir>${project.build.directory}/wildfly</install-dir>
+                            <plugin-options>
+                                <jboss-fork-embedded>${plugin.fork.embedded}</jboss-fork-embedded>
+                            </plugin-options>
                         </configuration>
                     </execution>
                 </executions>

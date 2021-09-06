@@ -48,7 +48,7 @@ import org.wildfly.plugin.core.Deployment;
 public abstract class AbstractWildFlyMojoTest {
 
     protected final String DEPLOYMENT_NAME = "test.war";
-    protected final String BASE_CONFIG_DIR = System.getProperty("wildfly.test.config.dir");
+    protected static final String BASE_CONFIG_DIR = System.getProperty("wildfly.test.config.dir");
 
     @Rule
     public MojoRule rule = new MojoRule() {
@@ -81,16 +81,26 @@ public abstract class AbstractWildFlyMojoTest {
      * @throws java.lang.AssertionError if the MOJO was not found
      */
     public <T extends Mojo> T lookupMojoAndVerify(final String goal, final String fileName) throws Exception {
-        final Path baseDir = Paths.get(BASE_CONFIG_DIR);
-        assertTrue("Not a directory: " + BASE_CONFIG_DIR, Files.exists(baseDir));
-        final Path pom = Paths.get(BASE_CONFIG_DIR, fileName);
-        assertTrue(Files.exists(pom));
+        final Path pom = getPomFile(fileName);
         MavenProject project = readMavenProject(pom);
         @SuppressWarnings("unchecked")
         T mojo = (T) rule.lookupConfiguredMojo(project, goal);
         assertNotNull(mojo);
         setDefaultEnvironment(mojo);
         return mojo;
+    }
+
+    public static Path getPomFile(String fileName) {
+        final Path baseDir = getBaseDir();
+        final Path pom = baseDir.resolve(fileName);
+        assertTrue(Files.exists(pom));
+        return pom;
+    }
+
+    public static Path getBaseDir() {
+        final Path baseDir = Paths.get(BASE_CONFIG_DIR);
+        assertTrue("Not a directory: " + BASE_CONFIG_DIR, Files.exists(baseDir));
+       return baseDir;
     }
 
     public MavenProject readMavenProject(Path pom)

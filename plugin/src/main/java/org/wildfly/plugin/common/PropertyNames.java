@@ -61,19 +61,21 @@ public interface PropertyNames {
 
     String JAVA_HOME = "java.home";
 
-    String WILDFLY_ARTIFACT = "wildfly.artifact";
+    String WILDFLY_PROVISIONING_DIR = "wildfly.provisioning.dir";
 
-    String WILDFLY_ARTIFACT_ID = "wildfly.artifactId";
+    String WILDFLY_PROVISIONING_FILE = "wildfly.provisioning.file";
+
+    String WILDFLY_PROVISIONING_LOG_TIME = "wildfly.provisioning.log.time";
+
+    String WILDFLY_PROVISIONING_OFFLINE = "wildfly.provisioning.offline";
+
+    String WILDFLY_PROVISIONING_RECORD_STATE = "wildfly.provisioning.record.state";
+
+    String WILDFLY_PACKAGING_EXTRA_CONTENT_DIRS = "wildfly.packaging.extra.dirs";
 
     String WILDFLY_AUTH_CLIENT_CONFIG = "wildfly.authConfig";
 
-    String WILDFLY_CLASSIFIER = "wildfly.classifier";
-
-    String WILDFLY_GROUP_ID = "wildfly.groupId";
-
     String JBOSS_HOME = "jboss-as.home"; // TODO (jrp) look at this one
-
-    String WILDFLY_PACKAGING = "wildfly.packaging";
 
     String WILDFLY_VERSION = "wildfly.version";
 
