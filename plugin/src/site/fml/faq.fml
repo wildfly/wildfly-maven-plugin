@@ -107,5 +107,15 @@
                 </p>
             </answer>
         </faq>
+        <faq id="zipDownload">
+            <question>Why are archived server downloads being deprecated?</question>
+            <answer>
+                <p>
+                    In 3.0.0 new goals will be introduced to allow provisioning a server. WildFly Galleon has come a long
+                    way and it is the preferred means of creating a server. For this reason, the downloading of a server
+                    by means of a Maven artifact will be removed in 3.0.0.
+                </p>
+            </answer>
+        </faq>
     </part>
 </faqs>

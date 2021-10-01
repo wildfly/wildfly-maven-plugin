@@ -126,6 +126,10 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
      * <p>
      * Note that if {@code offline} is set to {@code true} this setting really has no effect.
      * </p>
+     * <p>
+     * <strong>WARNING: </strong> In 3.0.0 you'll be required to set the {@code jboss-home}. An error will occur if
+     * this option is {@code true} and the {@code jboss-home} is not set.
+     * </p>
      *
      * @since 2.0.0
      */
@@ -230,6 +234,8 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             //we do not need to download WildFly
             return Paths.get(jbossHome);
         }
+        getLog().warn("The jboss-home parameter was not set. In 3.0.0 this parameter will be required. " +
+                "Downloading a server via Maven artifact will not longer be supported.");
         final Path result = artifactResolver.resolve(session, repositories, ArtifactNameBuilder.forRuntime(null).build());
         try {
             return Archives.uncompress(result, buildDir.toPath());
