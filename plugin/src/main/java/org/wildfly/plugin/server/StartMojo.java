@@ -63,6 +63,7 @@ import org.wildfly.plugin.repository.ArtifactResolver;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 @Mojo(name = "start", requiresDependencyResolution = ResolutionScope.RUNTIME)
+@SuppressWarnings("DeprecatedIsStillUsed")
 public class StartMojo extends AbstractServerConnection {
 
     @Parameter(defaultValue = "${repositorySystemSession}", readonly = true, required = true)
@@ -89,33 +90,48 @@ public class StartMojo extends AbstractServerConnection {
     /**
      * A string of the form groupId:artifactId:version[:packaging][:classifier]. Any missing portion of the artifact
      * will be replaced with the it's appropriate default property value
+     *
+     * @deprecated this will be removed in 3.0.0 in favor of provisioning a server
      */
+    @Deprecated
     @Parameter(property = PropertyNames.WILDFLY_ARTIFACT)
     private String artifact;
 
     /**
      * The {@code groupId} of the artifact to download. Ignored if {@link #artifact} {@code groupId} portion is used.
+     *
+     * @deprecated this will be removed in 3.0.0 in favor of provisioning a server
      */
+    @Deprecated
     @Parameter(defaultValue = ArtifactNameBuilder.WILDFLY_GROUP_ID, property = PropertyNames.WILDFLY_GROUP_ID)
     private String groupId;
 
     /**
      * The {@code artifactId} of the artifact to download. Ignored if {@link #artifact} {@code artifactId} portion is
      * used.
+     *
+     * @deprecated this will be removed in 3.0.0 in favor of provisioning a server
      */
+    @Deprecated
     @Parameter(defaultValue = ArtifactNameBuilder.WILDFLY_ARTIFACT_ID, property = PropertyNames.WILDFLY_ARTIFACT_ID)
     private String artifactId;
 
     /**
      * The {@code classifier} of the artifact to download. Ignored if {@link #artifact} {@code classifier} portion is
      * used.
+     *
+     * @deprecated this will be removed in 3.0.0 in favor of provisioning a server
      */
+    @Deprecated
     @Parameter(property = PropertyNames.WILDFLY_CLASSIFIER)
     private String classifier;
 
     /**
      * The {@code packaging} of the artifact to download. Ignored if {@link #artifact} {@code packing} portion is used.
+     *
+     * @deprecated this will be removed in 3.0.0 in favor of provisioning a server
      */
+    @Deprecated
     @Parameter(property = PropertyNames.WILDFLY_PACKAGING, defaultValue = ArtifactNameBuilder.WILDFLY_PACKAGING)
     private String packaging;
 
