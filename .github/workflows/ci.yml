@@ -1,0 +1,51 @@
+# This workflow will build a Java project with Maven
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+
+name: WildFly Maven Plugin - CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+
+jobs:
+  build:
+    name: ${{ matrix.os }}-jdk${{ matrix.java }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest ]
+        java: ['8', '11']
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v2
+        with:
+          java-version: ${{ matrix.java }}
+          cache: 'maven'
+          distribution: 'temurin'
+      - name: Build and Test on ${{ matrix.java }}
+        run: mvn clean install '-Dorg.jboss.logmanager.nocolor=true'
+      - name: Upload surefire logs for failed run
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: surefire-reports-${{ matrix.os }}-${{ matrix.java }}
+          path: '**/surefire-reports/*.txt'
+      - name: Upload failsafe logs for failed run
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: failsafe-reports-${{ matrix.os }}-${{ matrix.java }}
+          path: '**/failsafe-reports/*.txt'
+      - name: Upload logs for failed run
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: server-logs-${{ matrix.os }}-${{ matrix.java }}
+          path: '**/*.log'
