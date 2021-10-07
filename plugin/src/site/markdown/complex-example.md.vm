@@ -1,22 +1,14 @@
- ------
- Deploy/Undeploy Examples
- ------
- James R. Perkins
- ------
- 2012-03-12
- ------
+# Complex Deployment and Resource Examples
 
-Complex Deployment and Resource Examples
+#[[##]]# Complex standalone example
 
-* Complex standalone example
+The following example will undeploy the application, if it's previously been deployed, when the clean `goal` is
+executed.
 
-    The following example will undeploy the application, if it's previously been deployed, when the clean <<<goal>>> is
-    executed.
+When the `install` goal is executed the plugin will deploy the application, deploy a data source library, add a
+data source connection resource and add an XA data source connect.
 
-    When the <<<install>>> goal is executed the plugin will deploy the application, deploy a data source library, add a
-    data source connection resource and add an XA data source connect.
-
-----------
+```xml
 <project>
     ...
     <build>
@@ -156,17 +148,17 @@ Complex Deployment and Resource Examples
     </build>
 ...
 </project>
-----------
+```
 
-* Complex domain example
+#[[##]]# Complex domain example
 
-    The following example will undeploy the application, if it's previously been deployed, when the clean <<<goal>>> is
-    executed.
+The following example will undeploy the application, if it's previously been deployed, when the clean `goal` is
+executed.
 
-    When the <<<install>>> goal is executed the plugin will deploy the application, deploy a data source library, add a
-    data source connection resource and add an XA data source connect.
+When the `install` goal is executed the plugin will deploy the application, deploy a data source library, add a
+data source connection resource and add an XA data source connect.
 
-----------
+```xml
 <project>
     ...
     <build>
@@ -316,4 +308,4 @@ Complex Deployment and Resource Examples
     </build>
 ...
 </project>
-----------
+```

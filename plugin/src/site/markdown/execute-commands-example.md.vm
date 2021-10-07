@@ -1,20 +1,12 @@
- ------
- Execute Commands Example
- ------
- James R. Perkins
- ------
- 2012-06-15
- ------
+# Execute Commands Examples
 
-Execute Commands Examples
+The execute-commands goal allows you to execute commands, in the CLI format, on the running ${appServerName}.
 
-  The execute-commands goal allows you to execute commands, in the CLI format, on the running ${appServerName}.
+#[[##]]# Execute commands
 
-* Execute commands
+The example below shows how to add a debug logger with a debug log file:
 
-  The example below shows how to add a debug logger with a debug log file:
-
-----------
+```xml
 <project>
     ...
     <build>
@@ -38,13 +30,13 @@ Execute Commands Examples
     </build>
 ...
 </project>
-----------
+```
 
-* Execute commands from CLI scripts
+#[[##]]# Execute commands from CLI scripts
 
-  The example below shows how to execute commands from a CLI script:
+The example below shows how to execute commands from a CLI script:
 
-----------
+```xml
 <project>
     ...
     <build>
@@ -67,11 +59,11 @@ Execute Commands Examples
     </build>
 ...
 </project>
-----------
+```
 
-  Example of a CLI script to set the transaction timeout to 600 seconds.
+#[[##]]# Example of a CLI script to set the transaction timeout to 600 seconds.
 
-----------
+```
 batch
 # set default transaction timeout
 /subsystem=transactions:write-attribute(name=default-timeout, value=600)
@@ -79,15 +71,15 @@ batch
 # Execute and reload
 run-batch
 :reload
-----------
+```
 
 
-* Execute CLI commands in a new process
+#[[##]]# Execute CLI commands in a new process
 
-  The example below shows how to execute commands in a forked process. This allows for CLI commands, such as
-  <<<module add>>>, to be used.
+The example below shows how to execute commands in a forked process. This allows for CLI commands, such as
+`module add`, to be used.
 
-----------
+```xml
 <project>
     ...
     <build>
@@ -113,15 +105,15 @@ run-batch
     </build>
     ...
 </project>
-----------
+```
 
 
-* Execute offline embedded CLI scripts
+#[[##]]# Execute offline embedded CLI scripts
 
-  The example below shows how to execute commands offline from a CLI script, which is useful for running scripts that
-  embed server or host controller.
+The example below shows how to execute commands offline from a CLI script, which is useful for running scripts that
+embed server or host controller.
 
-----------
+```xml
 <project>
     ...
     <build>
@@ -158,16 +150,16 @@ run-batch
     </build>
     ...
 </project>
-----------
+```
 
 
-* Execute offline embedded CLI scripts
+#[[##]]# Execute offline embedded CLI scripts
 
   The example below shows how to execute commands offline from a CLI script, which is useful for running scripts that
-  embed server or host controller. Note that the <<<java-opts>>> in this example shows how to set JVM options with a
+  embed server or host controller. Note that the `java-opts` in this example shows how to set JVM options with a
   space delimited set of options rather than an array.
 
-----------
+```xml
 <project>
     ...
     <build>
@@ -205,5 +197,5 @@ run-batch
     </build>
     ...
 </project>
-----------
+```
 

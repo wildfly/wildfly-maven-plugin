@@ -1,20 +1,12 @@
- ------
- Run Example
- ------
- James R. Perkins
- ------
- 2014-02-13
- ------
+# Run Examples
 
-Run Examples
+The run goal allows you to run a local instance of ${appServerName}.
 
-  The run goal allows you to run a local instance of ${appServerName}.
+#[[##]]# Run Example
 
-* Run Example
+The example below shows how to run a server with multiple module paths:
 
-  The example below shows how to run a server with multiple module paths:
-
-----------
+```xml
 <project>
     ...
     <build>
@@ -40,13 +32,13 @@ Run Examples
     </build>
 ...
 </project>
-----------
+```
 
-* Run with different port
+#[[##]]# Run with different port
 
-   The example below shows how to run a server with the management port running a different port.
+The example below shows how to run a server with the management port running a different port.
 
-----------
+```xml
 <project>
     ...
     <build>
@@ -69,13 +61,13 @@ Run Examples
     </build>
 ...
 </project>
-----------
+```
 
-* Run with a different base directory
+#[[##]]# Run with a different base directory
 
-   The example below shows how to run a server with a different base directory.
+The example below shows how to run a server with a different base directory.
 
-----------
+```xml
 <project>
     ...
     <build>
@@ -99,13 +91,13 @@ Run Examples
     </build>
 ...
 </project>
-----------
+```
 
-* Add a user before running the server
+#[[##]]# Add a user before running the server
 
-   The example below shows how to add a user before running the server
+The example below shows how to add a user before running the server
 
-----------
+```xml
 <project>
     ...
     <build>
@@ -150,13 +142,13 @@ Run Examples
     </build>
 ...
 </project>
-----------
+```
 
-* Enable debugging
+#[[##]]# Enable debugging
 
-   The example below shows how to run a server with debugging enabled
+The example below shows how to run a server with debugging enabled
 
-----------
+```xml
 <project>
     ...
     <build>
@@ -179,3 +171,4 @@ Run Examples
     </build>
 ...
 </project>
+```

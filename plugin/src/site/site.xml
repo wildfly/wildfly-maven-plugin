@@ -24,38 +24,50 @@
 <project name="WildFly Maven Plugin">
 
     <skin>
-        <groupId>org.apache.maven.skins</groupId>
-        <artifactId>maven-fluido-skin</artifactId>
-        <version>1.7</version>
+        <groupId>com.bernardomg.maven.skins</groupId>
+        <artifactId>docs-maven-skin</artifactId>
+        <version>${version.com.bernardomg.maven.skins}</version>
     </skin>
-    <bannerLeft>
-        <name>WildFly Maven Plugin</name>
-        <src>./images/wildfly_logo_450px.png</src>
-        <href>http://www.wildfly.org</href>
-    </bannerLeft>
+
+    <custom>
+        <skinConfig>
+            <descriptionUrl>WildFly Maven Plugin</descriptionUrl>
+            <twitterSite>@WildFlyAS</twitterSite>
+            <customStyle>./css/custom.css</customStyle>
+            <bootswatchStyle>slate</bootswatchStyle>
+            <shine>bg-primary</shine>
+            <customHighlightStyle>rainbow</customHighlightStyle>
+            <topNav>
+                <menu>Overview</menu>
+                <menu>Examples</menu>
+                <menu>Project Documentation</menu>
+                <menu>Reports</menu>
+            </topNav>
+        </skinConfig>
+    </custom>
 
     <body>
-        <menu name="Overview">
+        <menu name="Overview" inherit="top">
             <item name="Introduction" href="index.html"/>
             <item name="Goals" href="plugin-info.html"/>
             <item name="Usage" href="usage.html"/>
             <item name="FAQ" href="faq.html"/>
         </menu>
 
-        <menu name="Examples">
-            <item name="Add Resource Example" href="examples/add-resource-example.html"/>
-            <item name="Deploy Application Example" href="examples/deployment-example.html"/>
-            <item name="Complex Example" href="examples/complex-example.html"/>
-            <item name="Execute Commands Example" href="examples/execute-commands-example.html"/>
-            <item name="Run Example" href="examples/run-example.html"/>
+        <menu name="Examples" inherit="top">
+            <item name="Add Resource Example" href="add-resource-example.html"/>
+            <item name="Deploy Application Example" href="deployment-example.html"/>
+            <item name="Complex Example" href="complex-example.html"/>
+            <item name="Execute Commands Example" href="execute-commands-example.html"/>
+            <item name="Run Example" href="run-example.html"/>
         </menu>
 
-        <menu name="Project Documentation">
+        <menu name="Project Documentation" inherit="top">
             <item name="JavaDoc" href="apidocs/index.html"/>
             <item name="WildFly" href="https://docs.wildfly.org"/>
         </menu>
 
-        <menu ref="reports"/>
-        <footer><![CDATA[<a href="http://www.redhat.com/"><img src="http://static.jboss.org/theme/images/common/redhat_logo.png"></a>]]></footer>
+        <menu name="Reports" inherit="top" ref="reports"/>
+        <footer><![CDATA[<div class="float-md-end"><a href="http://www.redhat.com/"><span class="fw-bold btn-link">Sponsored by</span> <img class="img-fluid" src="https://www.wildfly.org/assets/img/redhat_reversed.svg"></a></div>]]></footer>
     </body>
 </project>

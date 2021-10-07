@@ -56,10 +56,10 @@
                 <artifactId>maven-site-plugin</artifactId>
                 <configuration>
                     <skip>false</skip>
-                    <relativizeDecorationLinks>false</relativizeDecorationLinks>
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
                 <version>${version.pir.plugin}</version>
             </plugin>

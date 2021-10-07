@@ -1,28 +1,18 @@
- ------
- Adding Resources Example
- ------
- Stuart Douglas
- ------
- 2011-08-16
- ------
+# Adding Resources Examples
 
-Adding Resources Examples
+The add-resources goal allows you to add resources such as datsources etc to a running ${appServerName} instance.
 
-  The add-resources goal allows you to add resources such as datsources etc to a running ${appServerName} instance.
+#[[##]]# Adding datasources
 
-* Adding datasources
+This can be combined with the [add-resource](add-resource-mojo.html) goal to automatically deploy the datasource drivers.
 
-  This can be combined with the {{{{./add-resource-mojo.html}add-resource}} goal to automatically deploy the datasource drivers.
+The example below shows how to add a datasource that uses the default h2 database:
 
-  The example below shows how to add a datasource that uses the default h2 database:
-
-----------
+```xml
 <project>
     ...
     <build>
-        ...
         <plugins>
-            ...
             <plugin>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>${project.artifactId}</artifactId>
@@ -53,18 +43,16 @@ Adding Resources Examples
                     </execution>
                 </executions>
             </plugin>
-            ...
         </plugins>
-        ...
     </build>
 ...
 </project>
-----------
+```
 
-  The example below shows how to configure a postgresql XA data source, including deploying the driver. The postgresql
-  driver module must be listed in the <dependencies> section of the pom.
+The example below shows how to configure a postgresql XA data source, including deploying the driver. The postgresql
+driver module must be listed in the `<dependencies>` section of the pom.
 
-----------
+```xml
 <project>
     ...
     <build>
@@ -151,20 +139,20 @@ Adding Resources Examples
     </build>
 ...
 </project>
-----------
+```
 
-  The xml tags in the <properties> element correspond directly to the DMR nodes in the corresponding management operation.
-  If you need to use DMR nodes of a non-primitive type then you must prefix the value with the !! escape sequence, which
-  will cause the value to be interpreted as a string representation of a DMR node. For example in the <xa-data-source-properties>
-  element about <xa-datasource-properties> is a DMR property list.
-
-
-* Adding other resources
-
-  It is also possible to deploy resources other than datasources, the example below shows how to deploy a JMS queue:
+The xml tags in the `<properties>` element correspond directly to the DMR nodes in the corresponding management operation.
+If you need to use DMR nodes of a non-primitive type then you must prefix the value with the !! escape sequence, which
+will cause the value to be interpreted as a string representation of a DMR node. For example in the `<xa-data-source-properties>`
+element about `<xa-datasource-properties>` is a DMR property list.
 
 
-----------
+#[[##]]#  Adding other resources
+
+It is also possible to deploy resources other than datasources, the example below shows how to deploy a JMS queue:
+
+
+```xml
 <project>
     ...
     <build>
@@ -202,15 +190,15 @@ Adding Resources Examples
     </build>
 ...
 </project>
-----------
+```
 
 
-* Adding resources in domain mode
+#[[##]]#  Adding resources in domain mode
 
-  Adding resources in domain mode works the same as the examples above, except you need to add the <profiles> property
-  as well as specify at least one profile.
+Adding resources in domain mode works the same as the examples above, except you need to add the `<profiles>` property
+as well as specify at least one profile.
 
-----------
+```xml
 <project>
     ...
     <build>
@@ -256,4 +244,4 @@ Adding Resources Examples
     </build>
 ...
 </project>
-----------
+```
