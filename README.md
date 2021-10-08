@@ -9,7 +9,7 @@ A Maven plug-in for WildFly Application Server. This plugin allows you to:
   * Execute CLI commands
   * Run a standalone server within Maven
 
-Plugin documentation is at https://docs.jboss.org/wildfly/plugins/maven/latest/
+Plugin documentation is at https://docs.wildfly.org/wildfly-maven-plugin
 
 Issues can be filed at https://issues.jboss.org/browse/WFMP
 

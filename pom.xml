@@ -321,28 +321,21 @@
     <profiles>
         <profile>
             <id>release</id>
+            <activation>
+                <property>
+                    <name>release</name>
+                </property>
+            </activation>
             <build>
                 <plugins>
                     <plugin>
                         <artifactId>maven-javadoc-plugin</artifactId>
                         <executions>
                             <execution>
-                                <id>create-site</id>
+                                <id>generate-javadoc</id>
                                 <phase>package</phase>
                                 <goals>
                                     <goal>javadoc</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-site-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>create-site</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>site</goal>
                                 </goals>
                             </execution>
                         </executions>
