@@ -189,7 +189,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
                     .setAppend(true)
                     .setStdout(stdout)
                     .setOffline(true);
-            commandExecutor.execute(cmdConfigDeployment);
+            commandExecutor.execute(cmdConfigDeployment, artifactResolver);
         }
         // CLI execution
          try {
@@ -212,7 +212,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
                          if (session.getResolveExpression()) {
                             cmdConfig.addCLIArguments(CLI_RESOLVE_PARAMETERS_VALUES);
                          }
-                         commandExecutor.execute(cmdConfig);
+                         commandExecutor.execute(cmdConfig, artifactResolver);
                      } finally {
                          for (File f : wrappedScripts) {
                              Files.delete(f.toPath());

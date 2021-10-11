@@ -42,7 +42,7 @@ public class ExecuteCommandsTest extends AbstractWildFlyServerMojoTest {
     public void testExecuteCommandsFromScript() throws Exception {
 
         final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-script-pom.xml");
-
+        setValidSession(executeCommandsMojo);
         executeCommandsMojo.execute();
 
         // Create the address
@@ -70,7 +70,7 @@ public class ExecuteCommandsTest extends AbstractWildFlyServerMojoTest {
     public void testExecuteCommands() throws Exception {
 
         final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-commands-pom.xml");
-
+        setValidSession(executeCommandsMojo);
         executeCommandsMojo.execute();
 
         // Read the attribute
@@ -142,7 +142,7 @@ public class ExecuteCommandsTest extends AbstractWildFlyServerMojoTest {
     public void testExecuteBatchCommands() throws Exception {
 
         final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-batch-commands-pom.xml");
-
+        setValidSession(executeCommandsMojo);
         executeCommandsMojo.execute();
 
         // Read the attribute

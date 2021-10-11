@@ -42,7 +42,7 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
         final Mojo packageMojo =  lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("package-pom.xml").toFile(), "package");
 
         packageMojo.execute();
-        Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("server");
+        Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("packaged-server");
         Assert.assertTrue(Files.exists(jbossHome.resolve("standalone").
                 resolve("configuration").resolve("foo.txt")));
         String[] layers = {"jaxrs-server"};

@@ -230,7 +230,7 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
         if (fork) {
             cmdConfig.setJBossHome(getInstallation(buildDir.toPath().resolve(Utils.WILDFLY_DEFAULT_DIR)));
         }
-        commandExecutor.execute(cmdConfig);
+        commandExecutor.execute(cmdConfig, mavenRepoManager);
     }
 
     /**

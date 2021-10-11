@@ -56,6 +56,7 @@
                         <dir>extra-content</dir>
                     </extra-server-content-dirs>
                     <record-provisioning-state>true</record-provisioning-state>
+                    <provisioning-dir>packaged-server</provisioning-dir>
                 </configuration>
             </plugin>
         </plugins>

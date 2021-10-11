@@ -22,6 +22,7 @@
 
 package org.wildfly.plugin.tests;
 
+import java.io.File;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -38,6 +39,10 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuilder;
 import org.apache.maven.project.ProjectBuildingRequest;
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
+import org.eclipse.aether.repository.LocalRepository;
+import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
+import org.jboss.galleon.util.PropertyUtils;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.wildfly.plugin.core.Deployment;
@@ -140,4 +145,25 @@ public abstract class AbstractWildFlyMojoTest {
         field.set(instance, value);
     }
 
+    private static Path getDefaultMavenRepositoryPath() {
+        String repoPath = PropertyUtils.getSystemProperty("maven.repo.path");
+        if (repoPath == null) {
+            repoPath = new StringBuilder(PropertyUtils.getSystemProperty("user.home")).append(File.separatorChar)
+                    .append(".m2").append(File.separatorChar)
+                    .append("repository")
+                    .toString();
+        }
+        return Paths.get(repoPath);
+    }
+
+    // Needed when resolving CLI artifact for in process execution
+    protected static void setValidSession(Mojo mojo) throws NoLocalRepositoryManagerException, NoSuchFieldException, IllegalAccessException {
+        DefaultRepositorySystemSession repoSession = new DefaultRepositorySystemSession();
+        // Take into account maven.repo.local
+        String path = System.getProperty("maven.repo.local", getDefaultMavenRepositoryPath().toString());
+        repoSession.setLocalRepositoryManager(
+                new SimpleLocalRepositoryManagerFactory().newInstance(repoSession,
+                        new LocalRepository(path)));
+        setValue(mojo, "session", repoSession);
+    }
 }

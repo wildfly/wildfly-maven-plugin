@@ -39,6 +39,7 @@
                         <layer>jaxrs-server</layer>
                     </layers>
                     <record-provisioning-state>false</record-provisioning-state>
+                    <provisioning-dir>provisioned-server</provisioning-dir>
                 </configuration>
             </plugin>
         </plugins>

@@ -163,7 +163,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
 
     private Path wildflyDir;
 
-    private MavenRepoManager artifactResolver;
+    protected MavenRepoManager artifactResolver;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -177,13 +177,19 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
 
         wildflyDir = targetDir.toPath().resolve(provisioningDir);
         IoUtils.recursiveDelete(wildflyDir);
-
         try {
-            provisionServer(wildflyDir);
-        } catch (ProvisioningException | IOException | XMLStreamException ex) {
-            throw new MojoExecutionException("Provisioning failed", ex);
+            try {
+                provisionServer(wildflyDir);
+            } catch (ProvisioningException | IOException | XMLStreamException ex) {
+                throw new MojoExecutionException("Provisioning failed", ex);
+            }
+            serverProvisioned(wildflyDir);
+        } finally {
+            // Although cli and embedded are run in their own classloader,
+            // the module.path system property has been set and needs to be cleared for
+            // in same JVM next execution.
+            System.clearProperty("module.path");
         }
-        serverProvisioned(wildflyDir);
     }
 
     protected abstract void serverProvisioned(Path jbossHome) throws MojoExecutionException, MojoFailureException;

@@ -40,7 +40,7 @@ public class ProvisionTest extends AbstractProvisionConfiguredMojoTestCase {
         final Mojo provisionMojo =  lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("provision-pom.xml").toFile(), "provision");
 
         provisionMojo.execute();
-        Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("server");
+        Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("provisioned-server");
         checkStandaloneWildFlyHome(jbossHome, 0, null, null, false);
     }
 

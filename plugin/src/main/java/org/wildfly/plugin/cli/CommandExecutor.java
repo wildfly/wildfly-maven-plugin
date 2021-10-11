@@ -36,19 +36,12 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.codehaus.plexus.logging.AbstractLogEnabled;
 import org.codehaus.plexus.logging.Logger;
-import org.jboss.as.cli.CommandContext;
-import org.jboss.as.cli.CommandContextFactory;
-import org.jboss.as.cli.CommandFormatException;
-import org.jboss.as.cli.CommandLineException;
-import org.jboss.as.cli.batch.Batch;
-import org.jboss.as.cli.batch.BatchManager;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.dmr.ModelNode;
+import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.wildfly.core.launcher.CliCommandBuilder;
 import org.wildfly.core.launcher.Launcher;
 import org.wildfly.plugin.common.Environment;
 import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
-import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.common.StandardOutput;
 import org.wildfly.plugin.core.ServerHelper;
 
@@ -65,11 +58,12 @@ public class CommandExecutor extends AbstractLogEnabled {
      * Executes CLI commands based on the configuration.
      *
      * @param config the configuration used to execute the CLI commands
+     * @param artifactResolver Resolver to retrieve CLI artifact for in-process execution.
      *
      * @throws MojoFailureException   if the JBoss Home directory is required and invalid
      * @throws MojoExecutionException if an error occurs executing the CLI commands
      */
-    public void execute(final CommandConfiguration config) throws MojoFailureException, MojoExecutionException {
+    public void execute(final CommandConfiguration config, MavenRepoManager artifactResolver) throws MojoFailureException, MojoExecutionException {
         if (config.isOffline()) {
             // The jbossHome is required for offline CLI
             if (!ServerHelper.isValidHomeDirectory(config.getJBossHome())) {
@@ -80,7 +74,11 @@ public class CommandExecutor extends AbstractLogEnabled {
             if (config.isFork()) {
                 executeInNewProcess(config);
             } else {
-                executeInProcess(config);
+                try {
+                    executeInProcess(config, artifactResolver);
+                } catch (Exception ex) {
+                    throw new MojoExecutionException(ex.getLocalizedMessage(), ex);
+                }
             }
         }
     }
@@ -214,7 +212,7 @@ public class CommandExecutor extends AbstractLogEnabled {
         }
     }
 
-    private void executeInProcess(final CommandConfiguration config) throws MojoExecutionException, MojoFailureException {
+    private void executeInProcess(final CommandConfiguration config, MavenRepoManager artifactResolver) throws Exception {
         // The jbossHome is not required, but if defined should be valid
         final Path jbossHome = config.getJBossHome();
         if (jbossHome != null && !ServerHelper.isValidHomeDirectory(jbossHome)) {
@@ -240,15 +238,15 @@ public class CommandExecutor extends AbstractLogEnabled {
 
             // Set the system properties for executing commands
             System.setProperties(newSystemProperties);
-            CommandContext commandContext = null;
+            LocalCLIExecutor commandContext = null;
             try (ModelControllerClient client = config.getClient()) {
-                commandContext = createCommandContext(client);
+                commandContext = createCommandContext(jbossHome, client, artifactResolver);
                 final Collection<String> commands = config.getCommands();
                 if (!commands.isEmpty()) {
                     if (config.isBatch()) {
-                        executeBatch(commandContext, commands);
+                        commandContext.executeBatch(commands);
                     } else {
-                        executeCommands(commandContext, commands, config.isFailOnError());
+                        commandContext.executeCommands(commands, config.isFailOnError());
                     }
                 }
                 final Collection<Path> scripts = config.getScripts();
@@ -256,9 +254,9 @@ public class CommandExecutor extends AbstractLogEnabled {
                     for (Path scriptFile : scripts) {
                         final List<String> cmds = Files.readAllLines(scriptFile, StandardCharsets.UTF_8);
                         if (config.isBatch()) {
-                            executeBatch(commandContext, cmds);
+                            commandContext.executeBatch(cmds);
                         } else {
-                            executeCommands(commandContext, cmds, config.isFailOnError());
+                            commandContext.executeCommands(cmds, config.isFailOnError());
                         }
                     }
                 }
@@ -266,7 +264,7 @@ public class CommandExecutor extends AbstractLogEnabled {
                 throw new MojoExecutionException("Could not execute commands.", e);
             } finally {
                 if (commandContext != null) {
-                    commandContext.terminateSession();
+                    commandContext.close();
                 }
             }
         } catch (IOException e) {
@@ -276,51 +274,15 @@ public class CommandExecutor extends AbstractLogEnabled {
         }
     }
 
-    private static void executeCommands(final CommandContext ctx, final Iterable<String> commands, final boolean failOnError) throws MojoExecutionException {
-        for (String cmd : commands) {
-            try {
-                if (failOnError) {
-                    ctx.handle(cmd);
-                } else {
-                    ctx.handleSafe(cmd);
-                }
-            } catch (CommandFormatException e) {
-                throw new MojoExecutionException(String.format("Command '%s' is invalid. %s", cmd, e.getLocalizedMessage()), e);
-            } catch (CommandLineException e) {
-                throw new MojoExecutionException(String.format("Command execution failed for command '%s'. %s", cmd, e.getLocalizedMessage()), e);
-            }
-        }
-    }
-
-    private static void executeBatch(final CommandContext ctx, final Iterable<String> commands) throws IOException, MojoExecutionException {
-        final BatchManager batchManager = ctx.getBatchManager();
-        if (batchManager.activateNewBatch()) {
-            final Batch batch = batchManager.getActiveBatch();
-            for (String cmd : commands) {
-                try {
-                    batch.add(ctx.toBatchedCommand(cmd));
-                } catch (CommandFormatException e) {
-                    throw new MojoExecutionException(String.format("Command '%s' is invalid. %s", cmd, e.getLocalizedMessage()), e);
-                }
-            }
-            final ModelNode result = ctx.getModelControllerClient().execute(batch.toRequest());
-            if (!ServerOperations.isSuccessfulOutcome(result)) {
-                throw new MojoExecutionException(ServerOperations.getFailureDescriptionAsString(result));
-            }
-        }
-    }
-
-    private CommandContext createCommandContext(final ModelControllerClient client) {
-        CommandContext commandContext = null;
+    private LocalCLIExecutor createCommandContext(Path jbossHome, final ModelControllerClient client, MavenRepoManager artifactResolver) throws Exception {
+        LocalCLIExecutor commandContext = null;
         try {
-            commandContext = CommandContextFactory.getInstance().newCommandContext();
+            commandContext = new LocalCLIExecutor(jbossHome, artifactResolver);
             commandContext.bindClient(client);
-        } catch (CommandLineException e) {
-            throw new IllegalStateException("Failed to initialize CLI context", e);
         } catch (Exception e) {
             // Terminate the session if we've encountered an error
             if (commandContext != null) {
-                commandContext.terminateSession();
+                commandContext.close();
             }
             throw new IllegalStateException("Failed to initialize CLI context", e);
         }
