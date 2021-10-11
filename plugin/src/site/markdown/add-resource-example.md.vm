@@ -1,0 +1,247 @@
+# Adding Resources Examples
+
+The add-resources goal allows you to add resources such as datsources etc to a running ${appServerName} instance.
+
+#[[##]]# Adding datasources
+
+This can be combined with the [add-resource](add-resource-mojo.html) goal to automatically deploy the datasource drivers.
+
+The example below shows how to add a datasource that uses the default h2 database:
+
+```xml
+<project>
+    ...
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <executions>
+                    <execution>
+                        <id>add-datasource</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                        <configuration>
+                            <address>subsystem=datasources,data-source=java:jboss/myDs</address>
+                            <resources>
+                                <resource>
+                                    <properties>
+                                        <jndi-name>java:jboss/myDs</jndi-name>
+                                        <enabled>true</enabled>
+                                        <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</connection-url>
+                                        <driver-class>org.h2.Driver</driver-class>
+                                        <driver-name>h2</driver-name>
+                                        <user-name>sa</user-name>
+                                        <password>sa</password>
+                                    </properties>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+...
+</project>
+```
+
+The example below shows how to configure a postgresql XA data source, including deploying the driver. The postgresql
+driver module must be listed in the `<dependencies>` section of the pom.
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <executions>
+                    <execution>
+                        <id>deploy-postgresql</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>deploy-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <groupId>postgresql</groupId>
+                            <artifactId>postgresql</artifactId>
+                            <name>postgresql.jar</name>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>add-datasource</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                        <configuration>
+                            <address>subsystem=datasources</address>
+                            <resources>
+                                <resource>
+                                    <address>xa-data-source=java:jboss/datasources/postgresDS</address>
+                                    <properties>
+                                        <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
+                                        <jndi-name>java:jboss/datasources/postgresDS</jndi-name>
+                                        <enabled>true</enabled>
+                                        <driver-name>postgresql.jar</driver-name>
+                                    </properties>
+                                    <resources>
+                                        <resource>
+                                            <address>
+                                                xa-datasource-properties=DatabaseName
+                                            </address>
+                                            <properties>
+                                                <value>myDatabase</value>
+                                            </properties>
+                                        </resource>
+                                        <resource>
+                                            <address>
+                                                xa-datasource-properties=ServerName
+                                            </address>
+                                            <properties>
+                                                <value>localhost</value>
+                                            </properties>
+                                        </resource>
+                                        <resource>
+                                            <address>
+                                                xa-datasource-properties=User
+                                            </address>
+                                            <properties>
+                                                <value>dbuser</value>
+                                            </properties>
+                                        </resource>
+                                        <resource>
+                                            <address>
+                                                xa-datasource-properties=Password
+                                            </address>
+                                            <properties>
+                                                <value>supersecret</value>
+                                            </properties>
+                                        </resource>
+                                    </resources>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```
+
+The xml tags in the `<properties>` element correspond directly to the DMR nodes in the corresponding management operation.
+If you need to use DMR nodes of a non-primitive type then you must prefix the value with the !! escape sequence, which
+will cause the value to be interpreted as a string representation of a DMR node. For example in the `<xa-data-source-properties>`
+element about `<xa-datasource-properties>` is a DMR property list.
+
+
+#[[##]]#  Adding other resources
+
+It is also possible to deploy resources other than datasources, the example below shows how to deploy a JMS queue:
+
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <executions>
+                    <execution>
+                        <id>add-jms-queue</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <address>subsystem=messaging,hornetq-server=default,jms-queue=myJmsQueue</address>
+                                    <properties>
+                                        <durable>true</durable>
+                                        <entries>!!["java:jboss/myJmsQueue", "java:jboss/myJmsQueueAlias"]</entries>
+                                    </properties>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```
+
+
+#[[##]]#  Adding resources in domain mode
+
+Adding resources in domain mode works the same as the examples above, except you need to add the `<profiles>` property
+as well as specify at least one profile.
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <executions>
+                    <execution>
+                        <id>add-datasource</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                        <configuration>
+                            <profiles>
+                                <profile>default</profile>
+                            </profiles>
+                            <address>subsystem=datasources,data-source=java:jboss/myDs</address>
+                             <resources>
+                                <resource>
+                                    <properties>
+                                        <jndi-name>java:jboss/myDs</jndi-name>
+                                        <enabled>true</enabled>
+                                        <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</connection-url>
+                                        <driver-class>org.h2.Driver</driver-class>
+                                        <driver-name>h2</driver-name>
+                                        <user-name>sa</user-name>
+                                        <password>sa</password>
+                                    </properties>
+                                </resource>
+                             </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```

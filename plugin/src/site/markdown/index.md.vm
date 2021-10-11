@@ -1,0 +1,67 @@
+
+# ${project.name} (${project.artifactId})
+
+  The ${project.artifactId} is used to deploy, redeploy, undeploy or run your application. You can also deploy or undeploy
+  artifacts, such as JDBC drivers, and add or remove resources. There is also the ability to execute CLI commands.
+
+#[[##]]# Goals Overview
+
+  General information about the goals.
+
+  * [${pluginPrefix}:add-resource](./add-resource-mojo.html) adds a resource.
+
+  * [${pluginPrefix}:deploy](./deploy-mojo.html) deploys the application to the application server.
+
+  * [${pluginPrefix}:deploy-only](./deploy-only-mojo.html) deploys the application to application server invoking no other goals by default.
+
+  * [${pluginPrefix}:deploy-artifact](./deploy-artifact-mojo.html) deploys an arbitrary artifact to the server.
+
+  * [${pluginPrefix}:redeploy](./redeploy-mojo.html) redeploys the application.
+
+  * [${pluginPrefix}:redeploy-only](./redeploy-only-mojo.html) redeploys the application invoking no other goals by default.
+
+  * [${pluginPrefix}:undeploy](./undeploy-mojo.html) undeploys the application.
+
+  * [${pluginPrefix}:run](./run-mojo.html) runs the application server and deploys your application.
+
+  * [${pluginPrefix}:start](./start-mojo.html) starts the application server and leaves the process running. In most cases
+    the [shutdown goal](./shutdown-mojo.html) be executed to ensure the server is shutdown.
+
+  * [${pluginPrefix}:shutdown](./shutdown-mojo.html) shuts down a running application server.
+
+  * [${pluginPrefix}:execute-commands](./execute-commands-mojo.html) executes commands on the running server.
+
+#[[##]]# Usage
+
+General instructions on how to use the ${project.name} can be found on the [usage page](./usage.html). Some more
+specific use cases are described in the examples given below. Last but not least, users occasionally contribute
+additional examples, tips or errata to the
+[${appServerName} wiki page](http://community.jboss.org/en/wildfly).
+
+In case you still have questions regarding the plugin's usage, please have a look at the [FAQ](./faq.html) and feel
+free to contact the [user mailing list](./mail-lists.html). The posts to the mailing list are archived and could
+already contain the answer to your question as part of an older thread. Hence, it is also worth browsing/searching
+the [mail archive](./mail-lists.html).
+
+If you feel like the plugin is missing a feature or has a defect, you can fill a feature request or bug report in our
+[issue tracker](./issue-tracking.html). When creating a new issue, please provide a comprehensive description of your
+concern. Especially for fixing bugs it is crucial that the developers can reproduce your problem. For this reason,
+entire debug logs, POMs or most preferably little demo projects attached to the issue are very much appreciated.
+Of course, patches are welcome, too. Contributors can check out the project from our
+[source repository](./source-repository.html) and will find supplementary information in the
+[guide to helping with Maven](http://maven.apache.org/guides/development/guide-helping.html).
+
+#[[##]]# Examples
+
+  To provide you with better understanding of some usages of the ${project.name}, you can take a look into the
+  following example:
+
+  * [Deployment Example](./deployment-example.html)
+
+  * [Adding Resources Example](./add-resource-example.html)
+
+  * [Complex Examples](./complex-example.html)
+
+  * [Execute Commands Example](./execute-commands-example.html)
+
+  * [Run Example](./run-example.html)

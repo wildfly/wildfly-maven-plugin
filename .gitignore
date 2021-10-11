@@ -15,3 +15,6 @@ target/
 #Ignore Mac files
 .DS_Store
 nb-configuration.xml
+
+# Maven site files
+**/velocity.log

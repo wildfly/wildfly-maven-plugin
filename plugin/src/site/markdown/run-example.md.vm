@@ -1,0 +1,174 @@
+# Run Examples
+
+The run goal allows you to run a local instance of ${appServerName}.
+
+#[[##]]# Run Example
+
+The example below shows how to run a server with multiple module paths:
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <modules-path>
+                        <paths>
+                            <path>/opt/${appServerName}/modules</path>
+                            <path>/opt/my-modules</path>
+                        </paths>
+                    </modules-path>
+                </configuration>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```
+
+#[[##]]# Run with different port
+
+The example below shows how to run a server with the management port running a different port.
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <jboss-home>/opt/${appServerName}</jboss-home>
+                    <modules-path>/opt/${appServerName}/modules</modules-path>
+                    <port>9999</port>
+                </configuration>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```
+
+#[[##]]# Run with a different base directory
+
+The example below shows how to run a server with a different base directory.
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <server-args>
+                        <server-arg>-Djboss.server.base.dir=/opt/${appServerName}/standalone/</server-arg>
+                        <server-arg>-b=0.0.0.0</server-arg>
+                    </server-args>
+                </configuration>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```
+
+#[[##]]# Add a user before running the server
+
+The example below shows how to add a user before running the server
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <add-user>
+                        <users>
+                            <user>
+                                <username>admin</username>
+                                <password>admin.1234</password>
+                            </user>
+                            <user>
+                                <username>admin-user</username>
+                                <password>user.1234</password>
+                                <groups>
+                                    <group>admin</group>
+                                    <group>user</group>
+                                </groups>
+                                <application-user>true</application-user>
+                            </user>
+                            <user>
+                                <username>default-user</username>
+                                <password>user.1234</password>
+                                <groups>
+                                    <group>user</group>
+                                </groups>
+                                <application-user>true</application-user>
+                            </user>
+                        </users>
+                    </add-user>
+                </configuration>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```
+
+#[[##]]# Enable debugging
+
+The example below shows how to run a server with debugging enabled
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <java-opts>
+                        <java-opt>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005</java-opt>
+                    </java-opts>
+                </configuration>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```

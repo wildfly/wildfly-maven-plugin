@@ -1,0 +1,201 @@
+# Execute Commands Examples
+
+The execute-commands goal allows you to execute commands, in the CLI format, on the running ${appServerName}.
+
+#[[##]]# Execute commands
+
+The example below shows how to add a debug logger with a debug log file:
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <commands>
+                        <command>/subsystem=logging/file-handler=debug:add(level=DEBUG,autoflush=true,file={"relative-to"=>"jboss.server.log.dir", "path"=>"debug.log"})</command>
+                        <command>/subsystem=logging/logger=org.jboss.as:add(level=DEBUG,handlers=[debug])</command>
+                    </commands>
+                </configuration>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```
+
+#[[##]]# Execute commands from CLI scripts
+
+The example below shows how to execute commands from a CLI script:
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <scripts>
+                        <script>config.cli</script>
+                    </scripts>
+                </configuration>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```
+
+#[[##]]# Example of a CLI script to set the transaction timeout to 600 seconds.
+
+```
+batch
+# set default transaction timeout
+/subsystem=transactions:write-attribute(name=default-timeout, value=600)
+#...
+# Execute and reload
+run-batch
+:reload
+```
+
+
+#[[##]]# Execute CLI commands in a new process
+
+The example below shows how to execute commands in a forked process. This allows for CLI commands, such as
+`module add`, to be used.
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <version>${version.org.wildfly.plugin}</version>
+                <executions>
+                ....
+                </executions>
+                <configuration>
+                    <fork>true</fork>
+                    <jboss-home>${wildfly.dir}</jboss-home>
+                    <command>module add --name=org.wildfly.plugin.example --dependencies=org.jboss.logging --resources=\${project.build.directory}${file.separator}example.jar</command>
+                </configuration>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+    ...
+</project>
+```
+
+
+#[[##]]# Execute offline embedded CLI scripts
+
+The example below shows how to execute commands offline from a CLI script, which is useful for running scripts that
+embed server or host controller.
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <version>${version.org.wildfly.plugin}</version>
+                <configuration>
+                    <!-- Tells plugin to start in offline mode, to not try to connect to server or start it-->
+                    <offline>true</offline>
+                    <commands>
+                        <command>/system-property=org.jboss.example.runtime:write-attribute(name=dev)</command>
+                    </commands>
+                    <jboss-home>${wildfly.dir}</jboss-home>
+                    <!-- where to out log-->
+                    <stdout>\${project.build.directory}/wildfly-plugin.log</stdout>
+                    <!-- java opts with which CLI is started with -->
+                    <java-opts>
+                        <java-opt>--add-modules=javax.se</java-opt>
+                        <java-opt>-Xmx256m</java-opt>
+                    </java-opts>
+                    <!-- system properties that can than be referenced in CLI script-->
+                    <system-properties>
+                        <public.ip>${node0}</public.ip>
+                    </system-properties>
+                </configuration>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+    ...
+</project>
+```
+
+
+#[[##]]# Execute offline embedded CLI scripts
+
+  The example below shows how to execute commands offline from a CLI script, which is useful for running scripts that
+  embed server or host controller. Note that the `java-opts` in this example shows how to set JVM options with a
+  space delimited set of options rather than an array.
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <version>${version.org.wildfly.plugin}</version>
+                <executions>
+                ....
+                </executions>
+                <configuration>
+                    <!-- Tells plugin to start in offline mode, to not try to connect to server or start it-->
+                    <offline>true</offline>
+                    <scripts>
+                        <script>scrip-name.cli</script>
+                    </scripts>
+                    <jboss-home>${wildfly.dir}</jboss-home>
+                    <!-- where to out log-->
+                    <stdout>\${project.build.directory}/wildfly-plugin.log</stdout>
+                    <!-- java opts with which CLI is started with -->
+                    <java-opts>${modular.jdk.args}</java-opts>
+                    <!-- system properties that can than be referenced in CLI script-->
+                    <system-properties>
+                        <public.ip>${node0}</public.ip>
+                       ....
+                    </system-properties>
+                </configuration>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+    ...
+</project>
+```
+
