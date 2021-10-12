@@ -1,0 +1,164 @@
+# Package your application
+
+The package goal allows you to provision a server using Galleon, execute CLI commands and scripts to fine tune the server configuration, copy some 
+extra content (e.g.: keystore, properties files) to the server installation and finally deploy your application.
+
+By default the server is provisioned in the ``target/server`` directory.
+
+#[[##]]# Package a JAXRS application
+
+The example below shows how to produce the latest released ${appServerName} server trimmed using 'jaxrs-server' Galleon layer. 
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <feature-packs>
+                        <feature-pack>
+                            <!-- Latest released version -->
+                            <location>wildfly@maven(org.jboss.universe:community-universe)</location>
+                        </feature-pack>
+                    </feature-packs>
+                    <layers>
+                        <!-- Galleon layer allows to trim the installed server to your needs. The 'jaxrs-server' 
+                        contains the server content required to execute JAXRS applications -->
+                        <layer>jaxrs-server</layer>
+                    </layers>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>package</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```
+
+#[[##]]# Fine tune server configuration and package extra content
+
+The example below shows how to configure the plugin goal to execute CLI commands and copy extra content inside the installed server: 
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <feature-packs>
+                        <feature-pack>
+                            <location>wildfly@maven(org.jboss.universe:community-universe)</location>
+                        </feature-pack>
+                    </feature-packs>
+                    <layers>
+                        <layer>jaxrs-server</layer>
+                    </layers>
+                    <packaging-scripts>
+                        <!-- Commands and scripts are executed in the context of an embedded-server. 
+                        You don't need to start and stop the embedded-server. -->
+                        <execution>
+                            <!-- List of commands -->
+                            <commands>
+                                <command>/system-property=org.jboss.example.runtime:write-attribute(name=dev)</command>
+                                <command>/system-property=org.jboss.example.runtime2:write-attribute(name=dev2)</command>
+                            </commands>
+                            <!-- Properties files containing System Properties to resolve expressions -->
+                            <properties-files>
+                                <file>cli.properties</file>
+                            </properties-files>
+                            <!-- Enable expression resolution prior to send the commands to the server, false by default -->
+                            <resolve-expressions>true</resolve-expressions>
+                            <!-- List of CLI script files -->
+                            <scripts>
+                                <script>config.cli</script>
+                                <script>config2.cli</script>
+                            </scripts>
+                        </execution>
+                    </packaging-scripts>
+                    <!-- A list of directory that contains content to copy to the server. Each directory must contain a 
+                     directory structure that complies with the server directory structure. 
+                     For example extra-content/standalone/configuration/foo.properties to copy the foo.properties file to 
+                     target/server/standalone/configuration/ directory -->
+                    <extra-server-content-dirs>
+                        <extra-content>extra-content</extra-content>
+                    </extra-server-content-dirs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>package</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```
+
+#[[##]]# Deploy your WAR application in the root context
+
+By default the name of the WAR is used as the runtime-name for your deployment. 
+You can specify a runtime-name parameter to tune the context in which your deployment will be registered. 
+In this example we are using the special 'ROOT.war' runtime-name to reference the root context.
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <feature-packs>
+                        <feature-pack>
+                            <location>wildfly@maven(org.jboss.universe:community-universe)</location>
+                        </feature-pack>
+                    </feature-packs>
+                    <layers>
+                        <layer>jaxrs-server</layer>
+                    </layers>
+                    <runtime-name>ROOT.war</runtime-name>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>package</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```

@@ -45,6 +45,26 @@ For example to deploy the arbitrary artifact specified in you POM, you type the 
 mvn ${pluginPrefix}:deploy-artifact
 ```
 
+#[[##]]# The `${pluginPrefix}:package` Goal
+
+The `${pluginPrefix}:package` goal will provision a server, execute CLI commands and deploy your application.
+
+To execute the package goal type the following on the command line:
+
+```bash
+mvn ${pluginPrefix}:package
+```
+
+#[[##]]# The `${pluginPrefix}:provision` Goal
+
+The `${pluginPrefix}:provision` goal will provision a server.
+
+To execute the provision goal type the following on the command line:
+
+```bash
+mvn ${pluginPrefix}:provision
+```
+
 #[[##]]# The `${pluginPrefix}:redeploy` Goal
 
 The `${pluginPrefix}:redeploy` goal will redeploy your application if and only if the application has already been

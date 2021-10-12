@@ -1,7 +1,8 @@
 
 # ${project.name} (${project.artifactId})
 
-  The ${project.artifactId} is used to deploy, redeploy, undeploy or run your application. You can also deploy or undeploy
+  The ${project.artifactId} is used to provision a server using Galleon, package your application in Galleon provisioned server, 
+  deploy, redeploy, undeploy or run your application. You can also deploy or undeploy
   artifacts, such as JDBC drivers, and add or remove resources. There is also the ability to execute CLI commands.
 
 #[[##]]# Goals Overview
@@ -15,6 +16,10 @@
   * [${pluginPrefix}:deploy-only](./deploy-only-mojo.html) deploys the application to application server invoking no other goals by default.
 
   * [${pluginPrefix}:deploy-artifact](./deploy-artifact-mojo.html) deploys an arbitrary artifact to the server.
+
+  * [${pluginPrefix}:package](./package-mojo.html) produces a fully configured server installation using Galleon and WildFly CLI that contains your application.
+
+  * [${pluginPrefix}:provision](./provision-mojo.html) produces a server installation using Galleon.
 
   * [${pluginPrefix}:redeploy](./redeploy-mojo.html) redeploys the application.
 
@@ -65,3 +70,7 @@ Of course, patches are welcome, too. Contributors can check out the project from
   * [Execute Commands Example](./execute-commands-example.html)
 
   * [Run Example](./run-example.html)
+
+  * [Packaging the application and server Example](./package-example.html)
+
+  * [Provisioning a server Example](./provision-example.html)

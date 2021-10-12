@@ -1,0 +1,79 @@
+# Provision a server
+
+The provision goal allows you to provision a server using Galleon.
+
+By default the server is provisioned in the ``target/server`` directory.
+
+#[[##]]# Provision the latest complete ${appServerName} installation
+
+The example below shows how to produce the latest released ${appServerName} server. No configuration 
+arguments are needed. By default the plugin will provision the latest released version.
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>provision</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+
+```
+#[[##]]# Provision a server trimmed with Galleon layers
+
+The example below shows how to produce an ${appServerName} server installation trimmed with Galleon Layers:
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <feature-packs>
+                        <feature-pack>
+                            <location>wildfly@maven(org.jboss.universe:community-universe)</location>
+                        </feature-pack>
+                    </feature-packs>
+                    <layers>
+                        <!-- jaxrs-server Galleon layer adds the server content required to run JAXRS applications --> 
+                        <layer>jaxrs-server</layer>
+                    </layers>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>provision</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```
