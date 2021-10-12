@@ -38,7 +38,7 @@ class CLIWrapper implements AutoCloseable {
     private final ByteArrayOutputStream out = new ByteArrayOutputStream();
     private final String origConfig;
 
-    public CLIWrapper(Path jbossHome, ClassLoader loader) throws Exception {
+    public CLIWrapper(Path jbossHome, boolean resolveExpression, ClassLoader loader) throws Exception {
         if (jbossHome != null) {
             Path config = jbossHome.resolve("bin").resolve("jboss-cli.xml");
             origConfig = System.getProperty("jboss.cli.config");
@@ -51,6 +51,8 @@ class CLIWrapper implements AutoCloseable {
         final Object builder = loader.loadClass("org.jboss.as.cli.impl.CommandContextConfiguration$Builder").newInstance();
         final Method setEchoCommand = builder.getClass().getMethod("setEchoCommand", boolean.class);
         setEchoCommand.invoke(builder, true);
+        final Method setResolve = builder.getClass().getMethod("setResolveParameterValues", boolean.class);
+        setResolve.invoke(builder, resolveExpression);
         final Method setOutput = builder.getClass().getMethod("setConsoleOutput", OutputStream.class);
         setOutput.invoke(builder, out);
         Object ctxConfig = builder.getClass().getMethod("build").invoke(builder);

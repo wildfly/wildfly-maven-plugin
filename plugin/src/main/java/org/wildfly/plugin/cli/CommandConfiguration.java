@@ -55,6 +55,7 @@ public class CommandConfiguration {
     private String stdout;
     private int timeout;
     private boolean append;
+    private boolean resolveExpression;
 
     private CommandConfiguration(final Supplier<ModelControllerClient> client,
                                  final Supplier<MavenModelControllerClientConfiguration> clientConfiguration) {
@@ -418,4 +419,20 @@ public class CommandConfiguration {
         this.timeout = timeout;
         return this;
     }
+
+    /**
+     * If true resolve expression prior to send the operation to the server
+     */
+    public CommandConfiguration setResolveExpression(boolean resolveExpression) {
+        this.resolveExpression = resolveExpression;
+        return this;
+    }
+
+    /**
+     * Is expression resolved.
+     */
+    public boolean isExpressionResolved() {
+        return resolveExpression;
+    }
+
 }

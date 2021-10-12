@@ -195,6 +195,12 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     @Parameter(defaultValue = "${project.build.directory}", readonly = true, required = true)
     private File buildDir;
 
+    /**
+     * Resolve expressions prior to send the commands to the server.
+     */
+    @Parameter(alias = "resolve-expressions", defaultValue = "false", property = PropertyNames.RESOLVE_EXPRESSIONS)
+    private boolean resolveExpressions;
+
     @Inject
     private CommandExecutor commandExecutor;
 
@@ -225,7 +231,8 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
                 .setJBossHome(jbossHome)
                 .setOffline(offline)
                 .setStdout(stdout)
-                .setTimeout(timeout);
+                .setTimeout(timeout)
+                .setResolveExpression(resolveExpressions);
         // Why is that? fork implies a jboss-home?
         if (fork) {
             cmdConfig.setJBossHome(getInstallation(buildDir.toPath().resolve(Utils.WILDFLY_DEFAULT_DIR)));

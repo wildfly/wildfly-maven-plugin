@@ -43,6 +43,7 @@ import org.wildfly.core.launcher.Launcher;
 import org.wildfly.plugin.common.Environment;
 import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.StandardOutput;
+import static org.wildfly.plugin.core.Constants.CLI_RESOLVE_PARAMETERS_VALUES;
 import org.wildfly.plugin.core.ServerHelper;
 
 /**
@@ -189,6 +190,9 @@ public class CommandExecutor extends AbstractLogEnabled {
                     builder.addJavaOption(opt);
                 }
             }
+            if (config.isExpressionResolved()) {
+                builder.addCliArgument(CLI_RESOLVE_PARAMETERS_VALUES);
+            }
             if (log.isDebugEnabled()) {
                 log.debug("process parameters: " + builder.build());
             }
@@ -240,7 +244,7 @@ public class CommandExecutor extends AbstractLogEnabled {
             System.setProperties(newSystemProperties);
             LocalCLIExecutor commandContext = null;
             try (ModelControllerClient client = config.getClient()) {
-                commandContext = createCommandContext(jbossHome, client, artifactResolver);
+                commandContext = createCommandContext(jbossHome, config.isExpressionResolved(), client, artifactResolver);
                 final Collection<String> commands = config.getCommands();
                 if (!commands.isEmpty()) {
                     if (config.isBatch()) {
@@ -274,10 +278,11 @@ public class CommandExecutor extends AbstractLogEnabled {
         }
     }
 
-    private LocalCLIExecutor createCommandContext(Path jbossHome, final ModelControllerClient client, MavenRepoManager artifactResolver) throws Exception {
+    private LocalCLIExecutor createCommandContext(Path jbossHome, final boolean resolveExpression, final ModelControllerClient client,
+            MavenRepoManager artifactResolver) throws Exception {
         LocalCLIExecutor commandContext = null;
         try {
-            commandContext = new LocalCLIExecutor(jbossHome, artifactResolver);
+            commandContext = new LocalCLIExecutor(jbossHome, resolveExpression, artifactResolver);
             commandContext.bindClient(client);
         } catch (Exception e) {
             // Terminate the session if we've encountered an error

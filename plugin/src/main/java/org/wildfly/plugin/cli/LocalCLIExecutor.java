@@ -63,13 +63,13 @@ public class LocalCLIExecutor {
     private final URLClassLoader cliCl;
     private final CLIWrapper cliWrapper;
 
-    public LocalCLIExecutor(Path jbossHome, MavenRepoManager artifactResolver) throws Exception {
+    public LocalCLIExecutor(Path jbossHome, boolean resolveExpression, MavenRepoManager artifactResolver) throws Exception {
         URL[] cp = new URL[1];
         cp[0] = resolveCLI(artifactResolver);
         originalCl = Thread.currentThread().getContextClassLoader();
         cliCl = new URLClassLoader(cp, originalCl);
         Thread.currentThread().setContextClassLoader(cliCl);
-        cliWrapper = new CLIWrapper(jbossHome, cliCl);
+        cliWrapper = new CLIWrapper(jbossHome, resolveExpression, cliCl);
     }
 
     private static URL resolveCLI(MavenRepoManager artifactResolver) throws Exception {

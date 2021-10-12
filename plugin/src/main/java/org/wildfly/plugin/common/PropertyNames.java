@@ -93,6 +93,8 @@ public interface PropertyNames {
 
     String RELOAD = "wildfly.reload";
 
+    String RESOLVE_EXPRESSIONS = "wildfly.resolveExpressions";
+
     String SCRIPTS = "wildfly.scripts";
 
     String SERVER_CONFIG = "wildfly.serverConfig";

@@ -43,7 +43,6 @@ import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.StandardOutput;
 import static org.wildfly.plugin.core.Constants.CLI_ECHO_COMMAND_ARG;
-import static org.wildfly.plugin.core.Constants.CLI_RESOLVE_PARAMETERS_VALUES;
 import static org.wildfly.plugin.core.Constants.STANDALONE;
 import static org.wildfly.plugin.core.Constants.STANDALONE_XML;
 import org.wildfly.plugin.deployment.PackageType;
@@ -208,10 +207,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
                                  .setStdout(stdout)
                                  .addPropertiesFiles(resolveFiles(session.getPropertiesFiles()))
                                  .addJvmOptions(session.getJavaOpts())
+                                 .setResolveExpression(session.getResolveExpression())
                                  .setOffline(true);
-                         if (session.getResolveExpression()) {
-                            cmdConfig.addCLIArguments(CLI_RESOLVE_PARAMETERS_VALUES);
-                         }
                          commandExecutor.execute(cmdConfig, artifactResolver);
                      } finally {
                          for (File f : wrappedScripts) {
