@@ -69,7 +69,7 @@
                         <configuration>
                             <feature-packs>
                                 <feature-pack>
-                                    <location>wildfly@maven(org.jboss.universe:community-universe)</location>
+                                    <location>wildfly@maven(org.jboss.universe:community-universe)#${version.org.wildfly}</location>
                                 </feature-pack>
                             </feature-packs>
                             <install-dir>${project.build.directory}/wildfly</install-dir>
@@ -88,6 +88,7 @@
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <jboss.home>${jboss.home}</jboss.home>
                         <jboss-as.home>${jboss.home}</jboss-as.home>
+                        <wildfly.test.version>${version.org.wildfly}</wildfly.test.version>
                         <wildfly.management.port>10099</wildfly.management.port>
                         <wildfly.test.config.dir>${wildfly.test.config.dir}</wildfly.test.config.dir>
                     </systemPropertyVariables>

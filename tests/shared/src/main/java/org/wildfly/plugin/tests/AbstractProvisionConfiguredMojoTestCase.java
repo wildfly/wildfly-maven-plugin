@@ -62,6 +62,8 @@ import org.junit.Before;
  */
 @RunWith(JUnit4.class)
 public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMojoTestCase {
+    private static final String TEST_REPLACE_WF_VERSION = "WF_VERSION";
+    static final String WILDFLY_VERSION = "wildfly.test.version";
     private final String artifactId;
 
     protected AbstractProvisionConfiguredMojoTestCase(String artifactId) {
@@ -119,7 +121,7 @@ public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMo
     protected Mojo lookupConfiguredMojo(File pom, String goal) throws Exception {
         assertNotNull(pom);
         assertTrue(pom.exists());
-
+        patchPomFile(pom);
         ProjectBuildingRequest buildingRequest = newMavenSession().getProjectBuildingRequest();
         // Need to resolve artifacts for tests that upgrade server components
         buildingRequest.setResolveDependencies(true);
@@ -134,6 +136,17 @@ public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMo
         configureMojo(mojo, artifactId, pom);
 
         return mojo;
+    }
+
+    private void patchPomFile(File pom) throws IOException {
+        StringBuilder content = new StringBuilder();
+        for (String s : Files.readAllLines(pom.toPath())) {
+            if (s.contains(TEST_REPLACE_WF_VERSION)) {
+                s = s.replace(TEST_REPLACE_WF_VERSION, System.getProperty(WILDFLY_VERSION));
+            }
+            content.append(s).append(System.lineSeparator());
+        }
+        Files.write(pom.toPath(), content.toString().getBytes());
     }
 
     @Before

@@ -32,14 +32,12 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.galleon.ProvisioningDescriptionException;
 import org.jboss.galleon.config.ProvisioningConfig;
 import org.jboss.galleon.util.IoUtils;
 import org.wildfly.plugin.cli.CliSession;
 import org.wildfly.plugin.cli.CommandConfiguration;
 import org.wildfly.plugin.cli.CommandExecutor;
-import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.StandardOutput;
 import static org.wildfly.plugin.core.Constants.CLI_ECHO_COMMAND_ARG;
@@ -69,25 +67,26 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
      * started for each CLI execution. If a script file is not absolute, it has
      * to be relative to the project base directory. CLI executions are
      * configured in the following way:
-     * <br/>
-     * &lt;packaging-scripts&gt;<br/>
-     * &lt;packaging-script&gt;<br/>
-     * &lt;scripts&gt;<br/>
-     * &lt;script&gt;../scripts/script1.cli&lt;/script&gt;<br/>
-     * &lt;/scripts&gt;<br/>
-     * &lt;commands&gt;<br/>
-     * &lt;command&gt;/system-property:foo:add(value=bar)&lt;/command&gt;<br/>
-     * &lt;/commands&gt;<br/>
-     * &lt;properties-files&gt;<br/>
-     * &lt;property-file&gt;my-properties.properties&lt;/property-file&gt;<br/>
-     * &lt;/properties-files&gt;<br/>
-     * &lt;java-opts&gt;<br/>
-     * &lt;java-opt&gt;-Xmx256m&lt;/java-opt&gt;<br/>
-     * &lt;/java-opts&gt;<br/>
-     * &lt;!-- Expressions resolved during server execution --&gt;<br/>
-     * &lt;resolve-expressions&gt;false&lt;/resolve-expressions&gt;<br/>
-     * &lt;/packaging-script&gt;<br/>
-     * &lt;/packaging-scripts&gt;
+     * <pre>
+     *   &lt;packaging-scripts&gt;
+     *     &lt;packaging-script&gt;
+     *       &lt;scripts&gt;
+     *         &lt;script&gt;../scripts/script1.cli&lt;/script&gt;
+     *       &lt;/scripts&gt;
+     *       &lt;commands&gt;
+     *         &lt;command&gt;/system-property:foo:add(value=bar)&lt;/command&gt;
+     *       &lt;/commands&gt;
+     *       &lt;properties-files&gt;
+     *         &lt;property-file&gt;my-properties.properties&lt;/property-file&gt;
+     *       &lt;/properties-files&gt;
+     *       &lt;java-opts&gt;
+     *         &lt;java-opt&gt;-Xmx256m&lt;/java-opt&gt;
+     *       &lt;/java-opts&gt;
+     *       &lt;!-- Expressions resolved during server execution --&gt;
+     *       &lt;resolve-expressions&gt;false&lt;/resolve-expressions&gt;
+     *     &lt;/packaging-script&gt;
+     *   &lt;/packaging-scripts&gt;
+     * </pre>
      */
     @Parameter(alias = "packaging-scripts")
     private List<CliSession> packagingScripts = new ArrayList<>();
@@ -161,6 +160,11 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     }
 
     @Override
+    protected String getGoal() {
+        return "package";
+    }
+
+    @Override
     protected void serverProvisioned(Path jbossHome) throws MojoExecutionException, MojoFailureException {
         try {
             if (StandardOutput.isFile(stdout)) {
@@ -180,7 +184,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         if (Files.exists(deploymentContent)) {
             getLog().info("Deploying " + deploymentContent);
             List<String> deploymentCommands = getDeploymentCommands(deploymentContent);
-            final CommandConfiguration cmdConfigDeployment = CommandConfiguration.of(this::createClient, this::getClientConfiguration)
+            final CommandConfiguration cmdConfigDeployment = CommandConfiguration.of(()-> null, ()-> null)
                     .addCommands(deploymentCommands)
                     .setJBossHome(jbossHome)
                     .addCLIArguments(CLI_ECHO_COMMAND_ARG)
@@ -197,7 +201,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
                  for (CliSession session : packagingScripts) {
                      List<File> wrappedScripts = wrapOfflineScripts(session.getScripts());
                      try {
-                         final CommandConfiguration cmdConfig = CommandConfiguration.of(this::createClient, this::getClientConfiguration)
+                         final CommandConfiguration cmdConfig = CommandConfiguration.of(()-> null, ()-> null)
                                  .addCommands(wrapOfflineCommands(session.getCommands()))
                                  .addScripts(wrappedScripts)
                                  .addCLIArguments(CLI_ECHO_COMMAND_ARG)
@@ -316,14 +320,6 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         IoUtils.recursiveDelete(tmp);
         Path log = jbossHome.resolve("standalone").resolve("log");
         IoUtils.recursiveDelete(log);
-    }
-
-    private MavenModelControllerClientConfiguration getClientConfiguration() {
-        return null;
-    }
-
-    private ModelControllerClient createClient() {
-        return null;
     }
 
 }

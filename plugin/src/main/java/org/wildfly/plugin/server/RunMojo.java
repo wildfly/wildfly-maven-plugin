@@ -79,7 +79,7 @@ import org.wildfly.plugin.deployment.PackageType;
 @Execute(phase = LifecyclePhase.PACKAGE)
 public class RunMojo extends AbstractServerConnection {
 
-@Component
+    @Component
     RepositorySystem repoSystem;
 
     @Parameter(defaultValue = "${repositorySystemSession}", readonly = true, required = true)
@@ -108,7 +108,7 @@ public class RunMojo extends AbstractServerConnection {
      * and no server has previously been provisioned.
      * The latest stable version is resolved if left blank.
      */
-    @Parameter(alias = "version", property = PropertyNames.WILDFLY_VERSION)
+    @Parameter(property = PropertyNames.WILDFLY_VERSION)
     private String version;
 
     /**

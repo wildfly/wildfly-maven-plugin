@@ -33,6 +33,11 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 public class ProvisionServerMojo extends AbstractProvisionServerMojo {
 
     @Override
+    protected String getGoal() {
+        return "provision";
+    }
+
+    @Override
     protected void serverProvisioned(Path jbossHome) throws MojoExecutionException, MojoFailureException {
     }
 

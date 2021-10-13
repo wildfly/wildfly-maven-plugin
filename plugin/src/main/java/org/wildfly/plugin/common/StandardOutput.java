@@ -26,7 +26,6 @@ import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Locale;
 import java.util.Optional;
 
 import org.wildfly.plugin.core.ConsoleConsumer;
@@ -136,14 +135,14 @@ public class StandardOutput {
         final Target target;
         Path stdoutPath = null;
         final OutputStream out;
-        final String value = stdout.trim().toLowerCase(Locale.ENGLISH);
-        if (SYSTEM_OUT.equals(value)) {
+        final String value = stdout.trim();
+        if (SYSTEM_OUT.equalsIgnoreCase(value)) {
             target = Target.SYSTEM_OUT;
             out = System.out;
-        } else if (SYSTEM_ERR.equals(value)) {
+        } else if (SYSTEM_ERR.equalsIgnoreCase(value)) {
             target = Target.SYSTEM_ERR;
             out = System.err;
-        } else if (NONE.equals(value)) {
+        } else if (NONE.equalsIgnoreCase(value)) {
             if (discardNone) {
                 target = Target.DISCARDING;
                 out = DISCARDING;

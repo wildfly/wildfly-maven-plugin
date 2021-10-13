@@ -126,7 +126,7 @@
                         <configuration>
                             <feature-packs>
                                 <feature-pack>
-                                    <location>wildfly@maven(org.jboss.universe:community-universe)</location>
+                                    <location>wildfly@maven(org.jboss.universe:community-universe)#${version.org.wildfly}</location>
                                 </feature-pack>
                             </feature-packs>
                             <install-dir>${project.build.directory}/wildfly</install-dir>

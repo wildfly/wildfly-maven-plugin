@@ -85,10 +85,11 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
      * is strongly advised to set 'jboss-fork-embedded' option to 'true' in
      * order to fork Galleon provisioning and CLI scripts execution in dedicated
      * processes. For example:
-     * <br/>
-     * &lt;galleon-options&gt;<br/>
-     * &lt;jboss-fork-embedded&gt;true&lt;/jboss-fork-embedded&gt;<br/>
-     * &lt;/galleon-options&gt;
+     * <pre>
+     *   &lt;galleon-options&gt;
+     *     &lt;jboss-fork-embedded&gt;true&lt;/jboss-fork-embedded&gt;
+     *   &lt;/galleon-options&gt;
+     * </pre>
      */
     @Parameter(required = false, alias = "galleon-options")
     Map<String, String> galleonOptions = Collections.emptyMap();
@@ -168,7 +169,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (skip) {
-            getLog().debug(String.format("Skipping run of %s:%s", project.getGroupId(), project.getArtifactId()));
+            getLog().debug(String.format("Skipping " + getGoal() + " of %s:%s", project.getGroupId(), project.getArtifactId()));
             return;
         }
         MavenRepositoriesEnricher.enrich(session, project, repositories);
@@ -191,6 +192,8 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
             System.clearProperty("module.path");
         }
     }
+
+    protected abstract String getGoal();
 
     protected abstract void serverProvisioned(Path jbossHome) throws MojoExecutionException, MojoFailureException;
 
