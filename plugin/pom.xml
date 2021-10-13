@@ -175,7 +175,14 @@
             <groupId>org.wildfly.plugins</groupId>
             <artifactId>wildfly-plugin-core</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.wildfly.channel</groupId>
+            <artifactId>channel-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.channel</groupId>
+            <artifactId>maven-resolver</artifactId>
+        </dependency>
         <!-- Test dependencies -->
         <dependency>
             <groupId>junit</groupId>

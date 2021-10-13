@@ -19,6 +19,7 @@ package org.wildfly.plugin.provision;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -46,6 +47,8 @@ import org.jboss.galleon.maven.plugin.util.MvnMessageWriter;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.jboss.galleon.util.IoUtils;
 import org.jboss.galleon.xml.ProvisioningXmlWriter;
+import org.wildfly.channel.UnresolvedMavenArtifactException;
+import org.wildfly.channel.maven.ChannelCoordinate;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.Utils;
 import org.wildfly.plugin.core.GalleonUtils;
@@ -174,6 +177,9 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
     @Parameter(alias = "layers-configuration-file-name", property = PropertyNames.WILDFLY_LAYERS_CONFIGURATION_FILE_NAME, defaultValue = STANDALONE_XML)
     String layersConfigurationFileName;
 
+    @Parameter(alias = "channels", required = false)
+    List<ChannelCoordinate> channels;
+
     private Path wildflyDir;
 
     protected MavenRepoManager artifactResolver;
@@ -192,8 +198,17 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
             return;
         }
         enrichRepositories();
-        artifactResolver = offlineProvisioning ? new MavenArtifactRepositoryManager(repoSystem, repoSession)
-                : new MavenArtifactRepositoryManager(repoSystem, repoSession, repositories);
+        if (channels == null) {
+            artifactResolver = offlineProvisioning ? new MavenArtifactRepositoryManager(repoSystem, repoSession)
+                    : new MavenArtifactRepositoryManager(repoSystem, repoSession, repositories);
+        } else {
+            try {
+                artifactResolver = offlineProvisioning ? new ChannelMavenArtifactRepositoryManager(channels, repoSystem, repoSession)
+                        : new ChannelMavenArtifactRepositoryManager(channels, repoSystem, repoSession, repositories);
+            } catch (MalformedURLException | UnresolvedMavenArtifactException ex) {
+                throw new MojoExecutionException(ex.getLocalizedMessage(), ex);
+            }
+        }
         if (!Paths.get(provisioningDir).isAbsolute() && (targetPath.equals(wildflyDir) || !wildflyDir.startsWith(targetPath))) {
             throw new  MojoExecutionException("provisioning-dir " + provisioningDir + " must be an absolute path or a child directory relative to the project build directory.");
         }
@@ -201,6 +216,9 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
         try {
             try {
                 provisionServer(wildflyDir);
+                if (artifactResolver instanceof ChannelMavenArtifactRepositoryManager) {
+                    ((ChannelMavenArtifactRepositoryManager)artifactResolver).done(wildflyDir);
+                }
             } catch (ProvisioningException | IOException | XMLStreamException ex) {
                 throw new MojoExecutionException("Provisioning failed", ex);
             }
