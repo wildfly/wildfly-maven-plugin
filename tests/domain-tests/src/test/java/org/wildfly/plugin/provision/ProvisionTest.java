@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2018, Red Hat, Inc., and individual contributors
+ * Copyright 2021, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -19,31 +19,29 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
+package org.wildfly.plugin.provision;
 
-package org.wildfly.plugin.repository;
 
 import java.nio.file.Path;
-import java.util.List;
+import org.apache.maven.plugin.Mojo;
+import org.junit.Test;
+import org.wildfly.plugin.tests.AbstractProvisionConfiguredMojoTestCase;
+import org.wildfly.plugin.tests.AbstractWildFlyMojoTest;
 
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.repository.RemoteRepository;
+public class ProvisionTest extends AbstractProvisionConfiguredMojoTestCase {
 
-/**
- * Resolves artifacts downloading the artifact if necessary.
- *
- * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
- */
-public interface ArtifactResolver {
+    public ProvisionTest() {
+        super("wildfly-maven-plugin");
+    }
 
-    /**
-     * Resolves the artifact downloading it if necessary.
-     *
-     * @param session      the repository session
-     * @param repositories the remote repositories
-     * @param name         the artifact name
-     *
-     * @return the file associated with the artifact
-     */
-    Path resolve(RepositorySystemSession session, List<RemoteRepository> repositories, ArtifactName name);
+    @Test
+    public void testProvision() throws Exception {
+
+        final Mojo provisionMojo =  lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("provision-pom.xml").toFile(), "provision");
+
+        provisionMojo.execute();
+        Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("server");
+        checkDomainWildFlyHome(jbossHome, 0, false);
+    }
 
 }

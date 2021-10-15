@@ -22,6 +22,7 @@
 
 package org.wildfly.plugin.cli;
 
+import java.lang.reflect.InvocationTargetException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -32,7 +33,6 @@ import java.nio.file.Paths;
 
 import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.jboss.as.cli.CommandLineException;
 import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 import org.wildfly.plugin.common.ServerOperations;
@@ -48,12 +48,13 @@ public class FailOnErrorTest extends AbstractWildFlyServerMojoTest {
     public void testExecuteCommandsFailOnError() throws Exception {
 
         final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-commands-failOnError-pom.xml");
-
+         setValidSession(executeCommandsMojo);
         try {
             executeCommandsMojo.execute();
             fail("MojoExecutionException expected.");
         } catch (MojoExecutionException e) {
-            assertEquals(CommandLineException.class, e.getCause().getClass());
+            InvocationTargetException ex = (InvocationTargetException) e.getCause();
+            assertEquals("org.jboss.as.cli.CommandLineException", ex.getCause().getClass().getName());
         }
         final ModelNode address = ServerOperations.createAddress("system-property", "propertyFailOnError");
         final ModelNode op = ServerOperations.createReadAttributeOperation(address, "value");
@@ -119,7 +120,7 @@ public class FailOnErrorTest extends AbstractWildFlyServerMojoTest {
     public void testExecuteCommandsContinueOnError() throws Exception {
 
         final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-commands-continueOnError-pom.xml");
-
+        setValidSession(executeCommandsMojo);
         executeCommandsMojo.execute();
 
         // Read the attribute
@@ -181,12 +182,13 @@ public class FailOnErrorTest extends AbstractWildFlyServerMojoTest {
     public void testExecuteCommandScriptFailOnError() throws Exception {
 
         final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-script-failOnError-pom.xml");
-
+         setValidSession(executeCommandsMojo);
         try {
             executeCommandsMojo.execute();
             fail("MojoExecutionException expected.");
         } catch (MojoExecutionException e) {
-            assertEquals(CommandLineException.class, e.getCause().getClass());
+           InvocationTargetException ex = (InvocationTargetException) e.getCause();
+           assertEquals("org.jboss.as.cli.CommandLineException", ex.getCause().getClass().getName());
         }
         final ModelNode address = ServerOperations.createAddress("system-property", "scriptFailOnError");
         final ModelNode op = ServerOperations.createReadAttributeOperation(address, "value");
@@ -203,7 +205,7 @@ public class FailOnErrorTest extends AbstractWildFlyServerMojoTest {
     public void testExecuteCommandScriptContinueOnError() throws Exception {
 
         final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-script-continueOnError-pom.xml");
-
+        setValidSession(executeCommandsMojo);
         executeCommandsMojo.execute();
 
         // Read the attribute

@@ -26,7 +26,6 @@ import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Locale;
 import java.util.Optional;
 
 import org.wildfly.plugin.core.ConsoleConsumer;
@@ -37,6 +36,10 @@ import org.wildfly.plugin.core.ConsoleConsumer;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 public class StandardOutput {
+
+    private static final String SYSTEM_OUT = "system.out";
+    private static final String SYSTEM_ERR = "system.err";
+    private static final String NONE = "none";
 
     /**
      * The target for the the output stream.
@@ -100,22 +103,46 @@ public class StandardOutput {
      *
      * @throws IOException if there is an error creating the stream
      */
-    @SuppressWarnings("UseOfSystemOutOrSystemErr")
     public static StandardOutput parse(final String stdout, final boolean discardNone) throws IOException {
+        return parse(stdout, discardNone, false);
+    }
+
+    /**
+     * Parses the string and attempts to determine where the data for the stream should be written.The following are
+ the options for the value:
+    <ul>
+    <li>{@code none} indicates the data for this stream will be consumed and {@link #toString()} will return the
+ data of the {@code discardNone} parameter is {@code false}, otherwise the data will be discarded</li>
+    <li>{@code System.out} or {@code System.err} to write to the respective stream</li>
+    <li>Any other value is assumed to be the path to a file and the data will written to the file</li>
+    </ul>
+     *
+     * @param stdout      the value to be parsed
+     * @param discardNone {@code true} if the {@code stdout} value is {@code none} and the data should be discarded,
+     *                    otherwise the data will be consumed if the {@code stdout} value is {@code none} and will be
+     *                    available via {@link #toString()}
+     * @param append If stdout is a file, append output to existing file if true, otherwise a new file is created.
+     *
+     * @return a new output stream
+     *
+     * @throws IOException if there is an error creating the stream
+     */
+    @SuppressWarnings("UseOfSystemOutOrSystemErr")
+    public static StandardOutput parse(final String stdout, final boolean discardNone, final boolean append) throws IOException {
         if (stdout == null) {
             return new StandardOutput(Target.INHERIT, null, Redirect.INHERIT, null);
         }
         final Target target;
         Path stdoutPath = null;
         final OutputStream out;
-        final String value = stdout.trim().toLowerCase(Locale.ENGLISH);
-        if ("system.out".equals(value)) {
+        final String value = stdout.trim();
+        if (SYSTEM_OUT.equalsIgnoreCase(value)) {
             target = Target.SYSTEM_OUT;
             out = System.out;
-        } else if ("system.err".equals(value)) {
+        } else if (SYSTEM_ERR.equalsIgnoreCase(value)) {
             target = Target.SYSTEM_ERR;
             out = System.err;
-        } else if ("none".equals(value)) {
+        } else if (NONE.equalsIgnoreCase(value)) {
             if (discardNone) {
                 target = Target.DISCARDING;
                 out = DISCARDING;
@@ -138,9 +165,13 @@ public class StandardOutput {
         }
         Redirect destination = null;
         if (stdoutPath != null) {
-            destination = Redirect.to(stdoutPath.toFile());
+            destination = append? Redirect.appendTo(stdoutPath.toFile()) : Redirect.to(stdoutPath.toFile());
         }
         return new StandardOutput(target, out, destination, stdoutPath);
+    }
+
+    public static boolean isFile(String output) {
+        return  output!= null && !SYSTEM_OUT.equals(output) && !SYSTEM_ERR.equals(output) && !NONE.equals(output);
     }
 
     /**

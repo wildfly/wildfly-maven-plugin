@@ -40,6 +40,7 @@ import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 public class CommandConfiguration {
 
     private final Collection<String> jvmOptions;
+    private final Collection<String> cliArguments;
     private final Collection<String> commands;
     private final Map<String, String> systemProperties;
     private final Collection<Path> propertiesFiles;
@@ -53,6 +54,8 @@ public class CommandConfiguration {
     private boolean offline;
     private String stdout;
     private int timeout;
+    private boolean append;
+    private boolean resolveExpression;
 
     private CommandConfiguration(final Supplier<ModelControllerClient> client,
                                  final Supplier<MavenModelControllerClientConfiguration> clientConfiguration) {
@@ -64,6 +67,7 @@ public class CommandConfiguration {
         propertiesFiles = new ArrayList<>();
         scripts = new ArrayList<>();
         failOnError = true;
+        cliArguments = new ArrayList<>();
     }
 
     /**
@@ -77,6 +81,21 @@ public class CommandConfiguration {
     public static CommandConfiguration of(final Supplier<ModelControllerClient> clientSupplier,
                                           final Supplier<MavenModelControllerClientConfiguration> clientConfigurationSupplier) {
         return new CommandConfiguration(clientSupplier, clientConfigurationSupplier);
+    }
+
+    /**
+     * Is output appended to file.
+     */
+    public boolean isAppend() {
+        return append;
+    }
+
+    /**
+     * If true append output to file, otherwise a new file is created.
+     */
+    public CommandConfiguration setAppend(boolean append) {
+        this.append = append;
+        return this;
     }
 
     /**
@@ -174,6 +193,29 @@ public class CommandConfiguration {
     public CommandConfiguration addJvmOptions(final String... jvmOptions) {
         if (jvmOptions != null) {
             Collections.addAll(this.jvmOptions, jvmOptions);
+        }
+        return this;
+    }
+
+    /**
+     * Returns the CLI arguments used if {@link #isFork()} or {@link #isOffline()} is set to {@code true}.
+     *
+     * @return the CLI arguments
+     */
+    public Collection<String> getCLIArguments() {
+        return Collections.unmodifiableCollection(cliArguments);
+    }
+
+    /**
+     * Adds the CLI arguments used if {@link #isFork()} or {@link #isOffline()} is set to {@code true}.
+     *
+     * @param arguments the CLI arguments or {@code null}
+     *
+     * @return this configuration
+     */
+    public CommandConfiguration addCLIArguments(final String... arguments) {
+        if (arguments != null) {
+            Collections.addAll(this.cliArguments, arguments);
         }
         return this;
     }
@@ -377,4 +419,20 @@ public class CommandConfiguration {
         this.timeout = timeout;
         return this;
     }
+
+    /**
+     * If true resolve expression prior to send the operation to the server
+     */
+    public CommandConfiguration setResolveExpression(boolean resolveExpression) {
+        this.resolveExpression = resolveExpression;
+        return this;
+    }
+
+    /**
+     * Is expression resolved.
+     */
+    public boolean isExpressionResolved() {
+        return resolveExpression;
+    }
+
 }

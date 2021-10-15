@@ -22,6 +22,7 @@
 
 package org.wildfly.plugin.tests;
 
+import java.io.File;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -38,6 +39,10 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuilder;
 import org.apache.maven.project.ProjectBuildingRequest;
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
+import org.eclipse.aether.repository.LocalRepository;
+import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
+import org.jboss.galleon.util.PropertyUtils;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.wildfly.plugin.core.Deployment;
@@ -48,7 +53,7 @@ import org.wildfly.plugin.core.Deployment;
 public abstract class AbstractWildFlyMojoTest {
 
     protected final String DEPLOYMENT_NAME = "test.war";
-    protected final String BASE_CONFIG_DIR = System.getProperty("wildfly.test.config.dir");
+    protected static final String BASE_CONFIG_DIR = System.getProperty("wildfly.test.config.dir");
 
     @Rule
     public MojoRule rule = new MojoRule() {
@@ -81,16 +86,26 @@ public abstract class AbstractWildFlyMojoTest {
      * @throws java.lang.AssertionError if the MOJO was not found
      */
     public <T extends Mojo> T lookupMojoAndVerify(final String goal, final String fileName) throws Exception {
-        final Path baseDir = Paths.get(BASE_CONFIG_DIR);
-        assertTrue("Not a directory: " + BASE_CONFIG_DIR, Files.exists(baseDir));
-        final Path pom = Paths.get(BASE_CONFIG_DIR, fileName);
-        assertTrue(Files.exists(pom));
+        final Path pom = getPomFile(fileName);
         MavenProject project = readMavenProject(pom);
         @SuppressWarnings("unchecked")
         T mojo = (T) rule.lookupConfiguredMojo(project, goal);
         assertNotNull(mojo);
         setDefaultEnvironment(mojo);
         return mojo;
+    }
+
+    public static Path getPomFile(String fileName) {
+        final Path baseDir = getBaseDir();
+        final Path pom = baseDir.resolve(fileName);
+        assertTrue(Files.exists(pom));
+        return pom;
+    }
+
+    public static Path getBaseDir() {
+        final Path baseDir = Paths.get(BASE_CONFIG_DIR);
+        assertTrue("Not a directory: " + BASE_CONFIG_DIR, Files.exists(baseDir));
+       return baseDir;
     }
 
     public MavenProject readMavenProject(Path pom)
@@ -130,4 +145,25 @@ public abstract class AbstractWildFlyMojoTest {
         field.set(instance, value);
     }
 
+    private static Path getDefaultMavenRepositoryPath() {
+        String repoPath = PropertyUtils.getSystemProperty("maven.repo.path");
+        if (repoPath == null) {
+            repoPath = new StringBuilder(PropertyUtils.getSystemProperty("user.home")).append(File.separatorChar)
+                    .append(".m2").append(File.separatorChar)
+                    .append("repository")
+                    .toString();
+        }
+        return Paths.get(repoPath);
+    }
+
+    // Needed when resolving CLI artifact for in process execution
+    protected static void setValidSession(Mojo mojo) throws NoLocalRepositoryManagerException, NoSuchFieldException, IllegalAccessException {
+        DefaultRepositorySystemSession repoSession = new DefaultRepositorySystemSession();
+        // Take into account maven.repo.local
+        String path = System.getProperty("maven.repo.local", getDefaultMavenRepositoryPath().toString());
+        repoSession.setLocalRepositoryManager(
+                new SimpleLocalRepositoryManagerFactory().newInstance(repoSession,
+                        new LocalRepository(path)));
+        setValue(mojo, "session", repoSession);
+    }
 }

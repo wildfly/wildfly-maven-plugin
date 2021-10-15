@@ -23,25 +23,30 @@
 package org.wildfly.plugin.cli;
 
 import java.io.File;
-import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
+import org.apache.maven.execution.MavenSession;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
+import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.jboss.galleon.maven.plugin.util.MavenArtifactRepositoryManager;
+import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.wildfly.plugin.common.AbstractServerConnection;
-import org.wildfly.plugin.common.Archives;
 import org.wildfly.plugin.common.PropertyNames;
-import org.wildfly.plugin.repository.ArtifactNameBuilder;
-import org.wildfly.plugin.repository.ArtifactResolver;
+import org.wildfly.plugin.common.Utils;
+import org.wildfly.plugin.core.MavenRepositoriesEnricher;
 
 /**
  * Execute commands to the running WildFly Application Server.
@@ -172,20 +177,34 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     @Parameter(alias = "java-opts", property = PropertyNames.JAVA_OPTS)
     private String[] javaOpts;
 
+    @Component
+    RepositorySystem repoSystem;
+
     @Parameter(defaultValue = "${repositorySystemSession}", readonly = true, required = true)
     private RepositorySystemSession session;
 
     @Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true, required = true)
     private List<RemoteRepository> repositories;
 
+    @Parameter(defaultValue = "${project}", readonly = true, required = true)
+    MavenProject project;
+
+    @Parameter(defaultValue = "${session}", readonly = true, required = true)
+    MavenSession mavenSession;
+
     @Parameter(defaultValue = "${project.build.directory}", readonly = true, required = true)
     private File buildDir;
 
-    @Inject
-    private ArtifactResolver artifactResolver;
+    /**
+     * Resolve expressions prior to send the commands to the server.
+     */
+    @Parameter(alias = "resolve-expressions", defaultValue = "false", property = PropertyNames.RESOLVE_EXPRESSIONS)
+    private boolean resolveExpressions;
 
     @Inject
     private CommandExecutor commandExecutor;
+
+    private MavenRepoManager mavenRepoManager;
 
     @Override
     public String goal() {
@@ -198,6 +217,8 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             getLog().debug("Skipping commands execution");
             return;
         }
+        MavenRepositoriesEnricher.enrich(mavenSession, project, repositories);
+        mavenRepoManager = new MavenArtifactRepositoryManager(repoSystem, session, repositories);
         final CommandConfiguration cmdConfig = CommandConfiguration.of(this::createClient, this::getClientConfiguration)
                 .addCommands(commands)
                 .addJvmOptions(javaOpts)
@@ -210,11 +231,13 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
                 .setJBossHome(jbossHome)
                 .setOffline(offline)
                 .setStdout(stdout)
-                .setTimeout(timeout);
+                .setTimeout(timeout)
+                .setResolveExpression(resolveExpressions);
+        // Why is that? fork implies a jboss-home?
         if (fork) {
-            cmdConfig.setJBossHome(extractIfRequired());
+            cmdConfig.setJBossHome(getInstallation(buildDir.toPath().resolve(Utils.WILDFLY_DEFAULT_DIR)));
         }
-        commandExecutor.execute(cmdConfig);
+        commandExecutor.execute(cmdConfig, mavenRepoManager);
     }
 
     /**
@@ -229,18 +252,13 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
         }
     }
 
-    private Path extractIfRequired() throws MojoFailureException {
+    private Path getInstallation(Path installDir) throws MojoFailureException {
         if (jbossHome != null) {
-            //we do not need to download WildFly
             return Paths.get(jbossHome);
         }
-        getLog().warn("The jboss-home parameter was not set. In 3.0.0 this parameter will be required. " +
-                "Downloading a server via Maven artifact will not longer be supported.");
-        final Path result = artifactResolver.resolve(session, repositories, ArtifactNameBuilder.forRuntime(null).build());
-        try {
-            return Archives.uncompress(result, buildDir.toPath());
-        } catch (IOException e) {
-            throw new MojoFailureException("Artifact was not successfully extracted: " + result, e);
+        if (!Files.exists(installDir)) {
+            throw new MojoFailureException("No server installed.");
         }
+        return installDir;
     }
 }

@@ -61,29 +61,19 @@ public interface PropertyNames {
 
     String JAVA_HOME = "java.home";
 
-    String WILDFLY_ARTIFACT = "wildfly.artifact";
-
-    String WILDFLY_ARTIFACT_ID = "wildfly.artifactId";
-
-    String WILDFLY_AUTH_CLIENT_CONFIG = "wildfly.authConfig";
-
-    String WILDFLY_CLASSIFIER = "wildfly.classifier";
-
-    String WILDFLY_GROUP_ID = "wildfly.groupId";
-
     String JBOSS_HOME = "jboss-as.home"; // TODO (jrp) look at this one
-
-    String WILDFLY_PACKAGING = "wildfly.packaging";
-
-    String WILDFLY_VERSION = "wildfly.version";
 
     String JAVA_OPTS = "wildfly.javaOpts";
 
     String MODULES_PATH = "wildfly.modulesPath";
 
+    String OFFLINE = "wildfly.offline";
+
     String PASSWORD = "wildfly.password";
 
     String PORT = "wildfly.port";
+
+    String PROPERTIES_FILE = "wildfly.propertiesFile";
 
     String PROTOCOL = "wildfly.protocol";
 
@@ -91,7 +81,11 @@ public interface PropertyNames {
 
     String RELOAD = "wildfly.reload";
 
+    String RESOLVE_EXPRESSIONS = "wildfly.resolveExpressions";
+
     String SCRIPTS = "wildfly.scripts";
+
+   String SERVER_ARGS = "wildfly.serverArgs";
 
     String SERVER_CONFIG = "wildfly.serverConfig";
 
@@ -107,10 +101,19 @@ public interface PropertyNames {
 
     String USERNAME = "wildfly.username";
 
-    String PROPERTIES_FILE = "wildfly.propertiesFile";
+    String WILDFLY_AUTH_CLIENT_CONFIG = "wildfly.authConfig";
 
-    String SERVER_ARGS = "wildfly.serverArgs";
+    String WILDFLY_PACKAGING_EXTRA_CONTENT_DIRS = "wildfly.packaging.extra.dirs";
 
-    String OFFLINE = "wildfly.offline";
+    String WILDFLY_PROVISIONING_DIR = "wildfly.provisioning.dir";
 
+    String WILDFLY_PROVISIONING_FILE = "wildfly.provisioning.file";
+
+    String WILDFLY_PROVISIONING_LOG_TIME = "wildfly.provisioning.log.time";
+
+    String WILDFLY_PROVISIONING_OFFLINE = "wildfly.provisioning.offline";
+
+    String WILDFLY_PROVISIONING_RECORD_STATE = "wildfly.provisioning.record.state";
+
+    String WILDFLY_VERSION = "wildfly.version";
 }

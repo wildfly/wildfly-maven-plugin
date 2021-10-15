@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2018, Red Hat, Inc., and individual contributors
+ * Copyright 2021, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -19,48 +19,29 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
+package org.wildfly.plugin.provision;
 
-package org.wildfly.plugin.repository;
 
-/**
- * A Maven artifact name.
- *
- * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
- */
-public interface ArtifactName {
+import java.nio.file.Path;
+import org.apache.maven.plugin.Mojo;
+import org.junit.Test;
+import org.wildfly.plugin.tests.AbstractProvisionConfiguredMojoTestCase;
+import org.wildfly.plugin.tests.AbstractWildFlyMojoTest;
 
-    /**
-     * The group name for the artifact.
-     *
-     * @return the group name
-     */
-    String getGroupId();
+public class ProvisionTest extends AbstractProvisionConfiguredMojoTestCase {
 
-    /**
-     * The artifact id for the artifact.
-     *
-     * @return the artifact id
-     */
-    String getArtifactId();
+    public ProvisionTest() {
+        super("wildfly-maven-plugin");
+    }
 
-    /**
-     * The classier for the artifact.
-     *
-     * @return the classifier
-     */
-    String getClassifier();
+    @Test
+    public void testProvision() throws Exception {
 
-    /**
-     * The packaging for the artifact.
-     *
-     * @return the packaging
-     */
-    String getPackaging();
+        final Mojo provisionMojo =  lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("provision-pom.xml").toFile(), "provision");
 
-    /**
-     * The version for the artifact.
-     *
-     * @return the version
-     */
-    String getVersion();
+        provisionMojo.execute();
+        Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("provisioned-server");
+        checkStandaloneWildFlyHome(jbossHome, 0, null, null, false);
+    }
+
 }

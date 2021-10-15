@@ -99,35 +99,6 @@ public class ServerHelper {
     }
 
     /**
-     * Checks the running server to determine if it is a managed domain server.
-     * <p>
-     * Note that if the operation fails this will return {@code false}. It's better to use the
-     * {@link ContainerDescription#isDomain()} which can be queried via the
-     * {@link #getContainerDescription(ModelControllerClient)}. This will throw a {@link OperationExecutionException}
-     * if the operation fails.
-     * </p>
-     *
-     * @param client the client used to query the server
-     *
-     * @return {@code true} if the running server is a managed domain, otherwise {@code false}
-     *
-     * @throws IOException if an error occurs communicating with the server
-     * @see #getContainerDescription(ModelControllerClient)
-     * @deprecated use {@link ContainerDescription#isDomain()}
-     */
-    @Deprecated
-    public static boolean isDomainServer(final ModelControllerClient client) throws IOException {
-        boolean result = false;
-        // Check this is really a domain server
-        final ModelNode op = Operations.createReadAttributeOperation(EMPTY_ADDRESS, "launch-type");
-        final ModelNode opResult = Assert.checkNotNullParam("client", client).execute(op);
-        if (Operations.isSuccessfulOutcome(opResult)) {
-            result = ("DOMAIN".equalsIgnoreCase(Operations.readResult(opResult).asString()));
-        }
-        return result;
-    }
-
-    /**
      * Waits the given amount of time in seconds for a managed domain to start. A domain is considered started when each
      * of the servers in the domain are started unless the server is disabled.
      *
