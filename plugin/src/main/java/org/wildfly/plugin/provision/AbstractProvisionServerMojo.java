@@ -172,7 +172,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
             getLog().debug(String.format("Skipping " + getGoal() + " of %s:%s", project.getGroupId(), project.getArtifactId()));
             return;
         }
-        MavenRepositoriesEnricher.enrich(session, project, repositories);
+        enrichRepositories();
         artifactResolver = offlineProvisioning ? new MavenArtifactRepositoryManager(repoSystem, repoSession)
                 : new MavenArtifactRepositoryManager(repoSystem, repoSession, repositories);
 
@@ -191,6 +191,10 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
             // in same JVM next execution.
             System.clearProperty("module.path");
         }
+    }
+
+    protected void enrichRepositories() throws MojoExecutionException {
+        MavenRepositoriesEnricher.enrich(session, project, repositories);
     }
 
     protected abstract String getGoal();
