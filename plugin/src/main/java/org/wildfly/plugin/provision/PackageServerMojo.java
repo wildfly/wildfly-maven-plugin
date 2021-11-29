@@ -151,6 +151,13 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     @Parameter(name = "stdout", defaultValue = "System.out", property = PropertyNames.STDOUT)
     private String stdout;
 
+    /**
+     * Set to {@code true} if you want the goal to be skipped, otherwise
+     * {@code false}.
+     */
+    @Parameter(defaultValue = "false", property = PropertyNames.SKIP_PACKAGE)
+    private boolean skip;
+
     @Inject
     private CommandExecutor commandExecutor;
 
@@ -162,6 +169,15 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     @Override
     protected String getGoal() {
         return "package";
+    }
+
+    @Override
+    public void execute() throws MojoExecutionException, MojoFailureException {
+        if (skip) {
+            getLog().debug(String.format("Skipping " + getGoal() + " of %s:%s", project.getGroupId(), project.getArtifactId()));
+            return;
+        }
+        super.execute();
     }
 
     @Override

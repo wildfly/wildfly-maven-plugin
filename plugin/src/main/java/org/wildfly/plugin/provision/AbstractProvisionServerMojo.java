@@ -118,8 +118,8 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
      * Set to {@code true} if you want the goal to be skipped, otherwise
      * {@code false}.
      */
-    @Parameter(defaultValue = "false", property = PropertyNames.SKIP)
-    boolean skip;
+    @Parameter(defaultValue = "false", property = PropertyNames.SKIP_PROVISION)
+    private boolean skip;
 
     /**
      * The directory name inside the buildDir where to provision the server. By default the server is provisioned into the 'server' directory.

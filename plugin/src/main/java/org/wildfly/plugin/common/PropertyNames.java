@@ -93,6 +93,10 @@ public interface PropertyNames {
 
     String SKIP = "wildfly.skip";
 
+    String SKIP_PROVISION = "wildfly.provision.skip";
+
+    String SKIP_PACKAGE = "wildfly.package.skip";
+
     String STARTUP_TIMEOUT = "wildfly.startupTimeout";
 
     String STDOUT = "wildfly.stdout";
