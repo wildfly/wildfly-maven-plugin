@@ -318,7 +318,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         }
     }
 
-    private Path getDeploymentContent() {
+    private Path getDeploymentContent() throws MojoExecutionException {
         final PackageType packageType = PackageType.resolve(project);
         final String filename;
         if (this.filename == null) {
@@ -326,7 +326,18 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         } else {
             filename = this.filename;
         }
-        return targetDir.toPath().resolve(filename);
+        Path deployment = targetDir.toPath().resolve(filename);
+        if (Files.notExists(deployment)) {
+            if (this.filename != null ) {
+                throw new MojoExecutionException("No deployment found wih name " + this.filename);
+            }
+            if (this.runtimeName != null ) {
+                throw new MojoExecutionException("No deployment found although a runtime-name has been set. "
+                        + "Check the final name of the deployment. A custom file name can be set with <filename> parameter.");
+            }
+            getLog().warn("No deployment file found, the server will not contain a deployment");
+        }
+        return deployment;
     }
 
     private static void cleanupServer(Path jbossHome) throws IOException {

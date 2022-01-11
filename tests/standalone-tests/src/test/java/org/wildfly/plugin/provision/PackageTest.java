@@ -25,6 +25,7 @@ package org.wildfly.plugin.provision;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.apache.maven.plugin.Mojo;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Test;
 import org.junit.Assert;
 import org.wildfly.plugin.tests.AbstractProvisionConfiguredMojoTestCase;
@@ -51,4 +52,39 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
                 "org.wildfly.maven.plugin-package-goal-from-script");
     }
 
+    @Test
+    public void testNoDeploymentPackage() throws Exception {
+
+        final Mojo packageMojo =  lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("package-no-deployment-pom.xml").toFile(), "package");
+
+        packageMojo.execute();
+        Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("packaged-no-dep-server");
+        checkStandaloneWildFlyHome(jbossHome, 0, null, null, true);
+    }
+
+    @Test
+    public void testInvalidDeployment() throws Exception {
+
+        final Mojo packageMojo =  lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("package-invalid-deployment-pom.xml").toFile(), "package");
+        try {
+            packageMojo.execute();
+            throw new Exception("Execution should have failed");
+        } catch(MojoExecutionException ex) {
+            // XXX OK, expected.
+            Assert.assertTrue(ex.getLocalizedMessage().contains("No deployment found wih name test-foo.war"));
+        }
+    }
+
+    @Test
+    public void testInvalidDeployment2() throws Exception {
+
+        final Mojo packageMojo =  lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("package-invalid-deployment2-pom.xml").toFile(), "package");
+        try {
+            packageMojo.execute();
+            throw new Exception("Execution should have failed");
+        } catch(MojoExecutionException ex) {
+            // XXX OK, expected.
+            Assert.assertTrue(ex.getLocalizedMessage().contains("No deployment found although a runtime-name has been set"));
+        }
+    }
 }
