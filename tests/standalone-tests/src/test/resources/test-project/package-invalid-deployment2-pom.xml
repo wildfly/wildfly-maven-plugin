@@ -25,6 +25,7 @@
     <version>0.1.0-SNAPSHOT</version>
 
     <build>
+        <finalName>foo</finalName>
         <plugins>
             <plugin>
                 <groupId>org.wildfly.plugins</groupId>
