@@ -332,10 +332,11 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
                 throw new MojoExecutionException("No deployment found wih name " + this.filename);
             }
             if (this.runtimeName != null ) {
-                throw new MojoExecutionException("No deployment found although a runtime-name has been set. "
-                        + "Check the final name of the deployment. A custom file name can be set with <filename> parameter.");
+                throw new MojoExecutionException("No deployment found with name " + filename +
+                        ". A runtime-name has been set that indicates that a deployment is expected. "
+                        + "A custom file name can be set with the <filename> parameter.");
             }
-            getLog().warn("No deployment file found, the server will not contain a deployment");
+            getLog().warn("No deployment found. The file " + filename + " doesn't exist, the server will not contain any deployment");
         }
         return deployment;
     }

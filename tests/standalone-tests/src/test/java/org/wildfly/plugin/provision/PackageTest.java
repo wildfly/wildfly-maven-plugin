@@ -84,7 +84,8 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
             throw new Exception("Execution should have failed");
         } catch(MojoExecutionException ex) {
             // XXX OK, expected.
-            Assert.assertTrue(ex.getLocalizedMessage().contains("No deployment found although a runtime-name has been set"));
+            Assert.assertTrue(ex.getLocalizedMessage().contains("No deployment found with name foo.jar. "
+                    + "A runtime-name has been set that indicates that a deployment is expected. "));
         }
     }
 }
