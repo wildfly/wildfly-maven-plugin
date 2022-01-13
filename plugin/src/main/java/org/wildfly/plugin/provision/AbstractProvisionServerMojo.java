@@ -230,8 +230,10 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
             }
             getLog().info("Provisioning server in " + home);
             pm.provision(config);
-            if (!Files.exists(home)) {
-                getLog().error("Invalid galleon provisioning, no server provisioned in " + home);
+            // Check that at least the standalone or domain directories have been generated.
+            if (!Files.exists(home.resolve("standalone")) && !Files.exists(home.resolve("domain"))) {
+                getLog().error("Invalid galleon provisioning, no server provisioned in " + home + ". Make sure "
+                        + "that the list of Galleon feature-packs and Galleon layers are properly configured.");
                 throw new MojoExecutionException("Invalid plugin configuration, no server provisioned.");
             }
             if (!recordProvisioningState) {
@@ -253,4 +255,5 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
         }
         return path;
     }
+
 }
