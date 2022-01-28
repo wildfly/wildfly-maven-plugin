@@ -219,7 +219,7 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
         }
         MavenRepositoriesEnricher.enrich(mavenSession, project, repositories);
         mavenRepoManager = new MavenArtifactRepositoryManager(repoSystem, session, repositories);
-        final CommandConfiguration cmdConfig = CommandConfiguration.of(this::createClient, this::getClientConfiguration)
+        final CommandConfiguration.Builder cmdConfigBuilder = CommandConfiguration.of(this::createClient, this::getClientConfiguration)
                 .addCommands(commands)
                 .addJvmOptions(javaOpts)
                 .addPropertiesFiles(propertiesFiles)
@@ -235,9 +235,9 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
                 .setResolveExpression(resolveExpressions);
         // Why is that? fork implies a jboss-home?
         if (fork) {
-            cmdConfig.setJBossHome(getInstallation(buildDir.toPath().resolve(Utils.WILDFLY_DEFAULT_DIR)));
+            cmdConfigBuilder.setJBossHome(getInstallation(buildDir.toPath().resolve(Utils.WILDFLY_DEFAULT_DIR)));
         }
-        commandExecutor.execute(cmdConfig, mavenRepoManager);
+        commandExecutor.execute(cmdConfigBuilder.build(), mavenRepoManager);
     }
 
     /**

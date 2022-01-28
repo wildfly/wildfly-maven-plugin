@@ -275,7 +275,8 @@ public class RunMojo extends AbstractServerConnection {
                         .setJBossHome(commandBuilder.getWildFlyHome())
                         .setFork(true)
                         .setStdout("none")
-                        .setTimeout(timeout);
+                        .setTimeout(timeout)
+                        .build();
                 commandExecutor.execute(cmdConfig, mavenRepoManager);
                 // Create the deployment and deploy
                 final Deployment deployment = Deployment.of(deploymentContent)

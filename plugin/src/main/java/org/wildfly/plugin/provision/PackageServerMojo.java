@@ -36,8 +36,8 @@ import org.jboss.galleon.ProvisioningDescriptionException;
 import org.jboss.galleon.config.ProvisioningConfig;
 import org.jboss.galleon.util.IoUtils;
 import org.wildfly.plugin.cli.CliSession;
-import org.wildfly.plugin.cli.CommandConfiguration;
-import org.wildfly.plugin.cli.CommandExecutor;
+import org.wildfly.plugin.cli.BaseCommandConfiguration;
+import org.wildfly.plugin.cli.OfflineCommandExecutor;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.StandardOutput;
 import static org.wildfly.plugin.core.Constants.CLI_ECHO_COMMAND_ARG;
@@ -159,7 +159,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     private boolean skip;
 
     @Inject
-    private CommandExecutor commandExecutor;
+    private OfflineCommandExecutor commandExecutor;
 
     @Override
     protected ProvisioningConfig getDefaultConfig() throws ProvisioningDescriptionException {
@@ -200,14 +200,13 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         if (Files.exists(deploymentContent)) {
             getLog().info("Deploying " + deploymentContent);
             List<String> deploymentCommands = getDeploymentCommands(deploymentContent);
-            final CommandConfiguration cmdConfigDeployment = CommandConfiguration.of(()-> null, ()-> null)
+            final BaseCommandConfiguration cmdConfigDeployment = new BaseCommandConfiguration.Builder()
                     .addCommands(deploymentCommands)
                     .setJBossHome(jbossHome)
                     .addCLIArguments(CLI_ECHO_COMMAND_ARG)
-                    .setFork(true)
                     .setAppend(true)
                     .setStdout(stdout)
-                    .setOffline(true);
+                    .build();
             commandExecutor.execute(cmdConfigDeployment, artifactResolver);
         }
         // CLI execution
@@ -217,18 +216,17 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
                  for (CliSession session : packagingScripts) {
                      List<File> wrappedScripts = wrapOfflineScripts(session.getScripts());
                      try {
-                         final CommandConfiguration cmdConfig = CommandConfiguration.of(()-> null, ()-> null)
+                         final BaseCommandConfiguration cmdConfig = new BaseCommandConfiguration.Builder()
                                  .addCommands(wrapOfflineCommands(session.getCommands()))
                                  .addScripts(wrappedScripts)
                                  .addCLIArguments(CLI_ECHO_COMMAND_ARG)
                                  .setJBossHome(jbossHome)
-                                 .setFork(true)
                                  .setAppend(true)
                                  .setStdout(stdout)
                                  .addPropertiesFiles(resolveFiles(session.getPropertiesFiles()))
                                  .addJvmOptions(session.getJavaOpts())
                                  .setResolveExpression(session.getResolveExpression())
-                                 .setOffline(true);
+                                 .build();
                          commandExecutor.execute(cmdConfig, artifactResolver);
                      } finally {
                          for (File f : wrappedScripts) {

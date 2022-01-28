@@ -23,7 +23,6 @@ import static org.jboss.as.controller.client.helpers.ClientConstants.CONTROLLER_
 import static org.jboss.as.controller.client.helpers.ClientConstants.CONTROLLER_PROCESS_STATE_STOPPING;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -64,10 +63,7 @@ public class ServerHelper {
      * @return {@code true} if the path is valid otherwise {@code false}
      */
     public static boolean isValidHomeDirectory(final Path path) {
-        return path != null
-                && Files.exists(path)
-                && Files.isDirectory(path)
-                && Files.exists(path.resolve("jboss-modules.jar"));
+        return Utils.isValidHomeDirectory(path);
     }
 
     /**
