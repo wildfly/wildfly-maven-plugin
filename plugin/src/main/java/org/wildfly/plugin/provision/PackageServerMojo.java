@@ -50,6 +50,7 @@ import org.wildfly.plugin.deployment.PackageType;
  * exists
  *
  * @author jfdenise
+ * @since 3.0
  */
 @Mojo(name = "package", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME, defaultPhase = LifecyclePhase.PACKAGE)
 public class PackageServerMojo extends AbstractProvisionServerMojo {

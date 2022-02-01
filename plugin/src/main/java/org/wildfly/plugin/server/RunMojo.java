@@ -33,8 +33,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.inject.Inject;
-import org.apache.maven.execution.MavenSession;
 
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
@@ -114,6 +114,8 @@ public class RunMojo extends AbstractServerConnection {
     /**
      * The directory name inside the buildDir where to provision the default server.
      * By default the server is provisioned into the 'server' directory.
+     *
+     * @since 3.0
      */
     @Parameter(alias = "provisioning-dir", property = PropertyNames.WILDFLY_PROVISIONING_DIR, defaultValue = Utils.WILDFLY_DEFAULT_DIR)
     private String provisioningDir;

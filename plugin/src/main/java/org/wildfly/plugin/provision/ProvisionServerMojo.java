@@ -28,6 +28,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
  * Provision a server.
  *
  * @author jfdenise
+ * @since 3.0
  */
 @Mojo(name = "provision", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME, defaultPhase = LifecyclePhase.PACKAGE)
 public class ProvisionServerMojo extends AbstractProvisionServerMojo {
