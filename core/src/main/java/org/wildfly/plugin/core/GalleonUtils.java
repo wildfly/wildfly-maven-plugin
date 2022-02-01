@@ -120,8 +120,25 @@ public class GalleonUtils {
             List<String> excludedLayers,
             Map<String, String> pluginOptions) throws ProvisioningException, IllegalArgumentException {
         final ProvisioningConfig.Builder state = ProvisioningConfig.builder();
-        for (FeaturePack fp : featurePacks) {
+        boolean hasLayers = !layers.isEmpty();
+        boolean fpWithDefaults = true;
+        if (!hasLayers) {
+            // Check we have all feature-packs with default values only.
+            for (FeaturePack fp : featurePacks) {
+                if (fp.isInheritConfigs() != null ||
+                        fp.isInheritPackages() != null ||
+                        !fp.getIncludedConfigs().isEmpty() ||
+                        !fp.getExcludedConfigs().isEmpty() ||
+                        fp.isTransitive() ||
+                        !fp.getExcludedPackages().isEmpty() ||
+                        !fp.getIncludedPackages().isEmpty()) {
+                    fpWithDefaults = false;
+                    break;
+                }
+            }
+        }
 
+        for (FeaturePack fp : featurePacks) {
             if (fp.getLocation() == null && (fp.getGroupId() == null || fp.getArtifactId() == null)
                     && fp.getNormalizedPath() == null) {
                 throw new IllegalArgumentException("Feature-pack location, Maven GAV or feature pack path is missing");
@@ -140,12 +157,25 @@ public class GalleonUtils {
             final FeaturePackConfig.Builder fpConfig = fp.isTransitive() ? FeaturePackConfig.transitiveBuilder(fpl)
                     : FeaturePackConfig.builder(fpl);
             if (fp.isInheritConfigs() == null) {
-                fpConfig.setInheritConfigs(false);
+                if (hasLayers) {
+                    fpConfig.setInheritConfigs(false);
+                } else {
+                    if (fpWithDefaults) {
+                        fpConfig.setInheritConfigs(true);
+                    }
+                }
             } else {
                 fpConfig.setInheritConfigs(fp.isInheritConfigs());
             }
+
             if (fp.isInheritPackages() == null) {
-                fpConfig.setInheritPackages(false);
+                if (hasLayers) {
+                    fpConfig.setInheritPackages(false);
+                } else {
+                    if (fpWithDefaults) {
+                        fpConfig.setInheritConfigs(true);
+                    }
+                }
             } else {
                 fpConfig.setInheritPackages(fp.isInheritPackages());
             }

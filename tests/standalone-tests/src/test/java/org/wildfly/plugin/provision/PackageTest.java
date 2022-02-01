@@ -53,6 +53,17 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
     }
 
     @Test
+    public void testDefaultConfigPackage() throws Exception {
+
+        final Mojo packageMojo =  lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("package-default-config-pom.xml").toFile(), "package");
+
+        packageMojo.execute();
+        Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("packaged-default-config-server");
+        checkStandaloneWildFlyHome(jbossHome, 0, null, null, true);
+        checkDomainWildFlyHome(jbossHome, 0, true);
+    }
+
+    @Test
     public void testNoDeploymentPackage() throws Exception {
 
         final Mojo packageMojo =  lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("package-no-deployment-pom.xml").toFile(), "package");
