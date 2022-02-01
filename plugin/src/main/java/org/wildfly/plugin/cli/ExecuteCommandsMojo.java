@@ -197,6 +197,8 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
 
     /**
      * Resolve expressions prior to send the commands to the server.
+     *
+     * @since 3.0
      */
     @Parameter(alias = "resolve-expressions", defaultValue = "false", property = PropertyNames.RESOLVE_EXPRESSIONS)
     private boolean resolveExpressions;
