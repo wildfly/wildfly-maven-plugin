@@ -19,31 +19,23 @@
 
 package org.wildfly.plugin.cli;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.codehaus.plexus.logging.AbstractLogEnabled;
-import org.codehaus.plexus.logging.Logger;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.wildfly.core.launcher.CliCommandBuilder;
-import org.wildfly.core.launcher.Launcher;
-import org.wildfly.plugin.common.Environment;
 import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.StandardOutput;
-import static org.wildfly.plugin.core.Constants.CLI_RESOLVE_PARAMETERS_VALUES;
 import org.wildfly.plugin.core.ServerHelper;
 
 /**
@@ -53,7 +45,7 @@ import org.wildfly.plugin.core.ServerHelper;
  */
 @Singleton
 @Named
-public class CommandExecutor extends AbstractLogEnabled {
+public class CommandExecutor extends AbstractCommandExecutor<CommandConfiguration> {
 
     /**
      * Executes CLI commands based on the configuration.
@@ -64,6 +56,7 @@ public class CommandExecutor extends AbstractLogEnabled {
      * @throws MojoFailureException   if the JBoss Home directory is required and invalid
      * @throws MojoExecutionException if an error occurs executing the CLI commands
      */
+    @Override
     public void execute(final CommandConfiguration config, MavenRepoManager artifactResolver) throws MojoFailureException, MojoExecutionException {
         if (config.isOffline()) {
             // The jbossHome is required for offline CLI
@@ -84,78 +77,11 @@ public class CommandExecutor extends AbstractLogEnabled {
         }
     }
 
-    private void executeInNewProcess(final CommandConfiguration config) throws MojoExecutionException {
-        // If we have commands create a script file and execute
-        if (!config.getCommands().isEmpty()) {
-            Path scriptFile = null;
-            try {
-                scriptFile = ScriptWriter.create(config);
-                executeInNewProcess(config, scriptFile);
-            } catch (IOException e) {
-                throw new MojoExecutionException("Failed execute commands.", e);
-            } finally {
-                if (scriptFile != null) {
-                    try {
-                        Files.deleteIfExists(scriptFile);
-                    } catch (IOException e) {
-                        getLogger().debug("Failed to deleted CLI script file: " + scriptFile, e);
-                    }
-                }
-            }
-        }
-        if (!config.getScripts().isEmpty()) {
-            for (Path script : config.getScripts()) {
-                executeInNewProcess(config, script);
-            }
-        }
-    }
-
-    private void executeInNewProcess(final CommandConfiguration config, final Path scriptFile) throws MojoExecutionException {
-        getLogger().debug("Executing CLI scripts");
-        try {
-            final StandardOutput out = StandardOutput.parse(config.getStdout(), false, config.isAppend());
-
-            final int exitCode = executeInNewProcess(config, scriptFile, out);
-            if (exitCode != 0) {
-                final StringBuilder msg = new StringBuilder("Failed to execute commands: ");
-                switch (out.getTarget()) {
-                    case COLLECTING:
-                        msg.append(out);
-                        break;
-                    case FILE:
-                        final Path stdoutPath = out.getStdoutPath();
-                        msg.append("See ").append(stdoutPath).append(" for full details of failure.").append(System.lineSeparator());
-                        final List<String> lines = Files.readAllLines(stdoutPath);
-                        lines.subList(Math.max(lines.size() - 4, 0), lines.size())
-                                .forEach(line -> msg.append(line).append(System.lineSeparator()));
-                        break;
-                    case SYSTEM_ERR:
-                    case SYSTEM_OUT:
-                    case INHERIT:
-                        msg.append("See previous messages for failure messages.");
-                        break;
-                    default:
-                        msg.append("Reason unknown");
-                }
-                if (config.isFailOnError()) {
-                    throw new MojoExecutionException(msg.toString());
-                } else {
-                    getLogger().warn(msg.toString());
-                }
-            }
-        } catch (IOException e) {
-            throw new MojoExecutionException("Failed to execute scripts.", e);
-        }
-    }
-
-    private int executeInNewProcess(final CommandConfiguration config, final Path scriptFile, final StandardOutput stdout) throws MojoExecutionException, IOException {
-        final Logger log = getLogger();
+    @Override
+    protected int executeInNewProcess(final CommandConfiguration config, final Path scriptFile, final StandardOutput stdout) throws MojoExecutionException, IOException {
         try (MavenModelControllerClientConfiguration clientConfiguration = config.getClientConfiguration()) {
 
-            final CliCommandBuilder builder = CliCommandBuilder.of(config.getJBossHome())
-                    .setScriptFile(scriptFile)
-                    .addCliArguments(config.getCLIArguments())
-                    .setTimeout(config.getTimeout() * 1000);
+            final CliCommandBuilder builder = createCommandBuilder(config, scriptFile);
             if (!config.isOffline()) {
                 builder.setConnection(clientConfiguration.getController());
             }
@@ -163,56 +89,7 @@ public class CommandExecutor extends AbstractLogEnabled {
             if (clientConfiguration != null && clientConfiguration.getAuthenticationConfigUri() != null) {
                 builder.addJavaOption("-Dwildfly.config.url=" + clientConfiguration.getAuthenticationConfigUri().toString());
             }
-            // Workaround for WFCORE-4121
-            if (Environment.isModularJvm(builder.getJavaHome())) {
-                builder.addJavaOptions(Environment.getModularJvmArguments());
-            }
-            final Map<String, String> systemProperties = config.getSystemProperties();
-            systemProperties.forEach((key, value) -> builder.addJavaOption(String.format("-D%s=%s", key, value)));
-            if (systemProperties.containsKey("module.path")) {
-                builder.setModuleDirs(systemProperties.get("module.path"));
-            }
-
-            final Properties properties = new Properties();
-            for (Path file : config.getPropertiesFiles()) {
-                parseProperties(file, properties);
-            }
-            for (String key : properties.stringPropertyNames()) {
-                builder.addJavaOption(String.format("-D%s=%s", key, properties.getProperty(key)));
-            }
-
-            final Collection<String> javaOpts = config.getJvmOptions();
-            if (log.isDebugEnabled() && !javaOpts.isEmpty()) {
-                log.debug("java opts: " + javaOpts);
-            }
-            for (String opt : javaOpts) {
-                if (!opt.trim().isEmpty()) {
-                    builder.addJavaOption(opt);
-                }
-            }
-            if (config.isExpressionResolved()) {
-                builder.addCliArgument(CLI_RESOLVE_PARAMETERS_VALUES);
-            }
-            if (log.isDebugEnabled()) {
-                log.debug("process parameters: " + builder.build());
-            }
-            final Launcher launcher = Launcher.of(builder)
-                    .addEnvironmentVariable("JBOSS_HOME", config.getJBossHome().toString())
-                    .setRedirectErrorStream(true);
-            stdout.getRedirect().ifPresent(launcher::redirectOutput);
-            final Process process = launcher.launch();
-            final Optional<Thread> consoleConsumer = stdout.startConsumer(process);
-            try {
-                return process.waitFor();
-            } catch (InterruptedException e) {
-                throw new MojoExecutionException("Failed to run goal execute-commands in forked process.", e);
-            } finally {
-                // Be safe and destroy the process to ensure we don't leave rouge processes running
-                if (process.isAlive()) {
-                    process.destroyForcibly();
-                }
-                consoleConsumer.ifPresent(Thread::interrupt);
-            }
+            return launchProcess(builder, config, stdout);
         }
     }
 
@@ -292,11 +169,5 @@ public class CommandExecutor extends AbstractLogEnabled {
             throw new IllegalStateException("Failed to initialize CLI context", e);
         }
         return commandContext;
-    }
-
-    private static void parseProperties(final Path file, final Properties properties) throws IOException {
-        try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
-            properties.load(reader);
-        }
     }
 }

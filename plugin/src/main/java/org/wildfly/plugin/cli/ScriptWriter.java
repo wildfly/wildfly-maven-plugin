@@ -40,7 +40,7 @@ class ScriptWriter {
      *
      * @throws IOException if an error occurs creating the script file
      */
-    static Path create(final CommandConfiguration config) throws IOException {
+    static Path create(final BaseCommandConfiguration config) throws IOException {
         final Path tempScript = Files.createTempFile("cli-scrpts", ".cli");
         try (BufferedWriter writer = Files.newBufferedWriter(tempScript, StandardCharsets.UTF_8)) {
             if (config.isBatch()) {
