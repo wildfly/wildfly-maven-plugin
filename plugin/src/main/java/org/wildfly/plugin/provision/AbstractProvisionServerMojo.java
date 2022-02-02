@@ -156,12 +156,6 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
     @Parameter(alias = "provisioning-file", property = PropertyNames.WILDFLY_PROVISIONING_FILE, defaultValue = "${project.basedir}/galleon/provisioning.xml")
     private File provisioningFile;
 
-    /**
-     * The target directory the application to be deployed is located.
-     */
-    @Parameter(defaultValue = "${project.build.directory}/", property = PropertyNames.DEPLOYMENT_TARGET_DIR)
-    protected File targetDir;
-
     private Path wildflyDir;
 
     protected MavenRepoManager artifactResolver;
@@ -176,7 +170,11 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
         artifactResolver = offlineProvisioning ? new MavenArtifactRepositoryManager(repoSystem, repoSession)
                 : new MavenArtifactRepositoryManager(repoSystem, repoSession, repositories);
 
-        wildflyDir = targetDir.toPath().resolve(provisioningDir);
+        Path targetPath = Paths.get(project.getBuild().getDirectory());
+        wildflyDir = targetPath.resolve(provisioningDir).normalize();
+        if (Paths.get(provisioningDir).isAbsolute() || targetPath.equals(wildflyDir) || !wildflyDir.startsWith(targetPath)) {
+            throw new  MojoExecutionException("provisioning-dir " + provisioningDir + " must be a child directory relative to the project build directory.");
+        }
         IoUtils.recursiveDelete(wildflyDir);
         try {
             try {
