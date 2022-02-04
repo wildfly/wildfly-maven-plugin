@@ -325,7 +325,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         } else {
             filename = this.filename;
         }
-        Path deployment = targetDir.toPath().resolve(filename);
+        Path deployment = Paths.get(project.getBuild().getDirectory()).resolve(filename);
         if (Files.notExists(deployment)) {
             if (this.filename != null ) {
                 throw new MojoExecutionException("No deployment found wih name " + this.filename);
