@@ -35,7 +35,6 @@ import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.jboss.galleon.xml.ProvisioningXmlParser;
 import static org.wildfly.plugin.core.Constants.FORK_EMBEDDED_PROCESS_OPTION;
 import static org.wildfly.plugin.core.Constants.STANDALONE;
-import static org.wildfly.plugin.core.Constants.STANDALONE_XML;
 
 /**
  * @author jdenise
@@ -111,6 +110,7 @@ public class GalleonUtils {
      * @param layers Layers to include.
      * @param excludedLayers Layers to exclude.
      * @param pluginOptions Galleon plugin options.
+     * @param layersConfigFileName The name of the configuration generated from layers
      * @return The provisioning config.
      * @throws ProvisioningException
      */
@@ -118,7 +118,7 @@ public class GalleonUtils {
             List<FeaturePack> featurePacks,
             List<String> layers,
             List<String> excludedLayers,
-            Map<String, String> pluginOptions) throws ProvisioningException, IllegalArgumentException {
+            Map<String, String> pluginOptions, String layersConfigFileName) throws ProvisioningException, IllegalArgumentException {
         final ProvisioningConfig.Builder state = ProvisioningConfig.builder();
         boolean hasLayers = !layers.isEmpty();
         boolean fpWithDefaults = true;
@@ -215,7 +215,7 @@ public class GalleonUtils {
 
         if (!layers.isEmpty()) {
             ConfigModel.Builder configBuilder = ConfigModel.
-                    builder(STANDALONE, STANDALONE_XML);
+                    builder(STANDALONE, layersConfigFileName);
             for (String layer : layers) {
                 configBuilder.includeLayer(layer);
             }

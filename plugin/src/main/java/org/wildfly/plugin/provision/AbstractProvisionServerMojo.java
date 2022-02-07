@@ -51,6 +51,7 @@ import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.Utils;
 import org.wildfly.plugin.core.GalleonUtils;
 import static org.wildfly.plugin.core.Constants.PLUGIN_PROVISIONING_FILE;
+import static org.wildfly.plugin.core.Constants.STANDALONE_XML;
 import org.wildfly.plugin.core.MavenRepositoriesEnricher;
 
 
@@ -156,6 +157,13 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
     @Parameter(alias = "provisioning-file", property = PropertyNames.WILDFLY_PROVISIONING_FILE, defaultValue = "${project.basedir}/galleon/provisioning.xml")
     private File provisioningFile;
 
+    /**
+     * The name of the configuration file generated from layers. Default value is {@code standalone.xml}.
+     * If no {@code layers} have been configured, setting this parameter is invalid.
+     */
+    @Parameter(alias = "layers-configuration-file-name", property = PropertyNames.WILDFLY_LAYERS_CONFIGURATION_FILE_NAME, defaultValue = STANDALONE_XML)
+    String layersConfigurationFileName;
+
     private Path wildflyDir;
 
     protected MavenRepoManager artifactResolver;
@@ -224,7 +232,10 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
                 if (provisioningFileExists) {
                     getLog().warn("Galleon provisioning file " + provisioningFile + " is ignored, plugin configuration is used.");
                 }
-                config = GalleonUtils.buildConfig(pm, featurePacks, layers, excludedLayers, galleonOptions);
+                if (layers.isEmpty() && !STANDALONE_XML.equals(layersConfigurationFileName)) {
+                    throw new MojoExecutionException("layers-configuration-file-name has been set although no layers are defined.");
+                }
+                config = GalleonUtils.buildConfig(pm, featurePacks, layers, excludedLayers, galleonOptions, layersConfigurationFileName);
             }
             getLog().info("Provisioning server in " + home);
             pm.provision(config);
