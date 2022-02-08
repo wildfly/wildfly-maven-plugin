@@ -107,7 +107,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
 
     /**
      * The name of the server configuration to use when deploying the
-     * deployment. Defaults to 'standalone.xml'.
+     * deployment. Defaults to 'standalone.xml'. If {@code layers-configuration-file-name} has been set,
+     * this property is ignored and the deployment is deployed inside the configuration referenced from {@code layers-configuration-file-name}.
      */
     @Parameter(property = PropertyNames.SERVER_CONFIG, alias = "server-config", defaultValue = STANDALONE_XML)
     private String serverConfig;
@@ -269,7 +270,11 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
             return commands;
         }
         List<String> offlineCommands = new ArrayList<>();
-        offlineCommands.add("embed-server --server-config=" + serverConfig);
+        String serverConfigName = serverConfig;
+        if (!layersConfigurationFileName.equals(STANDALONE_XML)) {
+            serverConfigName = layersConfigurationFileName;
+        }
+        offlineCommands.add("embed-server --server-config=" + serverConfigName);
         offlineCommands.addAll(commands);
         offlineCommands.add("stop-embedded-server");
          return offlineCommands;
