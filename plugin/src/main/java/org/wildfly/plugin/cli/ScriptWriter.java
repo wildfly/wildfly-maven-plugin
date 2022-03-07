@@ -51,6 +51,9 @@ class ScriptWriter {
             boolean inTry = false;
 
             for (String cmd : config.getCommands()) {
+                if (cmd == null || cmd.isEmpty()) {
+                    continue;
+                }
                 if (config.isFailOnError()) {
                     writeCommand(writer, cmd);
                 } else {
