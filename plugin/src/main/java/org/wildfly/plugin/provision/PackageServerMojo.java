@@ -75,7 +75,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
      *         &lt;script&gt;../scripts/script1.cli&lt;/script&gt;
      *       &lt;/scripts&gt;
      *       &lt;commands&gt;
-     *         &lt;command&gt;/system-property:foo:add(value=bar)&lt;/command&gt;
+     *         &lt;command&gt;/system-property=foo:add(value=bar)&lt;/command&gt;
      *       &lt;/commands&gt;
      *       &lt;properties-files&gt;
      *         &lt;property-file&gt;my-properties.properties&lt;/property-file&gt;
