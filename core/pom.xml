@@ -72,7 +72,11 @@
         </dependency>
         <dependency>
             <groupId>org.jboss.galleon</groupId>
-            <artifactId>galleon-maven-plugin</artifactId>
+            <artifactId>galleon-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.galleon</groupId>
+            <artifactId>galleon-maven-universe</artifactId>
         </dependency>
         <!-- Test dependencies -->
         <dependency>

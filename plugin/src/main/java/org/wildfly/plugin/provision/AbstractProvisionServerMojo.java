@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +41,6 @@ import org.jboss.galleon.ProvisioningDescriptionException;
 import org.jboss.galleon.ProvisioningException;
 import org.jboss.galleon.ProvisioningManager;
 import org.jboss.galleon.config.ProvisioningConfig;
-import org.jboss.galleon.maven.plugin.util.FeaturePack;
 import org.jboss.galleon.maven.plugin.util.MavenArtifactRepositoryManager;
 import org.jboss.galleon.maven.plugin.util.MvnMessageWriter;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
@@ -53,6 +51,7 @@ import org.wildfly.plugin.common.Utils;
 import org.wildfly.plugin.core.GalleonUtils;
 import static org.wildfly.plugin.core.Constants.PLUGIN_PROVISIONING_FILE;
 import static org.wildfly.plugin.core.Constants.STANDALONE_XML;
+import org.wildfly.plugin.core.FeaturePack;
 import org.wildfly.plugin.core.MavenRepositoriesEnricher;
 
 
@@ -141,7 +140,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
      * A list of feature-pack configurations to install, can be combined with layers.
      * Use the System property {@code wildfly.provisioning.feature-packs} to provide a comma separated list of feature-packs.
      */
-    @Parameter(required = false, alias= "feature-packs")
+    @Parameter(required = false, alias= "feature-packs", property = PropertyNames.WILDFLY_PROVISIONING_FEATURE_PACKS)
     List<FeaturePack> featurePacks = Collections.emptyList();
 
 /**
@@ -233,8 +232,6 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
             ProvisioningConfig config = null;
             Path resolvedProvisioningFile = resolvePath(project, provisioningFile.toPath());
             boolean provisioningFileExists = Files.exists(resolvedProvisioningFile);
-            // Handle feature-packs provided by system property that would override the one in the config
-            setFeaturePacksFromProperty();
             if (featurePacks.isEmpty()) {
                 if (provisioningFileExists) {
                     getLog().info("Provisioning server using " + resolvedProvisioningFile + " file.");
@@ -280,30 +277,5 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
             path = Paths.get(project.getBasedir().getAbsolutePath()).resolve(path);
         }
         return path;
-    }
-
-    public void setFeaturePacksFromProperty() {
-        String fps = System.getProperty(PropertyNames.WILDFLY_PROVISIONING_FEATURE_PACKS);
-        if (fps != null) {
-            List<String> lst = splitArguments(fps);
-            featurePacks = new ArrayList<>();
-            for (String fp : lst) {
-                FeaturePack f = new FeaturePack();
-                f.setLocation(fp);
-                featurePacks.add(f);
-            }
-        }
-    }
-
-    private static List<String> splitArguments(final String arguments) {
-        final List<String> args = new ArrayList<>();
-        String[] items = arguments.split(",");
-        for (String i : items) {
-            i = i.trim();
-            if (!i.isEmpty()) {
-                args.add(i);
-            }
-        }
-        return args;
     }
 }

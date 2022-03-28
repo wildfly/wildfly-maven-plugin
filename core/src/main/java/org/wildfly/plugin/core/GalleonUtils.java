@@ -28,8 +28,6 @@ import org.jboss.galleon.ProvisioningManager;
 import org.jboss.galleon.config.ConfigModel;
 import org.jboss.galleon.config.FeaturePackConfig;
 import org.jboss.galleon.config.ProvisioningConfig;
-import org.jboss.galleon.maven.plugin.util.ConfigurationId;
-import org.jboss.galleon.maven.plugin.util.FeaturePack;
 import org.jboss.galleon.universe.FeaturePackLocation;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.jboss.galleon.xml.ProvisioningXmlParser;
