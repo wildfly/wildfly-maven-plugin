@@ -41,7 +41,6 @@ import org.jboss.galleon.ProvisioningDescriptionException;
 import org.jboss.galleon.ProvisioningException;
 import org.jboss.galleon.ProvisioningManager;
 import org.jboss.galleon.config.ProvisioningConfig;
-import org.jboss.galleon.maven.plugin.util.FeaturePack;
 import org.jboss.galleon.maven.plugin.util.MavenArtifactRepositoryManager;
 import org.jboss.galleon.maven.plugin.util.MvnMessageWriter;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
@@ -52,6 +51,7 @@ import org.wildfly.plugin.common.Utils;
 import org.wildfly.plugin.core.GalleonUtils;
 import static org.wildfly.plugin.core.Constants.PLUGIN_PROVISIONING_FILE;
 import static org.wildfly.plugin.core.Constants.STANDALONE_XML;
+import org.wildfly.plugin.core.FeaturePack;
 import org.wildfly.plugin.core.MavenRepositoriesEnricher;
 
 
@@ -123,30 +123,40 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
     private boolean skip;
 
     /**
-     * The directory name inside the buildDir where to provision the server. By default the server is provisioned into the 'server' directory.
+     * The path to the directory where to provision the server. Can be an absolute path or a path relative to the buildDir.
+     * By default the server is provisioned into the {@code target/server} directory.
      */
     @Parameter(alias = "provisioning-dir", property = PropertyNames.WILDFLY_PROVISIONING_DIR, defaultValue = Utils.WILDFLY_DEFAULT_DIR)
     private String provisioningDir;
 
-    /**
-     * A list of feature-pack configurations to install, can be combined with
-     * layers.
+     /**
+     * Set to {@code true} if you want to delete the existing server referenced from the {@code provisioningDir} and provision a new one,
+     * otherwise {@code false}.
      */
-    @Parameter(required = false, alias= "feature-packs")
+    @Parameter(alias="overwrite-provisioned-server", defaultValue = "false", property = PropertyNames.WILDFLY_PROVISIONING_OVERWRITE_PROVISIONED_SERVER)
+    private boolean overwriteProvisionedServer;
+
+    /**
+     * A list of feature-pack configurations to install, can be combined with layers.
+     * Use the System property {@code wildfly.provisioning.feature-packs} to provide a comma separated list of feature-packs.
+     */
+    @Parameter(required = false, alias= "feature-packs", property = PropertyNames.WILDFLY_PROVISIONING_FEATURE_PACKS)
     List<FeaturePack> featurePacks = Collections.emptyList();
 
 /**
      * A list of Galleon layers to provision. Can be used when
      * feature-pack-location or feature-packs are set.
+     * Use the System property {@code wildfly.provisioning.layers} to provide a comma separated list of layers.
      */
-    @Parameter(alias = "layers", required = false)
+    @Parameter(alias = "layers", required = false, property = PropertyNames.WILDFLY_PROVISIONING_LAYERS)
     List<String> layers = Collections.emptyList();
 
     /**
      * A list of Galleon layers to exclude. Can be used when
      * feature-pack-location or feature-packs are set.
+     * Use the System property {@code wildfly.provisioning.layers.excluded} to provide a comma separated list of layers to exclude.
      */
-    @Parameter(alias = "excluded-layers", required = false)
+    @Parameter(alias = "excluded-layers", required = false, property = PropertyNames.WILDFLY_PROVISIONING_LAYERS_EXCLUDED)
     List<String> excludedLayers = Collections.emptyList();
 
     /**
@@ -174,14 +184,18 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
             getLog().debug(String.format("Skipping " + getGoal() + " of %s:%s", project.getGroupId(), project.getArtifactId()));
             return;
         }
+        Path targetPath = Paths.get(project.getBuild().getDirectory());
+        wildflyDir = targetPath.resolve(provisioningDir).normalize();
+        if (!overwriteProvisionedServer && Files.exists(wildflyDir)) {
+            getLog().info(String.format("A server already exists in " + wildflyDir + ", skipping " + getGoal() +
+                    " of %s:%s", project.getGroupId(), project.getArtifactId()));
+            return;
+        }
         enrichRepositories();
         artifactResolver = offlineProvisioning ? new MavenArtifactRepositoryManager(repoSystem, repoSession)
                 : new MavenArtifactRepositoryManager(repoSystem, repoSession, repositories);
-
-        Path targetPath = Paths.get(project.getBuild().getDirectory());
-        wildflyDir = targetPath.resolve(provisioningDir).normalize();
-        if (Paths.get(provisioningDir).isAbsolute() || targetPath.equals(wildflyDir) || !wildflyDir.startsWith(targetPath)) {
-            throw new  MojoExecutionException("provisioning-dir " + provisioningDir + " must be a child directory relative to the project build directory.");
+        if (!Paths.get(provisioningDir).isAbsolute() && (targetPath.equals(wildflyDir) || !wildflyDir.startsWith(targetPath))) {
+            throw new  MojoExecutionException("provisioning-dir " + provisioningDir + " must be an absolute path or a child directory relative to the project build directory.");
         }
         IoUtils.recursiveDelete(wildflyDir);
         try {
@@ -264,5 +278,4 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
         }
         return path;
     }
-
 }

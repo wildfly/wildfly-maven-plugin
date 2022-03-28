@@ -113,11 +113,19 @@ public interface PropertyNames {
 
     String WILDFLY_PROVISIONING_DIR = "wildfly.provisioning.dir";
 
+    String WILDFLY_PROVISIONING_FEATURE_PACKS = "wildfly.provisioning.feature-packs";
+
     String WILDFLY_PROVISIONING_FILE = "wildfly.provisioning.file";
+
+    String WILDFLY_PROVISIONING_LAYERS = "wildfly.provisioning.layers";
+
+    String WILDFLY_PROVISIONING_LAYERS_EXCLUDED = "wildfly.provisioning.layers.excluded";
 
     String WILDFLY_PROVISIONING_LOG_TIME = "wildfly.provisioning.log.time";
 
     String WILDFLY_PROVISIONING_OFFLINE = "wildfly.provisioning.offline";
+
+    String WILDFLY_PROVISIONING_OVERWRITE_PROVISIONED_SERVER = "wildfly.provisioning.overwrite-provisioned-server";
 
     String WILDFLY_PROVISIONING_RECORD_STATE = "wildfly.provisioning.record.state";
 
