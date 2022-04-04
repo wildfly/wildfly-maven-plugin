@@ -283,6 +283,9 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     private List<File> wrapOfflineScripts(List<File> scripts) throws IOException, MojoExecutionException {
         List<File> wrappedScripts = new ArrayList<>();
         for(File script : scripts) {
+            if (script == null) {
+                continue;
+            }
             wrappedScripts.add(wrapScript(script).toFile());
         }
         return wrappedScripts;
