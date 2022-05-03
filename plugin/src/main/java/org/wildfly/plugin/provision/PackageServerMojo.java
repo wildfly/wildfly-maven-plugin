@@ -310,6 +310,9 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
             if (Files.notExists(extraContent)) {
                 throw new MojoExecutionException("Extra content dir " + extraContent + " doesn't exist");
             }
+            if (!Files.isDirectory(extraContent)) {
+                throw new MojoExecutionException("Extra content dir " + extraContent + " is not a directory");
+            }
             // Check for the presence of a standalone.xml file
             warnExtraConfig(extraContent);
             IoUtils.copy(extraContent, target);
