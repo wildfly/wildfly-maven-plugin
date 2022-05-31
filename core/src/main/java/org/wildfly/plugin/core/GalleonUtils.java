@@ -149,7 +149,15 @@ public class GalleonUtils {
                 String coords = getMavenCoords(fp);
                 fpl = FeaturePackLocation.fromString(coords);
             } else {
-                fpl = FeaturePackLocation.fromString(fp.getLocation());
+                //Special case for G:A that conflicts with producer:channel that we can't have in the plugin.
+                String location = fp.getLocation();
+                if (!FeaturePackLocation.fromString(location).hasUniverse()) {
+                    long numSeparators = location.chars().filter(ch -> ch == ':').count();
+                    if (numSeparators <= 1) {
+                        location += ":";
+                    }
+                }
+                fpl = FeaturePackLocation.fromString(location);
             }
 
             final FeaturePackConfig.Builder fpConfig = fp.isTransitive() ? FeaturePackConfig.transitiveBuilder(fpl)
