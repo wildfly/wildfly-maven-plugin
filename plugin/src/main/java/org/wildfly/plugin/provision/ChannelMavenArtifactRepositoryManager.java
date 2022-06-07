@@ -82,7 +82,7 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
     }
 
     private void resolveFromChannels(MavenArtifact artifact) throws UnresolvedMavenArtifactException {
-        org.wildfly.channel.MavenArtifact result = channelSession.resolveMavenArtifact(artifact.getGroupId(), artifact.getArtifactId(), artifact.getExtension(), artifact.getClassifier());
+        org.wildfly.channel.MavenArtifact result = channelSession.resolveMavenArtifact(artifact.getGroupId(), artifact.getArtifactId(), artifact.getExtension(), artifact.getClassifier(), artifact.getVersion());
         artifact.setVersion(result.getVersion());
         artifact.setPath(result.getFile().toPath());
     }
