@@ -21,6 +21,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
 import org.jboss.galleon.Constants;
 import org.jboss.galleon.ProvisioningDescriptionException;
 import org.jboss.galleon.ProvisioningException;
@@ -45,15 +47,16 @@ public class GalleonUtils {
      * Galleon provisioning of a default server.
      *
      * @param jbossHome Server installation directory
+     * @param featurePackLocation the location of the feature pack
      * @param version WildFly version, if null latest is used.
      * @param artifactResolver Artifact resolver used by Galleon
-     * @throws ProvisioningException
+     * @throws ProvisioningException if there is an error provisioning the server
      */
-    public static void provision(Path jbossHome, String version, MavenRepoManager artifactResolver) throws ProvisioningException {
+    public static void provision(Path jbossHome, String featurePackLocation, String version, MavenRepoManager artifactResolver) throws ProvisioningException {
         try (ProvisioningManager pm = ProvisioningManager.builder().addArtifactResolver(artifactResolver)
                 .setInstallationHome(jbossHome)
                 .build()) {
-            pm.provision(buildDefaultConfig(version));
+            pm.provision(buildDefaultConfig(featurePackLocation, version));
         }
     }
 
@@ -64,7 +67,7 @@ public class GalleonUtils {
      * @throws ProvisioningDescriptionException
      */
     public static ProvisioningConfig buildDefaultConfig() throws ProvisioningDescriptionException {
-        return buildDefaultConfig(null);
+        return buildDefaultConfig(WILDFLY_DEFAULT_FEATURE_PACK_LOCATION, null);
     }
 
     /**
@@ -74,8 +77,8 @@ public class GalleonUtils {
      * @return
      * @throws ProvisioningDescriptionException
      */
-    public static ProvisioningConfig buildDefaultConfig(String version) throws ProvisioningDescriptionException {
-        String location = getWildFlyFeaturePackLocation(version);
+    public static ProvisioningConfig buildDefaultConfig(String featurePackLocation, String version) throws ProvisioningDescriptionException {
+        String location = getWildFlyFeaturePackLocation(featurePackLocation, version);
         ProvisioningConfig.Builder state = ProvisioningConfig.builder();
         FeaturePackLocation fpl = FeaturePackLocation.fromString(location);
         FeaturePackConfig.Builder fpConfig = FeaturePackConfig.builder(fpl);
@@ -255,9 +258,9 @@ public class GalleonUtils {
         return builder.toString();
     }
 
-    private static String getWildFlyFeaturePackLocation(String version) {
+    private static String getWildFlyFeaturePackLocation(String featurePackLocation, String version) {
         StringBuilder fplBuilder = new StringBuilder();
-        fplBuilder.append(WILDFLY_DEFAULT_FEATURE_PACK_LOCATION);
+        fplBuilder.append(Objects.requireNonNull(featurePackLocation, "The feature pack location is required."));
         if (version != null) {
             fplBuilder.append("#").append(version);
         }
