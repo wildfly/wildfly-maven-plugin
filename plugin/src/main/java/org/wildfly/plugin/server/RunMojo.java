@@ -104,6 +104,17 @@ public class RunMojo extends AbstractServerConnection {
     private String jbossHome;
 
     /**
+     * The feature pack location. See the <a href="https://docs.wildfly.org/galleon/#_feature_pack_location">documentation</a>
+     * for details on how to format a feature pack location.
+     * <p>
+     * Note that if you define the version in the feature pack location, e.g. {@code #26.1.1.Final}, the {@code version}
+     * configuration parameter should be left blank.
+     * </p>
+     */
+    @Parameter(alias = "feature-pack-location", property = PropertyNames.WILDFLY_FEATURE_PACK_LOCATION)
+    private String featurePackLocation;
+
+    /**
      * The version of the WildFly default server to install in case no jboss-home has been set
      * and no server has previously been provisioned.
      * The latest stable version is resolved if left blank.
@@ -359,8 +370,8 @@ public class RunMojo extends AbstractServerConnection {
         }
         try {
             if (!Files.exists(installDir)) {
-                getLog().info("Provisioning default WildFly server in " + installDir);
-                GalleonUtils.provision(installDir, version, mavenRepoManager);
+                getLog().info("Provisioning default server in " + installDir);
+                GalleonUtils.provision(installDir, resolveFeaturePackLocation(), version, mavenRepoManager);
             }
             return installDir;
         } catch (ProvisioningException ex) {
@@ -371,6 +382,19 @@ public class RunMojo extends AbstractServerConnection {
     @Override
     public String goal() {
         return "run";
+    }
+
+    private String resolveFeaturePackLocation() {
+        return featurePackLocation == null ? getDefaultFeaturePackLocation() : featurePackLocation;
+    }
+
+    /**
+     * Returns the default feature pack location if not defined in the configuration.
+     *
+     * @return the default feature pack location
+     */
+    protected String getDefaultFeaturePackLocation() {
+        return "wildfly@maven(org.jboss.universe:community-universe)";
     }
 
     private Process startContainer(final CommandBuilder commandBuilder) throws IOException, InterruptedException, TimeoutException {
