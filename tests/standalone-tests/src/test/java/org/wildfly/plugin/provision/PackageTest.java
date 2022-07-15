@@ -82,7 +82,7 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
             throw new Exception("Execution should have failed");
         } catch(MojoExecutionException ex) {
             // XXX OK, expected.
-            Assert.assertTrue(ex.getLocalizedMessage().contains("No deployment found wih name test-foo.war"));
+            Assert.assertTrue(ex.getLocalizedMessage().contains("No deployment found with name test-foo.war"));
         }
     }
 

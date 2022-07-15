@@ -339,7 +339,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         Path deployment = Paths.get(project.getBuild().getDirectory()).resolve(filename);
         if (Files.notExists(deployment)) {
             if (this.filename != null ) {
-                throw new MojoExecutionException("No deployment found wih name " + this.filename);
+                throw new MojoExecutionException("No deployment found with name " + this.filename);
             }
             if (this.runtimeName != null ) {
                 throw new MojoExecutionException("No deployment found with name " + filename +
