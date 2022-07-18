@@ -20,6 +20,7 @@
 package org.wildfly.plugin.cli;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -138,7 +139,8 @@ public abstract class AbstractCommandExecutor<T extends BaseCommandConfiguration
         final Map<String, String> systemProperties = config.getSystemProperties();
         systemProperties.forEach((key, value) -> builder.addJavaOption(String.format("-D%s=%s", key, value)));
         if (systemProperties.containsKey("module.path")) {
-            builder.setModuleDirs(systemProperties.get("module.path"));
+            String[] modulePaths = systemProperties.get("module.path").split(File.pathSeparator);
+            builder.setModuleDirs(modulePaths);
         }
 
         final Properties properties = new Properties();
