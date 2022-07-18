@@ -325,7 +325,8 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             if (systemProperties != null) {
                 systemProperties.forEach((key, value) -> builder.addJavaOption(String.format("-D%s=%s", key, value)));
                 if (systemProperties.containsKey("module.path")) {
-                    builder.setModuleDirs(systemProperties.get("module.path"));
+                    String[] modulePaths = systemProperties.get("module.path").split(File.pathSeparator);
+                    builder.setModuleDirs(modulePaths);
                 }
             }
 
