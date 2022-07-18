@@ -96,7 +96,7 @@
         <!-- This version property is also retrieved by plugin at runtime to resolve CLI artifact -->
         <version.org.wildfly.core>17.0.1.Final</version.org.wildfly.core>
         <version.org.wildfly>25.0.0.Final</version.org.wildfly>
-        <version.org.wildfly.channel>1.0.0.Alpha16</version.org.wildfly.channel>
+        <version.org.wildfly.channel>1.0.0.Beta1</version.org.wildfly.channel>
 
         <!-- maven dependencies -->
         <version.javax.inject.javax.inject>1</version.javax.inject.javax.inject>
