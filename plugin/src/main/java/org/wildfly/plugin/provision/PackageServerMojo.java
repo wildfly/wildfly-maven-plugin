@@ -346,7 +346,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
                         ". A runtime-name has been set that indicates that a deployment is expected. "
                         + "A custom file name can be set with the <filename> parameter.");
             }
-            getLog().warn("No deployment found. The file " + filename + " doesn't exist, the server will not contain any deployment");
+            getLog().warn("The project doesn't define a deployment artifact to deploy to the server.");
         }
         return deployment;
     }
