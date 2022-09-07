@@ -1,0 +1,168 @@
+# Build and push your application in a container image
+
+The `image` goal allows you to build an application image that contains a server and your application.
+This application image contains your application ready to run on the cloud in a containerized platform such as Kubernetes.
+
+The operations related to the image are executing using a Docker binary. By default, it uses `docker` but it is possible to configure it
+with the `<image><docker-binary>` element to use another binary such as `podman`.
+
+By default, the `image` goal will only build the application image.
+To push it to a container registry, you must configure the `<image><push>` element with to `true`.
+
+#[[##]]# Build an application image
+
+The example below shows how to build an application image.
+
+```xml
+<project>
+    <artifactId>my-app</artifactId>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <feature-packs>
+                        <feature-pack>
+                            <!-- Latest released version -->
+                            <location>wildfly@maven(org.jboss.universe:community-universe)</location>
+                        </feature-pack>
+                    </feature-packs>
+                    <layers>
+                        <!-- Galleon layer allows to trim the installed server to your needs. The 'jaxrs-server' 
+                        contains the server content required to execute JAXRS applications -->
+                        <layer>jaxrs-server</layer>
+                    </layers>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>image</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```
+
+Once `mvn package` is executed, a container image is available in with the docker binary with the name `my-app:latest`.
+The name of the image is based on the `<artifactId>` value of the Maven module.
+
+You can then run the image locally using Docker:
+
+```
+docker run -p 8080:8080 my-app:latest
+```
+
+#[[##]]# Push an application image to a container registry.
+
+The example below shows how to configure the `image` goal to push the applicaition image to a container registry:
+
+```xml
+<project>
+    <artifactId>my-app</artifactId>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <feature-packs>
+                        <feature-pack>
+                            <location>wildfly@maven(org.jboss.universe:community-universe)</location>
+                        </feature-pack>
+                    </feature-packs>
+                    <layers>
+                        <layer>jaxrs-server</layer>
+                    </layers>
+                    <image>
+                        <push>true</push>
+                        <registry>quay.io</registry>
+                        <group>${user.name}</group>
+                        <user>${user.name}</user>
+                        <password>${my.secret.password}</password>
+                    </image>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>image</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```
+
+When `mvn package` is executed, the `image` goal will build the image with the name `quay.io/jdoe/my-app` (`jdoe` being the name
+of the user running the Maven commands).
+Before the image is pushed, it will login to `quay.io` using the credentials specified by `<image><user>` and `<image><password>`.
+As it is not recommended to store credentials in clear in the `pom.xml`, we use a System propery (`my.secret.password`) to pass it when Maven is executed
+(with `mvn package -Dmy.secret.password="********").
+
+
+#[[##]]# Configure the JDK version used by the application image.
+
+The application image is based on a runtime image provided by WildFly that contains all the runtimes required to run WildFly and your application.Push an application image to a container registry.
+At the moment, WildFly provides runtime images for OpenJDK 11 and OpenJDK 17.
+
+By default, the `image` goal uses the OpenJDK 11 runtime image. It is possible to use the OpenJDK 17 image instead by configuring the `<image><jdk-version>` to `17` as shown in the example below:
+
+```xml
+<project>
+    <artifactId>my-app</artifactId>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <feature-packs>
+                        <feature-pack>
+                            <location>wildfly@maven(org.jboss.universe:community-universe)</location>
+                        </feature-pack>
+                    </feature-packs>
+                    <layers>
+                        <layer>jaxrs-server</layer>
+                    </layers>
+                    <image>
+                        <jdk-version>17</jdk-version>
+                    </image>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>image</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```

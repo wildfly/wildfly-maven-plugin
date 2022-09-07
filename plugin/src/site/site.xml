@@ -62,6 +62,7 @@
             <item name="Run Example" href="run-example.html"/>
             <item name="Package Example" href="package-example.html"/>
             <item name="Provision Example" href="provision-example.html"/>
+            <item name="Build and Push an Application Image Example" href="image-example.html"/>
         </menu>
 
         <menu name="Project Documentation" inherit="top">

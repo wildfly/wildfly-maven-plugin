@@ -130,7 +130,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
      * By default the server is provisioned into the {@code target/server} directory.
      */
     @Parameter(alias = "provisioning-dir", property = PropertyNames.WILDFLY_PROVISIONING_DIR, defaultValue = Utils.WILDFLY_DEFAULT_DIR)
-    private String provisioningDir;
+    protected String provisioningDir;
 
      /**
      * Set to {@code true} if you want to delete the existing server referenced from the {@code provisioningDir} and provision a new one,
