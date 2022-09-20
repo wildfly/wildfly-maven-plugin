@@ -21,6 +21,8 @@
 
   * [${pluginPrefix}:provision](./provision-mojo.html) produces a server installation using Galleon.
 
+  * [${pluginPrefix}:image](./image-mojo.html) build (and push) a container image to run your application on the cloud.
+
   * [${pluginPrefix}:redeploy](./redeploy-mojo.html) redeploys the application.
 
   * [${pluginPrefix}:redeploy-only](./redeploy-only-mojo.html) redeploys the application invoking no other goals by default.
@@ -74,3 +76,5 @@ Of course, patches are welcome, too. Contributors can check out the project from
   * [Packaging the application and server Example](./package-example.html)
 
   * [Provisioning a server Example](./provision-example.html)
+
+  * [Building (and pushing) an application image Example](./image-example.html)
