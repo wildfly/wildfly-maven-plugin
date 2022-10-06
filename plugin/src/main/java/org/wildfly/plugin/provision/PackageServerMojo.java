@@ -160,6 +160,12 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     @Parameter(defaultValue = "false", property = PropertyNames.SKIP_PACKAGE)
     private boolean skip;
 
+    /**
+     * Skip deploying the deployment after the server is provisioned ({@code false} by default).
+     */
+    @Parameter(defaultValue = "false", property = PropertyNames.SKIP_PACKAGE)
+    protected boolean skipDeployment;
+
     @Inject
     private OfflineCommandExecutor commandExecutor;
 
@@ -198,19 +204,22 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
             throw new MojoExecutionException(ex.getLocalizedMessage(), ex);
         }
 
-        final Path deploymentContent = getDeploymentContent();
-        if (Files.exists(deploymentContent)) {
-            getLog().info("Deploying " + deploymentContent);
-            List<String> deploymentCommands = getDeploymentCommands(deploymentContent);
-            final BaseCommandConfiguration cmdConfigDeployment = new BaseCommandConfiguration.Builder()
-                    .addCommands(deploymentCommands)
-                    .setJBossHome(jbossHome)
-                    .addCLIArguments(CLI_ECHO_COMMAND_ARG)
-                    .setAppend(true)
-                    .setStdout(stdout)
-                    .build();
-            commandExecutor.execute(cmdConfigDeployment, artifactResolver);
+        if (!skipDeployment) {
+            final Path deploymentContent = getDeploymentContent();
+            if (Files.exists(deploymentContent)) {
+                getLog().info("Deploying " + deploymentContent);
+                List<String> deploymentCommands = getDeploymentCommands(deploymentContent);
+                final BaseCommandConfiguration cmdConfigDeployment = new BaseCommandConfiguration.Builder()
+                        .addCommands(deploymentCommands)
+                        .setJBossHome(jbossHome)
+                        .addCLIArguments(CLI_ECHO_COMMAND_ARG)
+                        .setAppend(true)
+                        .setStdout(stdout)
+                        .build();
+                commandExecutor.execute(cmdConfigDeployment, artifactResolver);
+            }
         }
+
         // CLI execution
          try {
              if (!packagingScripts.isEmpty()) {
