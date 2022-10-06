@@ -111,6 +111,10 @@ public class ApplicationImageMojo extends PackageServerMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        // when the application image is built, the deployment step is skipped.
+        // This allows to create 2 different Docker layers (1 for the server and 1 for the deployments)
+        this.skipDeployment = true;
+
         super.execute();
 
         if (image == null) {
@@ -147,7 +151,7 @@ public class ApplicationImageMojo extends PackageServerMojo {
 
             String image = this.image.getApplicationImageName(project.getArtifactId());
 
-            boolean buildSuccess = buildApplicationImage(image, runtimeImage);
+            boolean buildSuccess = buildApplicationImage(image);
             if (!buildSuccess) {
                 throw new MojoExecutionException(String.format("Unable to build application image %s", image));
             }
@@ -188,7 +192,7 @@ public class ApplicationImageMojo extends PackageServerMojo {
         }
     }
 
-    private boolean buildApplicationImage(String image, String runtimeImage) throws IOException {
+    private boolean buildApplicationImage(String image) throws IOException {
         getLog().info(format("Building application image %s using %s.", image, this.image.getDockerBinary()));
         String[] dockerArgs = new String[] {"build", "-t", image, "."};
 
@@ -206,11 +210,14 @@ public class ApplicationImageMojo extends PackageServerMojo {
         return ExecUtil.exec(getLog(), Paths.get(project.getBuild().getDirectory()).toFile(), this.image.getDockerBinary(), dockerArgs);
     }
 
-    private void generateDockerfile(String runtimeImage, Path targetDir, String wildflyDirectory) throws IOException {
+    private void generateDockerfile(String runtimeImage, Path targetDir, String wildflyDirectory) throws IOException, MojoExecutionException {
+
+        String targetName = getDeploymentTargetName();
         Files.writeString(targetDir.resolve("Dockerfile"),
                 "FROM " + runtimeImage + "\n" +
                         "COPY --chown=jboss:root " + wildflyDirectory + " $JBOSS_HOME\n" +
-                        "RUN chmod -R ug+rwX $JBOSS_HOME",
+                        "RUN chmod -R ug+rwX $JBOSS_HOME\n" +
+                        "COPY --chown=jboss:root " + getDeploymentContent().getFileName() + " $JBOSS_HOME/standalone/deployments/" + targetName,
                 StandardCharsets.UTF_8);
     }
 
@@ -228,5 +235,4 @@ public class ApplicationImageMojo extends PackageServerMojo {
 
         return true;
     }
-
 }

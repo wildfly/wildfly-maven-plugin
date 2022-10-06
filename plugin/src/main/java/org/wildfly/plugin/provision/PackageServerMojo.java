@@ -213,13 +213,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
             if (Files.exists(deploymentContent)) {
                 Path standaloneDeploymentDir = Paths.get(project.getBuild().getDirectory(), provisioningDir, "standalone", "deployments").normalize();
                 try {
-                    String targetName;
-                    if (runtimeName != null) {
-                        targetName = runtimeName;
-                    } else {
-                        targetName = name != null ? name : deploymentContent.getFileName().toString();
-                    }
-                    Path deploymentTarget = standaloneDeploymentDir.resolve(targetName);
+                    Path deploymentTarget = standaloneDeploymentDir.resolve(getDeploymentTargetName());
                     getLog().info("Copy deployment " + deploymentContent + " to " + deploymentTarget);
                     Files.copy(deploymentContent, deploymentTarget, StandardCopyOption.REPLACE_EXISTING);
                 } catch (IOException e) {
@@ -259,6 +253,20 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         } catch (IOException ex) {
             throw new MojoExecutionException(ex.getLocalizedMessage(), ex);
         }
+    }
+
+    /** Return the file name of the deployment to put in the server deployment directory
+     *
+     * @throws MojoExecutionException
+     */
+    protected String getDeploymentTargetName() throws MojoExecutionException {
+        String targetName;
+        if (runtimeName != null) {
+            targetName = runtimeName;
+        } else {
+            targetName = name != null ? name : getDeploymentContent().getFileName().toString();
+        }
+        return targetName;
     }
 
     private List<File> resolveFiles(List<File> files) {
@@ -335,7 +343,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         }
     }
 
-    private Path getDeploymentContent() throws MojoExecutionException {
+    protected Path getDeploymentContent() throws MojoExecutionException {
         final PackageType packageType = PackageType.resolve(project);
         final String filename;
         if (this.filename == null) {
