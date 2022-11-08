@@ -41,6 +41,7 @@ import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.core.DeploymentManager;
+import org.wildfly.plugin.core.ServerHelper;
 import org.wildfly.plugin.core.UndeployDescription;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
 
@@ -94,7 +95,7 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         if (deploymentManager.hasDeployment(DEPLOYMENT_NAME, DEFAULT_SERVER_GROUP)) {
             deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
         }
-        final ModelNode address = ServerOperations.createAddress("host", "master", "server-config", "server-one");
+        final ModelNode address = ServerHelper.determineHostAddress(client).add("server-config").add("server-one");
         try {
             // Shutdown server-one
             final ModelNode op = ServerOperations.createOperation("stop", address);
