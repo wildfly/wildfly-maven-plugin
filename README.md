@@ -13,7 +13,7 @@ A Maven plug-in for WildFly Application Server. This plugin allows you to:
 
 Plugin documentation is at https://docs.wildfly.org/wildfly-maven-plugin
 
-Issues can be filed at https://issues.jboss.org/browse/WFMP
+Issues can be filed at https://issues.redhat.com/browse/WFMP
 
 License
 -------
