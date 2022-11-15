@@ -5,8 +5,8 @@ name: WildFly Maven Plugin - CI
 
 on:
   push:
-    branches:
-      - '**'
+    branches-ignore:
+      - 'dependabot/**'
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
 
