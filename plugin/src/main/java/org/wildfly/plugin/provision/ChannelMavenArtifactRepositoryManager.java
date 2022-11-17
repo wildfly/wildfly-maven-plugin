@@ -18,7 +18,6 @@ package org.wildfly.plugin.provision;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -32,19 +31,18 @@ import org.jboss.galleon.universe.maven.MavenArtifact;
 import org.jboss.galleon.universe.maven.MavenUniverseException;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.wildfly.channel.Channel;
-import org.wildfly.channel.ChannelMapper;
+import org.wildfly.channel.ChannelManifest;
 import org.wildfly.channel.ChannelSession;
 import org.wildfly.channel.UnresolvedMavenArtifactException;
 import org.wildfly.channel.maven.ChannelCoordinate;
 import org.wildfly.channel.maven.VersionResolverFactory;
 import org.wildfly.channel.spi.ChannelResolvable;
-import org.wildfly.channel.spi.MavenVersionsResolver;
+import org.wildfly.prospero.metadata.ProsperoMetadataUtils;
 
 public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, ChannelResolvable {
 
     private final ChannelSession channelSession;
-    private final MavenVersionsResolver resolver;
-
+    private final List<Channel> channels;
     public ChannelMavenArtifactRepositoryManager(List<ChannelCoordinate> channelCoords,
                                                  RepositorySystem system, RepositorySystemSession contextSession) throws MalformedURLException, UnresolvedMavenArtifactException {
         this(channelCoords, system, contextSession, null);
@@ -56,9 +54,8 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
                                                  List<RemoteRepository> repositories) throws MalformedURLException, UnresolvedMavenArtifactException {
         DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
         session.setLocalRepositoryManager(contextSession.getLocalRepositoryManager());
-        VersionResolverFactory factory = new VersionResolverFactory(system, session, repositories);
-        resolver = factory.create();
-        List<Channel> channels = factory.resolveChannels(channelCoords);
+        VersionResolverFactory factory = new VersionResolverFactory(system, session);
+        channels = factory.resolveChannels(channelCoords, repositories);
         channelSession = new ChannelSession(channels, factory);
     }
 
@@ -89,8 +86,8 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
     }
 
     public void done(Path home) throws MavenUniverseException, IOException {
-        Channel channel = channelSession.getRecordedChannel();
-        Files.write(home.resolve(".channel.yaml"), ChannelMapper.toYaml(channel).getBytes());
+        ChannelManifest channelManifest = channelSession.getRecordedChannel();
+        ProsperoMetadataUtils.generate(home, channels, channelManifest);
     }
 
     @Override
