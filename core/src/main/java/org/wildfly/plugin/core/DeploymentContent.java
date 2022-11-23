@@ -163,6 +163,42 @@ abstract class DeploymentContent {
         };
     }
 
+    /**
+     * Creates new deployment content based on a file system path.
+     * <p>
+     * The {@link #resolvedName()} will return the name of the file.
+     * </p>
+     *
+     * @param content the path to the content
+     *
+     * @return the deployment content
+     */
+    static DeploymentContent local(final Path content) {
+        if (Files.notExists(content)) {
+            throw new IllegalArgumentException(String.format("File or directory %s does not exist.", content));
+        }
+        return new DeploymentContent() {
+
+            @Override
+            void addContentToOperation(final OperationBuilder builder, final ModelNode op) {
+                final ModelNode contentNode = op.get(CONTENT);
+                final ModelNode contentItem = contentNode.get(0);
+                contentItem.get(PATH).set(content.toAbsolutePath().toString());
+                contentItem.get("archive").set(!Files.isDirectory(content));
+            }
+
+            @Override
+            String resolvedName() {
+                return content.getFileName().toString();
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%s(%s)", DeploymentContent.class.getName(), content);
+            }
+        };
+    }
+
     private static ByteArrayInputStream copy(final InputStream in) {
         final ByteArrayOutputStream copy = new ByteArrayOutputStream();
         final byte[] buffer = new byte[64];

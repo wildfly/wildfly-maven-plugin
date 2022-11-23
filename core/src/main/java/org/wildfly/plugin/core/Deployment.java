@@ -113,6 +113,19 @@ public class Deployment implements DeploymentDescription, Comparable<Deployment>
     }
 
     /**
+     * Creates a new deployment for the path. If the path is a directory the content will be deployed exploded using
+     * the file system location. Otherwise, the content is deployed with the local path as an archive.
+     *
+     * @param content the path containing the content
+     *
+     * @return the deployment
+     */
+    public static Deployment local(final Path content) {
+        final DeploymentContent deploymentContent = DeploymentContent.local(Assert.checkNotNullParam("content", content));
+        return new Deployment(deploymentContent, null);
+    }
+
+    /**
      * Adds a server group for the deployment.
      *
      * @param serverGroup the server group to add
