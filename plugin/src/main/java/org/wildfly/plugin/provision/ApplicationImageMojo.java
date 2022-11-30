@@ -192,7 +192,7 @@ public class ApplicationImageMojo extends PackageServerMojo {
         String[] dockerArgs = new String[] {"push", image};
 
         getLog().info(format("Executing the following command to push application image: '%s %s'", this.image.dockerBinary, join(" ", dockerArgs)));
-        return ExecUtil.exec(getLog(), Paths.get("target").toFile(), this.image.dockerBinary, dockerArgs);
+        return ExecUtil.exec(getLog(), Paths.get(project.getBuild().getDirectory()).toFile(), this.image.dockerBinary, dockerArgs);
     }
 
     private void generateDockerfile(String runtimeImage, Path targetDir, String wildflyDirectory) throws IOException {
