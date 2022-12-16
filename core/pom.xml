@@ -78,6 +78,10 @@
             <groupId>org.jboss.galleon</groupId>
             <artifactId>galleon-maven-universe</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.maven.shared</groupId>
+            <artifactId>maven-artifact-transfer</artifactId>
+        </dependency>
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.wildfly.core</groupId>
