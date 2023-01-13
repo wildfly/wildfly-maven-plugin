@@ -48,7 +48,6 @@ import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.jboss.galleon.util.IoUtils;
 import org.jboss.galleon.xml.ProvisioningXmlWriter;
 import org.wildfly.channel.UnresolvedMavenArtifactException;
-import org.wildfly.channel.maven.ChannelCoordinate;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.Utils;
 import org.wildfly.plugin.core.GalleonUtils;
@@ -178,7 +177,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
     String layersConfigurationFileName;
 
     @Parameter(alias = "channels", required = false)
-    List<ChannelCoordinate> channels;
+    List<ChannelConfiguration> channels;
 
     private Path wildflyDir;
 
@@ -203,8 +202,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
                     : new MavenArtifactRepositoryManager(repoSystem, repoSession, repositories);
         } else {
             try {
-                artifactResolver = offlineProvisioning ? new ChannelMavenArtifactRepositoryManager(channels, repoSystem, repoSession)
-                        : new ChannelMavenArtifactRepositoryManager(channels, repoSystem, repoSession, repositories);
+                artifactResolver = new ChannelMavenArtifactRepositoryManager(channels, repoSystem, repoSession, repositories, getLog(), offlineProvisioning);
             } catch (MalformedURLException | UnresolvedMavenArtifactException ex) {
                 throw new MojoExecutionException(ex.getLocalizedMessage(), ex);
             }

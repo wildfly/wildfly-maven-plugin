@@ -19,8 +19,14 @@ package org.wildfly.plugin.provision;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Pattern;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
 
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -33,30 +39,44 @@ import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.wildfly.channel.Channel;
 import org.wildfly.channel.ChannelManifest;
 import org.wildfly.channel.ChannelSession;
+import org.wildfly.channel.Repository;
 import org.wildfly.channel.UnresolvedMavenArtifactException;
-import org.wildfly.channel.maven.ChannelCoordinate;
 import org.wildfly.channel.maven.VersionResolverFactory;
+import static org.wildfly.channel.maven.VersionResolverFactory.DEFAULT_REPOSITORY_MAPPER;
 import org.wildfly.channel.spi.ChannelResolvable;
 import org.wildfly.prospero.metadata.ProsperoMetadataUtils;
 
 public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, ChannelResolvable {
 
     private final ChannelSession channelSession;
-    private final List<Channel> channels;
-    public ChannelMavenArtifactRepositoryManager(List<ChannelCoordinate> channelCoords,
-                                                 RepositorySystem system, RepositorySystemSession contextSession) throws MalformedURLException, UnresolvedMavenArtifactException {
-        this(channelCoords, system, contextSession, null);
-    }
+    private final List<Channel> channels = new ArrayList<>();
 
-    public ChannelMavenArtifactRepositoryManager(List<ChannelCoordinate> channelCoords,
-                                                 RepositorySystem system,
-                                                 RepositorySystemSession contextSession,
-                                                 List<RemoteRepository> repositories) throws MalformedURLException, UnresolvedMavenArtifactException {
+    public ChannelMavenArtifactRepositoryManager(List<ChannelConfiguration> channels,
+            RepositorySystem system,
+            RepositorySystemSession contextSession,
+            List<RemoteRepository> repositories, Log log, boolean offline) throws MalformedURLException, UnresolvedMavenArtifactException, MojoExecutionException {
+        if (channels.isEmpty()) {
+            throw new MojoExecutionException("No channel specified.");
+        }
         DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
         session.setLocalRepositoryManager(contextSession.getLocalRepositoryManager());
-        VersionResolverFactory factory = new VersionResolverFactory(system, session);
-        channels = factory.resolveChannels(channelCoords, repositories);
-        channelSession = new ChannelSession(channels, factory);
+        session.setOffline(offline);
+        Map<String, RemoteRepository> mapping = new HashMap<>();
+        for (RemoteRepository r : repositories) {
+            mapping.put(r.getId(), r);
+        }
+        for (ChannelConfiguration channelConfiguration : channels) {
+            this.channels.add(channelConfiguration.toChannel(mapping.keySet(), repositories, log));
+        }
+        Function<Repository, RemoteRepository> mapper = r -> {
+            RemoteRepository rep = mapping.get(r.getId());
+            if (rep == null) {
+                rep = DEFAULT_REPOSITORY_MAPPER.apply(r);
+            }
+            return rep;
+        };
+        VersionResolverFactory factory = new VersionResolverFactory(system, session, mapper);
+        channelSession = new ChannelSession(this.channels, factory);
     }
 
     @Override
