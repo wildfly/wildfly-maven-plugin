@@ -158,4 +158,26 @@ public class ExecUtil {
         }
     }
 
+    /**
+     * Resolves which image binary to use. First {@code docker} is tried. If docker does not exist, then {@code podman}
+     * is tried. If podman does not exist {@code null} is returned.
+     *
+     * @return the resolved binary, or {@code null} if docker or podman was not found
+     */
+    public static String resolveImageBinary() {
+        try {
+            if (execSilentWithTimeout(Duration.ofSeconds(3), "docker", "-v")) {
+                return "docker";
+            }
+        } catch (Exception ignore) {
+        }
+        try {
+            if (execSilentWithTimeout(Duration.ofSeconds(3), "podman", "-v")) {
+                return "podman";
+            }
+        } catch (Exception ignore) {
+        }
+        return null;
+    }
+
 }
