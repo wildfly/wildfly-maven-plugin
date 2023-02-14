@@ -38,10 +38,11 @@ public class ApplicationImageInfo {
     protected boolean push = false;
 
     /**
-     * Determine which WildFly Runtime image to use so that the application runs with the specified JDK.
-     * The default is "11". Accepted values are "11", "17".
+     * Determine which WildFly runtime image to use so that the application runs with the specified JDK.
+     * If the value is not set, the `latest` tag of the WildFly runtime image is used.
+     * Accepted values are "11", "17".
      */
-    private String jdkVersion = "11";
+    private String jdkVersion;
 
     /**
      * The group part of the name of the application image.
@@ -91,11 +92,17 @@ public class ApplicationImageInfo {
     }
 
     String getWildFlyRuntimeImage() {
-        switch (jdkVersion) {
-            case "17":
-                return "quay.io/wildfly/wildfly-runtime-jdk17:latest";
-            default:
-                return "quay.io/wildfly/wildfly-runtime-jdk11:latest";
+        String runtimeImageName = "quay.io/wildfly/wildfly-runtime:";
+        String runtimeImageTag = "";
+        if (jdkVersion == null) {
+            runtimeImageTag = "latest";
+        } else {
+            switch (jdkVersion) {
+                case "17":
+                case "11":
+                    runtimeImageTag = "latest-jdk" + jdkVersion;
+            }
         }
+        return runtimeImageName + runtimeImageTag;
     }
 }
