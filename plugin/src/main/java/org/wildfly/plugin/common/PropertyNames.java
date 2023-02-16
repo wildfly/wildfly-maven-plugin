@@ -111,6 +111,8 @@ public interface PropertyNames {
 
     String WILDFLY_FEATURE_PACK_LOCATION = "wildfly.feature-pack.location";
 
+    String WILDFLY_IMAGE_BINARY = "wildfly.image.binary";
+
     String WILDFLY_LAYERS_CONFIGURATION_FILE_NAME = "wildfly.provisioning.layers.configuration.file.name";
 
     String WILDFLY_PACKAGING_EXTRA_CONTENT_DIRS = "wildfly.packaging.extra.dirs";

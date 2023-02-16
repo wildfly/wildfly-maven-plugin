@@ -22,7 +22,7 @@
 package org.wildfly.plugin.provision;
 
 
-import static org.junit.Assume.assumeTrue;
+import static org.junit.Assume.assumeNotNull;
 import static org.wildfly.plugin.provision.ExecUtil.exec;
 import static org.wildfly.plugin.provision.ExecUtil.execSilentWithTimeout;
 
@@ -44,20 +44,20 @@ public class ImageTest extends AbstractProvisionConfiguredMojoTestCase {
 
     @BeforeClass
     public static void checkDockerInstallation() {
-        assumeTrue("Docker is not present in the installation, skipping the tests",
-                execSilentWithTimeout(Duration.ofMillis(3000),
-                        "docker", "-v"));
+        assumeNotNull("Docker is not present in the installation, skipping the tests",
+                ExecUtil.resolveImageBinary());
     }
 
     @Test
     public void testBuildImage() throws Exception {
+        final String binary = ExecUtil.resolveImageBinary();
         try {
             assertTrue(
                     execSilentWithTimeout(Duration.ofMillis(3000),
-                            "docker", "-v"));
+                            binary, "-v"));
             assertFalse(
                     exec(null,
-                            "docker", "inspect", "wildfly-maven-plugin/testing"));
+                            binary, "inspect", "wildfly-maven-plugin/testing"));
 
             final Mojo imageMojo = lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("image-pom.xml").toFile(), "image");
 
@@ -67,11 +67,11 @@ public class ImageTest extends AbstractProvisionConfiguredMojoTestCase {
 
             assertTrue(
                     exec(null,
-                            "docker", "inspect", "wildfly-maven-plugin/testing"));
+                            binary, "inspect", "wildfly-maven-plugin/testing"));
         } finally {
 
             exec(null,
-                    "docker", "rmi", "wildfly-maven-plugin/testing");
+                    binary, "rmi", "wildfly-maven-plugin/testing");
         }
     }
 

@@ -78,9 +78,12 @@ public class ApplicationImageInfo {
     protected String password;
 
     /**
-     * The binary used to build and push images (default is "docker").
+     * The binary used to build and push images. If not explicitly set, there will be an attempt to determine the binary
+     * to use. The first attempt will be to check the {@code docker} command. If that command is not available,
+     * {@code podman} is attempted. If neither is available {@code null} will be set as the default and an error will
+     * occur if attempting to build or push an image.
      */
-    protected String dockerBinary = "docker";
+    private String dockerBinary;
 
     String getApplicationImageName(String artifactId) {
         String registry = this.registry != null ? this.registry + "/"  : "";
@@ -104,5 +107,23 @@ public class ApplicationImageInfo {
             }
         }
         return runtimeImageName + runtimeImageTag;
+    }
+
+    String getDockerBinary() {
+        if (dockerBinary == null) {
+            dockerBinary = ExecUtil.resolveImageBinary();
+        }
+        return dockerBinary;
+    }
+
+    /**
+     * Sets the {@code binary} if the injected property is not {@code null}.
+     *
+     * @param dockerBinary the docker binary to use
+     */
+    void setDockerBinary(final String dockerBinary) {
+        if (this.dockerBinary == null) {
+            this.dockerBinary = dockerBinary;
+        }
     }
 }

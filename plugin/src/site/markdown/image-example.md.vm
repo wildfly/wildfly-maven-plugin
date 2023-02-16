@@ -3,8 +3,10 @@
 The `image` goal allows you to build an application image that contains a server and your application.
 This application image contains your application ready to run on the cloud in a containerized platform such as Kubernetes.
 
-The operations related to the image are executing using a Docker binary. By default, it uses `docker` but it is possible to configure it
-with the `<image><docker-binary>` element to use another binary such as `podman`.
+The operations related to the image are executing using a Docker binary. This can be explicitly set with the
+`<image><docker-binary>` element. It can also be overridden with the `wildfly.image.binary` property. If no binary is
+defined in the configuration, an attempt will be made to determine a default binary. First `docker` is attempted to be
+resolved. If it cannot be resolved, then `podman` is attempted. If neither can be resolved an error will occur.
 
 By default, the `image` goal will only build the application image.
 To push it to a container registry, you must configure the `<image><push>` element with to `true`.
