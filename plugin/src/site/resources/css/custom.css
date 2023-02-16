@@ -24,3 +24,7 @@ a {
 a:hover {
      color: #fff !important;
  }
+
+.navbar-text {
+    color: #aaa; !important;
+}
