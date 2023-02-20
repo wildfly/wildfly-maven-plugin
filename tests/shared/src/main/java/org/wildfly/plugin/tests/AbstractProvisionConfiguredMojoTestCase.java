@@ -158,25 +158,16 @@ public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMo
             String[] layers, String[] excludedLayers, boolean stateRecorded, String... configTokens) throws Exception {
         Assert.assertTrue(TestEnvironment.isValidWildFlyHome(wildflyHome));
         if (numDeployments > 0) {
-            // Must retrieve all content directories.
-            Path rootDir = wildflyHome.resolve("standalone/data/content");
-            List<Path> deployments = new ArrayList<>();
-            Files.walkFileTree(rootDir, new SimpleFileVisitor<Path>() {
-                    @Override
-                    public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
-                        if ("content".equals(file.getFileName().toString())) {
-                            deployments.add(file);
-                        }
-                        return FileVisitResult.CONTINUE;
-                    }
-                });
-            assertEquals(numDeployments, deployments.size());
+            // Must retrieve all deployments.
+            Path rootDir = wildflyHome.resolve("standalone/deployments");
+            String[] deployments = rootDir.toFile().list((dir, name) -> !name.equals("README.txt"));
+            assertEquals(numDeployments, deployments.length);
         } else {
             // The directory should be empty if no deployment is expected, however in some cases it may not even be
             // created.
-            if (Files.exists(wildflyHome.resolve("standalone/data/content"))) {
-                assertEquals(0, Files.list(wildflyHome.resolve("standalone/data/content")).count());
-            }
+            Path rootDir = wildflyHome.resolve("standalone/deployments");
+            String[] deployments = rootDir.toFile().list((dir, name) -> !name.equals("README.txt"));
+            assertEquals(0, deployments.length);
         }
         Path history = wildflyHome.resolve("standalone").resolve("configuration").resolve("standalone_xml_history");
         assertFalse(Files.exists(history));

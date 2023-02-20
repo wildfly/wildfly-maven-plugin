@@ -22,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -43,6 +44,8 @@ import org.wildfly.plugin.common.StandardOutput;
 import static org.wildfly.plugin.core.Constants.CLI_ECHO_COMMAND_ARG;
 import static org.wildfly.plugin.core.Constants.STANDALONE;
 import static org.wildfly.plugin.core.Constants.STANDALONE_XML;
+
+import org.wildfly.plugin.deployment.MojoDeploymentException;
 import org.wildfly.plugin.deployment.PackageType;
 
 /**
@@ -115,22 +118,23 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
 
     /**
      * Specifies the name used for the deployment.
+     *
+     * When the deployment is copied to the server, it is renamed with this name.
      */
     @Parameter(property = PropertyNames.DEPLOYMENT_NAME)
     private String name;
 
     /**
      * The runtime name for the deployment.
-     * <p>
-     * In some cases users may wish to have two deployments with the same
-     * {@code runtime-name} (e.g. two versions of {@code example.war}) both
-     * available in the management configuration, in which case the deployments
-     * would need to have distinct {@code name} values but would have the same
-     * {@code runtime-name}.
-     * </p>
+     *
+     * When the deployment is copied to the server, it is renamed with the {@code runtime-name}.
+     * If both {@code name} and {@code runtime-name} are specified, {@code runtime-name} is used.
+     *
+     * @deprecated use the {@code name} property instead to change the name of the deployment.
      */
+    @Deprecated(since="4.1.O")
     @Parameter(property = PropertyNames.DEPLOYMENT_RUNTIME_NAME, alias = "runtime-name")
-    private String runtimeName;
+    protected String runtimeName;
 
     /**
      * Indicates how {@code stdout} and {@code stderr} should be handled for the
@@ -207,16 +211,20 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         if (!skipDeployment) {
             final Path deploymentContent = getDeploymentContent();
             if (Files.exists(deploymentContent)) {
-                getLog().info("Deploying " + deploymentContent);
-                List<String> deploymentCommands = getDeploymentCommands(deploymentContent);
-                final BaseCommandConfiguration cmdConfigDeployment = new BaseCommandConfiguration.Builder()
-                        .addCommands(deploymentCommands)
-                        .setJBossHome(jbossHome)
-                        .addCLIArguments(CLI_ECHO_COMMAND_ARG)
-                        .setAppend(true)
-                        .setStdout(stdout)
-                        .build();
-                commandExecutor.execute(cmdConfigDeployment, artifactResolver);
+                Path standaloneDeploymentDir = Paths.get(project.getBuild().getDirectory(), provisioningDir, "standalone", "deployments").normalize();
+                try {
+                    String targetName;
+                    if (runtimeName != null) {
+                        targetName = runtimeName;
+                    } else {
+                        targetName = name != null ? name : deploymentContent.getFileName().toString();
+                    }
+                    Path deploymentTarget = standaloneDeploymentDir.resolve(targetName);
+                    getLog().info("Copy deployment " + deploymentContent + " to " + deploymentTarget);
+                    Files.copy(deploymentContent, deploymentTarget, StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException e) {
+                    throw new MojoDeploymentException("Could not copy deployment in provisioned server", e);
+                }
             }
         }
 
@@ -262,16 +270,6 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
             resolvedFiles.add(resolvePath(project, f.toPath()).toFile());
         }
         return resolvedFiles;
-    }
-
-    private List<String> getDeploymentCommands(Path deploymentContent) throws MojoExecutionException {
-        List<String> deploymentCommands = new ArrayList<>();
-        StringBuilder deploymentBuilder = new StringBuilder();
-        deploymentBuilder.append("deploy  ").append(deploymentContent).append(" --name=").
-                append(name == null ? deploymentContent.getFileName() : name).append(" --runtime-name=").
-                append(runtimeName == null ? deploymentContent.getFileName() : runtimeName);
-        deploymentCommands.add(deploymentBuilder.toString());
-        return wrapOfflineCommands(deploymentCommands);
     }
 
     private List<String> wrapOfflineCommands(List<String> commands) {
