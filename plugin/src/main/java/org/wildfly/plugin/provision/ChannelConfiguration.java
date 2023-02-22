@@ -16,96 +16,69 @@
  */
 package org.wildfly.plugin.provision;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.logging.Log;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.wildfly.channel.Channel;
 import org.wildfly.channel.ChannelManifestCoordinate;
-import org.wildfly.channel.ChannelMapper;
-import org.wildfly.channel.InvalidChannelMetadataException;
 import org.wildfly.channel.Repository;
 
 /**
- * A channel configuration. One of url or manifest coordinates.
+ * A channel configuration. Contains a {@code manifest} composed of a {@code groupId}, an {@code artifactId}
+ * an optional {@code version} or a {@code url}.
  *
  * @author jdenise
  */
 public class ChannelConfiguration {
 
-    private URL url;
-    private ChannelManifestCoordinate manifestCoordinate;
+    private ChannelManifestCoordinate manifest;
 
     /**
-     * @return the url
+     * @return the manifest
      */
-    public URL getUrl() {
-        return url;
+    public ChannelManifestCoordinate getManifest() {
+        return manifest;
     }
 
-    /**
-     * @return the manifestCoordinate
-     */
-    public ChannelManifestCoordinate getManifestCoordinate() {
-        return manifestCoordinate;
+    void setManifest(ChannelManifestCoordinate manifest) {
+        this.manifest = manifest;
     }
 
     private void validate() throws MojoExecutionException {
-        if (getUrl() != null) {
-            if (getManifestCoordinate() != null) {
-                throw new MojoExecutionException("Invalid Channel. A manifest-coordinate is specified although an URL is provided.");
+        if (getManifest() == null) {
+            throw new MojoExecutionException("Invalid Channel. No manifest specified.");
+        }
+        ChannelManifestCoordinate coordinates = getManifest();
+        if (coordinates.getUrl() == null && coordinates.getGroupId() == null && coordinates.getArtifactId() == null) {
+            throw new MojoExecutionException("Invalid Channel. Manifest must contain a groupId, artifactId and (optional) version or an url.");
+        }
+        if (coordinates.getUrl() == null) {
+            if (coordinates.getGroupId() == null) {
+                throw new MojoExecutionException("Invalid Channel. Manifest groupId is null.");
+            }
+            if (coordinates.getArtifactId() == null) {
+                throw new MojoExecutionException("Invalid Channel. Manifest artifactId is null.");
             }
         } else {
-            if (getManifestCoordinate() == null) {
-                throw new MojoExecutionException("Invalid Channel. No manifest-coordinate or URL specified.");
-            } else {
-                ChannelManifestCoordinate coordinates = getManifestCoordinate();
-                if (coordinates.getUrl() == null) {
-                    if (coordinates.getGroupId() == null) {
-                        throw new MojoExecutionException("Invalid Channel. Manifest groupId is null.");
-                    }
-                    if (coordinates.getArtifactId() == null) {
-                        throw new MojoExecutionException("Invalid Channel. Manifest artifactId is null.");
-                    }
-                } else {
-                    if (coordinates.getGroupId() != null) {
-                        throw new MojoExecutionException("Invalid Channel. Manifest groupId is set although an URL is provided.");
-                    }
-                    if (coordinates.getArtifactId() != null) {
-                        throw new MojoExecutionException("Invalid Channel. Manifest artifactId is set although an URL is provided.");
-                    }
-                }
+            if (coordinates.getGroupId() != null) {
+                throw new MojoExecutionException("Invalid Channel. Manifest groupId is set although an URL is provided.");
+            }
+            if (coordinates.getArtifactId() != null) {
+                throw new MojoExecutionException("Invalid Channel. Manifest artifactId is set although an URL is provided.");
+            }
+            if (coordinates.getVersion() != null) {
+                throw new MojoExecutionException("Invalid Channel. Manifest version is set although an URL is provided.");
             }
         }
     }
 
-    public Channel toChannel(Set<String> remoteRepositories, List<RemoteRepository> repositories, Log log) throws MojoExecutionException {
+    public Channel toChannel(List<RemoteRepository> repositories) throws MojoExecutionException {
         validate();
-        Channel channel;
-        if (getUrl() == null) {
-            List<Repository> repos = new ArrayList<>();
-            for (RemoteRepository r : repositories) {
-                repos.add(new Repository(r.getId(), r.getUrl()));
-            }
-            channel = new Channel(null, null, null, repos, getManifestCoordinate(), null, null);
-        } else {
-            try {
-                channel = ChannelMapper.from(getUrl());
-                for (Repository r : channel.getRepositories()) {
-                    if (!remoteRepositories.contains(r.getId())) {
-                        log.warn("Repository id " + r.getId() + " defined in channel " + getUrl()
-                                + " is not found in the configured Maven "
-                                + "repositories. Will create a new repository.");
-                    }
-                }
-            } catch (InvalidChannelMetadataException ex) {
-                throw new MojoExecutionException("Invalid Channel: "
-                        + (ex.getValidationMessages() == null ? "" : ex.getValidationMessages()), ex);
-            }
+        List<Repository> repos = new ArrayList<>();
+        for (RemoteRepository r : repositories) {
+            repos.add(new Repository(r.getId(), r.getUrl()));
         }
-        return channel;
+        return new Channel(null, null, null, repos, getManifest(), null, null);
     }
 }

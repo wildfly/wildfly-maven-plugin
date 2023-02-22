@@ -66,7 +66,7 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
             mapping.put(r.getId(), r);
         }
         for (ChannelConfiguration channelConfiguration : channels) {
-            this.channels.add(channelConfiguration.toChannel(mapping.keySet(), repositories, log));
+            this.channels.add(channelConfiguration.toChannel(repositories));
         }
         Function<Repository, RemoteRepository> mapper = r -> {
             RemoteRepository rep = mapping.get(r.getId());
