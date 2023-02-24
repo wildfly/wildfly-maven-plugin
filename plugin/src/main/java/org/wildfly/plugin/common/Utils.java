@@ -22,7 +22,10 @@
 
 package org.wildfly.plugin.common;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -32,6 +35,8 @@ import java.util.regex.Pattern;
  */
 public class Utils {
     private static final Pattern EMPTY_STRING = Pattern.compile("^$|\\s+");
+
+    private static final Pattern WHITESPACE_IF_NOT_QUOTED = Pattern.compile("(\\S+\"[^\"]+\")|\\S+");
 
     public static final String WILDFLY_DEFAULT_DIR= "server";
     /**
@@ -74,5 +79,25 @@ public class Utils {
             }
         }
         return result.toString();
+    }
+
+    /**
+     * Splits the arguments into a list. The arguments are split based on whitespace while ignoring whitespace that is
+     * within quotes.
+     *
+     * @param arguments the arguments to split
+     *
+     * @return the list of the arguments
+     */
+    public static List<String> splitArguments(final CharSequence arguments) {
+        final List<String> args = new ArrayList<>();
+        final Matcher m = WHITESPACE_IF_NOT_QUOTED.matcher(arguments);
+        while (m.find()) {
+            final String value = m.group();
+            if (!value.isEmpty()) {
+                args.add(value);
+            }
+        }
+        return args;
     }
 }

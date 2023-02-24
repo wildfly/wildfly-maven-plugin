@@ -136,6 +136,30 @@ public abstract class AbstractServerStartMojo extends AbstractServerConnection {
     private String javaHome;
 
     /**
+     * Starts the server with debugging enabled.
+     */
+    @Parameter(property = "wildfly.debug", defaultValue = "false")
+    private boolean debug;
+
+    /**
+     * Sets the hostname to listen on for debugging. An {@code *} means all hosts.
+     */
+    @Parameter(property = "wildfly.debug.host", defaultValue = "*")
+    private String debugHost;
+
+    /**
+     * Sets the port the debugger should listen on.
+     */
+    @Parameter(property = "wildfly.debug.port", defaultValue = "8787")
+    private int debugPort;
+
+    /**
+     * Indicates whether the server should suspend itself until a debugger is attached.
+     */
+    @Parameter(property = "wildfly.debug.suspend", defaultValue = "false")
+    private boolean debugSuspend;
+
+    /**
      * The path to the system properties file to load.
      */
     @Parameter(alias = "properties-file", property = PropertyNames.PROPERTIES_FILE)
@@ -271,6 +295,10 @@ public abstract class AbstractServerStartMojo extends AbstractServerConnection {
         // Set the JVM options
         if (Utils.isNotNullOrEmpty(javaOpts)) {
             commandBuilder.setJavaOptions(javaOpts);
+        }
+        if (debug) {
+            commandBuilder.addJavaOptions(String.format("-agentlib:jdwp=transport=dt_socket,server=y,suspend=%s,address=%s:%d",
+                    debugSuspend ? "y" : "n", debugHost, debugPort));
         }
 
         if (serverConfig != null) {

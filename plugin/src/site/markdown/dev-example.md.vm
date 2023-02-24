@@ -1,6 +1,8 @@
-# Run Examples
+# Dev Examples
 
-The run goal allows you to run a local instance of ${appServerName}.
+The dev goal allows you to run a local instance of ${appServerName} and watches the source directories for changes. If
+required your deployment will be recompiled and possibly redeployed. This allows for more rapid development. Do note
+that large deployments may take longer to deploy.
 
 #[[##]]# Run overriding the feature pack location
 
@@ -29,41 +31,9 @@ The example below shows how to run a server overriding the feature pack location
 </project>
 ```
 
-#[[##]]# Run Example
+#[[##]]# Run ignoring redeployment if properties files are changed
 
-The example below shows how to run a server with multiple module paths:
-
-```xml
-<project>
-    ...
-    <build>
-        ...
-        <plugins>
-            ...
-            <plugin>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>${project.artifactId}</artifactId>
-                <version>${project.version}</version>
-                <configuration>
-                    <modules-path>
-                        <paths>
-                            <path>/opt/${appServerName}/modules</path>
-                            <path>/opt/my-modules</path>
-                        </paths>
-                    </modules-path>
-                </configuration>
-            </plugin>
-            ...
-        </plugins>
-        ...
-    </build>
-...
-</project>
-```
-
-#[[##]]# Run with different port
-
-The example below shows how to run a server with the management port running a different port.
+The example below shows how to ignore properties files from triggering a redeploy:
 
 ```xml
 <project>
@@ -77,39 +47,9 @@ The example below shows how to run a server with the management port running a d
                 <artifactId>${project.artifactId}</artifactId>
                 <version>${project.version}</version>
                 <configuration>
-                    <jboss-home>/opt/${appServerName}</jboss-home>
-                    <modules-path>/opt/${appServerName}/modules</modules-path>
-                    <port>9999</port>
-                </configuration>
-            </plugin>
-            ...
-        </plugins>
-        ...
-    </build>
-...
-</project>
-```
-
-#[[##]]# Run with a different base directory
-
-The example below shows how to run a server with a different base directory.
-
-```xml
-<project>
-    ...
-    <build>
-        ...
-        <plugins>
-            ...
-            <plugin>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>${project.artifactId}</artifactId>
-                <version>${project.version}</version>
-                <configuration>
-                    <server-args>
-                        <server-arg>-Djboss.server.base.dir=/opt/${appServerName}/standalone/</server-arg>
-                        <server-arg>-b=0.0.0.0</server-arg>
-                    </server-args>
+                    <webExtensions>
+                        <webExtension>.properties</webExtension>
+                    </webExtensions>
                 </configuration>
             </plugin>
             ...
@@ -173,7 +113,7 @@ The example below shows how to add a user before running the server
 
 #[[##]]# Enable debugging
 
-The example below shows how to run a server with debugging enabled
+The example below shows how to run a server in dev mode with debugging enabled
 
 ```xml
 <project>
