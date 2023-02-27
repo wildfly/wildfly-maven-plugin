@@ -120,7 +120,7 @@
         <maven.compiler.source>11</maven.compiler.source>
 
         <!-- galleon properties -->
-        <version.org.jboss.galleon>5.0.7.Final</version.org.jboss.galleon>
+        <version.org.jboss.galleon>5.0.8.Final</version.org.jboss.galleon>
         <plugin.fork.embedded>true</plugin.fork.embedded>
         <!-- used by tests -->
         <version.org.jboss.logging.slf4j-jboss-logging>1.2.1.Final</version.org.jboss.logging.slf4j-jboss-logging>
