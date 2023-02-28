@@ -268,6 +268,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
                 config = GalleonUtils.buildConfig(pm, featurePacks, layers, excludedLayers, galleonOptions, layersConfigurationFileName);
             }
             getLog().info("Provisioning server in " + home);
+            PluginProgressTracker.initTrackers(pm, getLog());
             pm.provision(config);
             // Check that at least the standalone or domain directories have been generated.
             if (!Files.exists(home.resolve("standalone")) && !Files.exists(home.resolve("domain"))) {
