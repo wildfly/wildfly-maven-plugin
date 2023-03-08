@@ -138,6 +138,15 @@ public class Environment {
         return exe;
     }
 
+    /**
+     * Determines if this is a Windows environment.
+     *
+     * @return {@code true} if this is a Windows environment, otherwise {@code false}
+     */
+    public static boolean isWindows() {
+        return WINDOWS;
+    }
+
     private static Path findJavaHome() {
         String path = WildFlySecurityManager.getPropertyPrivileged("java.home", null);
         if (path != null) {

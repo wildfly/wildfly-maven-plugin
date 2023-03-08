@@ -59,6 +59,7 @@
             <item name="Deploy Application Example" href="deployment-example.html"/>
             <item name="Complex Example" href="complex-example.html"/>
             <item name="Execute Commands Example" href="execute-commands-example.html"/>
+            <item name="Dev Example" href="dev-example.html"/>
             <item name="Run Example" href="run-example.html"/>
             <item name="Package Example" href="package-example.html"/>
             <item name="Provision Example" href="provision-example.html"/>
