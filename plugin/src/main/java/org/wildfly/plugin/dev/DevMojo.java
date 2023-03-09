@@ -85,6 +85,7 @@ import org.wildfly.plugin.deployment.PackageType;
 import org.wildfly.plugin.server.AbstractServerStartMojo;
 import org.wildfly.plugin.server.ServerContext;
 import org.wildfly.plugin.server.ServerType;
+import org.wildfly.plugin.server.VersionComparator;
 
 /**
  * Starts a standalone instance of WildFly and deploys the application to the server. The deployment type myst be a WAR.
@@ -131,6 +132,41 @@ public class DevMojo extends AbstractServerStartMojo {
             "verify",
             "install",
             "deploy");
+
+    // A list of configuration parameters of the exploded goal as of 3.3.2
+    private static final Map<String, String> EXPLODED_WAR_PARAMETERS = Map.ofEntries(
+            Map.entry("archive", ""),
+            Map.entry("archiveClasses", "2.0.1"),
+            Map.entry("containerConfigXML", ""),
+            Map.entry("delimiters", "3.0.0"),
+            Map.entry("dependentWarExcludes", ""),
+            Map.entry("dependentWarIncludes", ""),
+            Map.entry("escapeString", "2.1-beta-1"),
+            Map.entry("escapedBackslashesInFilePath", "2.1-alpha-2"),
+            // Only added to the exploded goal since 3.3.0, see
+            // https://github.com/apache/maven-war-plugin/commit/d98aee4b2c0e58c89f610f4fa1c613861c4cdcd1
+            Map.entry("failOnMissingWebXml", "3.3.0"),
+            Map.entry("filteringDeploymentDescriptors", "2.1-alpha-2"),
+            Map.entry("filters", ""),
+            Map.entry("includeEmptyDirectories", "2.4"),
+            Map.entry("nonFilteredFileExtensions", "2.1-alpha-2"),
+            Map.entry("outdatedCheckPath", "3.3.1"),
+            Map.entry("outputFileNameMapping", "2.1-alpha-1"),
+            Map.entry("outputTimestamp", "3.3.0"),
+            Map.entry("overlays", "2.1-alpha-1"),
+            Map.entry("recompressZippedFiles", "2.3"),
+            Map.entry("resourceEncoding", "2.3"),
+            Map.entry("supportMultiLineFiltering", "2.4"),
+            Map.entry("useDefaultDelimiters", "3.0.0"),
+            Map.entry("useJvmChmod", "2.4"),
+            Map.entry("warSourceDirectory", ""),
+            Map.entry("warSourceExcludes", ""),
+            Map.entry("warSourceIncludes", ""),
+            Map.entry("webappDirectory", ""),
+            Map.entry("webResources", ""),
+            Map.entry("webXml", ""),
+            Map.entry("workDirectory", "")
+    );
     private final Map<WatchKey, WatchContext> watchedDirectories = new HashMap<>();
 
     @Component
@@ -185,54 +221,58 @@ public class DevMojo extends AbstractServerStartMojo {
     private List<String> ignorePatterns = new ArrayList<>();
     // Lazily loaded list of patterns based on the ignorePatterns
     private final List<Pattern> ignoreUpdatePatterns = new ArrayList<>();
+    // Lazy loaded
+    private final Set<String> allowedWarPluginParams = new HashSet<>();
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         final var packageType = PackageType.resolve(project);
-        if (!"war".equals(packageType.getPackaging())) {
+        if (!"war".equalsIgnoreCase(packageType.getPackaging())) {
             throw new MojoExecutionException("The dev goal only works for WAR deployments");
         }
         // Start the container
         final ServerContext context = startServer(ServerType.STANDALONE);
-        // Do we need to build first?
-        if (needsCompile()) {
-            triggerResources();
-            triggerCompile();
-            triggerExplodeWar();
-        }
-        try (final WatchService watcher = FileSystems.getDefault().newWatchService()) {
-            final CompiledSourceHandler sourceHandler = new CompiledSourceHandler();
-            registerDir(watcher, Path.of(project.getBuild().getSourceDirectory()), sourceHandler);
-            for (Resource resource : project.getResources()) {
-                registerDir(watcher, Path.of(resource.getDirectory()), new ResourceHandler());
+        try {
+            // Do we need to build first?
+            if (needsCompile()) {
+                triggerResources();
+                triggerCompile();
+                triggerExplodeWar();
             }
-            registerDir(watcher, resolveWebAppSourceDir(), new WebAppResourceHandler(webExtensions));
-            try (ModelControllerClient client = createClient()) {
-                // Execute commands before the deployment is done
-                final CommandConfiguration cmdConfig = CommandConfiguration.of(this::createClient, this::getClientConfiguration)
-                        .addCommands(commands)
-                        .addScripts(scripts)
-                        .setJBossHome(context.jbossHome())
-                        .setFork(true)
-                        .setStdout("none")
-                        .setTimeout(timeout)
-                        .build();
-                commandExecutor.execute(cmdConfig, mavenRepoManager);
-                final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
-                final Deployment deployment = getDeploymentContent();
-                try {
-                    final DeploymentResult result = deploymentManager.forceDeploy(deployment);
-                    if (!result.successful()) {
-                        throw new MojoExecutionException("Failed to deploy content: " + result.getFailureMessage());
-                    }
-                    watch(watcher, deploymentManager, deployment);
-                } finally {
-                    deploymentManager.undeploy(UndeployDescription.of(deployment));
-                    ServerHelper.shutdownStandalone(client);
+            try (final WatchService watcher = FileSystems.getDefault().newWatchService()) {
+                final CompiledSourceHandler sourceHandler = new CompiledSourceHandler();
+                registerDir(watcher, Path.of(project.getBuild().getSourceDirectory()), sourceHandler);
+                for (Resource resource : project.getResources()) {
+                    registerDir(watcher, Path.of(resource.getDirectory()), new ResourceHandler());
                 }
+                registerDir(watcher, resolveWebAppSourceDir(), new WebAppResourceHandler(webExtensions));
+                try (ModelControllerClient client = createClient()) {
+                    // Execute commands before the deployment is done
+                    final CommandConfiguration cmdConfig = CommandConfiguration.of(this::createClient, this::getClientConfiguration)
+                            .addCommands(commands)
+                            .addScripts(scripts)
+                            .setJBossHome(context.jbossHome())
+                            .setFork(true)
+                            .setStdout("none")
+                            .setTimeout(timeout)
+                            .build();
+                    commandExecutor.execute(cmdConfig, mavenRepoManager);
+                    final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
+                    final Deployment deployment = getDeploymentContent();
+                    try {
+                        final DeploymentResult result = deploymentManager.forceDeploy(deployment);
+                        if (!result.successful()) {
+                            throw new MojoExecutionException("Failed to deploy content: " + result.getFailureMessage());
+                        }
+                        watch(watcher, deploymentManager, deployment);
+                    } finally {
+                        deploymentManager.undeploy(UndeployDescription.of(deployment));
+                        ServerHelper.shutdownStandalone(client);
+                    }
+                }
+            } catch (IOException e) {
+                throw new MojoExecutionException(e.getLocalizedMessage(), e);
             }
-        } catch (IOException e) {
-            throw new MojoExecutionException(e.getLocalizedMessage(), e);
         } finally {
             context.process().destroyForcibly();
         }
@@ -414,7 +454,7 @@ public class DevMojo extends AbstractServerStartMojo {
         final String warPluginKey = ORG_APACHE_MAVEN_PLUGINS + ":" + MAVEN_WAR_PLUGIN;
         final Plugin warPlugin = project.getPlugin(warPluginKey);
         if (warPlugin != null) {
-            executeGoal(project, warPlugin, ORG_APACHE_MAVEN_PLUGINS, MAVEN_WAR_PLUGIN, MAVEN_EXPLODED_GOAL, getPluginConfig(warPlugin));
+            executeGoal(project, warPlugin, ORG_APACHE_MAVEN_PLUGINS, MAVEN_WAR_PLUGIN, MAVEN_EXPLODED_GOAL, getWarPluginConfig(warPlugin));
         } else {
             getLog().warn("Can't package war application, war plugin not found");
         }
@@ -502,15 +542,24 @@ public class DevMojo extends AbstractServerStartMojo {
         return configuration;
     }
 
-    private Xpp3Dom getPluginConfig(final Plugin plugin) {
+    private Xpp3Dom getWarPluginConfig(final Plugin plugin) {
 
         final Xpp3Dom configuration = configuration();
 
+        // Load the allowed configuration params if not yet loaded
+        if (allowedWarPluginParams.isEmpty()) {
+            final String pluginVersion = plugin.getVersion();
+            final VersionComparator comparator = new VersionComparator();
+            allowedWarPluginParams.addAll(EXPLODED_WAR_PARAMETERS.entrySet().stream()
+                    .filter(e -> e.getValue().isEmpty() || comparator.compare(e.getValue(), pluginVersion) <= 0)
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toSet()));
+        }
+
         final Xpp3Dom pluginConfiguration = (Xpp3Dom) plugin.getConfiguration();
         if (pluginConfiguration != null) {
-            //Filter out `test*` configurations
             for (Xpp3Dom child : pluginConfiguration.getChildren()) {
-                if (!child.getName().startsWith("test") && !child.getName().startsWith("failOnMissingWebXml")) {
+                if (allowedWarPluginParams.contains(child.getName())) {
                     configuration.addChild(child);
                 }
             }
@@ -579,7 +628,7 @@ public class DevMojo extends AbstractServerStartMojo {
     private Path resolveWebAppSourceDir() {
         final String warPluginKey = ORG_APACHE_MAVEN_PLUGINS + ":" + MAVEN_WAR_PLUGIN;
         final Plugin warPlugin = project.getPlugin(warPluginKey);
-        Xpp3Dom dom = getPluginConfig(warPlugin);
+        Xpp3Dom dom = getWarPluginConfig(warPlugin);
         final Xpp3Dom warSourceDirectory = dom.getChild("warSourceDirectory");
         if (warSourceDirectory == null) {
             return project.getBasedir().toPath().resolve("src").resolve("main").resolve("webapp");
