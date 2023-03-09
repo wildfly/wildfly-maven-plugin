@@ -71,7 +71,10 @@
             <item name="WildFly" href="https://docs.wildfly.org"/>
         </menu>
 
-        <menu name="Reports" inherit="top" ref="reports"/>
-        <footer><![CDATA[<div class="float-md-end"><a href="http://www.redhat.com/"><span class="fw-bold btn-link">Sponsored by</span> <img class="img-fluid" src="https://www.wildfly.org/assets/img/redhat_reversed.svg"></a></div>]]></footer>
+        <menu name="Reports" inherit="top">
+            <item name="Project Information" href="project-info.html"/>
+            <item name="Project Reports" href="project-reports.html"/>
+        </menu>
+        <footer><![CDATA[<div class="float-md-end"><a href="https://www.redhat.com/"><span class="fw-bold btn-link">Sponsored by</span> <img class="img-fluid" src="https://www.wildfly.org/assets/img/redhat_reversed.svg"></a></div>]]></footer>
     </body>
 </project>

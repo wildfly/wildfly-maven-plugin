@@ -42,7 +42,7 @@
 
     <issueManagement>
         <system>JIRA</system>
-        <url>https://issues.jboss.org/browse/WFMP</url>
+        <url>https://issues.redhat.com/browse/WFMP</url>
     </issueManagement>
 
     <!-- required when provisioning the server for tests, using Galleon plugin to be removed when WF doesn't require them -->
