@@ -134,7 +134,7 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title>WildFly Maven Plugin &#x2013; Run Examples</title>
+    <title>WildFly Maven Plugin &#x2013; Dev Examples</title>
     <link href="./favicon.ico" rel="shortcut icon" type="image/x-icon">
 
     <!-- Metadata -->
@@ -143,14 +143,14 @@
 
     <!-- Facebook Open Graph -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="WildFly Maven Plugin &#x2013; Run Examples">
-    <meta property="og:title" content="WildFly Maven Plugin &#x2013; Run Examples">
+    <meta property="og:site_name" content="WildFly Maven Plugin &#x2013; Dev Examples">
+    <meta property="og:title" content="WildFly Maven Plugin &#x2013; Dev Examples">
     <meta property="og:description" content="WildFly Maven Plugin">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary">
     <meta name="twitter:creator" content="@WildFlyAS">
-    <meta name="twitter:title" content="WildFly Maven Plugin &#x2013; Run Examples">
+    <meta name="twitter:title" content="WildFly Maven Plugin &#x2013; Dev Examples">
     <meta name="twitter:description" content="WildFly Maven Plugin">
 
     <!-- CSS -->
@@ -254,9 +254,9 @@
 <main>
     <section id="main-section" class="container flex-grow-1">
 <header class="pb-2 mt-4 mb-2 border-bottom">
- <h1 id="Run-Examples">Run Examples</h1>
+ <h1 id="Dev-Examples">Dev Examples</h1>
 </header>
-<p>The run goal allows you to run a local instance of WildFly.</p>
+<p>The dev goal allows you to run a local instance of WildFly and watches the source directories for changes. If required your deployment will be recompiled and possibly redeployed. This allows for more rapid development. Do note that large deployments may take longer to deploy.</p>
 <section>
  <h2 id="Run-overriding-the-feature-pack-location"><a name="Run_overriding_the_feature_pack_location"></a>Run overriding the feature pack location</h2>
  <p>The example below shows how to run a server overriding the feature pack location:</p>
@@ -286,8 +286,8 @@
  </div>
 </section>
 <section>
- <h2 id="Run-Example"><a name="Run_Example"></a>Run Example</h2>
- <p>The example below shows how to run a server with multiple module paths:</p>
+ <h2 id="Run-ignoring-redeployment-if-properties-files-are-changed"><a name="Run_ignoring_redeployment_if_properties_files_are_changed"></a>Run ignoring redeployment if properties files are changed</h2>
+ <p>The example below shows how to ignore properties files from triggering a redeploy:</p>
  <div>
   <div>
    <pre class="border shadow rounded"><code>&lt;project&gt;
@@ -301,73 +301,9 @@
                 &lt;artifactId&gt;wildfly-maven-plugin&lt;/artifactId&gt;
                 &lt;version&gt;4.1.0.Beta3&lt;/version&gt;
                 &lt;configuration&gt;
-                    &lt;modules-path&gt;
-                        &lt;paths&gt;
-                            &lt;path&gt;/opt/WildFly/modules&lt;/path&gt;
-                            &lt;path&gt;/opt/my-modules&lt;/path&gt;
-                        &lt;/paths&gt;
-                    &lt;/modules-path&gt;
-                &lt;/configuration&gt;
-            &lt;/plugin&gt;
-            ...
-        &lt;/plugins&gt;
-        ...
-    &lt;/build&gt;
-...
-&lt;/project&gt;</code></pre>
-  </div>
- </div>
-</section>
-<section>
- <h2 id="Run-with-different-port"><a name="Run_with_different_port"></a>Run with different port</h2>
- <p>The example below shows how to run a server with the management port running a different port.</p>
- <div>
-  <div>
-   <pre class="border shadow rounded"><code>&lt;project&gt;
-    ...
-    &lt;build&gt;
-        ...
-        &lt;plugins&gt;
-            ...
-            &lt;plugin&gt;
-                &lt;groupId&gt;org.wildfly.plugins&lt;/groupId&gt;
-                &lt;artifactId&gt;wildfly-maven-plugin&lt;/artifactId&gt;
-                &lt;version&gt;4.1.0.Beta3&lt;/version&gt;
-                &lt;configuration&gt;
-                    &lt;jboss-home&gt;/opt/WildFly&lt;/jboss-home&gt;
-                    &lt;modules-path&gt;/opt/WildFly/modules&lt;/modules-path&gt;
-                    &lt;port&gt;9999&lt;/port&gt;
-                &lt;/configuration&gt;
-            &lt;/plugin&gt;
-            ...
-        &lt;/plugins&gt;
-        ...
-    &lt;/build&gt;
-...
-&lt;/project&gt;</code></pre>
-  </div>
- </div>
-</section>
-<section>
- <h2 id="Run-with-a-different-base-directory"><a name="Run_with_a_different_base_directory"></a>Run with a different base directory</h2>
- <p>The example below shows how to run a server with a different base directory.</p>
- <div>
-  <div>
-   <pre class="border shadow rounded"><code>&lt;project&gt;
-    ...
-    &lt;build&gt;
-        ...
-        &lt;plugins&gt;
-            ...
-            &lt;plugin&gt;
-                &lt;groupId&gt;org.wildfly.plugins&lt;/groupId&gt;
-                &lt;artifactId&gt;wildfly-maven-plugin&lt;/artifactId&gt;
-                &lt;version&gt;4.1.0.Beta3&lt;/version&gt;
-                &lt;configuration&gt;
-                    &lt;server-args&gt;
-                        &lt;server-arg&gt;-Djboss.server.base.dir=/opt/WildFly/standalone/&lt;/server-arg&gt;
-                        &lt;server-arg&gt;-b=0.0.0.0&lt;/server-arg&gt;
-                    &lt;/server-args&gt;
+                    &lt;webExtensions&gt;
+                        &lt;webExtension&gt;.properties&lt;/webExtension&gt;
+                    &lt;/webExtensions&gt;
                 &lt;/configuration&gt;
             &lt;/plugin&gt;
             ...
@@ -433,7 +369,7 @@
 </section>
 <section>
  <h2 id="Enable-debugging"><a name="Enable_debugging"></a>Enable debugging</h2>
- <p>The example below shows how to run a server with debugging enabled</p>
+ <p>The example below shows how to run a server in dev mode with debugging enabled</p>
  <div>
   <div>
    <pre class="border shadow rounded"><code>&lt;project&gt;
