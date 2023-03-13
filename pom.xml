@@ -97,7 +97,7 @@
         <version.org.wildfly.core>19.0.1.Final</version.org.wildfly.core>
         <version.org.wildfly>27.0.1.Final</version.org.wildfly>
         <version.org.wildfly.channel>1.0.0.Beta6</version.org.wildfly.channel>
-        <version.org.wildfly.prospero>1.0.0.Beta6</version.org.wildfly.prospero>
+        <version.org.wildfly.prospero>1.0.0.Beta7</version.org.wildfly.prospero>
         <!-- maven dependencies -->
         <version.javax.inject.javax.inject>1</version.javax.inject.javax.inject>
         <version.org.apache.maven.maven-core>3.3.9</version.org.apache.maven.maven-core>

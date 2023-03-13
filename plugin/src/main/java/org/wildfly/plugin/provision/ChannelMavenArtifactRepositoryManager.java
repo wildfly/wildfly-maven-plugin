@@ -44,6 +44,8 @@ import org.wildfly.channel.UnresolvedMavenArtifactException;
 import org.wildfly.channel.maven.VersionResolverFactory;
 import static org.wildfly.channel.maven.VersionResolverFactory.DEFAULT_REPOSITORY_MAPPER;
 import org.wildfly.channel.spi.ChannelResolvable;
+import org.wildfly.prospero.metadata.ManifestVersionRecord;
+import org.wildfly.prospero.metadata.ManifestVersionResolver;
 import org.wildfly.prospero.metadata.ProsperoMetadataUtils;
 
 public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, ChannelResolvable {
@@ -52,6 +54,9 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
     private final List<Channel> channels = new ArrayList<>();
     private final boolean originalVersionResolution;
     private final Log log;
+    private final Path localCachePath;
+    private final RepositorySystem system;
+
     public ChannelMavenArtifactRepositoryManager(List<ChannelConfiguration> channels,
             RepositorySystem system,
             RepositorySystemSession contextSession,
@@ -80,6 +85,8 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
         };
         VersionResolverFactory factory = new VersionResolverFactory(system, session, mapper);
         channelSession = new ChannelSession(this.channels, factory);
+        localCachePath = contextSession.getLocalRepositoryManager().getRepository().getBasedir().toPath();
+        this.system = system;
     }
 
     @Override
@@ -120,7 +127,8 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
 
     public void done(Path home) throws MavenUniverseException, IOException {
         ChannelManifest channelManifest = channelSession.getRecordedChannel();
-        ProsperoMetadataUtils.generate(home, channels, channelManifest);
+        final ManifestVersionRecord currentVersions = new ManifestVersionResolver(localCachePath, system).getCurrentVersions(channels);
+        ProsperoMetadataUtils.generate(home, channels, channelManifest, currentVersions);
     }
 
     @Override
