@@ -115,6 +115,8 @@ public interface PropertyNames {
 
     String WILDFLY_LAYERS_CONFIGURATION_FILE_NAME = "wildfly.provisioning.layers.configuration.file.name";
 
+    String WILDFLY_ORIGINAL_ARTIFACT_VERSION_RESOLUTION = "wildfly.provisioning.original-artifact-version-resolution";
+
     String WILDFLY_PACKAGING_EXTRA_CONTENT_DIRS = "wildfly.packaging.extra.dirs";
 
     String WILDFLY_PROVISIONING_DIR = "wildfly.provisioning.dir";

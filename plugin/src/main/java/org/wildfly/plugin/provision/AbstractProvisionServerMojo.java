@@ -179,6 +179,15 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
     @Parameter(alias = "channels", required = false)
     List<ChannelConfiguration> channels;
 
+    /**
+     * When channels are configured, the maven artifact versions are retrieved from the configured channels.
+     * If the artifact version can't be resolved from the channel, the provisioning fails.
+     * By setting this parameter to true, the original version of the artifact
+     * (e.g.: feature-pack versions configured in the plugin or artifact versions known by the feature-pack) is used.
+     */
+    @Parameter(alias = "original-artifact-version-resolution", required = false, property = PropertyNames.WILDFLY_ORIGINAL_ARTIFACT_VERSION_RESOLUTION, defaultValue = "false")
+    boolean originalVersionResolution;
+
     private Path wildflyDir;
 
     protected MavenRepoManager artifactResolver;
@@ -202,7 +211,9 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
                     : new MavenArtifactRepositoryManager(repoSystem, repoSession, repositories);
         } else {
             try {
-                artifactResolver = new ChannelMavenArtifactRepositoryManager(channels, repoSystem, repoSession, repositories, getLog(), offlineProvisioning);
+                artifactResolver = new ChannelMavenArtifactRepositoryManager(channels,
+                        repoSystem, repoSession, repositories,
+                        getLog(), offlineProvisioning, originalVersionResolution);
             } catch (MalformedURLException | UnresolvedMavenArtifactException ex) {
                 throw new MojoExecutionException(ex.getLocalizedMessage(), ex);
             }
