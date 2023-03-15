@@ -50,14 +50,17 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
 
     private final ChannelSession channelSession;
     private final List<Channel> channels = new ArrayList<>();
-
+    private final boolean originalVersionResolution;
+    private final Log log;
     public ChannelMavenArtifactRepositoryManager(List<ChannelConfiguration> channels,
             RepositorySystem system,
             RepositorySystemSession contextSession,
-            List<RemoteRepository> repositories, Log log, boolean offline) throws MalformedURLException, UnresolvedMavenArtifactException, MojoExecutionException {
+            List<RemoteRepository> repositories, Log log, boolean offline, boolean originalVersionResolution) throws MalformedURLException, UnresolvedMavenArtifactException, MojoExecutionException {
         if (channels.isEmpty()) {
             throw new MojoExecutionException("No channel specified.");
         }
+        this.log = log;
+        this.originalVersionResolution = originalVersionResolution;
         DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
         session.setLocalRepositoryManager(contextSession.getLocalRepositoryManager());
         session.setOffline(offline);
@@ -84,17 +87,27 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
         try {
             resolveFromChannels(artifact);
         } catch (UnresolvedMavenArtifactException ex) {
-            // unable to resolve the artifact through the channel.
-            // if the version is defined, let's resolve it directly
-            if (artifact.getVersion() == null) {
+            if (originalVersionResolution) {
+                log.warn("Resolution of artifact " + artifact.getGroupId() + ":" +
+                        artifact.getArtifactId() + " failed. Using original version.");
+                // unable to resolve the artifact through the channel.
+                // if the version is defined, let's resolve it directly
+                if (artifact.getVersion() == null) {
+                    log.error("No version provided.");
+                    throw new MavenUniverseException(ex.getLocalizedMessage(), ex);
+                }
+                try {
+                    log.warn("Using version " + artifact.getVersion() +
+                            " to resolve artifact " + artifact.getGroupId() + ":" +
+                        artifact.getArtifactId());
+                    org.wildfly.channel.MavenArtifact mavenArtifact = channelSession.resolveDirectMavenArtifact(artifact.getGroupId(), artifact.getArtifactId(), artifact.getExtension(), artifact.getClassifier(), artifact.getVersion());
+                    artifact.setPath(mavenArtifact.getFile().toPath());
+                } catch (UnresolvedMavenArtifactException e) {
+                    // if the artifact can not be resolved directly either, we abort
+                    throw new MavenUniverseException(e.getLocalizedMessage(), e);
+                }
+            } else {
                 throw new MavenUniverseException(ex.getLocalizedMessage(), ex);
-            }
-            try {
-                org.wildfly.channel.MavenArtifact mavenArtifact = channelSession.resolveDirectMavenArtifact(artifact.getGroupId(), artifact.getArtifactId(), artifact.getExtension(), artifact.getClassifier(), artifact.getVersion());
-                artifact.setPath(mavenArtifact.getFile().toPath());
-            } catch (UnresolvedMavenArtifactException e) {
-                // if the artifact can not be resolved directly either, we abort
-                throw new MavenUniverseException(e.getLocalizedMessage(), e);
             }
         }
     }
