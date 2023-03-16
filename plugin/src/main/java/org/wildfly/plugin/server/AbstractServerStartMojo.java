@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -202,12 +203,21 @@ public abstract class AbstractServerStartMojo extends AbstractServerConnection {
     @Parameter
     private Map<String, String> env;
 
+    private final AtomicBoolean initialized = new AtomicBoolean();
+
     protected MavenRepoManager mavenRepoManager;
+
+    protected void init() throws MojoExecutionException {
+        // Setting the mavenRepoManager is not thread-safe, however creating it more than once won't hurt anything
+        if (initialized.compareAndSet(false, true)) {
+            MavenRepositoriesEnricher.enrich(mavenSession, project, repositories);
+            mavenRepoManager = new MavenArtifactRepositoryManager(repoSystem, session, repositories);
+        }
+    }
 
     protected ServerContext startServer(final ServerType serverType) throws MojoExecutionException, MojoFailureException {
         final Log log = getLog();
-        MavenRepositoriesEnricher.enrich(mavenSession, project, repositories);
-        mavenRepoManager = new MavenArtifactRepositoryManager(repoSystem, session, repositories);
+        init();
 
         // Validate the environment
         final Path jbossHome = provisionIfRequired(targetDir.toPath().resolve(provisioningDir));
