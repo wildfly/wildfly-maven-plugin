@@ -76,6 +76,7 @@ import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.common.Environment;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.Utils;
+import org.wildfly.plugin.core.ContainerDescription;
 import org.wildfly.plugin.core.Deployment;
 import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.core.DeploymentResult;
@@ -219,6 +220,14 @@ public class DevMojo extends AbstractServerStartMojo {
      */
     @Parameter(property = "wildfly.dev.ignore.patterns", alias = "ignore-patterns")
     private List<String> ignorePatterns = new ArrayList<>();
+
+    /**
+     * If set to {@code true} a server will not be provisioned or started and the application will be deployed to a
+     * remote server.
+     */
+    @Parameter(property = "wildfly.dev.remote", defaultValue = "false")
+    private boolean remote;
+
     // Lazily loaded list of patterns based on the ignorePatterns
     private final List<Pattern> ignoreUpdatePatterns = new ArrayList<>();
     // Lazy loaded
@@ -230,8 +239,13 @@ public class DevMojo extends AbstractServerStartMojo {
         if (!"war".equalsIgnoreCase(packageType.getPackaging())) {
             throw new MojoExecutionException("The dev goal only works for WAR deployments");
         }
-        // Start the container
-        final ServerContext context = startServer(ServerType.STANDALONE);
+        ServerContext context = null;
+        if (remote) {
+            init();
+        } else {
+            // Start the container
+            context = startServer(ServerType.STANDALONE);
+        }
         try {
             // Do we need to build first?
             if (needsCompile()) {
@@ -247,22 +261,36 @@ public class DevMojo extends AbstractServerStartMojo {
                 }
                 registerDir(watcher, resolveWebAppSourceDir(), new WebAppResourceHandler(webExtensions));
                 try (ModelControllerClient client = createClient()) {
+                    if (!ServerHelper.isStandaloneRunning(client)) {
+                        throw new MojoExecutionException("No standalone server appears to be running.");
+                    }
+                    if (remote) {
+                        final ContainerDescription description = ServerHelper.getContainerDescription(client);
+                        getLog().info(String.format("Deploying to remote %s container.", description));
+                    }
                     // Execute commands before the deployment is done
-                    final CommandConfiguration cmdConfig = CommandConfiguration.of(this::createClient, this::getClientConfiguration)
+                    final CommandConfiguration.Builder builder = CommandConfiguration.of(this::createClient, this::getClientConfiguration)
                             .addCommands(commands)
                             .addScripts(scripts)
-                            .setJBossHome(context.jbossHome())
-                            .setFork(true)
                             .setStdout("none")
-                            .setTimeout(timeout)
-                            .build();
-                    commandExecutor.execute(cmdConfig, mavenRepoManager);
+                            .setTimeout(timeout);
+                    if (context == null) {
+                        builder.setOffline(false)
+                                .setFork(false);
+                    } else {
+                        builder.setJBossHome(context.jbossHome())
+                                .setFork(true);
+                    }
+                    commandExecutor.execute(builder.build(), mavenRepoManager);
                     final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
                     final Deployment deployment = getDeploymentContent();
                     try {
                         final DeploymentResult result = deploymentManager.forceDeploy(deployment);
                         if (!result.successful()) {
                             throw new MojoExecutionException("Failed to deploy content: " + result.getFailureMessage());
+                        }
+                        if (remote) {
+                            getLog().info(String.format("Deployed %s", deployment.toString()));
                         }
                         watch(watcher, deploymentManager, deployment);
                     } finally {
@@ -274,7 +302,9 @@ public class DevMojo extends AbstractServerStartMojo {
                 throw new MojoExecutionException(e.getLocalizedMessage(), e);
             }
         } finally {
-            context.process().destroyForcibly();
+            if (context != null) {
+                context.process().destroyForcibly();
+            }
         }
     }
 
