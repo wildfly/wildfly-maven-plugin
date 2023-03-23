@@ -29,6 +29,8 @@
 
   * [${pluginPrefix}:undeploy](./undeploy-mojo.html) undeploys the application.
 
+  * [${pluginPrefix}:dev](./dev-mojo.html) runs the application server, if applicable, and deploys your application watching for source changes.
+
   * [${pluginPrefix}:run](./run-mojo.html) runs the application server and deploys your application.
 
   * [${pluginPrefix}:start](./start-mojo.html) starts the application server and leaves the process running. In most cases
