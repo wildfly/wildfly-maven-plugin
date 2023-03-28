@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.wildfly.plugin.provision;
+package org.wildfly.plugin.core;
 
 import org.apache.maven.plugin.logging.Log;
 import org.jboss.galleon.ProvisioningManager;
@@ -26,7 +26,7 @@ import org.jboss.galleon.progresstracking.ProgressTracker;
  *
  * @author jdenise@redhat.com
  */
-class PluginProgressTracker<T> implements ProgressCallback<T> {
+public class PluginProgressTracker<T> implements ProgressCallback<T> {
 
     private static final String DELAYED_EXECUTION_MSG = "Delayed generation, waiting...";
     private final Log log;
