@@ -75,7 +75,8 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
         try (ModelControllerClient client = createClient()) {
             // Verify the server is running
             Assert.assertTrue("The start goal did not start the server.", ServerHelper.isStandaloneRunning(client));
-            Assert.assertFalse("This should be a standalone server, but found a domain server.", ServerHelper.getContainerDescription(client).isDomain());
+            Assert.assertFalse("This should be a standalone server, but found a domain server.",
+                    ServerHelper.getContainerDescription(client).isDomain());
         }
     }
 
@@ -120,7 +121,8 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
         // Check the management users
         final Path mgmtGroups = standaloneConfigDir.resolve("mgmt-groups.properties");
         Assert.assertTrue("File " + mgmtGroups + " does not exist", Files.exists(mgmtGroups));
-        Assert.assertTrue("User admin was not added to the mgmt-groups.properties file", fileContains(mgmtGroups, "admin=admin"));
+        Assert.assertTrue("User admin was not added to the mgmt-groups.properties file",
+                fileContains(mgmtGroups, "admin=admin"));
 
         // Check the application users
         final Path appUsers = standaloneConfigDir.resolve("application-users.properties");
@@ -130,7 +132,8 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
         // Check the management users
         final Path appGroups = standaloneConfigDir.resolve("application-roles.properties");
         Assert.assertTrue("File " + appGroups + " does not exist", Files.exists(appGroups));
-        Assert.assertTrue("User user was not added to the application-roles.properties file", fileContains(appGroups, "user=user,mgmt"));
+        Assert.assertTrue("User user was not added to the application-roles.properties file",
+                fileContains(appGroups, "user=user,mgmt"));
     }
 
     @Test
@@ -140,7 +143,8 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
         try (DomainClient client = DomainClient.Factory.create(createClient())) {
             // Verify the server is running
             Assert.assertTrue("The start goal did not start the server.", ServerHelper.isDomainRunning(client));
-            Assert.assertTrue("This should be a domain server server, but found a standalone server.", ServerHelper.getContainerDescription(client).isDomain());
+            Assert.assertTrue("This should be a domain server server, but found a standalone server.",
+                    ServerHelper.getContainerDescription(client).isDomain());
         }
     }
 
@@ -171,7 +175,8 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
         // Start up the server and ensure it's running
         final StartMojo startMojo = lookupMojoAndVerify("start", pomFile);
         setValue(startMojo, "jbossHome", TestEnvironment.WILDFLY_HOME.toString());
-        setValue(startMojo, "serverArgs", new String[]{"-Djboss.management.http.port=" + Integer.toString(TestEnvironment.PORT)});
+        setValue(startMojo, "serverArgs",
+                new String[] { "-Djboss.management.http.port=" + Integer.toString(TestEnvironment.PORT) });
         return startMojo;
     }
 

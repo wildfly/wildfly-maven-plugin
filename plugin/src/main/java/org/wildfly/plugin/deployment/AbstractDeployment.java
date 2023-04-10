@@ -103,8 +103,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         }
         try (
                 ModelControllerClient client = createClient();
-                MavenModelControllerClientConfiguration configuration = getClientConfiguration()
-        ) {
+                MavenModelControllerClientConfiguration configuration = getClientConfiguration()) {
             final boolean isDomain = ServerHelper.getContainerDescription(client).isDomain();
             validate(isDomain);
             // Deploy the deployment
@@ -114,7 +113,8 @@ abstract class AbstractDeployment extends AbstractServerConnection {
 
             final DeploymentResult result = executeDeployment(DeploymentManager.Factory.create(client), deployment);
             if (!result.successful()) {
-                throw new MojoExecutionException(String.format("Failed to execute goal %s: %s", goal(), result.getFailureMessage()));
+                throw new MojoExecutionException(
+                        String.format("Failed to execute goal %s: %s", goal(), result.getFailureMessage()));
             }
         } catch (IOException e) {
             throw new MojoFailureException(String.format("Failed to execute goal %s.", goal()), e);
@@ -125,7 +125,8 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         return skip;
     }
 
-    protected abstract DeploymentResult executeDeployment(DeploymentManager deploymentManager, Deployment deployment) throws IOException, MojoDeploymentException;
+    protected abstract DeploymentResult executeDeployment(DeploymentManager deploymentManager, Deployment deployment)
+            throws IOException, MojoDeploymentException;
 
     protected Deployment createDeployment() {
         return Deployment.of(file());

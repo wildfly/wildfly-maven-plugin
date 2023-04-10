@@ -18,6 +18,7 @@ package org.wildfly.plugin.provision;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.wildfly.channel.Channel;
@@ -51,7 +52,8 @@ public class ChannelConfiguration {
         }
         ChannelManifestCoordinate coordinates = getManifest();
         if (coordinates.getUrl() == null && coordinates.getGroupId() == null && coordinates.getArtifactId() == null) {
-            throw new MojoExecutionException("Invalid Channel. Manifest must contain a groupId, artifactId and (optional) version or an url.");
+            throw new MojoExecutionException(
+                    "Invalid Channel. Manifest must contain a groupId, artifactId and (optional) version or an url.");
         }
         if (coordinates.getUrl() == null) {
             if (coordinates.getGroupId() == null) {

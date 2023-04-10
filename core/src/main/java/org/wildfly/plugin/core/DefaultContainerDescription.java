@@ -40,7 +40,7 @@ class DefaultContainerDescription implements ContainerDescription {
     private final boolean isDomain;
 
     private DefaultContainerDescription(final String productName, final String productVersion,
-                                        final String releaseVersion, final String launchType, final boolean isDomain) {
+            final String releaseVersion, final String launchType, final boolean isDomain) {
         this.productName = productName;
         this.productVersion = productVersion;
         this.releaseVersion = releaseVersion;
@@ -103,7 +103,8 @@ class DefaultContainerDescription implements ContainerDescription {
      * @throws IOException                 if an error occurs while executing the management operation
      * @throws OperationExecutionException if the operation used to query the container fails
      */
-    static DefaultContainerDescription lookup(final ModelControllerClient client) throws IOException, OperationExecutionException {
+    static DefaultContainerDescription lookup(final ModelControllerClient client)
+            throws IOException, OperationExecutionException {
         final ModelNode op = Operations.createReadResourceOperation(new ModelNode().setEmptyList());
         op.get(ClientConstants.INCLUDE_RUNTIME).set(true);
         final ModelNode result = client.execute(op);
@@ -113,7 +114,8 @@ class DefaultContainerDescription implements ContainerDescription {
             final String productVersion = getValue(model, "product-version");
             final String releaseVersion = getValue(model, "release-version");
             final String launchType = getValue(model, "launch-type");
-            return new DefaultContainerDescription(productName, productVersion, releaseVersion, launchType, "DOMAIN".equalsIgnoreCase(launchType));
+            return new DefaultContainerDescription(productName, productVersion, releaseVersion, launchType,
+                    "DOMAIN".equalsIgnoreCase(launchType));
         }
         throw new OperationExecutionException(op, result);
     }

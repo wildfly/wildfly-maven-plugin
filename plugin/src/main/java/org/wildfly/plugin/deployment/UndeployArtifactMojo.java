@@ -61,7 +61,6 @@ public class UndeployArtifactMojo extends AbstractServerConnection {
     @Parameter
     private String groupId;
 
-
     /**
      * The artifact to deploys artifactId
      */
@@ -135,11 +134,11 @@ public class UndeployArtifactMojo extends AbstractServerConnection {
         final DeploymentResult result;
         try (
                 ModelControllerClient client = createClient();
-                MavenModelControllerClientConfiguration configuration = getClientConfiguration();
-        ) {
+                MavenModelControllerClientConfiguration configuration = getClientConfiguration();) {
             final boolean failOnMissing = !ignoreMissingDeployment;
             final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
-            result = deploymentManager.undeploy(UndeployDescription.of(deploymentName).addServerGroups(getServerGroups()).setFailOnMissing(failOnMissing));
+            result = deploymentManager.undeploy(
+                    UndeployDescription.of(deploymentName).addServerGroups(getServerGroups()).setFailOnMissing(failOnMissing));
         } catch (IOException e) {
             throw new MojoFailureException(String.format("Failed to execute %s goal.", goal()), e);
         }

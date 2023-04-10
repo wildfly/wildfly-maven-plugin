@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
 import javax.inject.Inject;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -97,7 +98,6 @@ public class RunMojo extends AbstractServerStartMojo {
     @Parameter(alias = "runtime-name", property = PropertyNames.DEPLOYMENT_RUNTIME_NAME)
     private String runtimeName;
 
-
     /**
      * The target directory the application to be deployed is located.
      */
@@ -125,7 +125,8 @@ public class RunMojo extends AbstractServerStartMojo {
             final Path deploymentContent = getDeploymentContent();
             // The deployment must exist before we do anything
             if (Files.notExists(deploymentContent)) {
-                throw new MojoExecutionException(String.format("The deployment '%s' could not be found.", deploymentContent.toAbsolutePath()));
+                throw new MojoExecutionException(
+                        String.format("The deployment '%s' could not be found.", deploymentContent.toAbsolutePath()));
             }
             // Start the server
             log.info("Server is starting up. Press CTRL + C to stop the server.");
@@ -171,7 +172,8 @@ public class RunMojo extends AbstractServerStartMojo {
             } catch (Exception e) {
                 throw new MojoExecutionException("The server failed to start", e);
             } finally {
-                if (process != null) process.destroy();
+                if (process != null)
+                    process.destroy();
             }
         } catch (Exception e) {
             throw new MojoExecutionException("The server failed to start", e);

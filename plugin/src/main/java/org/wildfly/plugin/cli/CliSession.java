@@ -109,6 +109,7 @@ public class CliSession {
     /**
      * By default, the CLI doesn't resolve expressions located in scripts locally. In order to have the expressions
      * resolved locally, set this value to true.
+     *
      * @param resolveExpressions True to resolve locally, false to resolve at server execution time.
      */
     public void setResolveExpressions(boolean resolveExpressions) {
@@ -117,6 +118,7 @@ public class CliSession {
 
     /**
      * Get the expression resolution value.
+     *
      * @return The expression resolution value.
      */
     public boolean getResolveExpression() {

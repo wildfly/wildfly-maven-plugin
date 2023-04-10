@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+
 import javax.net.ssl.SSLContext;
 import javax.security.auth.callback.CallbackHandler;
 
@@ -42,7 +43,8 @@ public class MavenModelControllerClientConfiguration implements ModelControllerC
     private final String password;
     private final CallbackHandler callbackHandler;
 
-    MavenModelControllerClientConfiguration(final ModelControllerClientConfiguration delegate, final String username, final String password) {
+    MavenModelControllerClientConfiguration(final ModelControllerClientConfiguration delegate, final String username,
+            final String password) {
         this.delegate = delegate;
         this.username = username;
         this.password = password;

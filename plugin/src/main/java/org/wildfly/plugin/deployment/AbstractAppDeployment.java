@@ -32,7 +32,6 @@ import org.wildfly.plugin.common.PropertyNames;
  */
 abstract class AbstractAppDeployment extends AbstractDeployment {
 
-
     /**
      * The target directory the application to be deployed is located.
      */

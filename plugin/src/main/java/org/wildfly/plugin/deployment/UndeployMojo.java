@@ -124,12 +124,12 @@ public class UndeployMojo extends AbstractServerConnection {
             final DeploymentResult result;
             try (
                     ModelControllerClient client = createClient();
-                    MavenModelControllerClientConfiguration configuration = getClientConfiguration()
-            ) {
+                    MavenModelControllerClientConfiguration configuration = getClientConfiguration()) {
                 final boolean failOnMissing = !ignoreMissingDeployment;
                 final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
                 if (matchPattern == null) {
-                    result = deploymentManager.undeploy(UndeployDescription.of(name).addServerGroups(getServerGroups()).setFailOnMissing(failOnMissing));
+                    result = deploymentManager.undeploy(
+                            UndeployDescription.of(name).addServerGroups(getServerGroups()).setFailOnMissing(failOnMissing));
                 } else {
                     final Set<UndeployDescription> matchedDeployments = findDeployments(deploymentManager, failOnMissing);
                     if (matchedDeployments.isEmpty()) {
@@ -155,8 +155,8 @@ public class UndeployMojo extends AbstractServerConnection {
         return "undeploy";
     }
 
-
-    private Set<UndeployDescription> findDeployments(final DeploymentManager deploymentManager, final boolean failOnMissing) throws IOException, MojoDeploymentException {
+    private Set<UndeployDescription> findDeployments(final DeploymentManager deploymentManager, final boolean failOnMissing)
+            throws IOException, MojoDeploymentException {
         if (name == null && matchPattern == null) {
             throw new IllegalArgumentException("deploymentName and matchPattern are null. One of them must "
                     + "be set in order to find an existing deployment.");
@@ -197,7 +197,6 @@ public class UndeployMojo extends AbstractServerConnection {
         }
         return matchedDeployments;
     }
-
 
     private MatchPatternStrategy getMatchPatternStrategy() {
         if (MatchPatternStrategy.FAIL.toString().equalsIgnoreCase(matchPatternStrategy)) {

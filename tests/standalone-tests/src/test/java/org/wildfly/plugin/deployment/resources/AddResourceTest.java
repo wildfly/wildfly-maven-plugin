@@ -36,7 +36,6 @@ import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
 // @Ignore("Composite operations don't seem to be working with datasources")
 public class AddResourceTest extends AbstractWildFlyServerMojoTest {
 
-
     @Test
     public void testCanAddCompositeResource() throws Exception {
 

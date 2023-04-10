@@ -20,6 +20,7 @@ import org.jboss.galleon.config.ConfigId;
 
 /**
  * Simple wrapper for configuration ids.
+ *
  * @author Emmanuel Hugonnet (c) 2018 Red Hat, inc.
  */
 public class ConfigurationId {
@@ -49,11 +50,11 @@ public class ConfigurationId {
     public String toString() {
         final StringBuilder buf = new StringBuilder();
         buf.append("{");
-        if(model != null) {
+        if (model != null) {
             buf.append("model=").append(model);
         }
-        if(name != null) {
-            if(buf.length() > 1) {
+        if (name != null) {
+            if (buf.length() > 1) {
                 buf.append(' ');
             }
             buf.append("name=").append(name);

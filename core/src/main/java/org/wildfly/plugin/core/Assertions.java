@@ -54,7 +54,8 @@ class Assertions {
      *
      * @throws IllegalArgumentException if the object representing the parameter is {@code null}
      */
-    static <E, T extends Collection<E>> T requiresNotNullOrNotEmptyParameter(final String name, final T value) throws IllegalArgumentException {
+    static <E, T extends Collection<E>> T requiresNotNullOrNotEmptyParameter(final String name, final T value)
+            throws IllegalArgumentException {
         Assert.checkNotNullParam(name, value);
         Assert.checkNotEmptyParam(name, value);
         return value;

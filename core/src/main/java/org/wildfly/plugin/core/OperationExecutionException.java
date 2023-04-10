@@ -88,9 +88,11 @@ public class OperationExecutionException extends RuntimeException {
 
     private static String formatMessage(final String message, final ModelNode operation, final ModelNode result) {
         if (message == null) {
-            return String.format("Failed to execute %s%nReason:%s", operation, Operations.getFailureDescription(result).asString());
+            return String.format("Failed to execute %s%nReason:%s", operation,
+                    Operations.getFailureDescription(result).asString());
         }
         final String msg = (message.endsWith(".") ? message : message + ".");
-        return String.format("%s Failed to execute %s%nReason:%s", msg, operation, Operations.getFailureDescription(result).asString());
+        return String.format("%s Failed to execute %s%nReason:%s", msg, operation,
+                Operations.getFailureDescription(result).asString());
     }
 }

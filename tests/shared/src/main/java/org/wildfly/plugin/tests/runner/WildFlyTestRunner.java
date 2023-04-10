@@ -25,6 +25,7 @@ package org.wildfly.plugin.tests.runner;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ServiceLoader;
+
 import javax.inject.Inject;
 
 import org.jboss.as.controller.client.ModelControllerClient;

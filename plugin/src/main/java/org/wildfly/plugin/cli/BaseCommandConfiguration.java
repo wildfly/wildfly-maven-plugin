@@ -82,7 +82,7 @@ public class BaseCommandConfiguration {
          * not.
          *
          * @param batch {@code true} if the commands should be executed in a
-         * batch, otherwise {@code false}
+         *                  batch, otherwise {@code false}
          *
          * @return this configuration
          */
@@ -95,7 +95,7 @@ public class BaseCommandConfiguration {
          * Sets the JBoss Home directory.
          *
          * @param jbossHome the JBoss Home directory or {@code null} if the
-         * value is not required
+         *                      value is not required
          *
          * @return this configuration
          */
@@ -112,7 +112,7 @@ public class BaseCommandConfiguration {
          * Sets the JBoss Home directory.
          *
          * @param jbossHome the JBoss Home directory or {@code null} if the
-         * value is not required
+         *                      value is not required
          *
          * @return this configuration
          */
@@ -210,7 +210,7 @@ public class BaseCommandConfiguration {
          * an error or not.
          *
          * @param failOnError {@code true} if a CLI command fails then the
-         * execution should fail
+         *                        execution should fail
          *
          * @return this configuration
          */
@@ -287,6 +287,7 @@ public class BaseCommandConfiguration {
 
     /**
      * Is output appended to file.
+     *
      * @return true to append to the file
      */
     public boolean isAppend() {
@@ -297,7 +298,7 @@ public class BaseCommandConfiguration {
      * Indicates whether or not the commands should be run in a batch or not.
      *
      * @return {@code true} if the commands should be executed in a batch,
-     * otherwise {@code false}
+     *             otherwise {@code false}
      */
     public boolean isBatch() {
         return batch;
@@ -368,13 +369,12 @@ public class BaseCommandConfiguration {
         return Collections.unmodifiableCollection(scripts);
     }
 
-
     /**
      * Indicates whether or not CLI commands should fail if the command ends in
      * an error or not.
      *
      * @return {@code true} if a CLI command fails then the execution should
-     * fail
+     *             fail
      */
     public boolean isFailOnError() {
         return failOnError;
@@ -401,6 +401,7 @@ public class BaseCommandConfiguration {
 
     /**
      * Is expression resolved.
+     *
      * @return true is expressions are resolved.
      */
     public boolean isExpressionResolved() {

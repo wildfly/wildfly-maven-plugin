@@ -57,7 +57,7 @@ public class DomainDeploymentManagerIT extends AbstractDeploymentManagerTest {
         final String javaVersion = System.getProperty("java.specification.version");
         int vmVersion;
         try {
-            final Matcher matcher = Pattern.compile("^(?:1\\.)?(\\d+)$").matcher(javaVersion); //match 1.<number> or <number>
+            final Matcher matcher = Pattern.compile("^(?:1\\.)?(\\d+)$").matcher(javaVersion); // match 1.<number> or <number>
             if (matcher.find()) {
                 vmVersion = Integer.valueOf(matcher.group(1));
             } else {
@@ -126,7 +126,8 @@ public class DomainDeploymentManagerIT extends AbstractDeploymentManagerTest {
     @Test
     public void testFailedDeploy() throws Exception {
         // Expect a failure with no server groups defined
-        final Deployment failedDeployment = createDefaultDeployment("test-failed-deployment.war").setServerGroups(Collections.<String>emptySet());
+        final Deployment failedDeployment = createDefaultDeployment("test-failed-deployment.war")
+                .setServerGroups(Collections.<String> emptySet());
         assertFailed(deploymentManager.deploy(failedDeployment));
         assertDeploymentDoesNotExist(failedDeployment);
     }
@@ -136,7 +137,8 @@ public class DomainDeploymentManagerIT extends AbstractDeploymentManagerTest {
         // Expect a failure with no server groups defined
         final Set<Deployment> failedDeployments = new HashSet<>();
         failedDeployments.add(createDefaultDeployment("test-failed-deployment-1.war"));
-        failedDeployments.add(createDefaultDeployment("test-failed-deployment-2.war").setServerGroups(Collections.<String>emptySet()));
+        failedDeployments
+                .add(createDefaultDeployment("test-failed-deployment-2.war").setServerGroups(Collections.<String> emptySet()));
         assertFailed(deploymentManager.deploy(failedDeployments));
         for (Deployment failedDeployment : failedDeployments) {
             assertDeploymentDoesNotExist(failedDeployment);
@@ -146,7 +148,8 @@ public class DomainDeploymentManagerIT extends AbstractDeploymentManagerTest {
     @Test
     public void testFailedForceDeploy() throws Exception {
         // Expect a failure with no server groups defined
-        final Deployment failedDeployment = createDefaultDeployment("test-failed-deployment.war").setServerGroups(Collections.<String>emptySet());
+        final Deployment failedDeployment = createDefaultDeployment("test-failed-deployment.war")
+                .setServerGroups(Collections.<String> emptySet());
         assertFailed(deploymentManager.forceDeploy(failedDeployment));
         assertDeploymentDoesNotExist(failedDeployment);
 
@@ -155,7 +158,8 @@ public class DomainDeploymentManagerIT extends AbstractDeploymentManagerTest {
     @Test
     public void testFailedRedeploy() throws Exception {
         // Expect a failure with no server groups defined
-        assertFailed(deploymentManager.redeploy(createDefaultDeployment("test-redeploy.war").setServerGroups(Collections.<String>emptySet())));
+        assertFailed(deploymentManager
+                .redeploy(createDefaultDeployment("test-redeploy.war").setServerGroups(Collections.<String> emptySet())));
     }
 
     @Test
@@ -165,8 +169,8 @@ public class DomainDeploymentManagerIT extends AbstractDeploymentManagerTest {
                 UndeployDescription.of("test-undeploy-multi-server-groups.war")
                         .setFailOnMissing(false)
                         .setRemoveContent(false)
-                        .addServerGroup("other-server-group")
-                , Collections.singleton(DEFAULT_SERVER_GROUP), false);
+                        .addServerGroup("other-server-group"),
+                Collections.singleton(DEFAULT_SERVER_GROUP), false);
 
         // Undeploy with an additional server-group where the deployment does not exist
         final Deployment deployment = createDefaultDeployment("test-undeploy-multi-server-groups-failed.war");
@@ -174,8 +178,7 @@ public class DomainDeploymentManagerIT extends AbstractDeploymentManagerTest {
         final DeploymentResult result = deploymentManager.undeploy(
                 UndeployDescription.of(deployment)
                         .setFailOnMissing(true)
-                        .addServerGroup("other-server-group")
-        );
+                        .addServerGroup("other-server-group"));
         assertFailed(result);
         assertDeploymentExists(deployment, true);
     }

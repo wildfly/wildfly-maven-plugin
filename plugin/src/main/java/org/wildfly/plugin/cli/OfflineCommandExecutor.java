@@ -21,6 +21,7 @@ package org.wildfly.plugin.cli;
 
 import java.io.IOException;
 import java.nio.file.Path;
+
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -43,14 +44,15 @@ public class OfflineCommandExecutor extends AbstractCommandExecutor<BaseCommandC
     /**
      * Executes forked offline CLI commands based on the configuration.
      *
-     * @param config the configuration used to execute the CLI commands
+     * @param config           the configuration used to execute the CLI commands
      * @param artifactResolver Resolver to retrieve CLI artifact for in-process execution.
      *
      * @throws MojoFailureException   if the JBoss Home directory is required and invalid
      * @throws MojoExecutionException if an error occurs executing the CLI commands
      */
     @Override
-    public void execute(final BaseCommandConfiguration config, MavenRepoManager artifactResolver) throws MojoFailureException, MojoExecutionException {
+    public void execute(final BaseCommandConfiguration config, MavenRepoManager artifactResolver)
+            throws MojoFailureException, MojoExecutionException {
         if (!Utils.isValidHomeDirectory(config.getJBossHome())) {
             throw new MojoFailureException("Invalid JBoss Home directory is not valid: " + config.getJBossHome());
         }
@@ -58,7 +60,8 @@ public class OfflineCommandExecutor extends AbstractCommandExecutor<BaseCommandC
     }
 
     @Override
-    protected int executeInNewProcess(final BaseCommandConfiguration config, final Path scriptFile, final StandardOutput stdout) throws MojoExecutionException, IOException {
+    protected int executeInNewProcess(final BaseCommandConfiguration config, final Path scriptFile, final StandardOutput stdout)
+            throws MojoExecutionException, IOException {
         CliCommandBuilder builder = createCommandBuilder(config, scriptFile);
         return launchProcess(builder, config, stdout);
     }

@@ -47,10 +47,13 @@ public class RedeployMojo extends AbstractAppDeployment {
     }
 
     @Override
-    protected DeploymentResult executeDeployment(final DeploymentManager deploymentManager, final Deployment deployment) throws IOException, MojoDeploymentException {
+    protected DeploymentResult executeDeployment(final DeploymentManager deploymentManager, final Deployment deployment)
+            throws IOException, MojoDeploymentException {
         // Ensure the deployment exists before attempting to redeploy it
         if (!deploymentManager.hasDeployment(deployment.getName())) {
-            throw new MojoDeploymentException("The deployment %s does not exist in the content repository and cannot be redeployed.", deployment.getName());
+            throw new MojoDeploymentException(
+                    "The deployment %s does not exist in the content repository and cannot be redeployed.",
+                    deployment.getName());
         }
         return deploymentManager.redeploy(deployment);
     }

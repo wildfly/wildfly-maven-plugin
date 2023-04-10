@@ -21,8 +21,8 @@
  */
 package org.wildfly.plugin.provision;
 
-
 import java.nio.file.Path;
+
 import org.apache.maven.plugin.Mojo;
 import org.junit.Test;
 import org.wildfly.plugin.tests.AbstractProvisionConfiguredMojoTestCase;
@@ -37,7 +37,8 @@ public class ProvisionTest extends AbstractProvisionConfiguredMojoTestCase {
     @Test
     public void testProvision() throws Exception {
 
-        final Mojo provisionMojo =  lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("provision-pom.xml").toFile(), "provision");
+        final Mojo provisionMojo = lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("provision-pom.xml").toFile(),
+                "provision");
 
         provisionMojo.execute();
         Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("provisioned-server");

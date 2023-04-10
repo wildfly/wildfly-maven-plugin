@@ -79,7 +79,6 @@ public class ConsoleConsumer implements Runnable {
         return thread;
     }
 
-
     @Override
     public void run() {
         final byte[] buffer = new byte[64];

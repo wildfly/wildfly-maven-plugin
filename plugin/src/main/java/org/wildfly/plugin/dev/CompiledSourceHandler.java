@@ -31,7 +31,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 class CompiledSourceHandler implements WatchHandler {
 
     @Override
-    public Result handle(final WatchContext context, final WatchEvent<Path> event, final Path file) throws IOException, MojoExecutionException {
+    public Result handle(final WatchContext context, final WatchEvent<Path> event, final Path file)
+            throws IOException, MojoExecutionException {
         return new Result() {
             @Override
             public boolean requiresRecompile() {

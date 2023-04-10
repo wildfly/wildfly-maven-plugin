@@ -19,6 +19,8 @@
 
 package org.wildfly.plugin.cli;
 
+import static org.wildfly.plugin.core.Constants.CLI_RESOLVE_PARAMETERS_VALUES;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -40,7 +42,6 @@ import org.wildfly.core.launcher.CliCommandBuilder;
 import org.wildfly.core.launcher.Launcher;
 import org.wildfly.plugin.common.Environment;
 import org.wildfly.plugin.common.StandardOutput;
-import static org.wildfly.plugin.core.Constants.CLI_RESOLVE_PARAMETERS_VALUES;
 
 /**
  * An abstract command executor for executing CLI commands.
@@ -52,14 +53,17 @@ public abstract class AbstractCommandExecutor<T extends BaseCommandConfiguration
     /**
      * Executes CLI commands based on the configuration.
      *
-     * @param config the configuration used to execute the CLI commands
+     * @param config           the configuration used to execute the CLI commands
      * @param artifactResolver Resolver to retrieve CLI artifact for in-process execution.
      *
      * @throws MojoFailureException   if the JBoss Home directory is required and invalid
      * @throws MojoExecutionException if an error occurs executing the CLI commands
      */
-    public abstract void execute(final T config, MavenRepoManager artifactResolver) throws MojoFailureException, MojoExecutionException;
-    protected abstract int executeInNewProcess(final T config, final Path scriptFile, final StandardOutput stdout) throws MojoExecutionException, IOException;
+    public abstract void execute(final T config, MavenRepoManager artifactResolver)
+            throws MojoFailureException, MojoExecutionException;
+
+    protected abstract int executeInNewProcess(final T config, final Path scriptFile, final StandardOutput stdout)
+            throws MojoExecutionException, IOException;
 
     protected void executeInNewProcess(final T config) throws MojoExecutionException {
         // If we have commands create a script file and execute
@@ -101,7 +105,8 @@ public abstract class AbstractCommandExecutor<T extends BaseCommandConfiguration
                         break;
                     case FILE:
                         final Path stdoutPath = out.getStdoutPath();
-                        msg.append("See ").append(stdoutPath).append(" for full details of failure.").append(System.lineSeparator());
+                        msg.append("See ").append(stdoutPath).append(" for full details of failure.")
+                                .append(System.lineSeparator());
                         final List<String> lines = Files.readAllLines(stdoutPath);
                         lines.subList(Math.max(lines.size() - 4, 0), lines.size())
                                 .forEach(line -> msg.append(line).append(System.lineSeparator()));

@@ -116,8 +116,7 @@ public class AddResourceMojo extends AbstractServerConnection {
         }
         try (
                 ModelControllerClient client = createClient();
-                MavenModelControllerClientConfiguration configuration = getClientConfiguration();
-        ) {
+                MavenModelControllerClientConfiguration configuration = getClientConfiguration();) {
             if (resources != null && resources.length > 0) {
                 processResources(client, configuration, resources);
             } else {
@@ -128,7 +127,8 @@ public class AddResourceMojo extends AbstractServerConnection {
         }
     }
 
-    private void processResources(final ModelControllerClient client, final MavenModelControllerClientConfiguration configuration, final Resource... resources) throws IOException {
+    private void processResources(final ModelControllerClient client,
+            final MavenModelControllerClientConfiguration configuration, final Resource... resources) throws IOException {
         final Collection<String> profiles = getProfiles();
         final boolean isDomain = ServerHelper.getContainerDescription(client).isDomain();
         for (Resource resource : resources) {
@@ -157,7 +157,9 @@ public class AddResourceMojo extends AbstractServerConnection {
         }
     }
 
-    private boolean addCompositeResource(final String profileName, final ModelControllerClient client, final Resource resource, final String parentAddress, final CompositeOperationBuilder compositeOp, final boolean checkExistence) throws IOException {
+    private boolean addCompositeResource(final String profileName, final ModelControllerClient client, final Resource resource,
+            final String parentAddress, final CompositeOperationBuilder compositeOp, final boolean checkExistence)
+            throws IOException {
         final String inputAddress;
         if (parentAddress == null) {
             inputAddress = resource.getAddress();
@@ -247,7 +249,8 @@ public class AddResourceMojo extends AbstractServerConnection {
     private boolean resourceExists(final ModelNode address, final ModelControllerClient client) throws IOException {
         final Property childAddress = ServerOperations.getChildAddress(address);
         final ModelNode parentAddress = ServerOperations.getParentAddress(address);
-        final ModelNode r = client.execute(ServerOperations.createOperation(ServerOperations.READ_RESOURCE, parentAddress, false));
+        final ModelNode r = client
+                .execute(ServerOperations.createOperation(ServerOperations.READ_RESOURCE, parentAddress, false));
         reportFailure(r);
         boolean found = false;
         final String name = childAddress.getName();

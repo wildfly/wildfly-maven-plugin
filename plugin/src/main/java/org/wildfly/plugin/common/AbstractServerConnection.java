@@ -24,6 +24,7 @@ package org.wildfly.plugin.common;
 
 import java.net.URISyntaxException;
 import java.net.URL;
+
 import javax.inject.Inject;
 
 import org.apache.maven.plugin.AbstractMojo;

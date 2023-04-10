@@ -31,7 +31,7 @@ import java.util.Set;
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-@SuppressWarnings({"WeakerAccess", "unused"})
+@SuppressWarnings({ "WeakerAccess", "unused" })
 public class SimpleDeploymentDescription implements DeploymentDescription, Comparable<SimpleDeploymentDescription> {
 
     private final String name;
@@ -61,7 +61,8 @@ public class SimpleDeploymentDescription implements DeploymentDescription, Compa
      *
      * @return the deployment description
      */
-    public static SimpleDeploymentDescription of(final String name, @SuppressWarnings("TypeMayBeWeakened") final Set<String> serverGroups) {
+    public static SimpleDeploymentDescription of(final String name,
+            @SuppressWarnings("TypeMayBeWeakened") final Set<String> serverGroups) {
         final SimpleDeploymentDescription result = of(name);
         if (serverGroups != null) {
             result.addServerGroups(serverGroups);

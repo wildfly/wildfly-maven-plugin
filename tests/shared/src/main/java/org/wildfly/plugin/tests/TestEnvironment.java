@@ -105,7 +105,8 @@ public class TestEnvironment extends Environment {
     }
 
     public static boolean isValidWildFlyHome(final Path wildflyHome) {
-        return Files.exists(wildflyHome) && Files.isDirectory(wildflyHome) && Files.exists(wildflyHome.resolve("jboss-modules.jar"));
+        return Files.exists(wildflyHome) && Files.isDirectory(wildflyHome)
+                && Files.exists(wildflyHome.resolve("jboss-modules.jar"));
     }
 
     public static void validateWildFlyHome(final Path wildflyHome) {

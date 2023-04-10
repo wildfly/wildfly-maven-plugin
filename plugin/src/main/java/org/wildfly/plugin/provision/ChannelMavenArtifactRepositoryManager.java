@@ -16,6 +16,8 @@
  */
 package org.wildfly.plugin.provision;
 
+import static org.wildfly.channel.maven.VersionResolverFactory.DEFAULT_REPOSITORY_MAPPER;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -29,9 +31,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
-
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
@@ -49,7 +51,6 @@ import org.wildfly.channel.ChannelSession;
 import org.wildfly.channel.Repository;
 import org.wildfly.channel.UnresolvedMavenArtifactException;
 import org.wildfly.channel.maven.VersionResolverFactory;
-import static org.wildfly.channel.maven.VersionResolverFactory.DEFAULT_REPOSITORY_MAPPER;
 import org.wildfly.channel.spi.ChannelResolvable;
 import org.wildfly.prospero.metadata.ManifestVersionRecord;
 import org.wildfly.prospero.metadata.ManifestVersionResolver;
@@ -68,7 +69,8 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
     public ChannelMavenArtifactRepositoryManager(List<ChannelConfiguration> channels,
             RepositorySystem system,
             RepositorySystemSession contextSession,
-            List<RemoteRepository> repositories, Log log, boolean offline) throws MalformedURLException, UnresolvedMavenArtifactException, MojoExecutionException {
+            List<RemoteRepository> repositories, Log log, boolean offline)
+            throws MalformedURLException, UnresolvedMavenArtifactException, MojoExecutionException {
         if (channels.isEmpty()) {
             throw new MojoExecutionException("No channel specified.");
         }
@@ -106,7 +108,7 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
                 // Could be a feature-pack that could require to be resolved from a channel.
                 try {
                     requireChannel = fpRequireChannel(artifact);
-                } catch(Exception exception) {
+                } catch (Exception exception) {
                     log.error("Error attempting to read artifact as a feature-pack", exception);
                     ex.addSuppressed(exception);
                     throw new MavenUniverseException(ex.getLocalizedMessage(), ex);
@@ -124,8 +126,10 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
                 try {
                     log.warn("Using version " + artifact.getVersion() +
                             " to resolve artifact " + artifact.getGroupId() + ":" +
-                        artifact.getArtifactId());
-                    org.wildfly.channel.MavenArtifact mavenArtifact = channelSession.resolveDirectMavenArtifact(artifact.getGroupId(), artifact.getArtifactId(), artifact.getExtension(), artifact.getClassifier(), artifact.getVersion());
+                            artifact.getArtifactId());
+                    org.wildfly.channel.MavenArtifact mavenArtifact = channelSession.resolveDirectMavenArtifact(
+                            artifact.getGroupId(), artifact.getArtifactId(), artifact.getExtension(), artifact.getClassifier(),
+                            artifact.getVersion());
                     artifact.setPath(mavenArtifact.getFile().toPath());
                 } catch (UnresolvedMavenArtifactException e) {
                     // if the artifact can not be resolved directly either, we abort
@@ -139,16 +143,16 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
 
     private boolean fpRequireChannel(MavenArtifact artifact) throws Exception {
         boolean requireChannel = false;
-        if (artifact.getVersion() != null && artifact.getExtension() != null && artifact.getExtension().equalsIgnoreCase("zip")) {
-            org.wildfly.channel.MavenArtifact mavenArtifact = channelSession.
-                    resolveDirectMavenArtifact(artifact.getGroupId(),
-                            artifact.getArtifactId(),
-                            artifact.getExtension(),
-                            artifact.getClassifier(),
-                            artifact.getVersion());
+        if (artifact.getVersion() != null && artifact.getExtension() != null
+                && artifact.getExtension().equalsIgnoreCase("zip")) {
+            org.wildfly.channel.MavenArtifact mavenArtifact = channelSession.resolveDirectMavenArtifact(artifact.getGroupId(),
+                    artifact.getArtifactId(),
+                    artifact.getExtension(),
+                    artifact.getClassifier(),
+                    artifact.getVersion());
             try {
                 FeaturePackDescriber.readSpec(mavenArtifact.getFile().toPath());
-            } catch(ProvisioningException ex) {
+            } catch (ProvisioningException ex) {
                 // Not a feature-pack
                 return requireChannel;
             }
@@ -158,7 +162,7 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
                 final Path channelPropsPath = wfRes.resolve("wildfly-channel.properties");
                 if (Files.exists(channelPropsPath)) {
                     Properties props = new Properties();
-                     try(BufferedReader reader = Files.newBufferedReader(channelPropsPath)) {
+                    try (BufferedReader reader = Files.newBufferedReader(channelPropsPath)) {
                         props.load(reader);
                     }
                     String resolution = props.getProperty("resolution");
@@ -172,14 +176,16 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
     }
 
     private void resolveFromChannels(MavenArtifact artifact) throws UnresolvedMavenArtifactException {
-        org.wildfly.channel.MavenArtifact result = channelSession.resolveMavenArtifact(artifact.getGroupId(), artifact.getArtifactId(), artifact.getExtension(), artifact.getClassifier(), artifact.getVersion());
+        org.wildfly.channel.MavenArtifact result = channelSession.resolveMavenArtifact(artifact.getGroupId(),
+                artifact.getArtifactId(), artifact.getExtension(), artifact.getClassifier(), artifact.getVersion());
         artifact.setVersion(result.getVersion());
         artifact.setPath(result.getFile().toPath());
     }
 
     public void done(Path home) throws MavenUniverseException, IOException {
         ChannelManifest channelManifest = channelSession.getRecordedChannel();
-        final ManifestVersionRecord currentVersions = new ManifestVersionResolver(localCachePath, system).getCurrentVersions(channels);
+        final ManifestVersionRecord currentVersions = new ManifestVersionResolver(localCachePath, system)
+                .getCurrentVersions(channels);
         ProsperoMetadataUtils.generate(home, channels, channelManifest, currentVersions);
     }
 
@@ -205,7 +211,8 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
     }
 
     @Override
-    public void resolveLatestVersion(MavenArtifact artifact, String lowestQualifier, boolean locallyAvailable) throws MavenUniverseException {
+    public void resolveLatestVersion(MavenArtifact artifact, String lowestQualifier, boolean locallyAvailable)
+            throws MavenUniverseException {
         throw new MavenUniverseException("Channel resolution can't be applied to Galleon universe");
     }
 
@@ -220,7 +227,8 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
     }
 
     @Override
-    public String getLatestVersion(MavenArtifact artifact, String lowestQualifier, Pattern includeVersion, Pattern excludeVersion) throws MavenUniverseException {
+    public String getLatestVersion(MavenArtifact artifact, String lowestQualifier, Pattern includeVersion,
+            Pattern excludeVersion) throws MavenUniverseException {
         throw new MavenUniverseException("Channel resolution can't be applied to Galleon universe");
     }
 
@@ -230,7 +238,8 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
     }
 
     @Override
-    public List<String> getAllVersions(MavenArtifact artifact, Pattern includeVersion, Pattern excludeVersion) throws MavenUniverseException {
+    public List<String> getAllVersions(MavenArtifact artifact, Pattern includeVersion, Pattern excludeVersion)
+            throws MavenUniverseException {
         throw new MavenUniverseException("Channel resolution can't be applied to Galleon universe");
     }
 

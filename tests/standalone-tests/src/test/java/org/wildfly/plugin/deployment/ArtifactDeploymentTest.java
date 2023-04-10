@@ -29,6 +29,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.Collections;
+
 import javax.inject.Inject;
 
 import org.apache.maven.artifact.Artifact;
@@ -116,7 +117,8 @@ public class ArtifactDeploymentTest extends AbstractWildFlyServerMojoTest {
     }
 
     private Artifact createArtifact(final String classifier) {
-        final Artifact artifact = new DefaultArtifact("dummy", "dummy", "1.0.0", "provided", "jar", classifier, new DefaultArtifactHandler());
+        final Artifact artifact = new DefaultArtifact("dummy", "dummy", "1.0.0", "provided", "jar", classifier,
+                new DefaultArtifactHandler());
         artifact.setFile(new File(BASE_CONFIG_DIR, artifactName));
         return artifact;
     }

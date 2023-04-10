@@ -26,5 +26,5 @@ public interface Constants {
     public static final String PLUGIN_PROVISIONING_FILE = ".wildfly-maven-plugin-provisioning.xml";
     public static final String STANDALONE = "standalone";
     public static final String STANDALONE_XML = "standalone.xml";
-    public static final String FORK_EMBEDDED_PROCESS_OPTION="jboss-fork-embedded";
+    public static final String FORK_EMBEDDED_PROCESS_OPTION = "jboss-fork-embedded";
 }

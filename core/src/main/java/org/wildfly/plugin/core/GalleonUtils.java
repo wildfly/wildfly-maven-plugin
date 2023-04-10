@@ -16,6 +16,9 @@
  */
 package org.wildfly.plugin.core;
 
+import static org.wildfly.plugin.core.Constants.FORK_EMBEDDED_PROCESS_OPTION;
+import static org.wildfly.plugin.core.Constants.STANDALONE;
+
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,8 +36,6 @@ import org.jboss.galleon.config.ProvisioningConfig;
 import org.jboss.galleon.universe.FeaturePackLocation;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.jboss.galleon.xml.ProvisioningXmlParser;
-import static org.wildfly.plugin.core.Constants.FORK_EMBEDDED_PROCESS_OPTION;
-import static org.wildfly.plugin.core.Constants.STANDALONE;
 
 /**
  * @author jdenise
@@ -46,13 +47,14 @@ public class GalleonUtils {
     /**
      * Galleon provisioning of a default server.
      *
-     * @param jbossHome Server installation directory
+     * @param jbossHome           Server installation directory
      * @param featurePackLocation the location of the feature pack
-     * @param version WildFly version, if null latest is used.
-     * @param artifactResolver Artifact resolver used by Galleon
+     * @param version             WildFly version, if null latest is used.
+     * @param artifactResolver    Artifact resolver used by Galleon
      * @throws ProvisioningException if there is an error provisioning the server
      */
-    public static void provision(Path jbossHome, String featurePackLocation, String version, MavenRepoManager artifactResolver) throws ProvisioningException {
+    public static void provision(Path jbossHome, String featurePackLocation, String version, MavenRepoManager artifactResolver)
+            throws ProvisioningException {
         try (ProvisioningManager pm = ProvisioningManager.builder().addArtifactResolver(artifactResolver)
                 .setInstallationHome(jbossHome)
                 .build()) {
@@ -77,7 +79,8 @@ public class GalleonUtils {
      * @return
      * @throws ProvisioningDescriptionException
      */
-    public static ProvisioningConfig buildDefaultConfig(String featurePackLocation, String version) throws ProvisioningDescriptionException {
+    public static ProvisioningConfig buildDefaultConfig(String featurePackLocation, String version)
+            throws ProvisioningDescriptionException {
         String location = getWildFlyFeaturePackLocation(featurePackLocation, version);
         ProvisioningConfig.Builder state = ProvisioningConfig.builder();
         FeaturePackLocation fpl = FeaturePackLocation.fromString(location);
@@ -106,11 +109,11 @@ public class GalleonUtils {
     /**
      * Build a Galleon provisioning configuration.
      *
-     * @param pm The Galleon provisioning runtime.
-     * @param featurePacks The list of feature-packs.
-     * @param layers Layers to include.
-     * @param excludedLayers Layers to exclude.
-     * @param pluginOptions Galleon plugin options.
+     * @param pm                   The Galleon provisioning runtime.
+     * @param featurePacks         The list of feature-packs.
+     * @param layers               Layers to include.
+     * @param excludedLayers       Layers to exclude.
+     * @param pluginOptions        Galleon plugin options.
      * @param layersConfigFileName The name of the configuration generated from layers
      * @return The provisioning config.
      * @throws ProvisioningException
@@ -119,7 +122,8 @@ public class GalleonUtils {
             List<FeaturePack> featurePacks,
             List<String> layers,
             List<String> excludedLayers,
-            Map<String, String> pluginOptions, String layersConfigFileName) throws ProvisioningException, IllegalArgumentException {
+            Map<String, String> pluginOptions, String layersConfigFileName)
+            throws ProvisioningException, IllegalArgumentException {
         final ProvisioningConfig.Builder state = ProvisioningConfig.builder();
         boolean hasLayers = !layers.isEmpty();
         boolean fpWithDefaults = true;
@@ -152,7 +156,7 @@ public class GalleonUtils {
                 String coords = getMavenCoords(fp);
                 fpl = FeaturePackLocation.fromString(coords);
             } else {
-                //Special case for G:A that conflicts with producer:channel that we can't have in the plugin.
+                // Special case for G:A that conflicts with producer:channel that we can't have in the plugin.
                 String location = fp.getLocation();
                 if (!FeaturePackLocation.fromString(location).hasUniverse()) {
                     long numSeparators = location.chars().filter(ch -> ch == ':').count();
@@ -223,8 +227,7 @@ public class GalleonUtils {
         }
 
         if (!layers.isEmpty()) {
-            ConfigModel.Builder configBuilder = ConfigModel.
-                    builder(STANDALONE, layersConfigFileName);
+            ConfigModel.Builder configBuilder = ConfigModel.builder(STANDALONE, layersConfigFileName);
             for (String layer : layers) {
                 configBuilder.includeLayer(layer);
             }
@@ -233,8 +236,7 @@ public class GalleonUtils {
             }
             state.addConfig(configBuilder.build());
             if (pluginOptions.isEmpty()) {
-                pluginOptions = Collections.
-                        singletonMap(Constants.OPTIONAL_PACKAGES, Constants.PASSIVE_PLUS);
+                pluginOptions = Collections.singletonMap(Constants.OPTIONAL_PACKAGES, Constants.PASSIVE_PLUS);
             } else if (!pluginOptions.containsKey(Constants.OPTIONAL_PACKAGES)) {
                 pluginOptions.put(Constants.OPTIONAL_PACKAGES, Constants.PASSIVE_PLUS);
             }
@@ -250,7 +252,8 @@ public class GalleonUtils {
         builder.append(fp.getGroupId()).append(":").append(fp.getArtifactId());
         String type = fp.getExtension() == null ? fp.getType() : fp.getExtension();
         if (fp.getClassifier() != null || type != null) {
-            builder.append(":").append(fp.getClassifier() == null ? "" : fp.getClassifier()).append(":").append(type == null ? "" : type);
+            builder.append(":").append(fp.getClassifier() == null ? "" : fp.getClassifier()).append(":")
+                    .append(type == null ? "" : type);
         }
         if (fp.getVersion() != null) {
             builder.append(":").append(fp.getVersion());

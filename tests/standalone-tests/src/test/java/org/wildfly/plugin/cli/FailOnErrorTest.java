@@ -22,11 +22,11 @@
 
 package org.wildfly.plugin.cli;
 
-import java.lang.reflect.InvocationTargetException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,7 +48,7 @@ public class FailOnErrorTest extends AbstractWildFlyServerMojoTest {
     public void testExecuteCommandsFailOnError() throws Exception {
 
         final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-commands-failOnError-pom.xml");
-         setValidSession(executeCommandsMojo);
+        setValidSession(executeCommandsMojo);
         try {
             executeCommandsMojo.execute();
             fail("MojoExecutionException expected.");
@@ -70,7 +70,8 @@ public class FailOnErrorTest extends AbstractWildFlyServerMojoTest {
     @Test
     public void testExecuteCommandsForkOpFailOnError() throws Exception {
 
-        final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-commands-fork-op-failOnError-pom.xml");
+        final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands",
+                "execute-commands-fork-op-failOnError-pom.xml");
         // Set the JBoss home field so commands will be executed in a new process
         setValue(executeCommandsMojo, "jbossHome", TestEnvironment.WILDFLY_HOME.toString());
 
@@ -94,10 +95,10 @@ public class FailOnErrorTest extends AbstractWildFlyServerMojoTest {
     @Test
     public void testExecuteCommandsForkCmdFailOnError() throws Exception {
 
-        final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-commands-fork-cmd-failOnError-pom.xml");
+        final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands",
+                "execute-commands-fork-cmd-failOnError-pom.xml");
         // Set the JBoss home field so commands will be executed in a new process
         setValue(executeCommandsMojo, "jbossHome", TestEnvironment.WILDFLY_HOME.toString());
-
 
         try {
             executeCommandsMojo.execute();
@@ -139,7 +140,8 @@ public class FailOnErrorTest extends AbstractWildFlyServerMojoTest {
     @Test
     public void testExecuteCommandsForkContinueOnError() throws Exception {
 
-        final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-commands-fork-continueOnError-pom.xml");
+        final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands",
+                "execute-commands-fork-continueOnError-pom.xml");
         // Set the JBoss home field so commands will be executed in a new process
         setValue(executeCommandsMojo, "jbossHome", TestEnvironment.WILDFLY_HOME.toString());
 
@@ -159,7 +161,8 @@ public class FailOnErrorTest extends AbstractWildFlyServerMojoTest {
             assertEquals("inside catch", ServerOperations.readResultAsString(inTryResult));
 
             // The invalid module directory should not exist
-            final Path baseModuleDir = Paths.get(TestEnvironment.WILDFLY_HOME.toString(), "modules", "org", "wildfly", "plugin", "tests");
+            final Path baseModuleDir = Paths.get(TestEnvironment.WILDFLY_HOME.toString(), "modules", "org", "wildfly", "plugin",
+                    "tests");
             final Path invalidModuleDir = baseModuleDir.resolve("invalid");
             assertTrue(String.format("Expected %s to not exist.", invalidModuleDir), Files.notExists(invalidModuleDir));
 
@@ -182,13 +185,13 @@ public class FailOnErrorTest extends AbstractWildFlyServerMojoTest {
     public void testExecuteCommandScriptFailOnError() throws Exception {
 
         final Mojo executeCommandsMojo = lookupMojoAndVerify("execute-commands", "execute-script-failOnError-pom.xml");
-         setValidSession(executeCommandsMojo);
+        setValidSession(executeCommandsMojo);
         try {
             executeCommandsMojo.execute();
             fail("MojoExecutionException expected.");
         } catch (MojoExecutionException e) {
-           InvocationTargetException ex = (InvocationTargetException) e.getCause();
-           assertEquals("org.jboss.as.cli.CommandLineException", ex.getCause().getClass().getName());
+            InvocationTargetException ex = (InvocationTargetException) e.getCause();
+            assertEquals("org.jboss.as.cli.CommandLineException", ex.getCause().getClass().getName());
         }
         final ModelNode address = ServerOperations.createAddress("system-property", "scriptFailOnError");
         final ModelNode op = ServerOperations.createReadAttributeOperation(address, "value");

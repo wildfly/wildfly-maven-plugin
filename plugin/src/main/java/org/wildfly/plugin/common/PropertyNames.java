@@ -85,7 +85,7 @@ public interface PropertyNames {
 
     String SCRIPTS = "wildfly.scripts";
 
-   String SERVER_ARGS = "wildfly.serverArgs";
+    String SERVER_ARGS = "wildfly.serverArgs";
 
     String SERVER_CONFIG = "wildfly.serverConfig";
 

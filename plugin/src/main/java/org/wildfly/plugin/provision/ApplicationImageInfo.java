@@ -86,7 +86,7 @@ public class ApplicationImageInfo {
     private String dockerBinary;
 
     String getApplicationImageName(String artifactId) {
-        String registry = this.registry != null ? this.registry + "/"  : "";
+        String registry = this.registry != null ? this.registry + "/" : "";
         String group = this.group != null ? this.group + "/" : "";
         String imageName = this.name != null ? this.name : artifactId.toLowerCase();
         String tag = this.tag;

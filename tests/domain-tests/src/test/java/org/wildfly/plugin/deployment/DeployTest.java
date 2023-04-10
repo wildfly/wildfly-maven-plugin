@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.inject.Inject;
 
 import org.apache.maven.plugin.Mojo;
@@ -122,7 +123,8 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
             deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroup("other-deployment-group"));
         }
         // Set up the other-server-group servers to ensure the full deployment process works correctly
-        final ModelNode op = ServerOperations.createOperation("start-servers", ServerOperations.createAddress(ClientConstants.SERVER_GROUP, "other-server-group"));
+        final ModelNode op = ServerOperations.createOperation("start-servers",
+                ServerOperations.createAddress(ClientConstants.SERVER_GROUP, "other-server-group"));
         op.get("blocking").set(true);
         executeOperation(op);
 
@@ -170,7 +172,8 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         deployMojo.execute();
 
         // Verify deployed
-        assertFalse("Deployment " + DEPLOYMENT_NAME + " was not undeployed", deploymentManager.hasDeployment(DEPLOYMENT_NAME, DEFAULT_SERVER_GROUP));
+        assertFalse("Deployment " + DEPLOYMENT_NAME + " was not undeployed",
+                deploymentManager.hasDeployment(DEPLOYMENT_NAME, DEFAULT_SERVER_GROUP));
     }
 
     @Override
@@ -184,11 +187,13 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         executeAndVerifyDeploymentExists(goal, fileName, null);
     }
 
-    private void executeAndVerifyDeploymentExists(final String goal, final String fileName, final String runtimeName) throws Exception {
+    private void executeAndVerifyDeploymentExists(final String goal, final String fileName, final String runtimeName)
+            throws Exception {
         executeAndVerifyDeploymentExists(goal, fileName, runtimeName, Collections.singleton("main-server-group"));
     }
 
-    private void executeAndVerifyDeploymentExists(final String goal, final String fileName, final String runtimeName, final Collection<String> serverGroups) throws Exception {
+    private void executeAndVerifyDeploymentExists(final String goal, final String fileName, final String runtimeName,
+            final Collection<String> serverGroups) throws Exception {
 
         final AbstractDeployment deployMojo = lookupMojoAndVerify(goal, fileName);
 
@@ -203,7 +208,8 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
 
         // Verify deployed on all server groups
         for (String serverGroup : serverGroups) {
-            assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed on server group " + serverGroup, deploymentManager.hasDeployment(DEPLOYMENT_NAME, serverGroup));
+            assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed on server group " + serverGroup,
+                    deploymentManager.hasDeployment(DEPLOYMENT_NAME, serverGroup));
         }
 
         // /deployment=test.war :read-attribute(name=status)
@@ -220,7 +226,8 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
             final ModelNode stepResults = ServerOperations.readResult(result);
             final Set<String> stepKeys = stepResults.keys();
             for (String stepKey : stepKeys) {
-                assertEquals("Runtime name does not match", runtimeName, ServerOperations.readResultAsString(stepResults.get(stepKey)));
+                assertEquals("Runtime name does not match", runtimeName,
+                        ServerOperations.readResultAsString(stepResults.get(stepKey)));
             }
         }
     }

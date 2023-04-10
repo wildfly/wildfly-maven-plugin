@@ -65,7 +65,8 @@ public class DomainTestServer implements TestServer {
                         .launch();
                 consoleConsumer = ConsoleConsumer.start(process, System.out);
                 shutdownThread = ProcessHelper.addShutdownHook(process);
-                client = DomainClient.Factory.create(ModelControllerClient.Factory.create(TestEnvironment.HOSTNAME, TestEnvironment.PORT));
+                client = DomainClient.Factory
+                        .create(ModelControllerClient.Factory.create(TestEnvironment.HOSTNAME, TestEnvironment.PORT));
                 currentProcess = process;
                 ServerHelper.waitForDomain(process, client, TestEnvironment.TIMEOUT);
                 deploymentManager = DeploymentManager.Factory.create(client);
@@ -118,12 +119,13 @@ public class DomainTestServer implements TestServer {
 
     private void cleanUp() {
         try {
-            if (client != null) try {
-                client.close();
-            } catch (Exception ignore) {
-            } finally {
-                client = null;
-            }
+            if (client != null)
+                try {
+                    client.close();
+                } catch (Exception ignore) {
+                } finally {
+                    client = null;
+                }
             try {
                 ProcessHelper.destroyProcess(currentProcess);
             } catch (InterruptedException ignore) {

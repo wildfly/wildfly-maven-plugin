@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 import javax.inject.Inject;
 
 import org.jboss.as.controller.client.helpers.ClientConstants;
@@ -97,25 +98,31 @@ public class UndeploymentMatchTest extends AbstractWildFlyServerMojoTest {
     public void undeployFirstMultiServerGroup() throws Exception {
         final String serverGroup = "other-server-group";
         if (!deploymentManager.hasDeployment(DEPLOYMENT_NAME_1, serverGroup)) {
-            final DeploymentResult result = deploymentManager.forceDeploy(getDeployment().setName(DEPLOYMENT_NAME_1).addServerGroup(serverGroup));
+            final DeploymentResult result = deploymentManager
+                    .forceDeploy(getDeployment().setName(DEPLOYMENT_NAME_1).addServerGroup(serverGroup));
             Assert.assertTrue(result.getFailureMessage(), result.successful());
         }
         if (!deploymentManager.hasDeployment(DEPLOYMENT_NAME_2, serverGroup)) {
-            final DeploymentResult result = deploymentManager.forceDeploy(getDeployment().setName(DEPLOYMENT_NAME_2).addServerGroup(serverGroup));
+            final DeploymentResult result = deploymentManager
+                    .forceDeploy(getDeployment().setName(DEPLOYMENT_NAME_2).addServerGroup(serverGroup));
             Assert.assertTrue(result.getFailureMessage(), result.successful());
         }
         // Set up the other-server-group servers to ensure the full deployment process works correctly
-        final ModelNode op = Operations.createOperation("start-servers", new ModelNode().setEmptyList().add(ClientConstants.SERVER_GROUP, "other-server-group"));
+        final ModelNode op = Operations.createOperation("start-servers",
+                new ModelNode().setEmptyList().add(ClientConstants.SERVER_GROUP, "other-server-group"));
         op.get("blocking").set(true);
         executeOperation(op);
 
-        undeploy(MatchPatternStrategy.FIRST, "undeploy-multi-server-group-match-pom.xml", Arrays.asList("main-server-group", "other-server-group"));
+        undeploy(MatchPatternStrategy.FIRST, "undeploy-multi-server-group-match-pom.xml",
+                Arrays.asList("main-server-group", "other-server-group"));
 
         final Set<DeploymentDescription> deployments = deploymentManager.getDeployments();
         assertEquals(1, deployments.size());
 
-        assertTrue("Deployment " + DEPLOYMENT_NAME_2 + " was not found on main-server-group", deploymentManager.hasDeployment(DEPLOYMENT_NAME_2, "main-server-group"));
-        assertTrue("Deployment " + DEPLOYMENT_NAME_2 + " was not found on other-server-group", deploymentManager.hasDeployment(DEPLOYMENT_NAME_2, "other-server-group"));
+        assertTrue("Deployment " + DEPLOYMENT_NAME_2 + " was not found on main-server-group",
+                deploymentManager.hasDeployment(DEPLOYMENT_NAME_2, "main-server-group"));
+        assertTrue("Deployment " + DEPLOYMENT_NAME_2 + " was not found on other-server-group",
+                deploymentManager.hasDeployment(DEPLOYMENT_NAME_2, "other-server-group"));
     }
 
     @Test(expected = MojoDeploymentException.class)
@@ -148,7 +155,8 @@ public class UndeploymentMatchTest extends AbstractWildFlyServerMojoTest {
         undeploy(matchPatternStrategy, pomName, Collections.singletonList("main-server-group"));
     }
 
-    private void undeploy(final MatchPatternStrategy matchPatternStrategy, final String pomName, final List<String> serverGroups) throws Exception {
+    private void undeploy(final MatchPatternStrategy matchPatternStrategy, final String pomName,
+            final List<String> serverGroups) throws Exception {
 
         final UndeployMojo undeployMojo = lookupMojoAndVerify("undeploy", pomName);
         // Server groups are required to be set and when there is a property defined on an attribute parameter the

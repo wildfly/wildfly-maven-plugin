@@ -50,7 +50,6 @@ public class DeployArtifactMojo extends AbstractDeployment {
     @Parameter
     private String groupId;
 
-
     /**
      * The artifact to deploys artifactId
      */
@@ -76,7 +75,6 @@ public class DeployArtifactMojo extends AbstractDeployment {
      * The resolved dependency file
      */
     private File file;
-
 
     @Override
     public void validate(final boolean isDomain) throws MojoDeploymentException {
@@ -114,7 +112,8 @@ public class DeployArtifactMojo extends AbstractDeployment {
     }
 
     @Override
-    protected DeploymentResult executeDeployment(final DeploymentManager deploymentManager, final Deployment deployment) throws IOException {
+    protected DeploymentResult executeDeployment(final DeploymentManager deploymentManager, final Deployment deployment)
+            throws IOException {
         if (force) {
             return deploymentManager.forceDeploy(deployment);
         }

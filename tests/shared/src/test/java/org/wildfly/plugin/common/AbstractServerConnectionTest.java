@@ -124,7 +124,8 @@ public class AbstractServerConnectionTest extends AbstractWildFlyMojoTest {
      */
     @Test
     public void testCredentialsProvidedInSettings() throws Exception {
-        final DeployMojo mojo = lookupMojoVerifyAndApplySettings("deploy", "id-provided-pom.xml", "credentials-provided-settings.xml");
+        final DeployMojo mojo = lookupMojoVerifyAndApplySettings("deploy", "id-provided-pom.xml",
+                "credentials-provided-settings.xml");
         mojo.setLog(log);
         mojo.getClientConfiguration();
         final InOrder inOrder = inOrder(log);
@@ -158,7 +159,8 @@ public class AbstractServerConnectionTest extends AbstractWildFlyMojoTest {
      * @throws Exception if the mojo can not be found
      */
     @SuppressWarnings("unchecked")
-    private <T extends Mojo> T lookupMojoVerifyAndApplySettings(final String mojoName, final String pomFileName, final String settingsFileName) throws Exception {
+    private <T extends Mojo> T lookupMojoVerifyAndApplySettings(final String mojoName, final String pomFileName,
+            final String settingsFileName) throws Exception {
         T mojo = lookupMojoAndVerify(mojoName, pomFileName);
         rule.setVariableValueToObject(mojo, "settings", getSettingsFile(settingsFileName));
         return mojo;

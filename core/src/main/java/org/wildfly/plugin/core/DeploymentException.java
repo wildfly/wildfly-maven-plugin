@@ -24,7 +24,7 @@ package org.wildfly.plugin.core;
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-@SuppressWarnings({"WeakerAccess", "unused"})
+@SuppressWarnings({ "WeakerAccess", "unused" })
 public class DeploymentException extends RuntimeException {
 
     /**

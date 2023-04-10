@@ -196,29 +196,29 @@ public class FeaturePack implements DependableCoordinate, ArtifactCoordinate {
     public String toString() {
         final StringBuilder buf = new StringBuilder();
         buf.append('{');
-        if(transitiveDep) {
+        if (transitiveDep) {
             buf.append("transitive ");
         }
-        if(location != null) {
+        if (location != null) {
             buf.append(location);
         } else {
             buf.append(groupId).append(':').append(artifactId).append(':').append(version);
         }
         buf.append(" inherit-packages=").append(inheritPackages);
-        if(!includedPackages.isEmpty()) {
+        if (!includedPackages.isEmpty()) {
             buf.append(" included-packages=");
             StringUtils.appendList(buf, includedPackages);
         }
-        if(!excludedPackages.isEmpty()) {
+        if (!excludedPackages.isEmpty()) {
             buf.append(" excluded-packages=");
             StringUtils.appendList(buf, excludedPackages);
         }
         buf.append(" inherit-configs=").append(inheritConfigs);
-        if(!includedConfigs.isEmpty()) {
+        if (!includedConfigs.isEmpty()) {
             buf.append(" included-configs=");
             StringUtils.appendList(buf, includedConfigs);
         }
-        if(!excludedConfigs.isEmpty()) {
+        if (!excludedConfigs.isEmpty()) {
             buf.append(" excluded-configs=");
             StringUtils.appendList(buf, excludedConfigs);
         }
@@ -227,7 +227,8 @@ public class FeaturePack implements DependableCoordinate, ArtifactCoordinate {
 
     private void assertPathLocation() {
         if (groupId != null || artifactId != null || version != null) {
-            throw new IllegalStateException("feature-pack Path cannot be used: feature-pack Maven coordinates have already been initialized");
+            throw new IllegalStateException(
+                    "feature-pack Path cannot be used: feature-pack Maven coordinates have already been initialized");
         }
         if (location != null) {
             throw new IllegalStateException("feature-pack Path cannot be used: location has already been initialized");
@@ -235,8 +236,9 @@ public class FeaturePack implements DependableCoordinate, ArtifactCoordinate {
     }
 
     private void assertLocation() {
-        if(groupId != null || artifactId != null || version != null) {
-            throw new IllegalStateException("Location can't bet set, feature-pack Maven coordinates have already been initialized");
+        if (groupId != null || artifactId != null || version != null) {
+            throw new IllegalStateException(
+                    "Location can't bet set, feature-pack Maven coordinates have already been initialized");
         }
         if (path != null) {
             throw new IllegalStateException("Location can't bet set, feature-pack Path has already been initialized");
@@ -244,11 +246,13 @@ public class FeaturePack implements DependableCoordinate, ArtifactCoordinate {
     }
 
     private void assertMavenCoordinates() {
-        if(location != null) {
-            throw new IllegalStateException("Feature-pack Maven coordinates cannot be used: feature-pack location has already been initialized");
+        if (location != null) {
+            throw new IllegalStateException(
+                    "Feature-pack Maven coordinates cannot be used: feature-pack location has already been initialized");
         }
         if (path != null) {
-            throw new IllegalStateException("Feature-pack Maven coordinates cannot be used: feature-pack Path has already been initialized");
+            throw new IllegalStateException(
+                    "Feature-pack Maven coordinates cannot be used: feature-pack Path has already been initialized");
         }
     }
 
