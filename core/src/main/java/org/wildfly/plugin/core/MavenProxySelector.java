@@ -19,6 +19,7 @@ package org.wildfly.plugin.core;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
 
@@ -69,6 +70,7 @@ class MavenProxySelector {
 
     private final List<Pattern> nonProxyHosts;
     private final Proxy proxy;
+
     MavenProxySelector(String host, int port, String protocol, String userName,
             String password, List<Pattern> nonProxyHosts) {
         this.nonProxyHosts = nonProxyHosts;

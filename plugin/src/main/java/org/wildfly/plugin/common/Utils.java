@@ -38,7 +38,8 @@ public class Utils {
 
     private static final Pattern WHITESPACE_IF_NOT_QUOTED = Pattern.compile("(\\S+\"[^\"]+\")|\\S+");
 
-    public static final String WILDFLY_DEFAULT_DIR= "server";
+    public static final String WILDFLY_DEFAULT_DIR = "server";
+
     /**
      * Tests if the character sequence is not {@code null} and not empty.
      *

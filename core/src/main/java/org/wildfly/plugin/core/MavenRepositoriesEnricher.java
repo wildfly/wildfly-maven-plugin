@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
@@ -35,6 +36,7 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 
 /**
  * Add required repositories if not present.
+ *
  * @author jdenise
  */
 public class MavenRepositoriesEnricher {
@@ -47,7 +49,8 @@ public class MavenRepositoriesEnricher {
         private final RepositoryPolicy releasePolicy;
         private final RepositoryPolicy snapshotPolicy;
 
-        RequiredRepository(String id, String type, String url, RepositoryPolicy releasePolicy, RepositoryPolicy snapshotPolicy) {
+        RequiredRepository(String id, String type, String url, RepositoryPolicy releasePolicy,
+                RepositoryPolicy snapshotPolicy) {
             this.id = id;
             this.type = type;
             this.url = url;
@@ -55,6 +58,7 @@ public class MavenRepositoriesEnricher {
             this.snapshotPolicy = snapshotPolicy;
         }
     }
+
     public static final String GA_REPO_URL = "https://maven.repository.redhat.com/ga/";
     public static final String NEXUS_REPO_URL = "https://repository.jboss.org/nexus/content/groups/public/";
     private static final String DEFAULT_REPOSITORY_TYPE = "default";
@@ -62,21 +66,25 @@ public class MavenRepositoriesEnricher {
     private static final Map<String, RequiredRepository> REQUIRED_REPOSITORIES = new HashMap<>();
 
     static {
-        REQUIRED_REPOSITORIES.put(GA_REPO_URL, new RequiredRepository("jboss-ga-repository", DEFAULT_REPOSITORY_TYPE, GA_REPO_URL,
+        REQUIRED_REPOSITORIES.put(GA_REPO_URL, new RequiredRepository("jboss-ga-repository", DEFAULT_REPOSITORY_TYPE,
+                GA_REPO_URL,
                 new RepositoryPolicy(true, RepositoryPolicy.UPDATE_POLICY_DAILY, RepositoryPolicy.CHECKSUM_POLICY_WARN),
                 new RepositoryPolicy(false, RepositoryPolicy.UPDATE_POLICY_NEVER, RepositoryPolicy.CHECKSUM_POLICY_FAIL)));
-        REQUIRED_REPOSITORIES.put(NEXUS_REPO_URL, new RequiredRepository("jboss-public-repository", DEFAULT_REPOSITORY_TYPE, NEXUS_REPO_URL,
+        REQUIRED_REPOSITORIES.put(NEXUS_REPO_URL, new RequiredRepository("jboss-public-repository", DEFAULT_REPOSITORY_TYPE,
+                NEXUS_REPO_URL,
                 new RepositoryPolicy(true, RepositoryPolicy.UPDATE_POLICY_DAILY, RepositoryPolicy.CHECKSUM_POLICY_WARN),
                 new RepositoryPolicy(false, RepositoryPolicy.UPDATE_POLICY_NEVER, RepositoryPolicy.CHECKSUM_POLICY_FAIL)));
     }
 
-    public static void enrich(MavenSession session, MavenProject project, List<RemoteRepository> repositories) throws MojoExecutionException {
+    public static void enrich(MavenSession session, MavenProject project, List<RemoteRepository> repositories)
+            throws MojoExecutionException {
         Set<String> configuredUrls = getUrls(repositories);
         Settings settings = session.getSettings();
         Proxy proxy = settings.getActiveProxy();
         MavenProxySelector proxySelector = null;
         if (proxy != null) {
-            MavenProxySelector.Builder selectorBuilder = new MavenProxySelector.Builder(proxy.getHost(), proxy.getPort(), proxy.getProtocol());
+            MavenProxySelector.Builder selectorBuilder = new MavenProxySelector.Builder(proxy.getHost(), proxy.getPort(),
+                    proxy.getProtocol());
             selectorBuilder.setPassword(proxy.getPassword());
             selectorBuilder.setUserName(proxy.getUsername());
             if (proxy.getNonProxyHosts() != null) {

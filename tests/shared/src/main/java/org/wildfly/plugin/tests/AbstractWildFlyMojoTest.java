@@ -22,10 +22,10 @@
 
 package org.wildfly.plugin.tests;
 
-import java.io.File;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -105,7 +105,7 @@ public abstract class AbstractWildFlyMojoTest {
     public static Path getBaseDir() {
         final Path baseDir = Paths.get(BASE_CONFIG_DIR);
         assertTrue("Not a directory: " + BASE_CONFIG_DIR, Files.exists(baseDir));
-       return baseDir;
+        return baseDir;
     }
 
     public MavenProject readMavenProject(Path pom)
@@ -124,11 +124,13 @@ public abstract class AbstractWildFlyMojoTest {
         setValue(instance, "hostname", TestEnvironment.HOSTNAME);
     }
 
-    protected static void setValue(final Object instance, final String name, final Object value) throws NoSuchFieldException, IllegalAccessException {
+    protected static void setValue(final Object instance, final String name, final Object value)
+            throws NoSuchFieldException, IllegalAccessException {
         setValue(instance.getClass(), instance, name, value);
     }
 
-    private static void setValue(final Class<?> clazz, final Object instance, final String name, final Object value) throws NoSuchFieldException, IllegalAccessException {
+    private static void setValue(final Class<?> clazz, final Object instance, final String name, final Object value)
+            throws NoSuchFieldException, IllegalAccessException {
         if (clazz == null || Object.class.getName().equals(clazz.getName())) {
             throw new NoSuchFieldException("Field " + name + " not found on " + instance.getClass().getName());
         }
@@ -157,7 +159,8 @@ public abstract class AbstractWildFlyMojoTest {
     }
 
     // Needed when resolving CLI artifact for in process execution
-    protected static void setValidSession(Mojo mojo) throws NoLocalRepositoryManagerException, NoSuchFieldException, IllegalAccessException {
+    protected static void setValidSession(Mojo mojo)
+            throws NoLocalRepositoryManagerException, NoSuchFieldException, IllegalAccessException {
         DefaultRepositorySystemSession repoSession = new DefaultRepositorySystemSession();
         // Take into account maven.repo.local
         String path = System.getProperty("maven.repo.local", getDefaultMavenRepositoryPath().toString());

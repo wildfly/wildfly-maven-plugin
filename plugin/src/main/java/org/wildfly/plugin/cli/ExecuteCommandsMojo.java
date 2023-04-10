@@ -29,9 +29,10 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
-import org.apache.maven.execution.MavenSession;
 
+import javax.inject.Inject;
+
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -54,6 +55,7 @@ import org.wildfly.plugin.core.MavenRepositoriesEnricher;
  * Commands should be formatted in the same manor CLI commands are formatted.
  * <p/>
  * Executing commands in a batch will rollback all changes if one command fails.
+ *
  * <pre>
  *      &lt;batch&gt;true&lt;/batch&gt;
  *      &lt;fail-on-error&gt;false&lt;/fail-on-error&gt;
@@ -145,7 +147,9 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
      * Indicates whether or not CLI scrips or commands should be executed in an offline mode. This is useful for using
      * an embedded server or host controller.
      *
-     * <p>This does not start an embedded server it instead skips checking if a server is running.</p>
+     * <p>
+     * This does not start an embedded server it instead skips checking if a server is running.
+     * </p>
      */
     @Parameter(name = "offline", defaultValue = "false", property = PropertyNames.OFFLINE)
     private boolean offline = false;
@@ -221,7 +225,8 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
         }
         MavenRepositoriesEnricher.enrich(mavenSession, project, repositories);
         mavenRepoManager = new MavenArtifactRepositoryManager(repoSystem, session, repositories);
-        final CommandConfiguration.Builder cmdConfigBuilder = CommandConfiguration.of(this::createClient, this::getClientConfiguration)
+        final CommandConfiguration.Builder cmdConfigBuilder = CommandConfiguration
+                .of(this::createClient, this::getClientConfiguration)
                 .addCommands(commands)
                 .addJvmOptions(javaOpts)
                 .addPropertiesFiles(propertiesFiles)

@@ -32,7 +32,6 @@ import org.apache.maven.plugin.MojoExecutionException;
  */
 public interface WatchHandler {
 
-
     Result handle(WatchContext context, WatchEvent<Path> event, Path file) throws IOException, MojoExecutionException;
 
     /**

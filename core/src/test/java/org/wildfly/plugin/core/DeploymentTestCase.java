@@ -37,7 +37,8 @@ import org.wildfly.plugin.core.common.Simple;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 public class DeploymentTestCase {
-    private static final Path TEST_DEPLOYMENT_DIR = Paths.get(System.getProperty("test.deployment.dir", ".")).toAbsolutePath().normalize();
+    private static final Path TEST_DEPLOYMENT_DIR = Paths.get(System.getProperty("test.deployment.dir", ".")).toAbsolutePath()
+            .normalize();
     private static final String TEST_DEPLOYMENT_FILE_NAME = TEST_DEPLOYMENT_DIR.getFileName().toString();
 
     @Test

@@ -56,7 +56,7 @@ import org.wildfly.common.Assert;
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-@SuppressWarnings({"unused", "StaticMethodOnlyUsedInOneClass", "WeakerAccess"})
+@SuppressWarnings({ "unused", "StaticMethodOnlyUsedInOneClass", "WeakerAccess" })
 public class DeploymentOperations {
     static final String ENABLED = "enabled";
     static final ModelNode EMPTY_ADDRESS = new ModelNode().setEmptyList();
@@ -70,7 +70,7 @@ public class DeploymentOperations {
      * simply a {@link ModelNode} of type {@link ModelType#LIST}.
      * <p>
      * The string is split into key/value pairs. If the final key does not have a value an {@code *} is used to
-     * indicate a  wildcard for the address.
+     * indicate a wildcard for the address.
      * </p>
      *
      * @param pairs the key/value pairs to use
@@ -86,7 +86,7 @@ public class DeploymentOperations {
      * simply a {@link ModelNode} of type {@link ModelType#LIST}.
      * <p>
      * The string is split into key/value pairs. If the final key does not have a value an {@code *} is used to
-     * indicate a  wildcard for the address.
+     * indicate a wildcard for the address.
      * </p>
      *
      * @param pairs the key/value pairs to use
@@ -358,10 +358,10 @@ public class DeploymentOperations {
      * @param deployment        the deployment used for the replacement
      * @param currentDeployment the currently deployed application
      * @param allowAddIfMissing {@code true} if this should add deployments to server groups which they do not already
-     *                          exist on, otherwise {@code false}
+     *                              exist on, otherwise {@code false}
      */
     static void addReplaceOperationSteps(final CompositeOperationBuilder builder, final Deployment deployment,
-                                         final DeploymentDescription currentDeployment, final boolean allowAddIfMissing) {
+            final DeploymentDescription currentDeployment, final boolean allowAddIfMissing) {
         final String name = deployment.getName();
         final String runtimeName = deployment.getRuntimeName();
         // Adds need to happen first on server-groups otherwise the full-replace-deployment will fail currently
@@ -419,20 +419,22 @@ public class DeploymentOperations {
      * @param builder    the builder to add the step to
      * @param deployment the deployment being redeployed
      */
-    private static void addRedeployOperationStep(final CompositeOperationBuilder builder, final DeploymentDescription deployment) {
+    private static void addRedeployOperationStep(final CompositeOperationBuilder builder,
+            final DeploymentDescription deployment) {
         final String deploymentName = deployment.getName();
         final Set<String> serverGroups = deployment.getServerGroups();
         if (serverGroups.isEmpty()) {
             builder.addStep(createOperation(DEPLOYMENT_REDEPLOY_OPERATION, createAddress(DEPLOYMENT, deploymentName)));
         } else {
             for (String serverGroup : serverGroups) {
-                builder.addStep(createOperation(DEPLOYMENT_REDEPLOY_OPERATION, createAddress(SERVER_GROUP, serverGroup, DEPLOYMENT, deploymentName)));
+                builder.addStep(createOperation(DEPLOYMENT_REDEPLOY_OPERATION,
+                        createAddress(SERVER_GROUP, serverGroup, DEPLOYMENT, deploymentName)));
             }
         }
     }
 
     private static void addUndeployOperationStep(final CompositeOperationBuilder builder,
-                                                 @SuppressWarnings("TypeMayBeWeakened") final UndeployDescription undeployDescription) {
+            @SuppressWarnings("TypeMayBeWeakened") final UndeployDescription undeployDescription) {
         final String name = undeployDescription.getName();
         final Set<String> serverGroups = undeployDescription.getServerGroups();
         if (serverGroups.isEmpty()) {

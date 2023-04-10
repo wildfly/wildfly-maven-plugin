@@ -43,11 +43,13 @@ public class DeploymentResultTestCase {
     @Test
     public void testFailed() {
         // Create a failure description
-        final ModelNode failureModel = createCompositeOutcome("WFLYCTL0212: Duplicate resource [(\"deployment\" => \"foo.war\")]");
+        final ModelNode failureModel = createCompositeOutcome(
+                "WFLYCTL0212: Duplicate resource [(\"deployment\" => \"foo.war\")]");
 
         DeploymentResult deploymentResult = new DeploymentResult(failureModel);
         Assert.assertFalse(deploymentResult.successful());
-        Assert.assertEquals("WFLYCTL0212: Duplicate resource [(\"deployment\" => \"foo.war\")]", deploymentResult.getFailureMessage());
+        Assert.assertEquals("WFLYCTL0212: Duplicate resource [(\"deployment\" => \"foo.war\")]",
+                deploymentResult.getFailureMessage());
         Assert.assertTrue(deploymentResult.asModelNode().isDefined());
 
         // Create a failure not based on model node
@@ -78,7 +80,8 @@ public class DeploymentResultTestCase {
 
         // Create a failure description
         try {
-            new DeploymentResult(createCompositeOutcome("WFLYCTL0212: Duplicate resource [(\"deployment\" => \"foo.war\")]")).assertSuccess();
+            new DeploymentResult(createCompositeOutcome("WFLYCTL0212: Duplicate resource [(\"deployment\" => \"foo.war\")]"))
+                    .assertSuccess();
             Assert.fail("Expected the deployment result to be a failure result");
         } catch (DeploymentException ignore) {
         }

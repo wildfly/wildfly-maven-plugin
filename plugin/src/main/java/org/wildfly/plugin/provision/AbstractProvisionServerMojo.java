@@ -16,6 +16,9 @@
  */
 package org.wildfly.plugin.provision;
 
+import static org.wildfly.plugin.core.Constants.PLUGIN_PROVISIONING_FILE;
+import static org.wildfly.plugin.core.Constants.STANDALONE_XML;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -26,7 +29,9 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
 import javax.xml.stream.XMLStreamException;
+
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -50,10 +55,8 @@ import org.jboss.galleon.xml.ProvisioningXmlWriter;
 import org.wildfly.channel.UnresolvedMavenArtifactException;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.Utils;
-import org.wildfly.plugin.core.GalleonUtils;
-import static org.wildfly.plugin.core.Constants.PLUGIN_PROVISIONING_FILE;
-import static org.wildfly.plugin.core.Constants.STANDALONE_XML;
 import org.wildfly.plugin.core.FeaturePack;
+import org.wildfly.plugin.core.GalleonUtils;
 import org.wildfly.plugin.core.MavenRepositoriesEnricher;
 import org.wildfly.plugin.core.PluginProgressTracker;
 
@@ -88,6 +91,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
      * is strongly advised to set 'jboss-fork-embedded' option to 'true' in
      * order to fork Galleon provisioning and CLI scripts execution in dedicated
      * processes. For example:
+     *
      * <pre>
      *   &lt;galleon-options&gt;
      *     &lt;jboss-fork-embedded&gt;true&lt;/jboss-fork-embedded&gt;
@@ -131,21 +135,22 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
     @Parameter(alias = "provisioning-dir", property = PropertyNames.WILDFLY_PROVISIONING_DIR, defaultValue = Utils.WILDFLY_DEFAULT_DIR)
     protected String provisioningDir;
 
-     /**
-     * Set to {@code true} if you want to delete the existing server referenced from the {@code provisioningDir} and provision a new one,
+    /**
+     * Set to {@code true} if you want to delete the existing server referenced from the {@code provisioningDir} and provision a
+     * new one,
      * otherwise {@code false}.
      */
-    @Parameter(alias="overwrite-provisioned-server", defaultValue = "false", property = PropertyNames.WILDFLY_PROVISIONING_OVERWRITE_PROVISIONED_SERVER)
+    @Parameter(alias = "overwrite-provisioned-server", defaultValue = "false", property = PropertyNames.WILDFLY_PROVISIONING_OVERWRITE_PROVISIONED_SERVER)
     private boolean overwriteProvisionedServer;
 
     /**
      * A list of feature-pack configurations to install, can be combined with layers.
      * Use the System property {@code wildfly.provisioning.feature-packs} to provide a comma separated list of feature-packs.
      */
-    @Parameter(required = false, alias= "feature-packs", property = PropertyNames.WILDFLY_PROVISIONING_FEATURE_PACKS)
+    @Parameter(required = false, alias = "feature-packs", property = PropertyNames.WILDFLY_PROVISIONING_FEATURE_PACKS)
     List<FeaturePack> featurePacks = Collections.emptyList();
 
-/**
+    /**
      * A list of Galleon layers to provision. Can be used when
      * feature-pack-location or feature-packs are set.
      * Use the System property {@code wildfly.provisioning.layers} to provide a comma separated list of layers.
@@ -156,7 +161,8 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
     /**
      * A list of Galleon layers to exclude. Can be used when
      * feature-pack-location or feature-packs are set.
-     * Use the System property {@code wildfly.provisioning.layers.excluded} to provide a comma separated list of layers to exclude.
+     * Use the System property {@code wildfly.provisioning.layers.excluded} to provide a comma separated list of layers to
+     * exclude.
      */
     @Parameter(alias = "excluded-layers", required = false, property = PropertyNames.WILDFLY_PROVISIONING_LAYERS_EXCLUDED)
     List<String> excludedLayers = Collections.emptyList();
@@ -210,14 +216,15 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
             }
         }
         if (!Paths.get(provisioningDir).isAbsolute() && (targetPath.equals(wildflyDir) || !wildflyDir.startsWith(targetPath))) {
-            throw new  MojoExecutionException("provisioning-dir " + provisioningDir + " must be an absolute path or a child directory relative to the project build directory.");
+            throw new MojoExecutionException("provisioning-dir " + provisioningDir
+                    + " must be an absolute path or a child directory relative to the project build directory.");
         }
         IoUtils.recursiveDelete(wildflyDir);
         try {
             try {
                 provisionServer(wildflyDir);
                 if (artifactResolver instanceof ChannelMavenArtifactRepositoryManager) {
-                    ((ChannelMavenArtifactRepositoryManager)artifactResolver).done(wildflyDir);
+                    ((ChannelMavenArtifactRepositoryManager) artifactResolver).done(wildflyDir);
                 }
             } catch (ProvisioningException | IOException | XMLStreamException ex) {
                 throw new MojoExecutionException("Provisioning failed", ex);
@@ -262,12 +269,15 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
                 }
             } else {
                 if (provisioningFileExists) {
-                    getLog().warn("Galleon provisioning file " + provisioningFile + " is ignored, plugin configuration is used.");
+                    getLog().warn(
+                            "Galleon provisioning file " + provisioningFile + " is ignored, plugin configuration is used.");
                 }
                 if (layers.isEmpty() && !STANDALONE_XML.equals(layersConfigurationFileName)) {
-                    throw new MojoExecutionException("layers-configuration-file-name has been set although no layers are defined.");
+                    throw new MojoExecutionException(
+                            "layers-configuration-file-name has been set although no layers are defined.");
                 }
-                config = GalleonUtils.buildConfig(pm, featurePacks, layers, excludedLayers, galleonOptions, layersConfigurationFileName);
+                config = GalleonUtils.buildConfig(pm, featurePacks, layers, excludedLayers, galleonOptions,
+                        layersConfigurationFileName);
             }
             getLog().info("Provisioning server in " + home);
             PluginProgressTracker.initTrackers(pm, getLog());

@@ -82,7 +82,6 @@ public class ExecuteCommandsTest extends AbstractWildFlyServerMojoTest {
         // Clean up the property
         executeOperation(ServerOperations.createRemoveOperation(address));
 
-
         // Read the attribute
         address = ServerOperations.createAddress("system-property", "property2");
         op = ServerOperations.createReadAttributeOperation(address, "value");
@@ -116,14 +115,14 @@ public class ExecuteCommandsTest extends AbstractWildFlyServerMojoTest {
         assertEquals("true", ServerOperations.readResultAsString(result));
 
         // Ensure the module has been added
-        final Path moduleDir = Paths.get(TestEnvironment.WILDFLY_HOME.toString(), "modules", "org", "wildfly", "plugin", "tests", "main");
+        final Path moduleDir = Paths.get(TestEnvironment.WILDFLY_HOME.toString(), "modules", "org", "wildfly", "plugin",
+                "tests", "main");
         assertTrue(String.format("Expected %s to exist.", moduleDir), Files.exists(moduleDir));
         assertTrue("Expected the module.xml to exist in " + moduleDir, Files.exists(moduleDir.resolve("module.xml")));
         assertTrue("Expected the test.jar to exist in " + moduleDir, Files.exists(moduleDir.resolve("test.jar")));
 
         // Clean up the property
         executeOperation(ServerOperations.createRemoveOperation(address));
-
 
         // Read the attribute
         address = ServerOperations.createAddress("system-property", "fork-command");

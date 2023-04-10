@@ -111,12 +111,13 @@ public class StandaloneTestServer implements TestServer {
 
     private void cleanUp() {
         try {
-            if (client != null) try {
-                client.close();
-            } catch (Exception ignore) {
-            } finally {
-                client = null;
-            }
+            if (client != null)
+                try {
+                    client.close();
+                } catch (Exception ignore) {
+                } finally {
+                    client = null;
+                }
             try {
                 ProcessHelper.destroyProcess(currentProcess);
             } catch (InterruptedException ignore) {

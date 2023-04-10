@@ -22,7 +22,6 @@
 
 package org.wildfly.plugin.deployment;
 
-
 import java.net.URL;
 
 import org.apache.maven.plugins.annotations.Execute;

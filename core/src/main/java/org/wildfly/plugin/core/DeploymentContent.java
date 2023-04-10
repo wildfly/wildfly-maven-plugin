@@ -49,7 +49,7 @@ abstract class DeploymentContent {
      *
      * @param builder the builder used to attach the content to
      * @param op      the deployment operation to be modified with the information required to represent the content
-     *                being deployed
+     *                    being deployed
      */
     abstract void addContentToOperation(OperationBuilder builder, ModelNode op);
 

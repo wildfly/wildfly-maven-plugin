@@ -25,6 +25,7 @@ package org.wildfly.plugin.deployment;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Set;
+
 import javax.inject.Inject;
 
 import org.junit.After;

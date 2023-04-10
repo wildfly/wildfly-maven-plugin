@@ -35,7 +35,8 @@ public class CommandConfiguration extends BaseCommandConfiguration {
     private final boolean fork;
     private final boolean offline;
 
-    protected abstract static class AbstractBuilder<T extends AbstractBuilder<T>> extends BaseCommandConfiguration.AbstractBuilder<T> {
+    protected abstract static class AbstractBuilder<T extends AbstractBuilder<T>>
+            extends BaseCommandConfiguration.AbstractBuilder<T> {
 
         private final Supplier<ModelControllerClient> client;
         private final Supplier<MavenModelControllerClientConfiguration> clientConfiguration;
@@ -56,7 +57,7 @@ public class CommandConfiguration extends BaseCommandConfiguration {
          * </p>
          *
          * @param fork {@code true} if commands should be executed in a new
-         * process
+         *                 process
          *
          * @return this configuration
          */
@@ -110,9 +111,9 @@ public class CommandConfiguration extends BaseCommandConfiguration {
     /**
      * Creates a new command configuration Builder.
      *
-     * @param clientSupplier the supplier used to get a management client
+     * @param clientSupplier              the supplier used to get a management client
      * @param clientConfigurationSupplier a supplier used to get the client
-     * configuration
+     *                                        configuration
      *
      * @return a new command configuration Builder.
      */
@@ -153,7 +154,7 @@ public class CommandConfiguration extends BaseCommandConfiguration {
      * Indicates whether or not this should be an offline process.
      *
      * @return {@code true} if this should be an offline process, otherwise
-     * {@code false}
+     *             {@code false}
      */
     public boolean isOffline() {
         return offline;

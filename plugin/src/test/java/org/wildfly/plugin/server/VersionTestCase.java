@@ -65,8 +65,7 @@ public class VersionTestCase {
                 "10.1.0",
                 "10.1.1.Final",
                 "11.0.0.Alpha5",
-                "11.0.0.GA"
-        );
+                "11.0.0.GA");
 
         final List<String> versions = new ArrayList<>(orderedVersions);
         Collections.shuffle(versions);

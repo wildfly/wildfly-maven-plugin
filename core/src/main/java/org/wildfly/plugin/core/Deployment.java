@@ -40,7 +40,7 @@ import org.wildfly.common.Assert;
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings({ "unused", "WeakerAccess" })
 public class Deployment implements DeploymentDescription, Comparable<Deployment> {
 
     private final DeploymentContent content;

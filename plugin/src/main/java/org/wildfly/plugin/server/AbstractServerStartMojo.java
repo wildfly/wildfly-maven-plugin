@@ -193,11 +193,13 @@ public abstract class AbstractServerStartMojo extends AbstractServerConnection {
     /**
      * Specifies the environment variables to be passed to the process being started.
      * <div>
+     *
      * <pre>
      * &lt;env&gt;
      *     &lt;HOME&gt;/home/wildfly/&lt;/HOME&gt;
      * &lt;/env&gt;
      * </pre>
+     *
      * </div>
      */
     @Parameter
@@ -297,7 +299,8 @@ public abstract class AbstractServerStartMojo extends AbstractServerConnection {
         }
     }
 
-    protected StandaloneCommandBuilder createStandaloneCommandBuilder(final Path jbossHome, final String serverConfig) throws MojoExecutionException {
+    protected StandaloneCommandBuilder createStandaloneCommandBuilder(final Path jbossHome, final String serverConfig)
+            throws MojoExecutionException {
         final StandaloneCommandBuilder commandBuilder = StandaloneCommandBuilder.of(jbossHome)
                 .setJavaHome(javaHome)
                 .addModuleDirs(modulesPath.getModulePaths());
@@ -323,7 +326,8 @@ public abstract class AbstractServerStartMojo extends AbstractServerConnection {
             commandBuilder.addServerArguments(serverArgs);
         }
 
-        final Path javaHomePath = (this.javaHome == null ? Paths.get(System.getProperty("java.home")) : Paths.get(this.javaHome));
+        final Path javaHomePath = (this.javaHome == null ? Paths.get(System.getProperty("java.home"))
+                : Paths.get(this.javaHome));
         if (Environment.isModularJvm(javaHomePath)) {
             commandBuilder.addJavaOptions(Environment.getModularJvmArguments());
         }
@@ -341,7 +345,8 @@ public abstract class AbstractServerStartMojo extends AbstractServerConnection {
         return commandBuilder;
     }
 
-    protected DomainCommandBuilder createDomainCommandBuilder(final Path jbossHome, final String domainConfig, final String hostConfig) throws MojoExecutionException {
+    protected DomainCommandBuilder createDomainCommandBuilder(final Path jbossHome, final String domainConfig,
+            final String hostConfig) throws MojoExecutionException {
         final Path javaHome = (this.javaHome == null ? Paths.get(System.getProperty("java.home")) : Paths.get(this.javaHome));
         final DomainCommandBuilder commandBuilder = DomainCommandBuilder.of(jbossHome, javaHome)
                 .addModuleDirs(modulesPath.getModulePaths());
@@ -389,7 +394,7 @@ public abstract class AbstractServerStartMojo extends AbstractServerConnection {
 
     private Path provisionIfRequired(final Path installDir) throws MojoFailureException {
         if (jbossHome != null) {
-            //we do not need to download WildFly
+            // we do not need to download WildFly
             return Paths.get(jbossHome);
         }
         try {

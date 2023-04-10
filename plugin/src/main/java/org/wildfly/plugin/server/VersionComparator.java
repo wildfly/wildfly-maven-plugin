@@ -51,12 +51,14 @@ public class VersionComparator implements Comparator<String> {
         MILESTONE("milestone", "m"),
         RELEASE_CANDIDATE("rc", "cr"),
         FINAL("final", "", "ga"),;
+
         private static final Map<String, ReleaseType> ENTRIES;
 
         static {
             final Map<String, ReleaseType> map = new HashMap<>();
             for (ReleaseType r : values()) {
-                if (r == UNKNOWN) continue;
+                if (r == UNKNOWN)
+                    continue;
                 map.put(r.type, r);
                 map.put("-" + r.type, r);
                 for (String alias : r.aliases) {
@@ -164,7 +166,8 @@ public class VersionComparator implements Comparator<String> {
 
         @Override
         public boolean equals(final Object obj) {
-            if (obj == this) return true;
+            if (obj == this)
+                return true;
             if (!(obj instanceof Version)) {
                 return false;
             }

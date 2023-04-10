@@ -21,7 +21,6 @@
  */
 package org.wildfly.plugin.provision;
 
-
 import static org.junit.Assume.assumeNotNull;
 import static org.wildfly.plugin.provision.ExecUtil.exec;
 import static org.wildfly.plugin.provision.ExecUtil.execSilentWithTimeout;
@@ -77,7 +76,8 @@ public class ImageTest extends AbstractProvisionConfiguredMojoTestCase {
 
     @Test(expected = MojoExecutionException.class)
     public void testBuildImageWithUnknownDockerBinary() throws Exception {
-        final Mojo imageMojo = lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("image-unknown-docker-binary-pom.xml").toFile(), "image");
+        final Mojo imageMojo = lookupConfiguredMojo(
+                AbstractWildFlyMojoTest.getPomFile("image-unknown-docker-binary-pom.xml").toFile(), "image");
         imageMojo.execute();
     }
 }

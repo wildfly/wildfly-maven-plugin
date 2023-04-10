@@ -37,8 +37,7 @@ class WebAppResourceHandler implements WatchHandler {
             ".html",
             ".jsp",
             ".js",
-            ".css"
-    );
+            ".css");
 
     private final Set<String> ignoredFileExtensions;
 

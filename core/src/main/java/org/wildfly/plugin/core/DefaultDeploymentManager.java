@@ -143,9 +143,9 @@ class DefaultDeploymentManager implements DeploymentManager {
 
     @Override
     public DeploymentResult deployToRuntime(final Set<DeploymentDescription> deployments) throws IOException {
-        return execute(DeploymentOperations.createDeployOperation(Assertions.requiresNotNullOrNotEmptyParameter("deployments", deployments)));
+        return execute(DeploymentOperations
+                .createDeployOperation(Assertions.requiresNotNullOrNotEmptyParameter("deployments", deployments)));
     }
-
 
     @Override
     public DeploymentResult redeploy(final Deployment deployment) throws IOException {
@@ -172,7 +172,8 @@ class DefaultDeploymentManager implements DeploymentManager {
 
     @Override
     public DeploymentResult redeployToRuntime(final Set<DeploymentDescription> deployments) throws IOException {
-        return execute(DeploymentOperations.createRedeployOperation(Assertions.requiresNotNullOrNotEmptyParameter("deployments", deployments)));
+        return execute(DeploymentOperations
+                .createRedeployOperation(Assertions.requiresNotNullOrNotEmptyParameter("deployments", deployments)));
     }
 
     @Override
@@ -219,7 +220,8 @@ class DefaultDeploymentManager implements DeploymentManager {
         }
         if (toRemove.isEmpty()) {
             if (failOnMissing) {
-                return new DeploymentResult("No deployments were found matching any of the following deployments: %s", undeployDescriptions);
+                return new DeploymentResult("No deployments were found matching any of the following deployments: %s",
+                        undeployDescriptions);
             }
             return DeploymentResult.SUCCESSFUL;
         }
@@ -230,7 +232,6 @@ class DefaultDeploymentManager implements DeploymentManager {
         }
         return execute(DeploymentOperations.createUndeployOperation(toRemove));
     }
-
 
     @Override
     public Set<DeploymentDescription> getDeployments() throws IOException {
@@ -278,7 +279,8 @@ class DefaultDeploymentManager implements DeploymentManager {
                 }
                 return deployments;
             }
-            throw new RuntimeException("Failed to get listing of deployments. Reason: " + Operations.getFailureDescription(result).asString());
+            throw new RuntimeException(
+                    "Failed to get listing of deployments. Reason: " + Operations.getFailureDescription(result).asString());
         }
         // Handle servers other than managed domains
         final Set<DeploymentDescription> deployments = new LinkedHashSet<>();
@@ -290,7 +292,8 @@ class DefaultDeploymentManager implements DeploymentManager {
             }
             return deployments;
         }
-        throw new RuntimeException("Failed to get listing of deployments. Reason: " + Operations.getFailureDescription(result).asString());
+        throw new RuntimeException(
+                "Failed to get listing of deployments. Reason: " + Operations.getFailureDescription(result).asString());
     }
 
     @Override
@@ -323,7 +326,8 @@ class DefaultDeploymentManager implements DeploymentManager {
             }
             return deployments;
         }
-        throw new RuntimeException("Failed to get listing of deployments. Reason: " + Operations.getFailureDescription(result).asString());
+        throw new RuntimeException(
+                "Failed to get listing of deployments. Reason: " + Operations.getFailureDescription(result).asString());
     }
 
     @Override
@@ -333,13 +337,15 @@ class DefaultDeploymentManager implements DeploymentManager {
 
     @Override
     public boolean hasDeployment(final String name, final String serverGroup) {
-        final ModelNode address = DeploymentOperations.createAddress(SERVER_GROUP, Assertions.requiresNotNullOrNotEmptyParameter("serverGroup", serverGroup));
+        final ModelNode address = DeploymentOperations.createAddress(SERVER_GROUP,
+                Assertions.requiresNotNullOrNotEmptyParameter("serverGroup", serverGroup));
         return hasDeployment(address, Assertions.requiresNotNullOrNotEmptyParameter("name", name));
     }
 
     @Override
     public boolean isEnabled(final String name) {
-        return isEnabled(DeploymentOperations.createAddress(DEPLOYMENT, Assertions.requiresNotNullOrNotEmptyParameter("name", name)));
+        return isEnabled(
+                DeploymentOperations.createAddress(DEPLOYMENT, Assertions.requiresNotNullOrNotEmptyParameter("name", name)));
     }
 
     @Override
@@ -348,8 +354,7 @@ class DefaultDeploymentManager implements DeploymentManager {
                 SERVER_GROUP,
                 Assertions.requiresNotNullOrNotEmptyParameter("serverGroup", serverGroup),
                 DEPLOYMENT,
-                Assertions.requiresNotNullOrNotEmptyParameter("name", name))
-        );
+                Assertions.requiresNotNullOrNotEmptyParameter("name", name)));
     }
 
     private boolean hasDeployment(final ModelNode address, final String name) {
@@ -415,16 +420,19 @@ class DefaultDeploymentManager implements DeploymentManager {
             }
             return SimpleDeploymentDescription.of(name, serverGroups);
         }
-        throw new RuntimeException("Failed to get listing of deployments. Reason: " + Operations.getFailureDescription(result).asString());
+        throw new RuntimeException(
+                "Failed to get listing of deployments. Reason: " + Operations.getFailureDescription(result).asString());
     }
 
     private DeploymentResult validateDeployment(final DeploymentDescription deployment) {
         Assert.checkNotNullParam("deployment", deployment);
         final Set<String> serverGroups = deployment.getServerGroups();
         if (containerDescription.isDomain() && serverGroups.isEmpty()) {
-            return new DeploymentResult("No server groups were defined for the deployment operation. Deployment: %s", deployment);
+            return new DeploymentResult("No server groups were defined for the deployment operation. Deployment: %s",
+                    deployment);
         } else if (!containerDescription.isDomain() && !serverGroups.isEmpty()) {
-            return new DeploymentResult("Server is not a managed domain, but server groups were defined. Deployment: %s", deployment);
+            return new DeploymentResult("Server is not a managed domain, but server groups were defined. Deployment: %s",
+                    deployment);
         }
         return null;
     }
@@ -460,7 +468,8 @@ class DefaultDeploymentManager implements DeploymentManager {
         return null;
     }
 
-    private static DeploymentDescription findDeployment(final Iterable<DeploymentDescription> deployments, final DeploymentDescription deployment) {
+    private static DeploymentDescription findDeployment(final Iterable<DeploymentDescription> deployments,
+            final DeploymentDescription deployment) {
         for (DeploymentDescription deploymentDescription : deployments) {
             if (deploymentDescription.getName().equals(deployment.getName())) {
                 return deploymentDescription;
@@ -469,7 +478,8 @@ class DefaultDeploymentManager implements DeploymentManager {
         return null;
     }
 
-    private static UndeployDescription copyIfRequired(final UndeployDescription undeployDescription, final DeploymentDescription found) {
+    private static UndeployDescription copyIfRequired(final UndeployDescription undeployDescription,
+            final DeploymentDescription found) {
         final Collection<String> unmatched = new LinkedHashSet<>(undeployDescription.getServerGroups());
         unmatched.removeAll(found.getServerGroups());
         if (unmatched.isEmpty()) {

@@ -76,8 +76,8 @@ public class StandardOutput {
     private final Target target;
     private final Path stdoutPath;
 
-
-    private StandardOutput(final Target target, final OutputStream consumerStream, final Redirect destination, final Path stdoutPath) {
+    private StandardOutput(final Target target, final OutputStream consumerStream, final Redirect destination,
+            final Path stdoutPath) {
         this.target = target;
         this.consumerStream = consumerStream;
         this.destination = destination;
@@ -96,8 +96,8 @@ public class StandardOutput {
      *
      * @param stdout      the value to be parsed
      * @param discardNone {@code true} if the {@code stdout} value is {@code none} and the data should be discarded,
-     *                    otherwise the data will be consumed if the {@code stdout} value is {@code none} and will be
-     *                    available via {@link #toString()}
+     *                        otherwise the data will be consumed if the {@code stdout} value is {@code none} and will be
+     *                        available via {@link #toString()}
      *
      * @return a new output stream
      *
@@ -109,26 +109,27 @@ public class StandardOutput {
 
     /**
      * Parses the string and attempts to determine where the data for the stream should be written.The following are
- the options for the value:
-    <ul>
-    <li>{@code none} indicates the data for this stream will be consumed and {@link #toString()} will return the
- data of the {@code discardNone} parameter is {@code false}, otherwise the data will be discarded</li>
-    <li>{@code System.out} or {@code System.err} to write to the respective stream</li>
-    <li>Any other value is assumed to be the path to a file and the data will written to the file</li>
-    </ul>
+     * the options for the value:
+     * <ul>
+     * <li>{@code none} indicates the data for this stream will be consumed and {@link #toString()} will return the
+     * data of the {@code discardNone} parameter is {@code false}, otherwise the data will be discarded</li>
+     * <li>{@code System.out} or {@code System.err} to write to the respective stream</li>
+     * <li>Any other value is assumed to be the path to a file and the data will written to the file</li>
+     * </ul>
      *
      * @param stdout      the value to be parsed
      * @param discardNone {@code true} if the {@code stdout} value is {@code none} and the data should be discarded,
-     *                    otherwise the data will be consumed if the {@code stdout} value is {@code none} and will be
-     *                    available via {@link #toString()}
-     * @param append If stdout is a file, append output to existing file if true, otherwise a new file is created.
+     *                        otherwise the data will be consumed if the {@code stdout} value is {@code none} and will be
+     *                        available via {@link #toString()}
+     * @param append      If stdout is a file, append output to existing file if true, otherwise a new file is created.
      *
      * @return a new output stream
      *
      * @throws IOException if there is an error creating the stream
      */
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
-    public static StandardOutput parse(final String stdout, final boolean discardNone, final boolean append) throws IOException {
+    public static StandardOutput parse(final String stdout, final boolean discardNone, final boolean append)
+            throws IOException {
         if (stdout == null) {
             return new StandardOutput(Target.INHERIT, null, Redirect.INHERIT, null);
         }
@@ -165,13 +166,13 @@ public class StandardOutput {
         }
         Redirect destination = null;
         if (stdoutPath != null) {
-            destination = append? Redirect.appendTo(stdoutPath.toFile()) : Redirect.to(stdoutPath.toFile());
+            destination = append ? Redirect.appendTo(stdoutPath.toFile()) : Redirect.to(stdoutPath.toFile());
         }
         return new StandardOutput(target, out, destination, stdoutPath);
     }
 
     public static boolean isFile(String output) {
-        return  output!= null && !SYSTEM_OUT.equals(output) && !SYSTEM_ERR.equals(output) && !NONE.equals(output);
+        return output != null && !SYSTEM_OUT.equals(output) && !SYSTEM_ERR.equals(output) && !NONE.equals(output);
     }
 
     /**

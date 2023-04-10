@@ -52,6 +52,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 
 import org.apache.maven.model.Plugin;
@@ -166,8 +167,7 @@ public class DevMojo extends AbstractServerStartMojo {
             Map.entry("webappDirectory", ""),
             Map.entry("webResources", ""),
             Map.entry("webXml", ""),
-            Map.entry("workDirectory", "")
-    );
+            Map.entry("workDirectory", ""));
     private final Map<WatchKey, WatchContext> watchedDirectories = new HashMap<>();
 
     @Component
@@ -269,7 +269,8 @@ public class DevMojo extends AbstractServerStartMojo {
                         getLog().info(String.format("Deploying to remote %s container.", description));
                     }
                     // Execute commands before the deployment is done
-                    final CommandConfiguration.Builder builder = CommandConfiguration.of(this::createClient, this::getClientConfiguration)
+                    final CommandConfiguration.Builder builder = CommandConfiguration
+                            .of(this::createClient, this::getClientConfiguration)
                             .addCommands(commands)
                             .addScripts(scripts)
                             .setStdout("none")
@@ -369,7 +370,7 @@ public class DevMojo extends AbstractServerStartMojo {
     private void watch(final WatchService watcher, final DeploymentManager deploymentManager, final Deployment deployment) {
         final var projectDir = project.getBasedir().toPath();
         try {
-            for (; ; ) {
+            for (;;) {
                 WatchKey key = watcher.take();
                 for (WatchEvent<?> event : key.pollEvents()) {
                     WatchEvent.Kind<?> kind = event.kind();
@@ -403,7 +404,8 @@ public class DevMojo extends AbstractServerStartMojo {
                             // Undeploy application as Windows won't be able to delete the directory
                             DeploymentResult deploymentResult = deploymentManager.undeploy(UndeployDescription.of(deployment));
                             if (!deploymentResult.successful()) {
-                                getLog().warn(String.format("Failed to undeploy application. Unexpected results may occur. Failure: %s",
+                                getLog().warn(String.format(
+                                        "Failed to undeploy application. Unexpected results may occur. Failure: %s",
                                         deploymentResult.getFailureMessage()));
                             } else {
                                 // Clean the deployment directory
@@ -414,7 +416,8 @@ public class DevMojo extends AbstractServerStartMojo {
                                 triggerExplodeWar();
                                 deploymentResult = deploymentManager.deploy(deployment);
                                 if (!deploymentResult.successful()) {
-                                    throw new MojoExecutionException("Failed to deploy content: " + deploymentResult.getFailureMessage());
+                                    throw new MojoExecutionException(
+                                            "Failed to deploy content: " + deploymentResult.getFailureMessage());
                                 }
                                 if (Files.notExists(context.directory())) {
                                     watchedDirectories.remove(key);
@@ -454,7 +457,8 @@ public class DevMojo extends AbstractServerStartMojo {
                         if (result.requiresRedeploy()) {
                             final DeploymentResult deploymentResult = deploymentManager.redeployToRuntime(deployment);
                             if (!deploymentResult.successful()) {
-                                throw new MojoExecutionException("Failed to deploy content: " + deploymentResult.getFailureMessage());
+                                throw new MojoExecutionException(
+                                        "Failed to deploy content: " + deploymentResult.getFailureMessage());
                             }
                         }
                     } catch (Exception ex) {
@@ -475,7 +479,8 @@ public class DevMojo extends AbstractServerStartMojo {
         final String compilerPluginKey = ORG_APACHE_MAVEN_PLUGINS + ":" + MAVEN_COMPILER_PLUGIN;
         final Plugin compilerPlugin = project.getPlugin(compilerPluginKey);
         if (compilerPlugin != null) {
-            executeGoal(project, compilerPlugin, ORG_APACHE_MAVEN_PLUGINS, MAVEN_COMPILER_PLUGIN, MAVEN_COMPILER_GOAL, getPluginConfig(compilerPlugin, MAVEN_COMPILER_GOAL));
+            executeGoal(project, compilerPlugin, ORG_APACHE_MAVEN_PLUGINS, MAVEN_COMPILER_PLUGIN, MAVEN_COMPILER_GOAL,
+                    getPluginConfig(compilerPlugin, MAVEN_COMPILER_GOAL));
         }
     }
 
@@ -484,7 +489,8 @@ public class DevMojo extends AbstractServerStartMojo {
         final String warPluginKey = ORG_APACHE_MAVEN_PLUGINS + ":" + MAVEN_WAR_PLUGIN;
         final Plugin warPlugin = project.getPlugin(warPluginKey);
         if (warPlugin != null) {
-            executeGoal(project, warPlugin, ORG_APACHE_MAVEN_PLUGINS, MAVEN_WAR_PLUGIN, MAVEN_EXPLODED_GOAL, getWarPluginConfig(warPlugin));
+            executeGoal(project, warPlugin, ORG_APACHE_MAVEN_PLUGINS, MAVEN_WAR_PLUGIN, MAVEN_EXPLODED_GOAL,
+                    getWarPluginConfig(warPlugin));
         } else {
             getLog().warn("Can't package war application, war plugin not found");
         }
@@ -499,7 +505,8 @@ public class DevMojo extends AbstractServerStartMojo {
         if (resourcesPlugin == null) {
             return;
         }
-        executeGoal(project, resourcesPlugin, ORG_APACHE_MAVEN_PLUGINS, MAVEN_RESOURCES_PLUGIN, MAVEN_RESOURCES_GOAL, getPluginConfig(resourcesPlugin, MAVEN_RESOURCES_GOAL));
+        executeGoal(project, resourcesPlugin, ORG_APACHE_MAVEN_PLUGINS, MAVEN_RESOURCES_PLUGIN, MAVEN_RESOURCES_GOAL,
+                getPluginConfig(resourcesPlugin, MAVEN_RESOURCES_GOAL));
     }
 
     private Path getPath(final WatchKey key, final Path fileName) {
@@ -533,8 +540,10 @@ public class DevMojo extends AbstractServerStartMojo {
         return compileNeeded;
     }
 
-    private void executeGoal(final MavenProject project, final Plugin plugin, final String groupId, final String artifactId, final String goal, final Xpp3Dom config) throws MojoExecutionException {
-        executeMojo(plugin(groupId(groupId), artifactId(artifactId), version(plugin.getVersion()), plugin.getDependencies()), MojoExecutor.goal(goal), config, executionEnvironment(project, mavenSession, pluginManager));
+    private void executeGoal(final MavenProject project, final Plugin plugin, final String groupId, final String artifactId,
+            final String goal, final Xpp3Dom config) throws MojoExecutionException {
+        executeMojo(plugin(groupId(groupId), artifactId(artifactId), version(plugin.getVersion()), plugin.getDependencies()),
+                MojoExecutor.goal(goal), config, executionEnvironment(project, mavenSession, pluginManager));
     }
 
     private Xpp3Dom getPluginConfig(final Plugin plugin, final String goal) throws MojoExecutionException {
@@ -542,13 +551,15 @@ public class DevMojo extends AbstractServerStartMojo {
         if (!plugin.getExecutions().isEmpty()) {
             for (PluginExecution exec : plugin.getExecutions()) {
                 if (exec.getConfiguration() != null && exec.getGoals().contains(goal)) {
-                    mergedConfig = mergedConfig == null ? (Xpp3Dom) exec.getConfiguration() : Xpp3Dom.mergeXpp3Dom(mergedConfig, (Xpp3Dom) exec.getConfiguration(), true);
+                    mergedConfig = mergedConfig == null ? (Xpp3Dom) exec.getConfiguration()
+                            : Xpp3Dom.mergeXpp3Dom(mergedConfig, (Xpp3Dom) exec.getConfiguration(), true);
                 }
             }
         }
 
         if (plugin.getConfiguration() != null) {
-            mergedConfig = mergedConfig == null ? (Xpp3Dom) plugin.getConfiguration() : Xpp3Dom.mergeXpp3Dom(mergedConfig, (Xpp3Dom) plugin.getConfiguration(), true);
+            mergedConfig = mergedConfig == null ? (Xpp3Dom) plugin.getConfiguration()
+                    : Xpp3Dom.mergeXpp3Dom(mergedConfig, (Xpp3Dom) plugin.getConfiguration(), true);
         }
 
         final Xpp3Dom configuration = configuration();
@@ -606,7 +617,8 @@ public class DevMojo extends AbstractServerStartMojo {
         try {
             return pluginManager.getMojoDescriptor(plugin, goal, repositories, session);
         } catch (Exception e) {
-            throw new MojoExecutionException("Failed to obtain descriptor for Maven plugin " + plugin.getId() + " goal " + goal, e);
+            throw new MojoExecutionException("Failed to obtain descriptor for Maven plugin " + plugin.getId() + " goal " + goal,
+                    e);
         }
     }
 
@@ -647,11 +659,11 @@ public class DevMojo extends AbstractServerStartMojo {
         final PackageType packageType = PackageType.resolve(project);
         final Deployment deployment = Deployment.of(resolveWarDir());
         final String filename;
-        //if (this.filename == null) {
+        // if (this.filename == null) {
         filename = String.format("%s.%s", project.getBuild().getFinalName(), packageType.getFileExtension());
-        //} else {
-        //filename = this.filename;
-        //}
+        // } else {
+        // filename = this.filename;
+        // }
         return deployment.setRuntimeName(filename);
     }
 

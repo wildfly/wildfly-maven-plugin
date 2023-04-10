@@ -36,7 +36,7 @@ import org.wildfly.common.Assert;
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings({ "unused", "WeakerAccess" })
 public class UndeployDescription implements DeploymentDescription, Comparable<UndeployDescription> {
 
     private final String name;
@@ -138,7 +138,7 @@ public class UndeployDescription implements DeploymentDescription, Comparable<Un
      * Sets whether or not a failure should occur if the deployment does exist on the container.
      *
      * @param failOnMissing {@code true} if the undeploy should fail if the deployment was not found on the server,
-     *                      {@code false} if the deployment does not exist and the undeploy should be ignored
+     *                          {@code false} if the deployment does not exist and the undeploy should be ignored
      *
      * @return the deployment description
      */
@@ -151,7 +151,7 @@ public class UndeployDescription implements DeploymentDescription, Comparable<Un
      * Indicates whether or not the content should be removed from the content repository.
      *
      * @return {@code true} if the content should also be removed from the repository, {@code false} it only an
-     * {@code undeploy} operation should be executed and the content should remain in the repository
+     *             {@code undeploy} operation should be executed and the content should remain in the repository
      */
     public boolean isRemoveContent() {
         return removeContent;
@@ -164,7 +164,7 @@ public class UndeployDescription implements DeploymentDescription, Comparable<Un
      * </p>
      *
      * @param removeContent {@code true} if the content should be removed, {@code false} if the content should remain
-     *                      in the repository
+     *                          in the repository
      *
      * @return the deployment description
      */

@@ -60,6 +60,7 @@ public class ApplicationImageMojo extends PackageServerMojo {
      * <p>
      * The {@code image} goal accepts the following configuration:
      * <p>
+     *
      * <pre>
      * &lt;image&gt;
      *   &lt;!-- (optional) set it to false to skip build the application image (true by default) --&gt;
@@ -141,12 +142,14 @@ public class ApplicationImageMojo extends PackageServerMojo {
             if (imageBinary == null) {
                 throw new MojoExecutionException("Could not locate a binary to build the image with. Please check your " +
                         "installation and either set the path to the binary in your PATH environment variable or define the " +
-                        "define the fully qualified path in your configuration, <image><docker-binary>/path/to/docker</docker-binary></image>. " +
+                        "define the fully qualified path in your configuration, <image><docker-binary>/path/to/docker</docker-binary></image>. "
+                        +
                         "The path can also be defined with the -Dwildfly.image.binary=/path/to/docker system property.");
             }
             if (!isImageBinaryAvailable(imageBinary)) {
-                throw new MojoExecutionException(String.format("Unable to build application image with %1$s. Please check your %1$s installation",
-                        imageBinary));
+                throw new MojoExecutionException(
+                        String.format("Unable to build application image with %1$s. Please check your %1$s installation",
+                                imageBinary));
             }
 
             String image = this.image.getApplicationImageName(project.getArtifactId());
@@ -184,40 +187,47 @@ public class ApplicationImageMojo extends PackageServerMojo {
             };
             boolean loginSuccessful = ExecUtil.exec(getLog(), image.getDockerBinary(), dockerArgs);
             if (!loginSuccessful) {
-                throw new MojoExecutionException(String.format("Could not log to the container registry with the command %s %s %s",
-                        image.getDockerBinary(),
-                        String.join(" ", Arrays.copyOf(dockerArgs, dockerArgs.length -1)),
-                        "*******"));
+                throw new MojoExecutionException(
+                        String.format("Could not log to the container registry with the command %s %s %s",
+                                image.getDockerBinary(),
+                                String.join(" ", Arrays.copyOf(dockerArgs, dockerArgs.length - 1)),
+                                "*******"));
             }
         }
     }
 
     private boolean buildApplicationImage(String image) throws IOException {
         getLog().info(format("Building application image %s using %s.", image, this.image.getDockerBinary()));
-        String[] dockerArgs = new String[] {"build", "-t", image, "."};
+        String[] dockerArgs = new String[] { "build", "-t", image, "." };
 
-        getLog().info(format("Executing the following command to build application image: '%s %s'", this.image.getDockerBinary(), join(" ", dockerArgs)));
-        return ExecUtil.exec(getLog(), Paths.get(project.getBuild().getDirectory()).toFile(), this.image.getDockerBinary(), dockerArgs);
+        getLog().info(format("Executing the following command to build application image: '%s %s'",
+                this.image.getDockerBinary(), join(" ", dockerArgs)));
+        return ExecUtil.exec(getLog(), Paths.get(project.getBuild().getDirectory()).toFile(), this.image.getDockerBinary(),
+                dockerArgs);
 
     }
 
     private boolean pushApplicationImage(String image) {
         getLog().info(format("Pushing application image %s using %s.", image, this.image.getDockerBinary()));
 
-        String[] dockerArgs = new String[] {"push", image};
+        String[] dockerArgs = new String[] { "push", image };
 
-        getLog().info(format("Executing the following command to push application image: '%s %s'", this.image.getDockerBinary(), join(" ", dockerArgs)));
-        return ExecUtil.exec(getLog(), Paths.get(project.getBuild().getDirectory()).toFile(), this.image.getDockerBinary(), dockerArgs);
+        getLog().info(format("Executing the following command to push application image: '%s %s'", this.image.getDockerBinary(),
+                join(" ", dockerArgs)));
+        return ExecUtil.exec(getLog(), Paths.get(project.getBuild().getDirectory()).toFile(), this.image.getDockerBinary(),
+                dockerArgs);
     }
 
-    private void generateDockerfile(String runtimeImage, Path targetDir, String wildflyDirectory) throws IOException, MojoExecutionException {
+    private void generateDockerfile(String runtimeImage, Path targetDir, String wildflyDirectory)
+            throws IOException, MojoExecutionException {
 
         String targetName = getDeploymentTargetName();
         Files.writeString(targetDir.resolve("Dockerfile"),
                 "FROM " + runtimeImage + "\n" +
                         "COPY --chown=jboss:root " + wildflyDirectory + " $JBOSS_HOME\n" +
                         "RUN chmod -R ug+rwX $JBOSS_HOME\n" +
-                        "COPY --chown=jboss:root " + getDeploymentContent().getFileName() + " $JBOSS_HOME/standalone/deployments/" + targetName,
+                        "COPY --chown=jboss:root " + getDeploymentContent().getFileName()
+                        + " $JBOSS_HOME/standalone/deployments/" + targetName,
                 StandardCharsets.UTF_8);
     }
 

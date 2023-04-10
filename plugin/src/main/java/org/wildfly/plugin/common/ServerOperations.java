@@ -68,8 +68,9 @@ public class ServerOperations extends Operations {
         final String msg;
         if (result.hasDefined(ClientConstants.FAILURE_DESCRIPTION)) {
             if (result.hasDefined(ClientConstants.OP)) {
-                msg = String.format("Operation '%s' at address '%s' failed: %s", result.get(ClientConstants.OP), result.get(ClientConstants.OP_ADDR), result
-                        .get(ClientConstants.FAILURE_DESCRIPTION));
+                msg = String.format("Operation '%s' at address '%s' failed: %s", result.get(ClientConstants.OP),
+                        result.get(ClientConstants.OP_ADDR), result
+                                .get(ClientConstants.FAILURE_DESCRIPTION));
             } else {
                 msg = String.format("Operation failed: %s", result.get(ClientConstants.FAILURE_DESCRIPTION));
             }

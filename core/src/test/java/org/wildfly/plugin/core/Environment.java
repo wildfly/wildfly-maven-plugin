@@ -29,7 +29,7 @@ import org.jboss.logging.Logger;
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-@SuppressWarnings({"WeakerAccess", "Duplicates"})
+@SuppressWarnings({ "WeakerAccess", "Duplicates" })
 class Environment {
 
     /**

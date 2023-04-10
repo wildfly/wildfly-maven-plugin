@@ -79,10 +79,15 @@ public class PluginProgressTracker<T> implements ProgressCallback<T> {
     }
 
     public static void initTrackers(ProvisioningManager pm, Log log) {
-        pm.getLayoutFactory().setProgressCallback(ProvisioningLayoutFactory.TRACK_PACKAGES, new PluginProgressTracker<String>(log, "Installing packages", false));
-        pm.getLayoutFactory().setProgressCallback(ProvisioningLayoutFactory.TRACK_CONFIGS, new PluginProgressTracker<String>(log, "Generating configurations", true));
-        pm.getLayoutFactory().setProgressCallback(ProvisioningLayoutFactory.TRACK_LAYOUT_BUILD, new PluginProgressTracker<String>(log, "Resolving feature-packs", false));
-        pm.getLayoutFactory().setProgressCallback("JBMODULES", new PluginProgressTracker<String>(log, "Resolving artifacts", false));
-        pm.getLayoutFactory().setProgressCallback("JBEXTRACONFIGS", new PluginProgressTracker<String>(log, "Generating extra configurations", true));
+        pm.getLayoutFactory().setProgressCallback(ProvisioningLayoutFactory.TRACK_PACKAGES,
+                new PluginProgressTracker<String>(log, "Installing packages", false));
+        pm.getLayoutFactory().setProgressCallback(ProvisioningLayoutFactory.TRACK_CONFIGS,
+                new PluginProgressTracker<String>(log, "Generating configurations", true));
+        pm.getLayoutFactory().setProgressCallback(ProvisioningLayoutFactory.TRACK_LAYOUT_BUILD,
+                new PluginProgressTracker<String>(log, "Resolving feature-packs", false));
+        pm.getLayoutFactory().setProgressCallback("JBMODULES",
+                new PluginProgressTracker<String>(log, "Resolving artifacts", false));
+        pm.getLayoutFactory().setProgressCallback("JBEXTRACONFIGS",
+                new PluginProgressTracker<String>(log, "Generating extra configurations", true));
     }
 }

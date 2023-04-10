@@ -19,6 +19,7 @@ package org.wildfly.plugin.provision;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Collections;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Test;
 import org.wildfly.channel.ChannelManifestCoordinate;

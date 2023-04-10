@@ -36,7 +36,6 @@ import org.apache.maven.project.MavenProject;
 @SuppressWarnings("WeakerAccess")
 public final class PackageType implements Comparable<PackageType> {
 
-
     private static final PackageType MAVEN_PLUGIN = new PackageType("maven-project", true);
     private static final PackageType POM = new PackageType("pom", true);
     private static final PackageType EJB = new PackageType("ejb", "jar");

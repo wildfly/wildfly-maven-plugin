@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -50,14 +51,15 @@ public class CommandExecutor extends AbstractCommandExecutor<CommandConfiguratio
     /**
      * Executes CLI commands based on the configuration.
      *
-     * @param config the configuration used to execute the CLI commands
+     * @param config           the configuration used to execute the CLI commands
      * @param artifactResolver Resolver to retrieve CLI artifact for in-process execution.
      *
      * @throws MojoFailureException   if the JBoss Home directory is required and invalid
      * @throws MojoExecutionException if an error occurs executing the CLI commands
      */
     @Override
-    public void execute(final CommandConfiguration config, MavenRepoManager artifactResolver) throws MojoFailureException, MojoExecutionException {
+    public void execute(final CommandConfiguration config, MavenRepoManager artifactResolver)
+            throws MojoFailureException, MojoExecutionException {
         if (config.isOffline()) {
             // The jbossHome is required for offline CLI
             if (!ServerHelper.isValidHomeDirectory(config.getJBossHome())) {
@@ -78,7 +80,8 @@ public class CommandExecutor extends AbstractCommandExecutor<CommandConfiguratio
     }
 
     @Override
-    protected int executeInNewProcess(final CommandConfiguration config, final Path scriptFile, final StandardOutput stdout) throws MojoExecutionException, IOException {
+    protected int executeInNewProcess(final CommandConfiguration config, final Path scriptFile, final StandardOutput stdout)
+            throws MojoExecutionException, IOException {
         try (MavenModelControllerClientConfiguration clientConfiguration = config.getClientConfiguration()) {
 
             final CliCommandBuilder builder = createCommandBuilder(config, scriptFile);
@@ -155,7 +158,8 @@ public class CommandExecutor extends AbstractCommandExecutor<CommandConfiguratio
         }
     }
 
-    private LocalCLIExecutor createCommandContext(Path jbossHome, final boolean resolveExpression, final ModelControllerClient client,
+    private LocalCLIExecutor createCommandContext(Path jbossHome, final boolean resolveExpression,
+            final ModelControllerClient client,
             MavenRepoManager artifactResolver) throws Exception {
         LocalCLIExecutor commandContext = null;
         try {

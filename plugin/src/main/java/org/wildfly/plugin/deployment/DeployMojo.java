@@ -65,7 +65,8 @@ public class DeployMojo extends AbstractAppDeployment {
     }
 
     @Override
-    protected DeploymentResult executeDeployment(final DeploymentManager deploymentManager, final Deployment deployment) throws IOException {
+    protected DeploymentResult executeDeployment(final DeploymentManager deploymentManager, final Deployment deployment)
+            throws IOException {
         if (force) {
             return deploymentManager.forceDeploy(deployment);
         }

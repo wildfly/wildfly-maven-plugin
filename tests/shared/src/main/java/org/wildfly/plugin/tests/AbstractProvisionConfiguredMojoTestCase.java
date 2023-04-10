@@ -27,6 +27,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import org.apache.maven.DefaultMaven;
 import org.apache.maven.Maven;
 import org.apache.maven.artifact.repository.ArtifactRepositoryPolicy;
@@ -52,9 +53,9 @@ import org.jboss.galleon.config.ProvisioningConfig;
 import org.jboss.galleon.util.PathsUtils;
 import org.jboss.galleon.xml.ProvisioningXmlParser;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.junit.Before;
 
 /**
  * A class to construct a properly configured MOJO.
@@ -80,23 +81,25 @@ public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMo
             populator.populateDefaults(request);
             // Required otherwise WARNING:The POM for org.wildfly.core:wildfly-jar-boot:jar:
             // is invalid, transitive dependencies (if any)
-            //request.setSystemProperties(System.getProperties());
+            // request.setSystemProperties(System.getProperties());
 
             DefaultMaven maven = (DefaultMaven) getContainer().lookup(Maven.class);
-            DefaultRepositorySystemSession repoSession
-                    = (DefaultRepositorySystemSession) maven.newRepositorySession(request);
+            DefaultRepositorySystemSession repoSession = (DefaultRepositorySystemSession) maven.newRepositorySession(request);
 
             // Add remote repositories required to resolve provisioned artifacts.
-            ArtifactRepositoryPolicy snapshot = new ArtifactRepositoryPolicy(false, ArtifactRepositoryPolicy.UPDATE_POLICY_NEVER, ArtifactRepositoryPolicy.CHECKSUM_POLICY_IGNORE);
-            ArtifactRepositoryPolicy release = new ArtifactRepositoryPolicy(true, ArtifactRepositoryPolicy.UPDATE_POLICY_DAILY, ArtifactRepositoryPolicy.CHECKSUM_POLICY_IGNORE);
+            ArtifactRepositoryPolicy snapshot = new ArtifactRepositoryPolicy(false,
+                    ArtifactRepositoryPolicy.UPDATE_POLICY_NEVER, ArtifactRepositoryPolicy.CHECKSUM_POLICY_IGNORE);
+            ArtifactRepositoryPolicy release = new ArtifactRepositoryPolicy(true, ArtifactRepositoryPolicy.UPDATE_POLICY_DAILY,
+                    ArtifactRepositoryPolicy.CHECKSUM_POLICY_IGNORE);
 
             // Take into account maven.repo.local
             String path = System.getProperty("maven.repo.local", request.getLocalRepository().getBasedir());
             repoSession.setLocalRepositoryManager(
                     new SimpleLocalRepositoryManagerFactory().newInstance(repoSession,
                             new LocalRepository(path)));
-            request.addRemoteRepository(new MavenArtifactRepository("jboss", "https://repository.jboss.org/nexus/content/groups/public/",
-                    new DefaultRepositoryLayout(), snapshot, release));
+            request.addRemoteRepository(
+                    new MavenArtifactRepository("jboss", "https://repository.jboss.org/nexus/content/groups/public/",
+                            new DefaultRepositoryLayout(), snapshot, release));
             request.addRemoteRepository(new MavenArtifactRepository("redhat-ga", "https://maven.repository.redhat.com/ga/",
                     new DefaultRepositoryLayout(), snapshot, release));
 
@@ -128,7 +131,6 @@ public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMo
         ProjectBuilder projectBuilder = lookup(ProjectBuilder.class);
         MavenProject project = projectBuilder.build(pom, buildingRequest).getProject();
 
-
         Mojo mojo = lookupConfiguredMojo(project, goal);
 
         // For some reasons, the configuration item gets ignored in lookupConfiguredMojo
@@ -154,7 +156,7 @@ public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMo
         super.setUp();
     }
 
-     public void checkStandaloneWildFlyHome(Path wildflyHome, int numDeployments,
+    public void checkStandaloneWildFlyHome(Path wildflyHome, int numDeployments,
             String[] layers, String[] excludedLayers, boolean stateRecorded, String... configTokens) throws Exception {
         Assert.assertTrue(TestEnvironment.isValidWildFlyHome(wildflyHome));
         if (numDeployments > 0) {
@@ -196,11 +198,11 @@ public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMo
                 assertTrue(str, str.contains(token));
             }
         }
-         assertEquals(Files.exists(wildflyHome.resolve(".galleon")), stateRecorded);
-         assertEquals(Files.exists(wildflyHome.resolve(".wildfly-maven-plugin-provisioning.xml")), !stateRecorded);
+        assertEquals(Files.exists(wildflyHome.resolve(".galleon")), stateRecorded);
+        assertEquals(Files.exists(wildflyHome.resolve(".wildfly-maven-plugin-provisioning.xml")), !stateRecorded);
     }
 
-     public void checkDomainWildFlyHome(Path wildflyHome, int numDeployments,
+    public void checkDomainWildFlyHome(Path wildflyHome, int numDeployments,
             boolean stateRecorded, String... configTokens) throws Exception {
         Assert.assertTrue(TestEnvironment.isValidWildFlyHome(wildflyHome));
         if (numDeployments > 0) {
@@ -208,14 +210,14 @@ public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMo
             Path rootDir = wildflyHome.resolve("domain/data/content");
             List<Path> deployments = new ArrayList<>();
             Files.walkFileTree(rootDir, new SimpleFileVisitor<Path>() {
-                    @Override
-                    public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
-                        if ("content".equals(file.getFileName().toString())) {
-                            deployments.add(file);
-                        }
-                        return FileVisitResult.CONTINUE;
+                @Override
+                public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
+                    if ("content".equals(file.getFileName().toString())) {
+                        deployments.add(file);
                     }
-                });
+                    return FileVisitResult.CONTINUE;
+                }
+            });
             assertEquals(numDeployments, deployments.size());
         } else {
             // The directory should be empty if no deployment is expected, however in some cases it may not even be
@@ -236,7 +238,7 @@ public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMo
                 assertTrue(str, str.contains(token));
             }
         }
-         assertEquals(Files.exists(wildflyHome.resolve(".galleon")), stateRecorded);
-         assertEquals(Files.exists(wildflyHome.resolve(".wildfly-maven-plugin-provisioning.xml")), !stateRecorded);
+        assertEquals(Files.exists(wildflyHome.resolve(".galleon")), stateRecorded);
+        assertEquals(Files.exists(wildflyHome.resolve(".wildfly-maven-plugin-provisioning.xml")), !stateRecorded);
     }
 }

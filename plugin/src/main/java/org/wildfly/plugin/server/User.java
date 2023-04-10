@@ -166,7 +166,8 @@ public class User {
 
     @Override
     public String toString() {
-        return "User{username=" + username + ", groups=" + groups + ", realm=" + realm + ", applicationUser=" + applicationUser + "}";
+        return "User{username=" + username + ", groups=" + groups + ", realm=" + realm + ", applicationUser=" + applicationUser
+                + "}";
     }
 
     private static List<String> splitAndTrim(final String value, final char splitChar) {

@@ -21,13 +21,13 @@
  */
 package org.wildfly.plugin.provision;
 
-
 import java.nio.file.Files;
 import java.nio.file.Path;
+
 import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.junit.Test;
 import org.junit.Assert;
+import org.junit.Test;
 import org.wildfly.plugin.tests.AbstractProvisionConfiguredMojoTestCase;
 import org.wildfly.plugin.tests.AbstractWildFlyMojoTest;
 
@@ -40,14 +40,14 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
     @Test
     public void testPackage() throws Exception {
 
-        final Mojo packageMojo =  lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("package-pom.xml").toFile(), "package");
+        final Mojo packageMojo = lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("package-pom.xml").toFile(),
+                "package");
 
         packageMojo.execute();
         Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("packaged-server");
-        Assert.assertTrue(Files.exists(jbossHome.resolve("standalone").
-                resolve("configuration").resolve("foo.txt")));
-        String[] layers = {"jaxrs-server"};
-        String[] excluded = {"deployment-scanner"};
+        Assert.assertTrue(Files.exists(jbossHome.resolve("standalone").resolve("configuration").resolve("foo.txt")));
+        String[] layers = { "jaxrs-server" };
+        String[] excluded = { "deployment-scanner" };
         checkStandaloneWildFlyHome(jbossHome, 1, layers, excluded, true, "org.wildfly.maven.plugin-package-goal",
                 "org.wildfly.maven.plugin-package-goal-from-script");
     }
@@ -55,7 +55,8 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
     @Test
     public void testDefaultConfigPackage() throws Exception {
 
-        final Mojo packageMojo =  lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("package-default-config-pom.xml").toFile(), "package");
+        final Mojo packageMojo = lookupConfiguredMojo(
+                AbstractWildFlyMojoTest.getPomFile("package-default-config-pom.xml").toFile(), "package");
 
         packageMojo.execute();
         Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("packaged-default-config-server");
@@ -66,7 +67,8 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
     @Test
     public void testNoDeploymentPackage() throws Exception {
 
-        final Mojo packageMojo =  lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("package-no-deployment-pom.xml").toFile(), "package");
+        final Mojo packageMojo = lookupConfiguredMojo(
+                AbstractWildFlyMojoTest.getPomFile("package-no-deployment-pom.xml").toFile(), "package");
 
         packageMojo.execute();
         Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("packaged-no-dep-server");
@@ -76,11 +78,12 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
     @Test
     public void testInvalidDeployment() throws Exception {
 
-        final Mojo packageMojo =  lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("package-invalid-deployment-pom.xml").toFile(), "package");
+        final Mojo packageMojo = lookupConfiguredMojo(
+                AbstractWildFlyMojoTest.getPomFile("package-invalid-deployment-pom.xml").toFile(), "package");
         try {
             packageMojo.execute();
             throw new Exception("Execution should have failed");
-        } catch(MojoExecutionException ex) {
+        } catch (MojoExecutionException ex) {
             // XXX OK, expected.
             Assert.assertTrue(ex.getLocalizedMessage().contains("No deployment found with name test-foo.war"));
         }
@@ -89,11 +92,12 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
     @Test
     public void testInvalidDeployment2() throws Exception {
 
-        final Mojo packageMojo =  lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("package-invalid-deployment2-pom.xml").toFile(), "package");
+        final Mojo packageMojo = lookupConfiguredMojo(
+                AbstractWildFlyMojoTest.getPomFile("package-invalid-deployment2-pom.xml").toFile(), "package");
         try {
             packageMojo.execute();
             throw new Exception("Execution should have failed");
-        } catch(MojoExecutionException ex) {
+        } catch (MojoExecutionException ex) {
             // XXX OK, expected.
             Assert.assertTrue(ex.getLocalizedMessage().contains("No deployment found with name foo.jar. "
                     + "A runtime-name has been set that indicates that a deployment is expected. "));

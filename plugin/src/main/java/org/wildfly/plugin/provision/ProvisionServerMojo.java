@@ -17,12 +17,12 @@
 package org.wildfly.plugin.provision;
 
 import java.nio.file.Path;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-
 
 /**
  * Provision a server.

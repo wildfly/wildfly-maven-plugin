@@ -29,7 +29,7 @@ public class ExecUtil {
         @Override
         public void run() {
             try (InputStreamReader isr = new InputStreamReader(is);
-                 BufferedReader reader = new BufferedReader(isr)) {
+                    BufferedReader reader = new BufferedReader(isr)) {
 
                 for (String line = reader.readLine(); line != null; line = reader.readLine()) {
                     if (log != null) {
@@ -46,7 +46,7 @@ public class ExecUtil {
      * Execute the specified command from within the current directory.
      *
      * @param command The command
-     * @param args The command arguments
+     * @param args    The command arguments
      * @return true if commands where executed successfully
      */
     public static boolean exec(Log log, String command, String... args) {
@@ -58,7 +58,7 @@ public class ExecUtil {
      *
      * @param timeout The timeout
      * @param command The command
-     * @param args The command arguments
+     * @param args    The command arguments
      * @return true if commands where executed successfully
      */
     public static boolean execSilentWithTimeout(Duration timeout, String command, String... args) {
@@ -70,12 +70,12 @@ public class ExecUtil {
      * The method allows specifying an output filter that processes the command output.
      *
      * @param directory The directory
-     * @param command The command
-     * @param args The command arguments
+     * @param command   The command
+     * @param args      The command arguments
      * @return true if commands where executed successfully
      */
     public static boolean exec(Log log, File directory, String command,
-                               String... args) {
+            String... args) {
         try {
             Process process = startProcess(directory, command, args);
             new HandleOutput(process.getInputStream(), log).run();
@@ -91,13 +91,13 @@ public class ExecUtil {
      * The method allows specifying an output filter that processes the command output.
      *
      * @param directory The directory
-     * @param timeout The timeout
-     * @param command The command
-     * @param args The command arguments
+     * @param timeout   The timeout
+     * @param command   The command
+     * @param args      The command arguments
      * @return true if commands where executed successfully
      */
     public static boolean execWithTimeout(Log log, File directory,
-                                          Duration timeout, String command, String... args) {
+            Duration timeout, String command, String... args) {
         try {
             Process process = startProcess(directory, command, args);
             Thread t = new Thread(new HandleOutput(process.getInputStream(), log));
@@ -116,8 +116,8 @@ public class ExecUtil {
      * Start a process executing given command with arguments within the specified directory.
      *
      * @param directory The directory
-     * @param command The command
-     * @param args The command arguments
+     * @param command   The command
+     * @param args      The command arguments
      * @return the process
      */
     public static Process startProcess(File directory, String command, String... args) {

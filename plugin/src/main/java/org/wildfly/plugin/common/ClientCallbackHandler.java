@@ -23,6 +23,7 @@ package org.wildfly.plugin.common;
 
 import java.io.Console;
 import java.io.IOException;
+
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.NameCallback;
@@ -111,7 +112,8 @@ class ClientCallbackHandler implements CallbackHandler {
 
     private void checkConsole() {
         if (console == null) {
-            throw new IllegalStateException("The environment does not have a usable console. Cannot prompt for user name and password");
+            throw new IllegalStateException(
+                    "The environment does not have a usable console. Cannot prompt for user name and password");
         }
     }
 

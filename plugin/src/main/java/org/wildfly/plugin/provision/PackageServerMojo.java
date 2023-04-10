@@ -16,6 +16,10 @@
  */
 package org.wildfly.plugin.provision;
 
+import static org.wildfly.plugin.core.Constants.CLI_ECHO_COMMAND_ARG;
+import static org.wildfly.plugin.core.Constants.STANDALONE;
+import static org.wildfly.plugin.core.Constants.STANDALONE_XML;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -26,7 +30,9 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import javax.inject.Inject;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -36,15 +42,11 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.jboss.galleon.ProvisioningDescriptionException;
 import org.jboss.galleon.config.ProvisioningConfig;
 import org.jboss.galleon.util.IoUtils;
-import org.wildfly.plugin.cli.CliSession;
 import org.wildfly.plugin.cli.BaseCommandConfiguration;
+import org.wildfly.plugin.cli.CliSession;
 import org.wildfly.plugin.cli.OfflineCommandExecutor;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.StandardOutput;
-import static org.wildfly.plugin.core.Constants.CLI_ECHO_COMMAND_ARG;
-import static org.wildfly.plugin.core.Constants.STANDALONE;
-import static org.wildfly.plugin.core.Constants.STANDALONE_XML;
-
 import org.wildfly.plugin.deployment.MojoDeploymentException;
 import org.wildfly.plugin.deployment.PackageType;
 
@@ -71,6 +73,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
      * started for each CLI execution. If a script file is not absolute, it has
      * to be relative to the project base directory. CLI executions are
      * configured in the following way:
+     *
      * <pre>
      *   &lt;packaging-scripts&gt;
      *     &lt;packaging-script&gt;
@@ -111,7 +114,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     /**
      * The name of the server configuration to use when deploying the
      * deployment. Defaults to 'standalone.xml'. If {@code layers-configuration-file-name} has been set,
-     * this property is ignored and the deployment is deployed inside the configuration referenced from {@code layers-configuration-file-name}.
+     * this property is ignored and the deployment is deployed inside the configuration referenced from
+     * {@code layers-configuration-file-name}.
      */
     @Parameter(property = PropertyNames.SERVER_CONFIG, alias = "server-config", defaultValue = STANDALONE_XML)
     private String serverConfig;
@@ -132,7 +136,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
      *
      * @deprecated use the {@code name} property instead to change the name of the deployment.
      */
-    @Deprecated(since="4.1.O")
+    @Deprecated(since = "4.1.O")
     @Parameter(property = PropertyNames.DEPLOYMENT_RUNTIME_NAME, alias = "runtime-name")
     protected String runtimeName;
 
@@ -211,7 +215,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         if (!skipDeployment) {
             final Path deploymentContent = getDeploymentContent();
             if (Files.exists(deploymentContent)) {
-                Path standaloneDeploymentDir = Paths.get(project.getBuild().getDirectory(), provisioningDir, "standalone", "deployments").normalize();
+                Path standaloneDeploymentDir = Paths
+                        .get(project.getBuild().getDirectory(), provisioningDir, "standalone", "deployments").normalize();
                 try {
                     Path deploymentTarget = standaloneDeploymentDir.resolve(getDeploymentTargetName());
                     getLog().info("Copy deployment " + deploymentContent + " to " + deploymentTarget);
@@ -223,31 +228,31 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         }
 
         // CLI execution
-         try {
-             if (!packagingScripts.isEmpty()) {
-                 getLog().info("Excuting CLI commands and scripts");
-                 for (CliSession session : packagingScripts) {
-                     List<File> wrappedScripts = wrapOfflineScripts(session.getScripts());
-                     try {
-                         final BaseCommandConfiguration cmdConfig = new BaseCommandConfiguration.Builder()
-                                 .addCommands(wrapOfflineCommands(session.getCommands()))
-                                 .addScripts(wrappedScripts)
-                                 .addCLIArguments(CLI_ECHO_COMMAND_ARG)
-                                 .setJBossHome(jbossHome)
-                                 .setAppend(true)
-                                 .setStdout(stdout)
-                                 .addPropertiesFiles(resolveFiles(session.getPropertiesFiles()))
-                                 .addJvmOptions(session.getJavaOpts())
-                                 .setResolveExpression(session.getResolveExpression())
-                                 .build();
-                         commandExecutor.execute(cmdConfig, artifactResolver);
-                     } finally {
-                         for (File f : wrappedScripts) {
-                             Files.delete(f.toPath());
-                         }
-                     }
-                 }
-             }
+        try {
+            if (!packagingScripts.isEmpty()) {
+                getLog().info("Excuting CLI commands and scripts");
+                for (CliSession session : packagingScripts) {
+                    List<File> wrappedScripts = wrapOfflineScripts(session.getScripts());
+                    try {
+                        final BaseCommandConfiguration cmdConfig = new BaseCommandConfiguration.Builder()
+                                .addCommands(wrapOfflineCommands(session.getCommands()))
+                                .addScripts(wrappedScripts)
+                                .addCLIArguments(CLI_ECHO_COMMAND_ARG)
+                                .setJBossHome(jbossHome)
+                                .setAppend(true)
+                                .setStdout(stdout)
+                                .addPropertiesFiles(resolveFiles(session.getPropertiesFiles()))
+                                .addJvmOptions(session.getJavaOpts())
+                                .setResolveExpression(session.getResolveExpression())
+                                .build();
+                        commandExecutor.execute(cmdConfig, artifactResolver);
+                    } finally {
+                        for (File f : wrappedScripts) {
+                            Files.delete(f.toPath());
+                        }
+                    }
+                }
+            }
 
             cleanupServer(jbossHome);
         } catch (IOException ex) {
@@ -255,7 +260,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         }
     }
 
-    /** Return the file name of the deployment to put in the server deployment directory
+    /**
+     * Return the file name of the deployment to put in the server deployment directory
      *
      * @throws MojoExecutionException
      */
@@ -274,7 +280,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
             return files;
         }
         List<File> resolvedFiles = new ArrayList<>();
-        for(File f : files) {
+        for (File f : files) {
             resolvedFiles.add(resolvePath(project, f.toPath()).toFile());
         }
         return resolvedFiles;
@@ -292,12 +298,12 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         offlineCommands.add("embed-server --server-config=" + serverConfigName);
         offlineCommands.addAll(commands);
         offlineCommands.add("stop-embedded-server");
-         return offlineCommands;
+        return offlineCommands;
     }
 
     private List<File> wrapOfflineScripts(List<File> scripts) throws IOException, MojoExecutionException {
         List<File> wrappedScripts = new ArrayList<>();
-        for(File script : scripts) {
+        for (File script : scripts) {
             if (script == null) {
                 continue;
             }
@@ -353,10 +359,10 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         }
         Path deployment = Paths.get(project.getBuild().getDirectory()).resolve(filename);
         if (Files.notExists(deployment)) {
-            if (this.filename != null ) {
+            if (this.filename != null) {
                 throw new MojoExecutionException("No deployment found with name " + this.filename);
             }
-            if (this.runtimeName != null ) {
+            if (this.runtimeName != null) {
                 throw new MojoExecutionException("No deployment found with name " + filename +
                         ". A runtime-name has been set that indicates that a deployment is expected. "
                         + "A custom file name can be set with the <filename> parameter.");

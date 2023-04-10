@@ -43,7 +43,7 @@ import org.wildfly.common.Assert;
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-@SuppressWarnings({"StaticMethodOnlyUsedInOneClass", "WeakerAccess", "unused", "MagicNumber"})
+@SuppressWarnings({ "StaticMethodOnlyUsedInOneClass", "WeakerAccess", "unused", "MagicNumber" })
 public class ServerHelper {
     private static final ModelNode EMPTY_ADDRESS = new ModelNode().setEmptyList();
     private static final Logger LOGGER = Logger.getLogger(ServerHelper.class);
@@ -90,7 +90,8 @@ public class ServerHelper {
      * @throws IOException                 if an error occurs communicating with the server
      * @throws OperationExecutionException if the operation used to query the container fails
      */
-    public static ContainerDescription getContainerDescription(final ModelControllerClient client) throws IOException, OperationExecutionException {
+    public static ContainerDescription getContainerDescription(final ModelControllerClient client)
+            throws IOException, OperationExecutionException {
         return DefaultContainerDescription.lookup(Assert.checkNotNullParam("client", client));
     }
 
@@ -138,7 +139,8 @@ public class ServerHelper {
             }
             timeout -= (System.currentTimeMillis() - before);
             if (process != null && !process.isAlive()) {
-                throw new RuntimeException(String.format("The process has unexpectedly exited with code %d", process.exitValue()));
+                throw new RuntimeException(
+                        String.format("The process has unexpectedly exited with code %d", process.exitValue()));
             }
             TimeUnit.MILLISECONDS.sleep(sleep);
             timeout -= sleep;
@@ -180,12 +182,13 @@ public class ServerHelper {
      *
      * @param client  the client used to communicate with the server
      * @param timeout the graceful shutdown timeout, a value of {@code -1} will wait indefinitely and a value of
-     *                {@code 0} will not attempt a graceful shutdown
+     *                    {@code 0} will not attempt a graceful shutdown
      *
      * @throws IOException                 if an error occurs communicating with the server
      * @throws OperationExecutionException if the operation used to shutdown the managed domain failed
      */
-    public static void shutdownDomain(final ModelControllerClient client, final int timeout) throws IOException, OperationExecutionException {
+    public static void shutdownDomain(final ModelControllerClient client, final int timeout)
+            throws IOException, OperationExecutionException {
         // Note the following two operations used to shutdown a domain don't seem to work well in a composite operation.
         // The operation occasionally sees a java.util.concurrent.CancellationException because the operation client
         // is likely closed before the AsyncFuture.get() is complete. Using a non-composite operation doesn't seem to
@@ -232,7 +235,8 @@ public class ServerHelper {
      * @throws IOException                 if an error occurs communicating with the server
      * @throws OperationExecutionException if the operation used to determine the host name fails
      */
-    public static ModelNode determineHostAddress(final ModelControllerClient client) throws IOException, OperationExecutionException {
+    public static ModelNode determineHostAddress(final ModelControllerClient client)
+            throws IOException, OperationExecutionException {
         final ModelNode op = Operations.createReadAttributeOperation(EMPTY_ADDRESS, "local-host-name");
         ModelNode response = client.execute(op);
         if (Operations.isSuccessfulOutcome(response)) {
@@ -282,7 +286,8 @@ public class ServerHelper {
                 break;
             timeout -= (System.currentTimeMillis() - before);
             if (process != null && !process.isAlive()) {
-                throw new RuntimeException(String.format("The process has unexpectedly exited with code %d", process.exitValue()));
+                throw new RuntimeException(
+                        String.format("The process has unexpectedly exited with code %d", process.exitValue()));
             }
             TimeUnit.MILLISECONDS.sleep(sleep);
             timeout -= sleep;
@@ -332,7 +337,7 @@ public class ServerHelper {
      *
      * @param client  the client used to communicate with the server
      * @param timeout the graceful shutdown timeout, a value of {@code -1} will wait indefinitely and a value of
-     *                {@code 0} will not attempt a graceful shutdown
+     *                    {@code 0} will not attempt a graceful shutdown
      *
      * @throws IOException if an error occurs communicating with the server
      */
@@ -358,7 +363,8 @@ public class ServerHelper {
     }
 
     private static boolean isDomainRunning(final ModelControllerClient client, boolean shutdown) {
-        final DomainClient domainClient = (client instanceof DomainClient ? (DomainClient) client : DomainClient.Factory.create(client));
+        final DomainClient domainClient = (client instanceof DomainClient ? (DomainClient) client
+                : DomainClient.Factory.create(client));
         try {
             // Check for admin-only
             final ModelNode hostAddress = determineHostAddress(domainClient);
