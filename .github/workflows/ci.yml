@@ -7,8 +7,25 @@ on:
   push:
     branches-ignore:
       - 'dependabot/**'
+    paths-ignore:
+      - '.gitignore'
+      - "CODEOWNERS"
+      - "CODE_OF_CONDUCT.md"
+      - "CONTRIBUTING.adoc"
+      - "dco.txt"
+      - "LICENSE.txt"
+      - "README.md"
+      - "security.txt"
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - '.gitignore'
+      - "CODEOWNERS"
+      - "CODE_OF_CONDUCT.md"
+      - "CONTRIBUTING.adoc"
+      - "dco.txt"
+      - "LICENSE.txt"
+      - "README.md"
+      - "security.txt"
 
 
 jobs:
