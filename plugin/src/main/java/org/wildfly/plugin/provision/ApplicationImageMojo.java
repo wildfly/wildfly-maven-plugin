@@ -221,10 +221,18 @@ public class ApplicationImageMojo extends PackageServerMojo {
     private void generateDockerfile(String runtimeImage, Path targetDir, String wildflyDirectory)
             throws IOException, MojoExecutionException {
 
+        Path jbossHome = Path.of(wildflyDirectory);
+        // Docker requires the source file be relative to the context directory. From the documentation:
+        // The <src> path must be inside the context of the build; you cannot COPY ../something /something, because
+        // the first step of a docker build is to send the context directory (and subdirectories) to the docker daemon.
+        if (jbossHome.isAbsolute()) {
+            jbossHome = targetDir.relativize(jbossHome);
+        }
+
         String targetName = getDeploymentTargetName();
         Files.writeString(targetDir.resolve("Dockerfile"),
                 "FROM " + runtimeImage + "\n" +
-                        "COPY --chown=jboss:root " + wildflyDirectory + " $JBOSS_HOME\n" +
+                        "COPY --chown=jboss:root " + jbossHome + " $JBOSS_HOME\n" +
                         "RUN chmod -R ug+rwX $JBOSS_HOME\n" +
                         "COPY --chown=jboss:root " + getDeploymentContent().getFileName()
                         + " $JBOSS_HOME/standalone/deployments/" + targetName,
