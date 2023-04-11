@@ -99,12 +99,6 @@ public class RunMojo extends AbstractServerStartMojo {
     private String runtimeName;
 
     /**
-     * The target directory the application to be deployed is located.
-     */
-    @Parameter(defaultValue = "${project.build.directory}/", property = PropertyNames.DEPLOYMENT_TARGET_DIR)
-    private File targetDir;
-
-    /**
      * The file name of the application to be deployed.
      * <p>
      * The {@code filename} property does have a default of <code>${project.build.finalName}.${project.packaging}</code>.

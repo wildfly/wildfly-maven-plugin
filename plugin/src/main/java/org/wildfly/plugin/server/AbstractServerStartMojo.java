@@ -79,7 +79,7 @@ public abstract class AbstractServerStartMojo extends AbstractServerConnection {
      * The target directory the application to be deployed is located.
      */
     @Parameter(defaultValue = "${project.build.directory}", readonly = true, required = true)
-    private File targetDir;
+    protected File targetDir;
 
     /**
      * The WildFly Application Server's home directory. If not used, WildFly will be downloaded.
