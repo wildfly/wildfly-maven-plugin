@@ -109,6 +109,7 @@ public class DevMojo extends AbstractServerStartMojo {
     private static final String MAVEN_COMPILER_GOAL = "compile";
     private static final String MAVEN_WAR_PLUGIN = "maven-war-plugin";
     private static final String MAVEN_EXPLODED_GOAL = "exploded";
+    private static final String MAVEN_WAR_GOAL = "war";
     private static final String MAVEN_RESOURCES_PLUGIN = "maven-resources-plugin";
     private static final String MAVEN_RESOURCES_GOAL = "resources";
 
@@ -155,6 +156,45 @@ public class DevMojo extends AbstractServerStartMojo {
             Map.entry("outdatedCheckPath", "3.3.1"),
             Map.entry("outputFileNameMapping", "2.1-alpha-1"),
             Map.entry("outputTimestamp", "3.3.0"),
+            Map.entry("overlays", "2.1-alpha-1"),
+            Map.entry("recompressZippedFiles", "2.3"),
+            Map.entry("resourceEncoding", "2.3"),
+            Map.entry("supportMultiLineFiltering", "2.4"),
+            Map.entry("useDefaultDelimiters", "3.0.0"),
+            Map.entry("useJvmChmod", "2.4"),
+            Map.entry("warSourceDirectory", ""),
+            Map.entry("warSourceExcludes", ""),
+            Map.entry("warSourceIncludes", ""),
+            Map.entry("webappDirectory", ""),
+            Map.entry("webResources", ""),
+            Map.entry("webXml", ""),
+            Map.entry("workDirectory", ""));
+
+    // A list of configuration parameters of the war goal as of 3.3.2
+    private static final Map<String, String> WAR_PARAMETERS = Map.ofEntries(
+            Map.entry("archive", ""),
+            Map.entry("archiveClasses", "2.0.1"),
+            Map.entry("attachClasses", "2.1-alpha-2"),
+            Map.entry("containerConfigXML", ""),
+            Map.entry("classesClassifier", "2.1-alpha-2"),
+            Map.entry("classifier", ""),
+            Map.entry("delimiters", "3.0.0"),
+            Map.entry("dependentWarExcludes", ""),
+            Map.entry("dependentWarIncludes", ""),
+            Map.entry("escapeString", "2.1-beta-1"),
+            Map.entry("escapedBackslashesInFilePath", "2.1-alpha-2"),
+            Map.entry("failOnMissingWebXml", "2.1-alpha-2"),
+            Map.entry("filteringDeploymentDescriptors", "2.1-alpha-2"),
+            Map.entry("filters", ""),
+            Map.entry("includeEmptyDirectories", "2.4"),
+            Map.entry("nonFilteredFileExtensions", "2.1-alpha-2"),
+            Map.entry("outdatedCheckPath", ""),
+            Map.entry("outputDirectory", "3.3.1"),
+            Map.entry("outputFileNameMapping", "2.1-alpha-1"),
+            Map.entry("outputTimestamp", "3.3.0"),
+            Map.entry("packagingExcludes", "2.1-alpha-2"),
+            Map.entry("packagingIncludes", "2.1-beta-1"),
+            Map.entry("primaryArtifact", ""),
             Map.entry("overlays", "2.1-alpha-1"),
             Map.entry("recompressZippedFiles", "2.3"),
             Map.entry("resourceEncoding", "2.3"),
@@ -233,6 +273,8 @@ public class DevMojo extends AbstractServerStartMojo {
     // Lazy loaded
     private final Set<String> allowedWarPluginParams = new HashSet<>();
 
+    private String warGoal = MAVEN_EXPLODED_GOAL;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         final var packageType = PackageType.resolve(project);
@@ -242,6 +284,7 @@ public class DevMojo extends AbstractServerStartMojo {
         ServerContext context = null;
         if (remote) {
             init();
+            warGoal = MAVEN_WAR_GOAL;
         } else {
             // Start the container
             context = startServer(ServerType.STANDALONE);
@@ -251,7 +294,7 @@ public class DevMojo extends AbstractServerStartMojo {
             if (needsCompile()) {
                 triggerResources();
                 triggerCompile();
-                triggerExplodeWar();
+                triggerWarGoal();
             }
             try (final WatchService watcher = FileSystems.getDefault().newWatchService()) {
                 final CompiledSourceHandler sourceHandler = new CompiledSourceHandler();
@@ -413,7 +456,7 @@ public class DevMojo extends AbstractServerStartMojo {
                                 deleteRecursively(path);
                                 triggerResources();
                                 triggerCompile();
-                                triggerExplodeWar();
+                                triggerWarGoal();
                                 deploymentResult = deploymentManager.deploy(deployment);
                                 if (!deploymentResult.successful()) {
                                     throw new MojoExecutionException(
@@ -451,11 +494,19 @@ public class DevMojo extends AbstractServerStartMojo {
                         if (result.requiresCopyResources()) {
                             triggerResources();
                         }
-                        if (result.requiresRepackage()) {
-                            triggerExplodeWar();
+                        if (remote || result.requiresRepackage()) {
+                            triggerWarGoal();
                         }
-                        if (result.requiresRedeploy()) {
-                            final DeploymentResult deploymentResult = deploymentManager.redeployToRuntime(deployment);
+                        if (remote || result.requiresRedeploy()) {
+                            final DeploymentResult deploymentResult;
+                            if (remote) {
+                                // If we are deploying an archive, we need to redeploy the full WAR
+                                deploymentResult = deploymentManager
+                                        .redeploy(deployment);
+                            } else {
+                                deploymentResult = deploymentManager
+                                        .redeployToRuntime(deployment);
+                            }
                             if (!deploymentResult.successful()) {
                                 throw new MojoExecutionException(
                                         "Failed to deploy content: " + deploymentResult.getFailureMessage());
@@ -484,12 +535,12 @@ public class DevMojo extends AbstractServerStartMojo {
         }
     }
 
-    private void triggerExplodeWar() throws MojoExecutionException {
+    private void triggerWarGoal() throws MojoExecutionException {
         // Compile the Java sources if needed
         final String warPluginKey = ORG_APACHE_MAVEN_PLUGINS + ":" + MAVEN_WAR_PLUGIN;
         final Plugin warPlugin = project.getPlugin(warPluginKey);
         if (warPlugin != null) {
-            executeGoal(project, warPlugin, ORG_APACHE_MAVEN_PLUGINS, MAVEN_WAR_PLUGIN, MAVEN_EXPLODED_GOAL,
+            executeGoal(project, warPlugin, ORG_APACHE_MAVEN_PLUGINS, MAVEN_WAR_PLUGIN, warGoal,
                     getWarPluginConfig(warPlugin));
         } else {
             getLog().warn("Can't package war application, war plugin not found");
@@ -591,7 +642,8 @@ public class DevMojo extends AbstractServerStartMojo {
         if (allowedWarPluginParams.isEmpty()) {
             final String pluginVersion = plugin.getVersion();
             final VersionComparator comparator = new VersionComparator();
-            allowedWarPluginParams.addAll(EXPLODED_WAR_PARAMETERS.entrySet().stream()
+            final Map<String, String> parameters = remote ? WAR_PARAMETERS : EXPLODED_WAR_PARAMETERS;
+            allowedWarPluginParams.addAll(parameters.entrySet().stream()
                     .filter(e -> e.getValue().isEmpty() || comparator.compare(e.getValue(), pluginVersion) <= 0)
                     .map(Map.Entry::getKey)
                     .collect(Collectors.toSet()));
@@ -657,14 +709,13 @@ public class DevMojo extends AbstractServerStartMojo {
 
     private Deployment getDeploymentContent() {
         final PackageType packageType = PackageType.resolve(project);
-        final Deployment deployment = Deployment.of(resolveWarDir());
-        final String filename;
-        // if (this.filename == null) {
-        filename = String.format("%s.%s", project.getBuild().getFinalName(), packageType.getFileExtension());
-        // } else {
-        // filename = this.filename;
-        // }
-        return deployment.setRuntimeName(filename);
+        final String filename = String.format("%s.%s", project.getBuild()
+                .getFinalName(), packageType.getFileExtension());
+        if (remote) {
+            return Deployment.of(Path.of(project.getBuild().getDirectory()).resolve(filename));
+        } else {
+            return Deployment.of(resolveWarDir()).setRuntimeName(filename);
+        }
     }
 
     private Path resolveWebAppSourceDir() {
