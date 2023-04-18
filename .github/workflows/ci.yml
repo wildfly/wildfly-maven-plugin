@@ -27,6 +27,11 @@ on:
       - "README.md"
       - "security.txt"
 
+# Only run the latest job
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
 
 jobs:
   build:
