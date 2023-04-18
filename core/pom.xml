@@ -175,10 +175,10 @@
 
     <profiles>
         <profile>
-            <id>release</id>
+            <id>copy-site</id>
             <activation>
                 <property>
-                    <name>release</name>
+                    <name>copy.site</name>
                 </property>
             </activation>
             <build>
