@@ -85,7 +85,7 @@ public abstract class AbstractServerStartMojo extends AbstractServerConnection {
      * The WildFly Application Server's home directory. If not used, WildFly will be downloaded.
      */
     @Parameter(alias = "jboss-home", property = PropertyNames.JBOSS_HOME)
-    private String jbossHome;
+    protected String jbossHome;
 
     /**
      * The feature pack location. See the <a href="https://docs.wildfly.org/galleon/#_feature_pack_location">documentation</a>
@@ -213,8 +213,12 @@ public abstract class AbstractServerStartMojo extends AbstractServerConnection {
         // Setting the mavenRepoManager is not thread-safe, however creating it more than once won't hurt anything
         if (initialized.compareAndSet(false, true)) {
             MavenRepositoriesEnricher.enrich(mavenSession, project, repositories);
-            mavenRepoManager = new MavenArtifactRepositoryManager(repoSystem, session, repositories);
+            mavenRepoManager = createMavenRepoManager();
         }
+    }
+
+    protected MavenRepoManager createMavenRepoManager() throws MojoExecutionException {
+        return new MavenArtifactRepositoryManager(repoSystem, session, repositories);
     }
 
     protected ServerContext startServer(final ServerType serverType) throws MojoExecutionException, MojoFailureException {
@@ -392,7 +396,7 @@ public abstract class AbstractServerStartMojo extends AbstractServerConnection {
         return commandBuilder;
     }
 
-    private Path provisionIfRequired(final Path installDir) throws MojoFailureException {
+    protected Path provisionIfRequired(final Path installDir) throws MojoFailureException, MojoExecutionException {
         if (jbossHome != null) {
             // we do not need to download WildFly
             return Paths.get(jbossHome);
