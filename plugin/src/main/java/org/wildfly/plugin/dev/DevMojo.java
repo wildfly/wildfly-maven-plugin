@@ -33,6 +33,7 @@ import static org.twdata.maven.mojoexecutor.MojoExecutor.version;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -45,6 +46,7 @@ import java.nio.file.WatchService;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.DosFileAttributes;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -70,7 +72,14 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.galleon.ProvisioningException;
+import org.jboss.galleon.ProvisioningManager;
+import org.jboss.galleon.config.ProvisioningConfig;
+import org.jboss.galleon.maven.plugin.util.MavenArtifactRepositoryManager;
+import org.jboss.galleon.maven.plugin.util.MvnMessageWriter;
+import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.twdata.maven.mojoexecutor.MojoExecutor;
+import org.wildfly.channel.UnresolvedMavenArtifactException;
 import org.wildfly.core.launcher.CommandBuilder;
 import org.wildfly.plugin.cli.CommandConfiguration;
 import org.wildfly.plugin.cli.CommandExecutor;
@@ -81,9 +90,14 @@ import org.wildfly.plugin.core.ContainerDescription;
 import org.wildfly.plugin.core.Deployment;
 import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.core.DeploymentResult;
+import org.wildfly.plugin.core.FeaturePack;
+import org.wildfly.plugin.core.GalleonUtils;
+import org.wildfly.plugin.core.PluginProgressTracker;
 import org.wildfly.plugin.core.ServerHelper;
 import org.wildfly.plugin.core.UndeployDescription;
 import org.wildfly.plugin.deployment.PackageType;
+import org.wildfly.plugin.provision.ChannelConfiguration;
+import org.wildfly.plugin.provision.ChannelMavenArtifactRepositoryManager;
 import org.wildfly.plugin.server.AbstractServerStartMojo;
 import org.wildfly.plugin.server.ServerContext;
 import org.wildfly.plugin.server.ServerType;
@@ -268,6 +282,66 @@ public class DevMojo extends AbstractServerStartMojo {
     @Parameter(property = "wildfly.dev.remote", defaultValue = "false")
     private boolean remote;
 
+    /**
+     * Arbitrary Galleon options used when provisioning the server. In case you
+     * are building a large amount of server in the same maven session, it
+     * is strongly advised to set 'jboss-fork-embedded' option to 'true' in
+     * order to fork Galleon provisioning and CLI scripts execution in dedicated
+     * processes. For example:
+     *
+     * <pre>
+     *   &lt;galleon-options&gt;
+     *     &lt;jboss-fork-embedded&gt;true&lt;/jboss-fork-embedded&gt;
+     *   &lt;/galleon-options&gt;
+     * </pre>
+     */
+    @Parameter(alias = "galleon-options")
+    private Map<String, String> galleonOptions = Collections.emptyMap();
+
+    /**
+     * Whether to use offline mode when the plugin resolves an artifact. In
+     * offline mode the plugin will only use the local Maven repository for an
+     * artifact resolution.
+     */
+    @Parameter(alias = "offline-provisioning", defaultValue = "false", property = PropertyNames.WILDFLY_PROVISIONING_OFFLINE)
+    private boolean offlineProvisioning;
+
+    /**
+     * Set to {@code true} if you want to delete the existing server referenced from the {@code provisioningDir} and provision a
+     * new one,
+     * otherwise {@code false}.
+     */
+    @Parameter(alias = "overwrite-provisioned-server", defaultValue = "false", property = PropertyNames.WILDFLY_PROVISIONING_OVERWRITE_PROVISIONED_SERVER)
+    private boolean overwriteProvisionedServer;
+
+    /**
+     * A list of feature-pack configurations to install, can be combined with layers. Use the System property
+     * {@code wildfly.provisioning.feature-packs} to provide a comma separated list of feature-packs.
+     */
+    @Parameter(alias = "feature-packs", property = PropertyNames.WILDFLY_PROVISIONING_FEATURE_PACKS)
+    private List<FeaturePack> featurePacks = Collections.emptyList();
+
+    /**
+     * A list of Galleon layers to provision. Can be used when feature-pack-location or feature-packs are set.
+     * Use the System property {@code wildfly.provisioning.layers} to provide a comma separated list of layers.
+     */
+    @Parameter(alias = "layers", property = PropertyNames.WILDFLY_PROVISIONING_LAYERS)
+    private List<String> layers = Collections.emptyList();
+
+    /**
+     * A list of Galleon layers to exclude. Can be used when feature-pack-location or feature-packs are set.
+     * Use the System property {@code wildfly.provisioning.layers.excluded} to provide a comma separated list of layers to
+     * exclude.
+     */
+    @Parameter(alias = "excluded-layers", property = PropertyNames.WILDFLY_PROVISIONING_LAYERS_EXCLUDED)
+    private List<String> excludedLayers = Collections.emptyList();
+
+    /**
+     * A list of channels used for resolving artifacts while provisioning.
+     */
+    @Parameter(alias = "channels")
+    private List<ChannelConfiguration> channels;
+
     // Lazily loaded list of patterns based on the ignorePatterns
     private final List<Pattern> ignoreUpdatePatterns = new ArrayList<>();
     // Lazy loaded
@@ -358,6 +432,22 @@ public class DevMojo extends AbstractServerStartMojo {
     }
 
     @Override
+    protected MavenRepoManager createMavenRepoManager() throws MojoExecutionException {
+        if (channels == null) {
+            return offlineProvisioning ? new MavenArtifactRepositoryManager(repoSystem, session)
+                    : new MavenArtifactRepositoryManager(repoSystem, session, repositories);
+        } else {
+            try {
+                return new ChannelMavenArtifactRepositoryManager(channels,
+                        repoSystem, session, repositories,
+                        getLog(), offlineProvisioning);
+            } catch (MalformedURLException | UnresolvedMavenArtifactException ex) {
+                throw new MojoExecutionException(ex.getLocalizedMessage(), ex);
+            }
+        }
+    }
+
+    @Override
     protected CommandBuilder createCommandBuilder(final Path jbossHome) throws MojoExecutionException {
         return createStandaloneCommandBuilder(jbossHome, serverConfig);
     }
@@ -380,6 +470,39 @@ public class DevMojo extends AbstractServerStartMojo {
     @SuppressWarnings("unused")
     public void setIgnorePatterns(final String ignorePatterns) {
         this.ignorePatterns = Utils.splitArguments(ignorePatterns);
+    }
+
+    @Override
+    protected Path provisionIfRequired(final Path installDir) throws MojoFailureException, MojoExecutionException {
+        if (!overwriteProvisionedServer && Files.exists(installDir)) {
+            getLog().info(String.format("A server already exists in %s, provisioning for %s:%s", installDir,
+                    project.getGroupId(), project.getArtifactId()));
+            return installDir;
+        }
+        try (ProvisioningManager pm = ProvisioningManager.builder().addArtifactResolver(mavenRepoManager)
+                .setInstallationHome(installDir)
+                .setMessageWriter(new MvnMessageWriter(getLog()))
+                .build()) {
+            ProvisioningConfig config;
+            if (featurePacks.isEmpty()) {
+                return super.provisionIfRequired(installDir);
+            } else {
+                config = GalleonUtils.buildConfig(pm, featurePacks, layers, excludedLayers, galleonOptions,
+                        serverConfig == null ? "standalone.xml" : serverConfig);
+            }
+            getLog().info("Provisioning server in " + installDir);
+            PluginProgressTracker.initTrackers(pm, getLog());
+            pm.provision(config);
+            // Check that at least the standalone or domain directories have been generated.
+            if (Files.notExists(installDir.resolve("standalone")) && Files.notExists(installDir.resolve("domain"))) {
+                getLog().error("Invalid galleon provisioning, no server provisioned in " + installDir + ". Make sure "
+                        + "that the list of Galleon feature-packs and Galleon layers are properly configured.");
+                throw new MojoExecutionException("Invalid plugin configuration, no server provisioned.");
+            }
+        } catch (ProvisioningException e) {
+            throw new MojoFailureException(e.getLocalizedMessage(), e);
+        }
+        return installDir;
     }
 
     private boolean registerDir(final WatchService watcher, final Path dir, final WatchHandler handler) throws IOException {
