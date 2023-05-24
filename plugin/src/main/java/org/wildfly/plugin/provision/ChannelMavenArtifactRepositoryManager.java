@@ -45,9 +45,11 @@ import org.jboss.galleon.universe.maven.MavenArtifact;
 import org.jboss.galleon.universe.maven.MavenUniverseException;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.jboss.galleon.util.ZipUtils;
+import org.wildfly.channel.ArtifactTransferException;
 import org.wildfly.channel.Channel;
 import org.wildfly.channel.ChannelManifest;
 import org.wildfly.channel.ChannelSession;
+import org.wildfly.channel.NoStreamFoundException;
 import org.wildfly.channel.Repository;
 import org.wildfly.channel.UnresolvedMavenArtifactException;
 import org.wildfly.channel.maven.VersionResolverFactory;
@@ -102,7 +104,9 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
     public void resolve(MavenArtifact artifact) throws MavenUniverseException {
         try {
             resolveFromChannels(artifact);
-        } catch (UnresolvedMavenArtifactException ex) {
+        } catch (ArtifactTransferException ex) {
+            throw new MavenUniverseException(ex.getLocalizedMessage(), ex);
+        } catch (NoStreamFoundException ex) {
             boolean requireChannel = Boolean.parseBoolean(artifact.getMetadata().get(REQUIRE_CHANNEL_FOR_ALL_ARTIFACT));
             if (!requireChannel) {
                 // Could be a feature-pack that could require to be resolved from a channel.
