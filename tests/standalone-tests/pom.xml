@@ -80,7 +80,13 @@
         </dependency>
         <dependency>
             <groupId>org.apache.maven.resolver</groupId>
-            <artifactId>maven-resolver-transport-http</artifactId>
+            <artifactId>maven-resolver-transport-wagon</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Only required by tests -->
+        <dependency>
+            <groupId>org.apache.maven.wagon</groupId>
+            <artifactId>wagon-http</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
