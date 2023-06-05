@@ -106,6 +106,9 @@
         <version.org.apache.maven.plugin-tools>3.7.0</version.org.apache.maven.plugin-tools>
         <version.org.apache.maven.shared>0.9.1</version.org.apache.maven.shared>
         <version.org.apache.maven.resolver>1.9.6</version.org.apache.maven.resolver>
+        <!-- maven dependencies only required by tests -->
+        <version.org.apache.maven.wagon>3.5.3</version.org.apache.maven.wagon>
+
         <version.org.eclipse.sisu>0.3.5</version.org.eclipse.sisu>
         <version.org.twdata.maven>2.3.1</version.org.twdata.maven>
 
@@ -297,18 +300,18 @@
                 <version>${version.org.apache.maven.resolver}</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-http</artifactId>
+                <version>${version.org.apache.maven.wagon}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.maven.resolver</groupId>
-                <artifactId>maven-resolver-transport-http</artifactId>
+                <artifactId>maven-resolver-transport-wagon</artifactId>
                 <version>${version.org.apache.maven.resolver}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.maven.resolver</groupId>
                 <artifactId>maven-resolver-util</artifactId>
-                <version>${version.org.apache.maven.resolver}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.maven.resolver</groupId>
-                <artifactId>maven-resolver-named-locks</artifactId>
                 <version>${version.org.apache.maven.resolver}</version>
             </dependency>
             <dependency>
