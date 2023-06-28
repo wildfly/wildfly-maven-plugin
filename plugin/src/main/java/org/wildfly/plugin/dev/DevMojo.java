@@ -342,6 +342,14 @@ public class DevMojo extends AbstractServerStartMojo {
     @Parameter(alias = "channels")
     private List<ChannelConfiguration> channels;
 
+    /**
+     * Specifies the name used for the deployment.
+     *
+     * When the deployment is copied to the server, it is renamed with this name.
+     */
+    @Parameter(property = PropertyNames.DEPLOYMENT_NAME)
+    private String name;
+
     // Lazily loaded list of patterns based on the ignorePatterns
     private final List<Pattern> ignoreUpdatePatterns = new ArrayList<>();
     // Lazy loaded
@@ -834,10 +842,12 @@ public class DevMojo extends AbstractServerStartMojo {
         final PackageType packageType = PackageType.resolve(project);
         final String filename = String.format("%s.%s", project.getBuild()
                 .getFinalName(), packageType.getFileExtension());
+        String runtimeName = this.name == null || this.name.isBlank() ? filename : this.name;
         if (remote) {
             return Deployment.of(Path.of(project.getBuild().getDirectory()).resolve(filename));
         } else {
-            return Deployment.of(resolveWarDir()).setRuntimeName(filename);
+
+            return Deployment.of(resolveWarDir()).setName(runtimeName).setRuntimeName(runtimeName);
         }
     }
 
