@@ -65,6 +65,8 @@ public interface PropertyNames {
 
     String JAVA_OPTS = "wildfly.javaOpts";
 
+    String MODULE_OPTS = "wildfly.moduleOptions";
+
     String MODULES_PATH = "wildfly.modulesPath";
 
     String OFFLINE = "wildfly.offline";
