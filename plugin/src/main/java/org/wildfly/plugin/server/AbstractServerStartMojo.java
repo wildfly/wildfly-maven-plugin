@@ -131,6 +131,13 @@ public abstract class AbstractServerStartMojo extends AbstractServerConnection {
     private String[] javaOpts;
 
     /**
+     * Options passed to JBoss Modules. This is useful for things like Java Agents where you need to start the server
+     * with an agent.
+     */
+    @Parameter(alias = "module-options", property = PropertyNames.MODULE_OPTS)
+    private String[] moduleOptions;
+
+    /**
      * The {@code JAVA_HOME} to use for launching the server.
      */
     @Parameter(alias = "java-home", property = PropertyNames.JAVA_HOME)
@@ -303,6 +310,18 @@ public abstract class AbstractServerStartMojo extends AbstractServerConnection {
         }
     }
 
+    /**
+     * Allows the {@link #moduleOptions} to be set as a string. The string is assumed to be space delimited.
+     *
+     * @param value a spaced delimited value of JBoss Modules options
+     */
+    @SuppressWarnings("unused")
+    public void setModulesOptions(final String value) {
+        if (value != null) {
+            moduleOptions = value.split("\\s+");
+        }
+    }
+
     protected StandaloneCommandBuilder createStandaloneCommandBuilder(final Path jbossHome, final String serverConfig)
             throws MojoExecutionException {
         final StandaloneCommandBuilder commandBuilder = StandaloneCommandBuilder.of(jbossHome)
@@ -328,6 +347,10 @@ public abstract class AbstractServerStartMojo extends AbstractServerConnection {
 
         if (serverArgs != null) {
             commandBuilder.addServerArguments(serverArgs);
+        }
+
+        if (Utils.isNotNullOrEmpty(moduleOptions)) {
+            commandBuilder.setModuleOptions(moduleOptions);
         }
 
         final Path javaHomePath = (this.javaHome == null ? Paths.get(System.getProperty("java.home"))
