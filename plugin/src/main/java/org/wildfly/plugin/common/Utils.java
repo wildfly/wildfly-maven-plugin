@@ -22,11 +22,28 @@
 
 package org.wildfly.plugin.common;
 
+import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
+import org.jboss.galleon.ProvisioningManager;
+import org.jboss.galleon.config.ProvisioningConfig;
+import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
+import org.jboss.galleon.xml.ProvisioningXmlWriter;
+import org.wildfly.glow.Arguments;
+import org.wildfly.glow.GlowSession;
+import org.wildfly.glow.ScanResults;
+import org.wildfly.plugin.core.FeaturePack;
+import org.wildfly.plugin.core.GalleonUtils;
+import org.wildfly.plugin.provision.GlowConfig;
 
 /**
  * A simple utility class.
@@ -100,5 +117,67 @@ public class Utils {
             }
         }
         return args;
+    }
+
+    public static ScanResults scanDeployment(GlowConfig discoverProvisioningInfo,
+            List<String> layers,
+            List<String> excludedLayers,
+            List<FeaturePack> featurePacks,
+            boolean dryRun,
+            Log log,
+            Path deploymentContent,
+            MavenRepoManager artifactResolver,
+            Path outputFolder,
+            ProvisioningManager pm,
+            Map<String, String> galleonOptions,
+            String layersConfigurationFileName) throws Exception {
+        if (!layers.isEmpty()) {
+            throw new MojoExecutionException("layers must be empty when enabling glow");
+        }
+        if (!excludedLayers.isEmpty()) {
+            throw new MojoExecutionException("excluded layers must be empty when enabling glow");
+        }
+        if (!Files.exists(deploymentContent)) {
+            throw new MojoExecutionException("A deployment is expected when enabling glow layer discovery");
+        }
+        Path inProvisioningFile = null;
+        Path glowOutputFolder = outputFolder.resolve("glow-scan");
+        Files.createDirectories(glowOutputFolder);
+        if (!featurePacks.isEmpty()) {
+            ProvisioningConfig in = GalleonUtils.buildConfig(pm, featurePacks, layers, excludedLayers, galleonOptions,
+                    layersConfigurationFileName);
+            inProvisioningFile = glowOutputFolder.resolve("glow-in-provisioning.xml");
+            try (FileWriter fileWriter = new FileWriter(inProvisioningFile.toFile())) {
+                ProvisioningXmlWriter.getInstance().write(in, fileWriter);
+            }
+        }
+        Arguments arguments = discoverProvisioningInfo.toArguments(deploymentContent, inProvisioningFile);
+        log.info("Glow is scanning... ");
+        ScanResults results;
+        GlowMavenMessageWriter writer = new GlowMavenMessageWriter(log);
+        try {
+            results = GlowSession.scan(artifactResolver, arguments, writer);
+        } catch (Exception ex) {
+            throw new MojoExecutionException(ex.getLocalizedMessage(), ex);
+        }
+
+        log.info("Glow scanning DONE.");
+        try {
+            results.outputInformation(writer);
+        } catch (Exception ex) {
+            throw new MojoExecutionException(ex.getLocalizedMessage(), ex);
+        }
+        if (!dryRun) {
+            results.outputConfig(glowOutputFolder, false);
+        }
+        if (results.getErrorSession().hasErrors()) {
+            if (discoverProvisioningInfo.isFailsOnError()) {
+                throw new MojoExecutionException("Error detected by WildFly Glow. Aborting.");
+            } else {
+                log.warn("Some erros have been identified, check logs.");
+            }
+        }
+
+        return results;
     }
 }

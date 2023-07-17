@@ -76,6 +76,17 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
     }
 
     @Test
+    public void testGlowPackage() throws Exception {
+
+        final Mojo packageMojo = lookupConfiguredMojo(
+                AbstractWildFlyMojoTest.getPomFile("package-glow-pom.xml").toFile(), "package");
+        String[] layers = { "ee-core-profile-server", "microprofile-openapi" };
+        packageMojo.execute();
+        Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("packaged-glow-server");
+        checkStandaloneWildFlyHome(jbossHome, 1, layers, null, true);
+    }
+
+    @Test
     public void testInvalidDeployment() throws Exception {
 
         final Mojo packageMojo = lookupConfiguredMojo(

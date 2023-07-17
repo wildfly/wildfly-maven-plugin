@@ -124,6 +124,7 @@
 
         <!-- galleon properties -->
         <version.org.jboss.galleon>5.2.0.Final</version.org.jboss.galleon>
+        <version.org.wildfly.glow>1.0.0.Alpha1</version.org.wildfly.glow>
         <plugin.fork.embedded>true</plugin.fork.embedded>
         <!-- used by tests -->
         <version.org.jboss.logging.slf4j-jboss-logging>1.2.1.Final</version.org.jboss.logging.slf4j-jboss-logging>
@@ -429,7 +430,11 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-
+            <dependency>
+                <groupId>org.wildfly.glow</groupId>
+                <artifactId>wildfly-glow-core</artifactId>
+                <version>${version.org.wildfly.glow}</version>
+            </dependency>
             <!-- Test dependencies -->
             <dependency>
                 <groupId>junit</groupId>

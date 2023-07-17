@@ -19,10 +19,12 @@ package org.wildfly.plugin.provision;
 import static org.wildfly.plugin.core.Constants.PLUGIN_PROVISIONING_FILE;
 import static org.wildfly.plugin.core.Constants.STANDALONE_XML;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -185,6 +187,13 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
     @Parameter(alias = "channels", required = false)
     List<ChannelConfiguration> channels;
 
+    /**
+     * Do not actually provision a server but generate the Galleon provisioning configuration
+     * in {@code target/.wildfly-maven-plugin-provisioning.xml} file.
+     */
+    @Parameter(alias = "dry-run", required = false)
+    boolean dryRun;
+
     private Path wildflyDir;
 
     protected MavenRepoManager artifactResolver;
@@ -194,6 +203,9 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
         if (skip) {
             getLog().debug(String.format("Skipping " + getGoal() + " of %s:%s", project.getGroupId(), project.getArtifactId()));
             return;
+        }
+        if (dryRun) {
+            getLog().info("Dry run execution, no server will be provisioned.");
         }
         Path targetPath = Paths.get(project.getBuild().getDirectory());
         wildflyDir = targetPath.resolve(provisioningDir).normalize();
@@ -223,13 +235,15 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
         try {
             try {
                 provisionServer(wildflyDir);
-                if (artifactResolver instanceof ChannelMavenArtifactRepositoryManager) {
-                    ((ChannelMavenArtifactRepositoryManager) artifactResolver).done(wildflyDir);
+                if (!dryRun) {
+                    if (artifactResolver instanceof ChannelMavenArtifactRepositoryManager) {
+                        ((ChannelMavenArtifactRepositoryManager) artifactResolver).done(wildflyDir);
+                    }
+                    serverProvisioned(wildflyDir);
                 }
             } catch (ProvisioningException | IOException | XMLStreamException ex) {
                 throw new MojoExecutionException("Provisioning failed", ex);
             }
-            serverProvisioned(wildflyDir);
         } finally {
             // Although cli and embedded are run in their own classloader,
             // the module.path system property has been set and needs to be cleared for
@@ -254,30 +268,15 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
                 .setLogTime(logProvisioningTime)
                 .setRecordState(recordProvisioningState)
                 .build()) {
-            ProvisioningConfig config = null;
-            Path resolvedProvisioningFile = resolvePath(project, provisioningFile.toPath());
-            boolean provisioningFileExists = Files.exists(resolvedProvisioningFile);
-            if (featurePacks.isEmpty()) {
-                if (provisioningFileExists) {
-                    getLog().info("Provisioning server using " + resolvedProvisioningFile + " file.");
-                    config = GalleonUtils.buildConfig(resolvedProvisioningFile);
-                } else {
-                    config = getDefaultConfig();
-                    if (config == null) {
-                        throw new MojoExecutionException("No feature-pack has been configured, can't provision a server.");
-                    }
+            ProvisioningConfig config = buildGalleonConfig(pm);
+            if (dryRun) {
+                Path targetPath = Paths.get(project.getBuild().getDirectory());
+                Path file = targetPath.resolve(PLUGIN_PROVISIONING_FILE);
+                getLog().info("Dry-run execution, generating provisioning.xml file: " + file);
+                try (BufferedWriter writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8)) {
+                    ProvisioningXmlWriter.getInstance().write(config, writer);
                 }
-            } else {
-                if (provisioningFileExists) {
-                    getLog().warn(
-                            "Galleon provisioning file " + provisioningFile + " is ignored, plugin configuration is used.");
-                }
-                if (layers.isEmpty() && !STANDALONE_XML.equals(layersConfigurationFileName)) {
-                    throw new MojoExecutionException(
-                            "layers-configuration-file-name has been set although no layers are defined.");
-                }
-                config = GalleonUtils.buildConfig(pm, featurePacks, layers, excludedLayers, galleonOptions,
-                        layersConfigurationFileName);
+                return;
             }
             getLog().info("Provisioning server in " + home);
             PluginProgressTracker.initTrackers(pm, getLog());
@@ -295,6 +294,36 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
                 }
             }
         }
+    }
+
+    protected ProvisioningConfig buildGalleonConfig(ProvisioningManager pm)
+            throws MojoExecutionException, ProvisioningException {
+        ProvisioningConfig config = null;
+        Path resolvedProvisioningFile = resolvePath(project, provisioningFile.toPath());
+        boolean provisioningFileExists = Files.exists(resolvedProvisioningFile);
+        if (featurePacks.isEmpty()) {
+            if (provisioningFileExists) {
+                getLog().info("Provisioning server using " + resolvedProvisioningFile + " file.");
+                config = GalleonUtils.buildConfig(resolvedProvisioningFile);
+            } else {
+                config = getDefaultConfig();
+                if (config == null) {
+                    throw new MojoExecutionException("No feature-pack has been configured, can't provision a server.");
+                }
+            }
+        } else {
+            if (provisioningFileExists) {
+                getLog().warn(
+                        "Galleon provisioning file " + provisioningFile + " is ignored, plugin configuration is used.");
+            }
+            if (layers.isEmpty() && !STANDALONE_XML.equals(layersConfigurationFileName)) {
+                throw new MojoExecutionException(
+                        "layers-configuration-file-name has been set although no layers are defined.");
+            }
+            config = GalleonUtils.buildConfig(pm, featurePacks, layers, excludedLayers, galleonOptions,
+                    layersConfigurationFileName);
+        }
+        return config;
     }
 
     protected ProvisioningConfig getDefaultConfig() throws ProvisioningDescriptionException {

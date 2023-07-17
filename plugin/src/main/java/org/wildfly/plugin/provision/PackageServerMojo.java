@@ -40,6 +40,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.jboss.galleon.ProvisioningDescriptionException;
+import org.jboss.galleon.ProvisioningException;
+import org.jboss.galleon.ProvisioningManager;
 import org.jboss.galleon.config.ProvisioningConfig;
 import org.jboss.galleon.util.IoUtils;
 import org.wildfly.plugin.cli.BaseCommandConfiguration;
@@ -47,6 +49,7 @@ import org.wildfly.plugin.cli.CliSession;
 import org.wildfly.plugin.cli.OfflineCommandExecutor;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.StandardOutput;
+import org.wildfly.plugin.common.Utils;
 import org.wildfly.plugin.deployment.MojoDeploymentException;
 import org.wildfly.plugin.deployment.PackageType;
 
@@ -174,12 +177,82 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     @Parameter(defaultValue = "false", property = PropertyNames.SKIP_PACKAGE_DEPLOYMENT)
     protected boolean skipDeployment;
 
+    /**
+     * Galleon provisioning info discovery.
+     * <p>
+     * By enabling this feature, the set of Galleon feature-packs
+     * and layers are automatically discovered by scanning the deployed application.
+     * You can configure the following items:
+     * </p>
+     * <div>
+     * <ul>
+     * <li>addOns: List of addOn to enable. An addOn brings extra galleon layers to the provisioning (eg: {@code wildfly-cli} to
+     * include CLI.</li>
+     * <li>context: {@code bare-metal} or (@code cloud}. Default to {@code bare-metal}</li>
+     * <li>failsOnError: true|false. If errors are detected (missing datasource, missing messaging broker, ambiguous JNDI call,
+     * provisioning is aborted. Default to {@code false}</li>
+     * <li>layersForJndi: List of Galleon layers required by some JNDI calls located in your application.</li>
+     * <li>preview: {@code true} | {@code false}. Use preview feature-packs. Default to {@code false}.</li>
+     * <li>profile: {@code ha}. Default being non ha server configuration.</li>
+     * <li>suggest: {@code true} | {@code false}. Display addOns that you can use to enhance discovered provisioning
+     * configuration. Default to {@code false}.</li>
+     * <li>version: server version. Default being the latest released version.</li>
+     *
+     * </ul>
+     * </div>
+     *
+     * For example, cloud, ha profile with CLI and openapi addOns enabled. mail layer eing explicitly included:
+     *
+     * <pre>
+     *   &lt;discover-provisioning-info&gt;
+     *     &lt;context&gt;cloud&lt;/context&gt;
+     *     &lt;profile&gt;ha&lt;/profile&gt;
+     *     &lt;addOns&gt;
+     *       &lt;addOn&gt;wildfly-cli&lt;/addOn&gt;
+     *       &lt;addOn&gt;openapi&lt;/addOn&gt;
+     *     &lt;/addOns&gt;
+     *     &lt;layersForJndi&gt;
+     *       &lt;layer&gt;mail&lt;/layer&gt;
+     *     &lt;/layersForJndi&gt;
+     *   &lt;/discover-provisioning-info&gt;
+     * </pre>
+     */
+    @Parameter(alias = "discover-provisioning-info", required = false)
+    GlowConfig discoverProvisioningInfo;
+
     @Inject
     private OfflineCommandExecutor commandExecutor;
+
+    private ProvisioningConfig config;
 
     @Override
     protected ProvisioningConfig getDefaultConfig() throws ProvisioningDescriptionException {
         return null;
+    }
+
+    @Override
+    protected ProvisioningConfig buildGalleonConfig(ProvisioningManager pm)
+            throws MojoExecutionException, ProvisioningException {
+        if (discoverProvisioningInfo == null) {
+            config = super.buildGalleonConfig(pm);
+            return config;
+        }
+        try {
+            return Utils.scanDeployment(discoverProvisioningInfo,
+                    layers,
+                    excludedLayers,
+                    featurePacks,
+                    dryRun,
+                    getLog(),
+                    getDeploymentContent(),
+                    artifactResolver,
+                    Paths.get(project.getBuild().getDirectory()),
+                    pm,
+                    galleonOptions,
+                    layersConfigurationFileName).getProvisioningConfig();
+        } catch (Exception ex) {
+            throw new MojoExecutionException(ex.getLocalizedMessage(), ex);
+        }
     }
 
     @Override
