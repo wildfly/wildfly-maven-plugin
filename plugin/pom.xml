@@ -50,6 +50,9 @@
         <url>${wildfly.scm.url}</url>
     </scm>
 
+    <properties>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -209,10 +212,10 @@
 
     <profiles>
         <profile>
-            <id>release</id>
+            <id>generate-site</id>
             <activation>
                 <property>
-                    <name>release</name>
+                    <name>generate.site</name>
                 </property>
             </activation>
             <build>
@@ -234,44 +237,7 @@
                         <executions>
                             <execution>
                                 <id>copy-site</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${project.basedir}/../docs/</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${project.build.directory}/site</directory>
-                                            <excludes>
-                                                <exclude>**/checkstyle.html</exclude>
-                                                <exclude>**/checkstyle.rss</exclude>
-                                                <exclude>**/apidocs/**</exclude>
-                                            </excludes>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>copy-site</id>
-            <activation>
-                <property>
-                    <name>copy.site</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-resources-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>copy-site</id>
-                                <phase>verify</phase>
+                                <phase>prepare-package</phase>
                                 <goals>
                                     <goal>copy-resources</goal>
                                 </goals>
