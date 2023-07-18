@@ -42,6 +42,7 @@
                 <menu>Examples</menu>
                 <menu>Project Documentation</menu>
                 <menu>Reports</menu>
+                <menu>Releases</menu>
             </topNav>
         </skinConfig>
     </custom>
@@ -74,6 +75,11 @@
         <menu name="Reports" inherit="top">
             <item name="Project Information" href="project-info.html"/>
             <item name="Project Reports" href="project-reports.html"/>
+        </menu>
+
+        <menu name="Releases" inherit="top">
+            <item name="4.2 (alpha)" href="../4.2"/>
+            <item name="4.1 (stable)" href="../4.1"/>
         </menu>
         <footer><![CDATA[<div class="float-md-end"><a href="https://www.redhat.com/"><span class="fw-bold btn-link">Sponsored by</span> <img class="img-fluid" src="https://www.wildfly.org/assets/img/redhat_reversed.svg"></a></div>]]></footer>
     </body>
