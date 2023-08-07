@@ -128,7 +128,7 @@
    </tr>
    <tr>
     <td><a href="deploy-only-mojo.html">wildfly:deploy-only</a></td>
-    <td>Deploys only the application to the WildFly Application Server without first invoking the the execution of the lifecycle phase 'package' prior to executing itself. If <code>force</code> is set to <code>true</code>, the server is queried to see if the application already exists. If the application already exists, the application is redeployed instead of deployed. If the application does not exist the application is deployed as normal. If <code>force</code> is set to <code>false</code> and the application has already been deployed to the server, an error will occur and the deployment will fail.</td>
+    <td>Deploys only the application to the WildFly Application Server without first invoking the the Execution of the lifecycle phase 'package' prior to executing itself. If <code>force</code> is set to <code>true</code>, the server is queried to see if the application already exists. If the application already exists, the application is redeployed instead of deployed. If the application does not exist the application is deployed as normal. If <code>force</code> is set to <code>false</code> and the application has already been deployed to the server, an error will occur and the deployment will fail.</td>
    </tr>
    <tr>
     <td><a href="dev-mojo.html">wildfly:dev</a></td>
@@ -136,7 +136,7 @@
    </tr>
    <tr>
     <td><a href="execute-commands-mojo.html">wildfly:execute-commands</a></td>
-    <td>Execute commands to the running WildFly Application Server. Commands should be formatted in the same manor CLI commands are formatted. Executing commands in a batch will rollback all changes if one command fails. <pre class="border shadow rounded">     &lt;batch&gt;true&lt;/batch&gt;
+    <td>Execute commands to the running WildFly Application Server. Commands should be formatted in the same manner CLI commands are formatted. Executing commands in a batch will rollback all changes if one command fails. <pre class="border shadow rounded">     &lt;batch&gt;true&lt;/batch&gt;
      &lt;fail-on-error&gt;false&lt;/fail-on-error&gt;
      &lt;commands&gt;
          &lt;command&gt;/subsystem=logging/console=CONSOLE:write-attribute(name=level,value=DEBUG)&lt;/command&gt;
