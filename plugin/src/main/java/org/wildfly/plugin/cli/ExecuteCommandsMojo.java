@@ -52,7 +52,7 @@ import org.wildfly.plugin.core.MavenRepositoriesEnricher;
 /**
  * Execute commands to the running WildFly Application Server.
  * <p/>
- * Commands should be formatted in the same manor CLI commands are formatted.
+ * Commands should be formatted in the same manner CLI commands are formatted.
  * <p/>
  * Executing commands in a batch will rollback all changes if one command fails.
  *
