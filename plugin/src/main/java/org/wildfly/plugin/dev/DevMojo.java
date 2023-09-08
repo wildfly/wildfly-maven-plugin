@@ -39,6 +39,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
@@ -72,15 +73,18 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.controller.client.helpers.Operations;
 import org.jboss.galleon.ProvisioningException;
 import org.jboss.galleon.ProvisioningManager;
 import org.jboss.galleon.config.ProvisioningConfig;
 import org.jboss.galleon.maven.plugin.util.MavenArtifactRepositoryManager;
 import org.jboss.galleon.maven.plugin.util.MvnMessageWriter;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
+import org.jboss.galleon.util.IoUtils;
 import org.twdata.maven.mojoexecutor.MojoExecutor;
 import org.wildfly.channel.UnresolvedMavenArtifactException;
 import org.wildfly.core.launcher.CommandBuilder;
+import org.wildfly.glow.ScanResults;
 import org.wildfly.plugin.cli.CommandConfiguration;
 import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.common.Environment;
@@ -98,6 +102,7 @@ import org.wildfly.plugin.core.UndeployDescription;
 import org.wildfly.plugin.deployment.PackageType;
 import org.wildfly.plugin.provision.ChannelConfiguration;
 import org.wildfly.plugin.provision.ChannelMavenArtifactRepositoryManager;
+import org.wildfly.plugin.provision.GlowConfig;
 import org.wildfly.plugin.server.AbstractServerStartMojo;
 import org.wildfly.plugin.server.ServerContext;
 import org.wildfly.plugin.server.ServerType;
@@ -350,12 +355,22 @@ public class DevMojo extends AbstractServerStartMojo {
     @Parameter(property = PropertyNames.DEPLOYMENT_NAME)
     private String name;
 
+    /*
+     * Galleon provisioning information discovery. This discovery only applies when the server is running locally.
+     * NOTE: {@code overwriteProvisionedServer } must be set to true.
+     */
+    @Parameter(alias = "discover-provisioning-info", required = false)
+    GlowConfig discoverProvisioningInfo;
+
     // Lazily loaded list of patterns based on the ignorePatterns
     private final List<Pattern> ignoreUpdatePatterns = new ArrayList<>();
     // Lazy loaded
     private final Set<String> allowedWarPluginParams = new HashSet<>();
 
     private String warGoal = MAVEN_EXPLODED_GOAL;
+    private ScanResults results;
+    private Path installDir;
+    private boolean requiresWarDeletion;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -363,13 +378,20 @@ public class DevMojo extends AbstractServerStartMojo {
         if (!"war".equalsIgnoreCase(packageType.getPackaging())) {
             throw new MojoExecutionException("The dev goal only works for WAR deployments");
         }
+        serverConfig = serverConfig == null ? "standalone.xml" : serverConfig;
         ServerContext context = null;
         if (remote) {
             init();
             warGoal = MAVEN_WAR_GOAL;
         } else {
-            // Start the container
-            context = startServer(ServerType.STANDALONE);
+            if (isDiscoveryEnabled()) {
+                if (!overwriteProvisionedServer) {
+                    throw new MojoExecutionException(
+                            "When layer discovery is enabled, overwriteProvisionedServer must be set to true");
+                }
+            } else {
+                context = startServer(ServerType.STANDALONE);
+            }
         }
         try {
             // Do we need to build first?
@@ -377,6 +399,14 @@ public class DevMojo extends AbstractServerStartMojo {
                 triggerResources();
                 triggerCompile();
                 triggerWarGoal();
+            } else {
+                // First update will imply to delete the war and redeploy it.
+                // in the remote case, we have a war and must keep it.
+                requiresWarDeletion = !remote;
+            }
+            // We must start the server after compilation occured to get a deployment to scan
+            if (!remote && isDiscoveryEnabled()) {
+                context = startServer(ServerType.STANDALONE);
             }
             try (final WatchService watcher = FileSystems.getDefault().newWatchService()) {
                 final CompiledSourceHandler sourceHandler = new CompiledSourceHandler();
@@ -480,37 +510,125 @@ public class DevMojo extends AbstractServerStartMojo {
         this.ignorePatterns = Utils.splitArguments(ignorePatterns);
     }
 
+    private boolean isDiscoveryEnabled() {
+        return discoverProvisioningInfo != null;
+    }
+
+    ProvisioningConfig shouldReprovision() {
+        // Remote or no initial Glow scanning
+        if (remote || results == null) {
+            return null;
+        }
+        // References a dummy install Dir
+        Path tmpInstallDir = Paths.get(project.getBuild().getDirectory()).resolve("glow-tmp");
+        try (ProvisioningManager pm = ProvisioningManager.builder().addArtifactResolver(mavenRepoManager)
+                .setInstallationHome(tmpInstallDir)
+                .setMessageWriter(new MvnMessageWriter(getLog()))
+                .build()) {
+            ScanResults newResults = scanDeployment(pm);
+            try {
+                if (!results.getDecorators().equals(newResults.getDecorators())) {
+                    getLog().info("Set of discovered layers changed, needs to reprovision. New layers: "
+                            + newResults.getDecorators());
+                    return newResults.getProvisioningConfig();
+                }
+                if (!results.getExcludedLayers().equals(newResults.getExcludedLayers())) {
+                    getLog().info("Set of discovered excluded layers changed, needs to reprovision. New layers: "
+                            + newResults.getExcludedLayers());
+                    return newResults.getProvisioningConfig();
+                }
+            } finally {
+                results = newResults;
+            }
+        } catch (Exception ex) {
+            getLog().error(ex);
+        }
+        return null;
+    }
+
+    boolean reprovisionAndStart()
+            throws IOException, InterruptedException, MojoExecutionException, MojoFailureException, ProvisioningException {
+        ProvisioningConfig newConfig = shouldReprovision();
+        if (newConfig == null) {
+            return false;
+        }
+        debug("Changes in layers detected, must re-provision the server");
+        try (ModelControllerClient client = createClient()) {
+            client.execute(Operations.createOperation("shutdown"));
+            while (ServerHelper.isStandaloneRunning(client)) {
+                Thread.sleep(100);
+            }
+            debug("Deleting existing installation " + installDir);
+            IoUtils.recursiveDelete(installDir);
+        }
+        try (ProvisioningManager pm = ProvisioningManager.builder().addArtifactResolver(mavenRepoManager)
+                .setInstallationHome(installDir)
+                .setMessageWriter(new MvnMessageWriter(getLog()))
+                .build()) {
+            provisionServer(pm, newConfig);
+        }
+        startServer(ServerType.STANDALONE);
+        return true;
+    }
+
     @Override
     protected Path provisionIfRequired(final Path installDir) throws MojoFailureException, MojoExecutionException {
+        // This is called for the initial start of the server.
+        this.installDir = installDir;
         if (!overwriteProvisionedServer && Files.exists(installDir)) {
             getLog().info(String.format("A server already exists in %s, provisioning for %s:%s", installDir,
                     project.getGroupId(), project.getArtifactId()));
             return installDir;
+        }
+        if (Files.exists(installDir)) {
+            IoUtils.recursiveDelete(installDir);
         }
         try (ProvisioningManager pm = ProvisioningManager.builder().addArtifactResolver(mavenRepoManager)
                 .setInstallationHome(installDir)
                 .setMessageWriter(new MvnMessageWriter(getLog()))
                 .build()) {
             ProvisioningConfig config;
-            if (featurePacks.isEmpty()) {
+            if (featurePacks.isEmpty() && !isDiscoveryEnabled()) {
                 return super.provisionIfRequired(installDir);
             } else {
-                config = GalleonUtils.buildConfig(pm, featurePacks, layers, excludedLayers, galleonOptions,
-                        serverConfig == null ? "standalone.xml" : serverConfig);
+                if (!isDiscoveryEnabled()) {
+                    config = GalleonUtils.buildConfig(pm, featurePacks, layers, excludedLayers, galleonOptions,
+                            serverConfig);
+                } else {
+                    results = scanDeployment(pm);
+                    config = results.getProvisioningConfig();
+                }
             }
-            getLog().info("Provisioning server in " + installDir);
-            PluginProgressTracker.initTrackers(pm, getLog());
-            pm.provision(config);
-            // Check that at least the standalone or domain directories have been generated.
-            if (Files.notExists(installDir.resolve("standalone")) && Files.notExists(installDir.resolve("domain"))) {
-                getLog().error("Invalid galleon provisioning, no server provisioned in " + installDir + ". Make sure "
-                        + "that the list of Galleon feature-packs and Galleon layers are properly configured.");
-                throw new MojoExecutionException("Invalid plugin configuration, no server provisioned.");
-            }
-        } catch (ProvisioningException e) {
+            provisionServer(pm, config);
+        } catch (Exception e) {
             throw new MojoFailureException(e.getLocalizedMessage(), e);
         }
         return installDir;
+    }
+
+    private ScanResults scanDeployment(ProvisioningManager pm) throws Exception {
+        return Utils.scanDeployment(discoverProvisioningInfo,
+                layers, excludedLayers, featurePacks, false,
+                getLog(),
+                resolveWarLocation(),
+                mavenRepoManager,
+                Paths.get(project.getBuild().getDirectory()),
+                pm,
+                galleonOptions,
+                serverConfig);
+    }
+
+    private void provisionServer(ProvisioningManager pm, ProvisioningConfig config)
+            throws ProvisioningException, MojoExecutionException {
+        getLog().info("Provisioning server in " + installDir);
+        PluginProgressTracker.initTrackers(pm, getLog());
+        pm.provision(config);
+        // Check that at least the standalone or domain directories have been generated.
+        if (Files.notExists(installDir.resolve("standalone")) && Files.notExists(installDir.resolve("domain"))) {
+            getLog().error("Invalid galleon provisioning, no server provisioned in " + installDir + ". Make sure "
+                    + "that the list of Galleon feature-packs and Galleon layers are properly configured.");
+            throw new MojoExecutionException("Invalid plugin configuration, no server provisioned.");
+        }
     }
 
     private boolean registerDir(final WatchService watcher, final Path dir, final WatchHandler handler) throws IOException {
@@ -582,8 +700,9 @@ public class DevMojo extends AbstractServerStartMojo {
                                         "Failed to undeploy application. Unexpected results may occur. Failure: %s",
                                         deploymentResult.getFailureMessage()));
                             } else {
-                                // Clean the deployment directory
-                                final Path path = resolveWarDir();
+                                // Clean the deployment directory if that is a first update and no compilation occured
+                                // meaning that is a war file, not an exploded directory.
+                                final Path path = resolveWarLocation();
                                 deleteRecursively(path);
                                 triggerResources();
                                 triggerCompile();
@@ -625,18 +744,42 @@ public class DevMojo extends AbstractServerStartMojo {
                         if (result.requiresCopyResources()) {
                             triggerResources();
                         }
+                        boolean repackaged = false;
                         if (remote || result.requiresRepackage()) {
+                            // If !remote, the first packaging was not an exploded war, clean it.
+                            if (requiresWarDeletion) {
+                                final Path path = resolveWarLocation();
+                                DeploymentResult deploymentResult = deploymentManager
+                                        .undeploy(UndeployDescription.of(deployment));
+                                if (!deploymentResult.successful()) {
+                                    getLog().warn(String.format(
+                                            "Failed to undeploy application. Unexpected results may occur. Failure: %s",
+                                            deploymentResult.getFailureMessage()));
+                                }
+                                deleteRecursively(path);
+                                requiresWarDeletion = false;
+                                repackaged = true;
+                            }
                             triggerWarGoal();
                         }
-                        if (remote || result.requiresRedeploy()) {
+                        boolean reprovisioned = false;
+                        if (!remote) {
+                            reprovisioned = reprovisionAndStart();
+                        }
+                        if (remote || result.requiresRedeploy() || repackaged || reprovisioned) {
                             final DeploymentResult deploymentResult;
                             if (remote) {
                                 // If we are deploying an archive, we need to redeploy the full WAR
                                 deploymentResult = deploymentManager
                                         .redeploy(deployment);
                             } else {
-                                deploymentResult = deploymentManager
-                                        .redeployToRuntime(deployment);
+                                if (reprovisioned || repackaged) {
+                                    deploymentResult = deploymentManager
+                                            .forceDeploy(deployment);
+                                } else {
+                                    deploymentResult = deploymentManager
+                                            .redeployToRuntime(deployment);
+                                }
                             }
                             if (!deploymentResult.successful()) {
                                 throw new MojoExecutionException(
@@ -789,8 +932,10 @@ public class DevMojo extends AbstractServerStartMojo {
             }
         }
 
-        final MojoExecutor.Element e = new MojoExecutor.Element("webappDirectory", resolveWarDir().toAbsolutePath()
-                .toString());
+        final MojoExecutor.Element e = new MojoExecutor.Element("webappDirectory",
+                (remote ? resolveWarDir().toAbsolutePath().toString()
+                        : resolveWarLocation().toAbsolutePath()
+                                .toString()));
         configuration.addChild(e.toDom());
         return configuration;
     }
@@ -839,16 +984,7 @@ public class DevMojo extends AbstractServerStartMojo {
     }
 
     private Deployment getDeploymentContent() {
-        final PackageType packageType = PackageType.resolve(project);
-        final String filename = String.format("%s.%s", project.getBuild()
-                .getFinalName(), packageType.getFileExtension());
-        String runtimeName = this.name == null || this.name.isBlank() ? filename : this.name;
-        if (remote) {
-            return Deployment.of(Path.of(project.getBuild().getDirectory()).resolve(filename));
-        } else {
-
-            return Deployment.of(resolveWarDir()).setName(runtimeName).setRuntimeName(runtimeName);
-        }
+        return Deployment.of(resolveWarLocation());
     }
 
     private Path resolveWebAppSourceDir() {
@@ -862,6 +998,17 @@ public class DevMojo extends AbstractServerStartMojo {
         return Path.of(warSourceDirectory.getValue());
     }
 
+    // The directory name also contains the extension, required for Glow scanning.
+    private Path resolveWarLocation() {
+        final PackageType packageType = PackageType.resolve(project);
+        final String filename = String.format("%s.%s", project.getBuild()
+                .getFinalName(), packageType.getFileExtension());
+        String runtimeName = this.name == null || this.name.isBlank() ? filename : this.name;
+        return Path.of(project.getBuild().getDirectory()).resolve(runtimeName);
+    }
+
+    // In the case of remote deployment, WildFly Glow is not executed.
+    // With the war goal, the directory doesn't contain the file extension.
     private Path resolveWarDir() {
         return Path.of(project.getBuild().getDirectory()).resolve(project.getBuild().getFinalName());
     }
