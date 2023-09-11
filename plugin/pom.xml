@@ -151,10 +151,6 @@
             <groupId>org.jboss.galleon</groupId>
             <artifactId>galleon-maven-plugin</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.jboss.logmanager</groupId>
-            <artifactId>jboss-logmanager</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>org.twdata.maven</groupId>
