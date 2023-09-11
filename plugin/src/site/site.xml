@@ -34,6 +34,7 @@
             <descriptionUrl>WildFly Maven Plugin</descriptionUrl>
             <twitterSite>@WildFlyAS</twitterSite>
             <customStyle>./css/custom.css</customStyle>
+            <customScript>../../js/custom-nav.js</customScript>
             <bootswatchStyle>slate</bootswatchStyle>
             <shine>bg-primary</shine>
             <customHighlightStyle>rainbow</customHighlightStyle>
@@ -78,8 +79,7 @@
         </menu>
 
         <menu name="Releases" inherit="top">
-            <item name="4.2 (stable)" href="../4.2"/>
-            <item name="4.1 (stable)" href="../4.1"/>
+            <item name="placeholder" href="../../"/>
         </menu>
         <footer><![CDATA[<div class="float-md-end"><a href="https://www.redhat.com/"><span class="fw-bold btn-link">Sponsored by</span> <img class="img-fluid" src="https://www.wildfly.org/assets/img/redhat_reversed.svg"></a></div>]]></footer>
     </body>
