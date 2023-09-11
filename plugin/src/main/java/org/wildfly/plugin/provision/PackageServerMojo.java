@@ -39,7 +39,6 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.jboss.galleon.ProvisioningDescriptionException;
 import org.jboss.galleon.ProvisioningException;
 import org.jboss.galleon.ProvisioningManager;
 import org.jboss.galleon.config.ProvisioningConfig;
@@ -125,17 +124,19 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
 
     /**
      * Specifies the name used for the deployment.
-     *
+     * <p>
      * When the deployment is copied to the server, it is renamed with this name.
+     * </p>
      */
     @Parameter(property = PropertyNames.DEPLOYMENT_NAME)
     private String name;
 
     /**
      * The runtime name for the deployment.
-     *
+     * <p>
      * When the deployment is copied to the server, it is renamed with the {@code runtime-name}.
      * If both {@code name} and {@code runtime-name} are specified, {@code runtime-name} is used.
+     * </p>
      *
      * @deprecated use the {@code name} property instead to change the name of the deployment.
      */
@@ -217,16 +218,14 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
      *   &lt;/discover-provisioning-info&gt;
      * </pre>
      */
-    @Parameter(alias = "discover-provisioning-info", required = false)
-    GlowConfig discoverProvisioningInfo;
+    @Parameter(alias = "discover-provisioning-info")
+    private GlowConfig discoverProvisioningInfo;
 
     @Inject
     private OfflineCommandExecutor commandExecutor;
 
-    private ProvisioningConfig config;
-
     @Override
-    protected ProvisioningConfig getDefaultConfig() throws ProvisioningDescriptionException {
+    protected ProvisioningConfig getDefaultConfig() {
         return null;
     }
 
@@ -234,8 +233,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     protected ProvisioningConfig buildGalleonConfig(ProvisioningManager pm)
             throws MojoExecutionException, ProvisioningException {
         if (discoverProvisioningInfo == null) {
-            config = super.buildGalleonConfig(pm);
-            return config;
+            return super.buildGalleonConfig(pm);
         }
         try {
             return Utils.scanDeployment(discoverProvisioningInfo,

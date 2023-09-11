@@ -17,8 +17,6 @@
 package org.wildfly.plugin.provision;
 
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -30,25 +28,23 @@ import org.wildfly.glow.ScanArguments.Builder;
  *
  * @author jdenise
  */
+@SuppressWarnings("unused")
 public class GlowConfig {
 
-    String context = "bare-metal";
-    String profile;
-    Set<String> addOns = Collections.emptySet();
-    String version;
-    boolean suggest;
-    private Set<String> layersForJndi = Collections.emptySet();
+    private String context = "bare-metal";
+    private String profile;
+    private Set<String> addOns = Set.of();
+    private String version;
+    private boolean suggest;
+    private Set<String> layersForJndi = Set.of();
     private boolean failsOnError = true;
-    boolean preview;
+    private boolean preview;
 
     public GlowConfig() {
     }
 
     public Arguments toArguments(Path deployment, Path inProvisioning) {
-        Set<String> profiles = new HashSet<>();
-        if (profile != null) {
-            profiles.add(profile);
-        }
+        final Set<String> profiles = profile != null ? Set.of(profile) : Set.of();
         List<Path> lst = List.of(deployment);
         Builder builder = Arguments.scanBuilder().setExecutionContext(context).setExecutionProfiles(profiles)
                 .setUserEnabledAddOns(addOns).setBinaries(lst).setSuggest(suggest).setJndiLayers(getLayersForJndi())
@@ -100,7 +96,7 @@ public class GlowConfig {
      * @param addOns the userEnabledAddOns to set
      */
     public void setAddOns(Set<String> addOns) {
-        this.addOns = addOns;
+        this.addOns = Set.copyOf(addOns);
     }
 
     /**
@@ -142,7 +138,7 @@ public class GlowConfig {
      * @param layersForJndi the layersForJndi to set
      */
     public void setLayersForJndi(Set<String> layersForJndi) {
-        this.layersForJndi = layersForJndi;
+        this.layersForJndi = Set.copyOf(layersForJndi);
     }
 
     /**

@@ -73,7 +73,6 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.controller.client.helpers.Operations;
 import org.jboss.galleon.ProvisioningException;
 import org.jboss.galleon.ProvisioningManager;
 import org.jboss.galleon.config.ProvisioningConfig;
@@ -352,18 +351,19 @@ public class DevMojo extends AbstractServerStartMojo {
 
     /**
      * Specifies the name used for the deployment.
-     *
+     * <p>
      * When the deployment is copied to the server, it is renamed with this name.
+     * </p>
      */
     @Parameter(property = PropertyNames.DEPLOYMENT_NAME)
     private String name;
 
-    /*
+    /**
      * Galleon provisioning information discovery. This discovery only applies when the server is running locally.
      * NOTE: {@code overwriteProvisionedServer } must be set to true.
      */
-    @Parameter(alias = "discover-provisioning-info", required = false)
-    GlowConfig discoverProvisioningInfo;
+    @Parameter(alias = "discover-provisioning-info")
+    private GlowConfig discoverProvisioningInfo;
 
     // Lazily loaded list of patterns based on the ignorePatterns
     private final List<Pattern> ignoreUpdatePatterns = new ArrayList<>();
@@ -522,7 +522,7 @@ public class DevMojo extends AbstractServerStartMojo {
         if (remote || results == null) {
             return null;
         }
-        // References a dummy install Dir
+        // References a dummy installation directory
         Path tmpInstallDir = Paths.get(project.getBuild().getDirectory()).resolve("glow-tmp");
         try (ProvisioningManager pm = ProvisioningManager.builder().addArtifactResolver(mavenRepoManager)
                 .setInstallationHome(tmpInstallDir)
@@ -531,12 +531,12 @@ public class DevMojo extends AbstractServerStartMojo {
             ScanResults newResults = scanDeployment(pm);
             try {
                 if (!results.getDecorators().equals(newResults.getDecorators())) {
-                    getLog().info("Set of discovered layers changed, needs to reprovision. New layers: "
+                    getLog().info("Set of discovered layers changed, needs to re-provision. New layers: "
                             + newResults.getDecorators());
                     return newResults.getProvisioningConfig();
                 }
                 if (!results.getExcludedLayers().equals(newResults.getExcludedLayers())) {
-                    getLog().info("Set of discovered excluded layers changed, needs to reprovision. New layers: "
+                    getLog().info("Set of discovered excluded layers changed, needs to re-provision. New layers: "
                             + newResults.getExcludedLayers());
                     return newResults.getProvisioningConfig();
                 }
@@ -557,10 +557,7 @@ public class DevMojo extends AbstractServerStartMojo {
         }
         debug("Changes in layers detected, must re-provision the server");
         try (ModelControllerClient client = createClient()) {
-            client.execute(Operations.createOperation("shutdown"));
-            while (ServerHelper.isStandaloneRunning(client)) {
-                Thread.sleep(100);
-            }
+            ServerHelper.shutdownStandalone(client);
             debug("Deleting existing installation " + installDir);
             IoUtils.recursiveDelete(installDir);
         }
