@@ -314,7 +314,10 @@ public class DevMojo extends AbstractServerStartMojo {
     /**
      * Set to {@code true} if you want to delete the existing server referenced from the {@code provisioningDir} and provision a
      * new one,
-     * otherwise {@code false}.
+     * otherwise {@code false}. When { @code discover-provisioning-info } is set to {@code true}, this option is enforced to be
+     * {@code true}.
+     * When discovery of Galleon provisioning information is enabled, a change to the application source code
+     * could imply re-provisioning of the server.
      */
     @Parameter(alias = "overwrite-provisioned-server", defaultValue = "false", property = PropertyNames.WILDFLY_PROVISIONING_OVERWRITE_PROVISIONED_SERVER)
     private boolean overwriteProvisionedServer;
@@ -386,8 +389,8 @@ public class DevMojo extends AbstractServerStartMojo {
         } else {
             if (isDiscoveryEnabled()) {
                 if (!overwriteProvisionedServer) {
-                    throw new MojoExecutionException(
-                            "When layer discovery is enabled, overwriteProvisionedServer must be set to true");
+                    overwriteProvisionedServer = true;
+                    getLog().info("Layer discovery has been enabled, overwriteProvisionedServer has been set to true");
                 }
             } else {
                 context = startServer(ServerType.STANDALONE);
