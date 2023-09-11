@@ -12,8 +12,6 @@ updates:
     ignore:
       - dependency-name: 'javax.inject:javax.inject'
         update-types: ['version-update:semver-major']
-      - dependency-name: 'org.apache.maven:*'
-        update-types: ['version-update:semver-major', 'version-update:semver-minor']
     rebase-strategy: disabled
   - package-ecosystem: "github-actions"
     # Workflow files stored in the
