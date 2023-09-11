@@ -51,7 +51,7 @@
     </scm>
 
     <properties>
-        <release.short.version>4.2</release.short.version>
+        <release.short.version>5.0</release.short.version>
     </properties>
 
     <build>
