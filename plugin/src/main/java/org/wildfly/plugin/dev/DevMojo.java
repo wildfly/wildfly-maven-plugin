@@ -317,6 +317,8 @@ public class DevMojo extends AbstractServerStartMojo {
      * {@code true}.
      * When discovery of Galleon provisioning information is enabled, a change to the application source code
      * could imply re-provisioning of the server.
+     *
+     * @since 5.0
      */
     @Parameter(alias = "overwrite-provisioned-server", defaultValue = "false", property = PropertyNames.WILDFLY_PROVISIONING_OVERWRITE_PROVISIONED_SERVER)
     private boolean overwriteProvisionedServer;
@@ -361,6 +363,8 @@ public class DevMojo extends AbstractServerStartMojo {
     /**
      * Galleon provisioning information discovery. This discovery only applies when the server is running locally.
      * NOTE: {@code overwriteProvisionedServer } must be set to true.
+     *
+     * @since 5.0
      */
     @Parameter(alias = "discover-provisioning-info")
     private GlowConfig discoverProvisioningInfo;

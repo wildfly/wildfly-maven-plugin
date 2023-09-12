@@ -217,6 +217,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
      *     &lt;/layersForJndi&gt;
      *   &lt;/discover-provisioning-info&gt;
      * </pre>
+     *
+     * @since 5.0
      */
     @Parameter(alias = "discover-provisioning-info")
     private GlowConfig discoverProvisioningInfo;

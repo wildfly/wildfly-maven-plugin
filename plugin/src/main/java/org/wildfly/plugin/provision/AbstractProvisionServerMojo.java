@@ -190,8 +190,10 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
     /**
      * Do not actually provision a server but generate the Galleon provisioning configuration
      * in {@code target/.wildfly-maven-plugin-provisioning.xml} file.
+     *
+     * @since 5.0
      */
-    @Parameter(alias = "dry-run", required = false)
+    @Parameter(alias = "dry-run")
     boolean dryRun;
 
     private Path wildflyDir;
