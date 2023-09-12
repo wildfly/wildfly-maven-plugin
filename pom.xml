@@ -31,7 +31,7 @@
     </parent>
     <groupId>org.wildfly.plugins</groupId>
     <artifactId>wildfly-maven-plugin-parent</artifactId>
-    <version>5.0.0.Alpha1-SNAPSHOT</version>
+    <version>5.0.0.Alpha1</version>
     <packaging>pom</packaging>
     <name>WildFly Maven Plugin - Parent</name>
 
@@ -143,6 +143,8 @@
 
         <!-- Other properties -->
         <maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
+        <release.short.version>5.0</release.short.version>
+        <docs.directory>${project.basedir}/../docs/releases/${release.short.version}</docs.directory>
     </properties>
 
     <modules>

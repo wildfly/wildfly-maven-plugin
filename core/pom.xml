@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.wildfly.plugins</groupId>
         <artifactId>wildfly-maven-plugin-parent</artifactId>
-        <version>5.0.0.Alpha1-SNAPSHOT</version>
+        <version>5.0.0.Alpha1</version>
     </parent>
 
     <artifactId>wildfly-plugin-core</artifactId>
@@ -193,7 +193,7 @@
                                     <goal>copy-resources</goal>
                                 </goals>
                                 <configuration>
-                                    <outputDirectory>${project.basedir}/../docs/apidocs/</outputDirectory>
+                                    <outputDirectory>${docs.directory}/apidocs/</outputDirectory>
                                     <resources>
                                         <resource>
                                             <directory>${project.build.directory}/site/apidocs/</directory>

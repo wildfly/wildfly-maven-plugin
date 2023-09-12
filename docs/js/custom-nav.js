@@ -27,6 +27,7 @@
         }
         // Create the map of current releases
         const versions = new Map([
+            ["5.0", "(alpha)"],
             ["4.2", "(stable)"],
             ["4.1", "(stable)"]
         ]);
