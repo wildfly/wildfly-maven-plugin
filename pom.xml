@@ -123,7 +123,7 @@
         <maven.compiler.source>11</maven.compiler.source>
 
         <!-- galleon properties -->
-        <version.org.jboss.galleon>5.2.0.Final</version.org.jboss.galleon>
+        <version.org.jboss.galleon>5.2.1.Final</version.org.jboss.galleon>
         <version.org.wildfly.glow>1.0.0.Alpha6</version.org.wildfly.glow>
         <plugin.fork.embedded>true</plugin.fork.embedded>
         <!-- used by tests -->
