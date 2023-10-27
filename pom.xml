@@ -95,7 +95,7 @@
         <!-- This version property is also retrieved by plugin at runtime to resolve CLI artifact -->
         <version.org.wildfly.core>22.0.0.Final</version.org.wildfly.core>
         <version.org.wildfly>27.0.1.Final</version.org.wildfly>
-        <version.org.wildfly.channel>1.0.3.Final</version.org.wildfly.channel>
+        <version.org.wildfly.channel>1.0.4.Final</version.org.wildfly.channel>
         <version.org.wildfly.prospero>1.2.0.Final</version.org.wildfly.prospero>
         <!-- maven dependencies -->
         <version.javax.inject.javax.inject>1</version.javax.inject.javax.inject>
@@ -123,7 +123,7 @@
         <maven.compiler.source>11</maven.compiler.source>
 
         <!-- galleon properties -->
-        <version.org.jboss.galleon>5.2.1.Final</version.org.jboss.galleon>
+        <version.org.jboss.galleon>5.2.2.Final</version.org.jboss.galleon>
         <version.org.wildfly.glow>1.0.0.Alpha6</version.org.wildfly.glow>
         <plugin.fork.embedded>true</plugin.fork.embedded>
         <!-- used by tests -->
