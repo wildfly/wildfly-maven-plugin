@@ -35,6 +35,8 @@ public class CommandConfiguration extends BaseCommandConfiguration {
     private final boolean fork;
     private final boolean offline;
 
+    private final boolean autoReload;
+
     protected abstract static class AbstractBuilder<T extends AbstractBuilder<T>>
             extends BaseCommandConfiguration.AbstractBuilder<T> {
 
@@ -42,6 +44,7 @@ public class CommandConfiguration extends BaseCommandConfiguration {
         private final Supplier<MavenModelControllerClientConfiguration> clientConfiguration;
         private boolean fork;
         private boolean offline;
+        private boolean autoReload;
 
         AbstractBuilder(final Supplier<ModelControllerClient> clientSupplier,
                 final Supplier<MavenModelControllerClientConfiguration> clientConfigurationSupplier) {
@@ -81,6 +84,19 @@ public class CommandConfiguration extends BaseCommandConfiguration {
             return builderInstance();
         }
 
+        /**
+         * Set to {@code true} if a reload should execute after the commands are complete. The reload will only execute
+         * if {@link #isOffline()} is {@code false} and the server state is in {@code reload-required}.
+         *
+         * @param autoReload {@code true} to enable auto-reload
+         *
+         * @return this configuration
+         */
+        public T setAutoReload(final boolean autoReload) {
+            this.autoReload = autoReload;
+            return builderInstance();
+        }
+
         @Override
         public CommandConfiguration build() {
             return new CommandConfiguration(this);
@@ -106,6 +122,7 @@ public class CommandConfiguration extends BaseCommandConfiguration {
         clientConfiguration = builder.clientConfiguration;
         fork = builder.fork;
         offline = builder.offline;
+        autoReload = builder.autoReload;
     }
 
     /**
@@ -158,5 +175,15 @@ public class CommandConfiguration extends BaseCommandConfiguration {
      */
     public boolean isOffline() {
         return offline;
+    }
+
+    /**
+     * Indicants if the server should be reloaded if the server is in the {@code reload-required} state and
+     * {@link #isOffline()} is {@code false}.
+     *
+     * @return {@code true} if a reload should execute if it's required, otherwise {@code false}
+     */
+    public boolean isAutoReload() {
+        return !offline && autoReload;
     }
 }

@@ -181,6 +181,15 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     @Parameter(alias = "java-opts", property = PropertyNames.JAVA_OPTS)
     private String[] javaOpts;
 
+    /**
+     * Automatically reloads the server if the commands leave the server in the "reload-required" state. Note a reload
+     * will not be done if {@code offline} is set to {@code true}.
+     *
+     * @since 4.2.1
+     */
+    @Parameter(alias = "auto-reload", defaultValue = "true", property = PropertyNames.AUTO_RELOAD)
+    private boolean autoReload;
+
     @Component
     RepositorySystem repoSystem;
 
@@ -237,6 +246,7 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
                 .setFork(fork)
                 .setJBossHome(jbossHome)
                 .setOffline(offline)
+                .setAutoReload(autoReload)
                 .setStdout(stdout)
                 .setTimeout(timeout)
                 .setResolveExpression(resolveExpressions);
