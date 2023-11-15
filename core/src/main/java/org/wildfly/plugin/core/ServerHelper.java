@@ -27,6 +27,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -93,6 +95,89 @@ public class ServerHelper {
     public static ContainerDescription getContainerDescription(final ModelControllerClient client)
             throws IOException, OperationExecutionException {
         return DefaultContainerDescription.lookup(Assert.checkNotNullParam("client", client));
+    }
+
+    /**
+     * Checks if the container status is "reload-required" and if it's the case executes reload and waits for completion.
+     *
+     * @param client the client used to execute the operation
+     */
+    public static void reloadIfRequired(final ModelControllerClient client, final long timeout) {
+        final String launchType = launchType(client);
+        if ("STANDALONE".equalsIgnoreCase(launchType)) {
+            final String runningState = serverState(client);
+            if ("reload-required".equalsIgnoreCase(runningState)) {
+                executeReload(client, Operations.createOperation("reload"));
+                try {
+                    waitForStandalone(client, timeout);
+                } catch (InterruptedException | TimeoutException e) {
+                    throw new RuntimeException("Failed to reload the serve.", e);
+                }
+            }
+        } else {
+            LOGGER.warnf("Server type %s is not supported for a reload.", launchType);
+        }
+    }
+
+    /**
+     * Reloads the server and returns immediately.
+     *
+     * @param client   the client used to execute the reload operation
+     * @param reloadOp the reload operation to execute
+     */
+    public static void executeReload(final ModelControllerClient client, final ModelNode reloadOp) {
+        try {
+            final ModelNode result = client.execute(reloadOp);
+            if (!Operations.isSuccessfulOutcome(result)) {
+                throw new RuntimeException(String.format("Failed to reload the server with %s: %s", reloadOp,
+                        Operations.getFailureDescription(result)));
+            }
+        } catch (IOException e) {
+            final Throwable cause = e.getCause();
+            if (!(cause instanceof ExecutionException) && !(cause instanceof CancellationException)) {
+                throw new RuntimeException(e);
+            } // else ignore, this might happen if the channel gets closed before we got the response
+        }
+    }
+
+    /**
+     * Determines the servers "launch-type".
+     *
+     * @param client the client used to communicate with the server
+     * @return the servers launch-type or "unknown" if it could not be determined
+     */
+    public static String launchType(final ModelControllerClient client) {
+        try {
+            final ModelNode response = client.execute(Operations.createReadAttributeOperation(EMPTY_ADDRESS, "launch-type"));
+            if (Operations.isSuccessfulOutcome(response)) {
+                return Operations.readResult(response).asString();
+            }
+        } catch (RuntimeException | IOException e) {
+            LOGGER.trace("Interrupted determining the launch type", e);
+        }
+        return "unknown";
+    }
+
+    /**
+     * Gets the "server-state" for a standalone server.
+     *
+     * @param client the client used to communicate with the server
+     * @return the server-state or "failed" if an error occurred. A value of "unknown" is returned if the server is not a
+     *             standalone server
+     */
+    public static String serverState(final ModelControllerClient client) {
+        final String launchType = launchType(client);
+        if ("STANDALONE".equalsIgnoreCase(launchType)) {
+            try {
+                final ModelNode response = client
+                        .execute(Operations.createReadAttributeOperation(EMPTY_ADDRESS, "server-state"));
+                return Operations.isSuccessfulOutcome(response) ? Operations.readResult(response).asString() : "failed";
+            } catch (RuntimeException | IOException e) {
+                LOGGER.tracef("Interrupted determining the server state", e);
+            }
+            return "failed";
+        }
+        return "unknown";
     }
 
     /**

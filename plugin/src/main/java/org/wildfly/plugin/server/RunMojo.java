@@ -132,6 +132,7 @@ public class RunMojo extends AbstractServerStartMojo {
                         .addCommands(commands)
                         .addScripts(scripts)
                         .setJBossHome(context.jbossHome())
+                        .setAutoReload(true)
                         .setFork(true)
                         .setStdout("none")
                         .setTimeout(timeout)

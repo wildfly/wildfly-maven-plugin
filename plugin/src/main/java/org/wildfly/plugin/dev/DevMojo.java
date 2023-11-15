@@ -436,6 +436,7 @@ public class DevMojo extends AbstractServerStartMojo {
                             .addCommands(commands)
                             .addScripts(scripts)
                             .setStdout("none")
+                            .setAutoReload(true)
                             .setTimeout(timeout);
                     if (context == null) {
                         builder.setOffline(false)
