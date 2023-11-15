@@ -91,7 +91,7 @@
         <!-- WildFly/JBoss dependencies -->
         <version.org.jboss.logging.jboss-logging>3.5.3.Final</version.org.jboss.logging.jboss-logging>
         <version.org.wildfly.checkstyle-config>1.0.8.Final</version.org.wildfly.checkstyle-config>
-        <version.org.wildfly.common.wildfly-common>1.6.0.Final</version.org.wildfly.common.wildfly-common>
+        <version.org.wildfly.common.wildfly-common>1.7.0.Final</version.org.wildfly.common.wildfly-common>
         <!-- This version property is also retrieved by plugin at runtime to resolve CLI artifact -->
         <version.org.wildfly.core>22.0.1.Final</version.org.wildfly.core>
         <version.org.wildfly>30.0.0.Final</version.org.wildfly>
