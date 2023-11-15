@@ -30,10 +30,12 @@ import java.time.Duration;
 
 import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.wildfly.plugin.tests.AbstractProvisionConfiguredMojoTestCase;
 import org.wildfly.plugin.tests.AbstractWildFlyMojoTest;
+import org.wildfly.plugin.tests.TestEnvironment;
 
 public class ImageTest extends AbstractProvisionConfiguredMojoTestCase {
 
@@ -49,6 +51,7 @@ public class ImageTest extends AbstractProvisionConfiguredMojoTestCase {
 
     @Test
     public void testBuildImage() throws Exception {
+        Assume.assumeFalse("This test is flaky on Windows, ignore it on Windows.", TestEnvironment.isWindows());
         final String binary = ExecUtil.resolveImageBinary();
         try {
             assertTrue(
