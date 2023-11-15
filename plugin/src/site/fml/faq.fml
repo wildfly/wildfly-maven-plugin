@@ -44,5 +44,17 @@
                 </p>
             </answer>
         </faq>
+        <faq id="autoReload">
+            <question>Why is my server reloading after I execute CLI commands?</question>
+            <answer>
+                <p>
+                    In 4.2.1 a new configuration parameter, <code>auto-reload</code>, was added which automatically
+                    reloads the running server if <code>offline</code> is set to <code>false</code> and the command
+                    left the server in a state of <code>reload-required</code>. If you previously had a reload operation
+                    or command in your script or command list, you can now remove it. The other option would be to set
+                    the <code>auto-reload</code> configuration to <code>false</code>.
+                </p>
+            </answer>
+        </faq>
     </part>
 </faqs>

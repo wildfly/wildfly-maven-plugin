@@ -29,6 +29,8 @@ public interface PropertyNames {
 
     String ADD_RESOURCE_FORCE = "add-resource.force";
 
+    String AUTO_RELOAD = "wildfly.auto.reload";
+
     String BATCH = "wildfly.batch";
 
     String CHECK_PACKAGING = "wildfly.checkPackaging";

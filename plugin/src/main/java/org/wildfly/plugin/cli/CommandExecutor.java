@@ -77,6 +77,10 @@ public class CommandExecutor extends AbstractCommandExecutor<CommandConfiguratio
                 }
             }
         }
+        if (config.isAutoReload()) {
+            // Reload the server if required
+            ServerHelper.reloadIfRequired(config.getClient(), config.getTimeout());
+        }
     }
 
     @Override
