@@ -16,8 +16,11 @@
  */
 package org.wildfly.plugin.provision;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -32,6 +35,7 @@ import org.wildfly.channel.Repository;
  * @author jdenise
  */
 public class ChannelConfiguration {
+    private static final Pattern FILE_MATCHER = Pattern.compile("^(file|http|https)://.*");
 
     private ChannelManifestCoordinate manifest;
 
@@ -40,6 +44,28 @@ public class ChannelConfiguration {
      */
     public ChannelManifestCoordinate getManifest() {
         return manifest;
+    }
+
+    public void set(final String channel) {
+        // Is this a URL?
+        if (FILE_MATCHER.matcher(channel).matches()) {
+            try {
+                this.manifest = new ChannelManifestCoordinate(new URL(channel));
+            } catch (MalformedURLException e) {
+                throw new IllegalArgumentException("Failed to parse URL for " + channel, e);
+            }
+        } else {
+            // Treat as a Maven GAV
+            final String[] coords = channel.split(":");
+            if (coords.length > 2) {
+                this.manifest = new ChannelManifestCoordinate(coords[0], coords[1], coords[2]);
+            } else if (coords.length == 2) {
+                this.manifest = new ChannelManifestCoordinate(coords[0], coords[1]);
+            } else {
+                throw new IllegalArgumentException(
+                        "A channel must be a Maven GAV in the format groupId:artifactId:version. The groupId and artifactId are both required.");
+            }
+        }
     }
 
     void setManifest(ChannelManifestCoordinate manifest) {

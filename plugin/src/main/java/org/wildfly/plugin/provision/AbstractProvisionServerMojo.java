@@ -184,7 +184,41 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
     @Parameter(alias = "layers-configuration-file-name", property = PropertyNames.WILDFLY_LAYERS_CONFIGURATION_FILE_NAME, defaultValue = STANDALONE_XML)
     String layersConfigurationFileName;
 
-    @Parameter(alias = "channels", required = false)
+    /**
+     * A list of channels used for resolving artifacts while provisioning.
+     * <p>
+     * Defining a channel:
+     *
+     * <pre>
+     * <channels>
+     *     <channel>
+     *         <manifest>
+     *             <groupId>org.wildfly.channels</groupId>
+     *             <artifactId>wildfly-30.0</artifactId>
+     *         </manifest>
+     *     </channel>
+     *     <channel>
+     *         <manifest>
+     *             <url>https://example.example.org/channel/30</url>
+     *         </manifest>
+     *     </channel>
+     * </channels>
+     * </pre>
+     * </p>
+     * <p>
+     * The {@code wildfly.channels} property can be used pass a comma delimited string for the channels. The channel
+     * can be a URL or a Maven GAV. If a Maven GAV is used, the groupId and artifactId are required.
+     * <br>
+     * Examples:
+     *
+     * <pre>
+     *     -Dwildfly.channels=&quot;https://channels.example.org/30&quot;
+     *     -Dwildfly.channels=&quot;https://channels.example.org/30,org.example.channel:updates-30&quot;
+     *     -Dwildfly.channels=&quot;https://channels.example.org/30,org.example.channel:updates-30:1.0.2&quot;
+     * </pre>
+     * </p>
+     */
+    @Parameter(alias = "channels", property = PropertyNames.CHANNELS)
     List<ChannelConfiguration> channels;
 
     /**
@@ -217,7 +251,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
             return;
         }
         enrichRepositories();
-        if (channels == null) {
+        if (channels == null || channels.isEmpty()) {
             artifactResolver = offlineProvisioning ? new MavenArtifactRepositoryManager(repoSystem, repoSession)
                     : new MavenArtifactRepositoryManager(repoSystem, repoSession, repositories);
         } else {
