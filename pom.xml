@@ -94,7 +94,7 @@
         <version.org.wildfly.common.wildfly-common>1.6.0.Final</version.org.wildfly.common.wildfly-common>
         <!-- This version property is also retrieved by plugin at runtime to resolve CLI artifact -->
         <version.org.wildfly.core>22.0.1.Final</version.org.wildfly.core>
-        <version.org.wildfly>27.0.1.Final</version.org.wildfly>
+        <version.org.wildfly>30.0.0.Final</version.org.wildfly>
         <version.org.wildfly.channel>1.0.5.Final</version.org.wildfly.channel>
         <version.org.wildfly.prospero>1.2.0.Final</version.org.wildfly.prospero>
         <!-- maven dependencies -->
