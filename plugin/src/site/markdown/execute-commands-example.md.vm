@@ -68,9 +68,8 @@ batch
 # set default transaction timeout
 /subsystem=transactions:write-attribute(name=default-timeout, value=600)
 #...
-# Execute and reload
+# Execute
 run-batch
-:reload
 ```
 
 
