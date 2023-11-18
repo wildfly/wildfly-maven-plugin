@@ -442,7 +442,7 @@ public class DevMojo extends AbstractServerStartMojo {
                 // in the remote case, we have a war and must keep it.
                 requiresWarDeletion = !remote;
             }
-            // We must start the server after compilation occured to get a deployment to scan
+            // We must start the server after compilation occurred to get a deployment to scan
             if (!remote && isDiscoveryEnabled()) {
                 context = startServer(ServerType.STANDALONE);
             }
@@ -467,7 +467,7 @@ public class DevMojo extends AbstractServerStartMojo {
                             .addCommands(commands)
                             .addScripts(scripts)
                             .setStdout("none")
-                            .setAutoReload(true)
+                            .setAutoReload(false)
                             .setTimeout(timeout);
                     if (context == null) {
                         builder.setOffline(false)
@@ -477,6 +477,11 @@ public class DevMojo extends AbstractServerStartMojo {
                                 .setFork(true);
                     }
                     commandExecutor.execute(builder.build(), mavenRepoManager);
+                    // Check the server state. We may need to restart the process, assuming we control the context
+                    if (context != null) {
+                        context = actOnServerState(client, context);
+                    }
+
                     final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
                     final Deployment deployment = getDeploymentContent();
                     try {

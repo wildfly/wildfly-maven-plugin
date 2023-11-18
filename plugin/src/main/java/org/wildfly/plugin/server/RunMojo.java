@@ -132,12 +132,14 @@ public class RunMojo extends AbstractServerStartMojo {
                         .addCommands(commands)
                         .addScripts(scripts)
                         .setJBossHome(context.jbossHome())
-                        .setAutoReload(true)
+                        .setAutoReload(false)
                         .setFork(true)
                         .setStdout("none")
                         .setTimeout(timeout)
                         .build();
                 commandExecutor.execute(cmdConfig, mavenRepoManager);
+
+                process = actOnServerState(client, context).process();
                 // Create the deployment and deploy
                 final Deployment deployment = Deployment.of(deploymentContent)
                         .setName(name)
