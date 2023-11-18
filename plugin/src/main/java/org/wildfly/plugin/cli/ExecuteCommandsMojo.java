@@ -23,6 +23,7 @@
 package org.wildfly.plugin.cli;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,6 +36,7 @@ import javax.inject.Inject;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -42,12 +44,15 @@ import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.galleon.maven.plugin.util.MavenArtifactRepositoryManager;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.Utils;
 import org.wildfly.plugin.core.MavenRepositoriesEnricher;
+import org.wildfly.plugin.core.ServerHelper;
 
 /**
  * Execute commands to the running WildFly Application Server.
@@ -255,6 +260,25 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             cmdConfigBuilder.setJBossHome(getInstallation(buildDir.toPath().resolve(Utils.WILDFLY_DEFAULT_DIR)));
         }
         commandExecutor.execute(cmdConfigBuilder.build(), mavenRepoManager);
+        // Check the server state if we're not in offline mode
+        if (!offline) {
+            try (ModelControllerClient client = createClient()) {
+                final String serverState = ServerHelper.serverState(client);
+                if (!ClientConstants.CONTROLLER_PROCESS_STATE_RUNNING.equals(serverState)) {
+                    getLog().warn(String.format(
+                            "The server may be in an unexpected state for further interaction. The current state is %s",
+                            serverState));
+                }
+            } catch (IOException e) {
+                final Log log = getLog();
+                log.warn(String.format(
+                        "Failed to determine the server-state. The server may be in an unexpected state. Failure: %s",
+                        e.getMessage()));
+                if (log.isDebugEnabled()) {
+                    log.debug(e);
+                }
+            }
+        }
     }
 
     /**

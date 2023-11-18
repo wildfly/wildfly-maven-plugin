@@ -430,7 +430,7 @@ public class DevMojo extends AbstractServerStartMojo {
                             .addCommands(commands)
                             .addScripts(scripts)
                             .setStdout("none")
-                            .setAutoReload(true)
+                            .setAutoReload(false)
                             .setTimeout(timeout);
                     if (context == null) {
                         builder.setOffline(false)
@@ -440,6 +440,11 @@ public class DevMojo extends AbstractServerStartMojo {
                                 .setFork(true);
                     }
                     commandExecutor.execute(builder.build(), mavenRepoManager);
+                    // Check the server state. We may need to restart the process, assuming we control the context
+                    if (context != null) {
+                        context = actOnServerState(client, context);
+                    }
+
                     final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
                     final Deployment deployment = getDeploymentContent();
                     try {
