@@ -215,8 +215,10 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         if (!skipDeployment) {
             final Path deploymentContent = getDeploymentContent();
             if (Files.exists(deploymentContent)) {
-                Path standaloneDeploymentDir = Paths
-                        .get(project.getBuild().getDirectory(), provisioningDir, "standalone", "deployments").normalize();
+                Path standaloneDeploymentDir = Path.of(provisioningDir, "standalone", "deployments");
+                if (!standaloneDeploymentDir.isAbsolute()) {
+                    standaloneDeploymentDir = Path.of(project.getBuild().getDirectory()).resolve(standaloneDeploymentDir);
+                }
                 try {
                     Path deploymentTarget = standaloneDeploymentDir.resolve(getDeploymentTargetName());
                     getLog().info("Copy deployment " + deploymentContent + " to " + deploymentTarget);
