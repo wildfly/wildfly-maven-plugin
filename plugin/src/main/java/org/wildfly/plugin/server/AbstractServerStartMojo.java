@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.maven.execution.MavenSession;
@@ -39,6 +40,8 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.controller.client.helpers.ClientConstants;
+import org.jboss.as.controller.client.helpers.Operations;
 import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.jboss.galleon.ProvisioningException;
 import org.jboss.galleon.maven.plugin.util.MavenArtifactRepositoryManager;
@@ -433,6 +436,44 @@ public abstract class AbstractServerStartMojo extends AbstractServerConnection {
         } catch (ProvisioningException ex) {
             throw new MojoFailureException(ex.getLocalizedMessage(), ex);
         }
+    }
+
+    /**
+     * Checks the current state of the server. If the server is in a state of
+     * {@link ClientConstants#CONTROLLER_PROCESS_STATE_RESTART_REQUIRED}, the process is restarted and a new
+     * {@link ServerContext} is returned. If the server is in a stat of
+     * {@link ClientConstants#CONTROLLER_PROCESS_STATE_RELOAD_REQUIRED}, the server will be reloaded and wait until
+     * the server is running. If the server is in any other state, other than
+     * {@link ClientConstants#CONTROLLER_PROCESS_STATE_RUNNING}, a warning message is logged to let the user know
+     * the state is unknown.
+     *
+     * @param client  the client used to communicate with the server
+     * @param context the current server context
+     * @return a new context if a restart was required, otherwise the same context
+     * @throws IOException            if an error occurs communicating with the server
+     * @throws MojoExecutionException if a failure occurs checking the state or reloading the server
+     * @throws MojoFailureException   if a failure occurs checking the state or reloading the server
+     */
+    protected ServerContext actOnServerState(final ModelControllerClient client, final ServerContext context)
+            throws IOException, MojoExecutionException, MojoFailureException {
+        final String serverState = ServerHelper.serverState(client);
+        if (ClientConstants.CONTROLLER_PROCESS_STATE_RESTART_REQUIRED.equals(serverState)) {
+            // Shutdown the server
+            ServerHelper.shutdownStandalone(client, timeout);
+            // Restart the server process
+            return startServer(ServerType.STANDALONE);
+        } else if (ClientConstants.CONTROLLER_PROCESS_STATE_RELOAD_REQUIRED.equals(serverState)) {
+            ServerHelper.executeReload(client, Operations.createOperation("reload"));
+            try {
+                ServerHelper.waitForStandalone(context.process(), client, timeout);
+            } catch (InterruptedException | TimeoutException e) {
+                throw new MojoExecutionException("Failed to wait for standalone server after a reload.", e);
+            }
+        } else if (!ClientConstants.CONTROLLER_PROCESS_STATE_RUNNING.equals(serverState)) {
+            getLog().warn(String.format(
+                    "The server may be in an unexpected state for further interaction. The current state is %s", serverState));
+        }
+        return context;
     }
 
     private void addUsers(final Path wildflyHome, final Path javaHome) throws IOException {
