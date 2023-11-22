@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.8" name="org.wildfly.plugins.core.bootablejar">
+    <resources>
+        <resource-root path="${test.class.path}" />
+    </resources>
+
+    <dependencies>
+        <!-- for java.beans -->
+        <module name="java.desktop" />
+        <module name="java.logging" />
+        <module name="java.xml" />
+        <module name="org.jboss.logmanager" />
+    </dependencies>
+</module>

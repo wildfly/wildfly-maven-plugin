@@ -15,7 +15,12 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.maven.DefaultMaven;
 import org.apache.maven.Maven;
 import org.apache.maven.artifact.repository.ArtifactRepositoryPolicy;
@@ -35,15 +40,25 @@ import org.apache.maven.project.ProjectBuildingRequest;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.repository.LocalRepository;
+import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.galleon.api.GalleonBuilder;
+import org.jboss.galleon.api.Provisioning;
+import org.jboss.galleon.api.config.GalleonConfigurationWithLayers;
+import org.jboss.galleon.api.config.GalleonProvisioningConfig;
 import org.jboss.galleon.config.ConfigId;
 import org.jboss.galleon.config.ConfigModel;
 import org.jboss.galleon.config.ProvisioningConfig;
+import org.jboss.galleon.util.IoUtils;
 import org.jboss.galleon.util.PathsUtils;
+import org.jboss.galleon.util.ZipUtils;
 import org.jboss.galleon.xml.ProvisioningXmlParser;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.wildfly.core.launcher.ProcessHelper;
+import org.wildfly.plugin.core.ServerHelper;
+import org.wildfly.plugins.core.bootablejar.BootableJarSupport;
 
 /**
  * A class to construct a properly configured MOJO.
@@ -228,5 +243,189 @@ public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMo
         }
         assertEquals(Files.exists(wildflyHome.resolve(".galleon")), stateRecorded);
         assertEquals(Files.exists(wildflyHome.resolve(".wildfly-maven-plugin-provisioning.xml")), !stateRecorded);
+    }
+
+    protected void checkJar(Path dir, String fileName, String deploymentName, boolean expectDeployment,
+            String[] layers, String[] excludedLayers, boolean stateRecorded, String... configTokens) throws Exception {
+        Path wildflyHome = null;
+        try {
+            wildflyHome = checkAndGetWildFlyHome(dir, fileName, deploymentName, expectDeployment, layers,
+                    excludedLayers,
+                    stateRecorded,
+                    configTokens);
+        } finally {
+            if (wildflyHome != null) {
+                IoUtils.recursiveDelete(wildflyHome);
+            }
+        }
+    }
+
+    protected Path checkAndGetWildFlyHome(Path dir, String fileName, String deploymentName, boolean expectDeployment,
+            String[] layers, String[] excludedLayers, boolean stateRecorded, String... configTokens) throws Exception {
+        Path tmpDir = Files.createTempDirectory("bootable-jar-test-unzipped");
+        Path wildflyHome = Files.createTempDirectory("bootable-jar-test-unzipped-" + BootableJarSupport.BOOTABLE_SUFFIX);
+        try {
+            Path jar = dir.resolve("target")
+                    .resolve(fileName == null ? "server-" + BootableJarSupport.BOOTABLE_SUFFIX + ".jar" : fileName);
+            assertTrue(Files.exists(jar));
+
+            ZipUtils.unzip(jar, tmpDir);
+            Path zippedWildfly = tmpDir.resolve("wildfly.zip");
+            assertTrue(Files.exists(zippedWildfly));
+
+            Path provisioningFile = tmpDir.resolve("provisioning.xml");
+            assertTrue(Files.exists(provisioningFile));
+
+            ZipUtils.unzip(zippedWildfly, wildflyHome);
+            if (expectDeployment) {
+                assertTrue(Files.exists(wildflyHome.resolve("standalone/deployments").resolve(deploymentName)));
+            } else {
+                assertFalse(Files.exists(wildflyHome.resolve("standalone/deployments").resolve(deploymentName)));
+            }
+            Path history = wildflyHome.resolve("standalone").resolve("configuration").resolve("standalone_xml_history");
+            assertFalse(Files.exists(history));
+
+            Path configFile = wildflyHome.resolve("standalone/configuration/standalone.xml");
+            assertTrue(Files.exists(configFile));
+            if (layers != null) {
+                Path pFile = PathsUtils.getProvisioningXml(wildflyHome);
+                assertTrue(Files.exists(pFile));
+                try (Provisioning provisioning = new GalleonBuilder().newProvisioningBuilder(pFile).build()) {
+                    GalleonProvisioningConfig configDescription = provisioning.loadProvisioningConfig(pFile);
+                    GalleonConfigurationWithLayers config = null;
+                    for (GalleonConfigurationWithLayers c : configDescription.getDefinedConfigs()) {
+                        if (c.getModel().equals("standalone") && c.getName().equals("standalone.xml")) {
+                            config = c;
+                        }
+                    }
+                    assertNotNull(config);
+                    assertEquals(layers.length, config.getIncludedLayers().size());
+                    for (String layer : layers) {
+                        assertTrue(config.getIncludedLayers().contains(layer));
+                    }
+                    if (excludedLayers != null) {
+                        for (String layer : excludedLayers) {
+                            assertTrue(config.getExcludedLayers().contains(layer));
+                        }
+                    }
+                }
+            }
+            if (configTokens != null) {
+                String str = new String(Files.readAllBytes(configFile), StandardCharsets.UTF_8);
+                for (String token : configTokens) {
+                    assertTrue(str, str.contains(token));
+                }
+            }
+        } finally {
+            IoUtils.recursiveDelete(tmpDir);
+        }
+        assertEquals(Files.exists(wildflyHome.resolve(".galleon")), stateRecorded);
+        return wildflyHome;
+    }
+
+    protected void checkDeployment(Path dir, String fileName, String deploymentName) throws Exception {
+        checkURL(dir, fileName, createUrl(TestEnvironment.HTTP_PORT, (deploymentName == null ? "" : deploymentName)), true);
+    }
+
+    protected static String createUrl(final int port, final String... paths) {
+        final StringBuilder result = new StringBuilder(32)
+                .append("http://")
+                .append(TestEnvironment.HOSTNAME)
+                .append(':')
+                .append(port);
+        for (String path : paths) {
+            result.append('/')
+                    .append(path);
+        }
+        return result.toString();
+    }
+
+    protected boolean checkURL(String url) {
+        try {
+            try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+                HttpGet httpget = new HttpGet(url);
+
+                CloseableHttpResponse response = httpclient.execute(httpget);
+                System.out.println("STATUS CODE " + response.getStatusLine().getStatusCode());
+                return response.getStatusLine().getStatusCode() == 200;
+            }
+        } catch (Exception ex) {
+            System.out.println(ex);
+            return false;
+        }
+    }
+
+    private static void shutdown() throws IOException {
+        try (ModelControllerClient client = ModelControllerClient.Factory.create(TestEnvironment.HOSTNAME,
+                TestEnvironment.PORT)) {
+            if (ServerHelper.isStandaloneRunning(client)) {
+                ServerHelper.shutdownStandalone(client, (int) TestEnvironment.TIMEOUT);
+            }
+        }
+    }
+
+    protected void checkURL(Path dir, String fileName, String url, boolean start, String... args) throws Exception {
+        Process process = null;
+        int timeout = (int) TestEnvironment.TIMEOUT * 1000;
+        long sleep = 1000;
+        boolean success = false;
+        try {
+            if (start) {
+                process = startServer(dir, fileName, args);
+            }
+            // Check the server state in all cases. All test cases are provisioning the manager layer.
+            try (ModelControllerClient client = ModelControllerClient.Factory.create(TestEnvironment.HOSTNAME,
+                    TestEnvironment.PORT)) {
+                // Wait for the server to start, this calls into the management interface.
+                ServerHelper.waitForStandalone(process, client, TestEnvironment.TIMEOUT);
+            }
+
+            if (url == null) {
+                // Checking for the server state is enough.
+                success = true;
+            } else {
+                while (timeout > 0) {
+                    if (checkURL(url)) {
+                        System.out.println("Successfully connected to " + url);
+                        success = true;
+                        break;
+                    }
+                    Thread.sleep(sleep);
+                    timeout -= sleep;
+                }
+            }
+            if (process != null) {
+                assertTrue(process.isAlive());
+            }
+            shutdown();
+            // If the process is not null wait for it to shutdown
+            if (process != null) {
+                assertTrue("The process has failed to shutdown", process.waitFor(TestEnvironment.TIMEOUT, TimeUnit.SECONDS));
+            }
+        } finally {
+            ProcessHelper.destroyProcess(process);
+        }
+        if (!success) {
+            throw new Exception("Unable to interact with deployed application");
+        }
+    }
+
+    protected Process startServer(Path dir, String fileName, String... args) throws Exception {
+        List<String> cmd = new ArrayList<>();
+        cmd.add(TestEnvironment.getJavaCommand(null));
+        cmd.add("-jar");
+        cmd.add(dir.resolve("target").resolve(fileName).toAbsolutePath().toString());
+        cmd.add("-Djboss.management.http.port=" + TestEnvironment.PORT);
+        cmd.add("-Djboss.http.port=" + TestEnvironment.HTTP_PORT);
+        cmd.addAll(Arrays.asList(args));
+        final Path out = Files.createTempFile("logs-package-bootable", "-process.txt");
+        final Path parent = out.getParent();
+        if (parent != null && Files.notExists(parent)) {
+            Files.createDirectories(parent);
+        }
+        return new ProcessBuilder(cmd)
+                .redirectErrorStream(true)
+                .redirectOutput(out.toFile())
+                .start();
     }
 }

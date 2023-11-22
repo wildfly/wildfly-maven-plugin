@@ -36,6 +36,10 @@ import org.wildfly.plugin.deployment.PackageType;
  * <p/>
  * This goal will block until cancelled or a shutdown is invoked from a management client.
  *
+ * <p>
+ * Note that if a WildFly Bootable JAR is packaged, it is ignored by this goal.
+ * </p>
+ *
  * @author Stuart Douglas
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */

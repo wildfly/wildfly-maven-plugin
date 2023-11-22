@@ -23,6 +23,10 @@ import org.wildfly.plugin.common.StandardOutput;
  * <p/>
  * The purpose of this goal is to start a WildFly Application Server for testing during the maven lifecycle.
  *
+ * <p>
+ * Note that if a WildFly Bootable JAR is packaged, it is ignored by this goal.
+ * </p>
+ *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 @Mojo(name = "start", requiresDependencyResolution = ResolutionScope.RUNTIME)

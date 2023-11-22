@@ -8,6 +8,8 @@ package org.wildfly.plugin.core;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.Collections;
 
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.logging.Logger;
@@ -16,7 +18,7 @@ import org.jboss.logging.Logger;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 @SuppressWarnings({ "WeakerAccess", "Duplicates" })
-class Environment {
+public class Environment {
 
     /**
      * The default WildFly home directory specified by the {@code jboss.home} system property.
@@ -37,6 +39,9 @@ class Environment {
      */
     public static final long TIMEOUT;
 
+    private static final String TMP_DIR = System.getProperty("java.io.tmpdir", "target");
+    private static final int LOG_SERVER_PORT = getProperty("ts.log.server.port", 10514);
+    private static final Collection<String> JVM_ARGS;
     static {
         final Logger logger = Logger.getLogger(Environment.class);
 
@@ -62,6 +67,12 @@ class Environment {
             logger.debugf(e, "Invalid timeout: %s", timeout);
             throw new RuntimeException("Invalid timeout: " + timeout, e);
         }
+        final String jvmArgs = System.getProperty("test.jvm.args");
+        if (jvmArgs == null) {
+            JVM_ARGS = Collections.emptyList();
+        } else {
+            JVM_ARGS = Utils.splitArguments(jvmArgs);
+        }
     }
 
     public static ModelControllerClient createClient() throws UnknownHostException {
@@ -72,5 +83,44 @@ class Environment {
         if (!ServerHelper.isValidHomeDirectory(wildflyHome)) {
             throw new RuntimeException("Invalid WildFly home directory: " + wildflyHome);
         }
+    }
+
+    /**
+     * Creates a temporary path based on the {@code java.io.tmpdir} system
+     * property.
+     *
+     * @param paths the additional portions of the path
+     *
+     * @return the path
+     */
+    public static Path createTempPath(final String... paths) {
+        return Paths.get(TMP_DIR, paths);
+    }
+
+    /**
+     * Gets the log server port
+     * <p>
+     * The default is 10514 and can be overridden via the
+     * {@code ts.log.server.port} system property.
+     * </p>
+     *
+     * @return the log server port
+     */
+    public static int getLogServerPort() {
+        return LOG_SERVER_PORT;
+    }
+
+    /**
+     * Returns a collection of the JVM arguments to set for any server started during the test process.
+     *
+     * @return the JVM arguments
+     */
+    public static Collection<String> getJvmArgs() {
+        return JVM_ARGS;
+    }
+
+    private static int getProperty(final String name, final int dft) {
+        final String value = System.getProperty(name);
+        return value == null ? dft : Integer.parseInt(value);
     }
 }

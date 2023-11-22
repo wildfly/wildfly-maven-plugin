@@ -38,6 +38,11 @@ public class TestEnvironment extends Environment {
     public static final int PORT;
 
     /**
+     * The port specified by the {@code wildfly.http.port} system property or {@code 8880} by default.
+     */
+    public static final int HTTP_PORT;
+
+    /**
      * The default server startup timeout specified by {@code wildfly.timeout}, default is 60 seconds.
      */
     public static final long TIMEOUT;
@@ -45,17 +50,26 @@ public class TestEnvironment extends Environment {
 
     static {
         final Logger logger = Logger.getLogger(TestEnvironment.class);
-
-        // Get the WildFly home directory and copy to the temp directory
-        final String wildflyDist = System.getProperty("jboss.home");
-        assert wildflyDist != null : "WildFly home property, jboss.home, was not set";
-        Path wildflyHome = Paths.get(wildflyDist);
-        validateWildFlyHome(wildflyHome);
+        Path wildflyHome = null;
+        if (!Boolean.getBoolean("wildfly.test.bootable")) {
+            // Get the WildFly home directory and copy to the temp directory
+            final String wildflyDist = System.getProperty("jboss.home");
+            assert wildflyDist != null : "WildFly home property, jboss.home, was not set";
+            wildflyHome = Paths.get(wildflyDist);
+            validateWildFlyHome(wildflyHome);
+        }
         WILDFLY_HOME = wildflyHome;
 
         final String port = System.getProperty("wildfly.management.port", "9990");
         try {
             PORT = Integer.parseInt(port);
+        } catch (NumberFormatException e) {
+            logger.debugf(e, "Invalid port: %s", port);
+            throw new RuntimeException("Invalid port: " + port, e);
+        }
+        final String httpPort = System.getProperty("wildfly.http.port", "8080");
+        try {
+            HTTP_PORT = Integer.parseInt(httpPort);
         } catch (NumberFormatException e) {
             logger.debugf(e, "Invalid port: %s", port);
             throw new RuntimeException("Invalid port: " + port, e);
