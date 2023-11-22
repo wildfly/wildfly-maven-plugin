@@ -28,9 +28,10 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.jboss.galleon.ProvisioningException;
-import org.jboss.galleon.ProvisioningManager;
-import org.jboss.galleon.config.ProvisioningConfig;
+import org.jboss.galleon.api.GalleonBuilder;
+import org.jboss.galleon.api.config.GalleonProvisioningConfig;
 import org.jboss.galleon.util.IoUtils;
+import org.wildfly.glow.ScanResults;
 import org.wildfly.plugin.cli.BaseCommandConfiguration;
 import org.wildfly.plugin.cli.CliSession;
 import org.wildfly.plugin.cli.OfflineCommandExecutor;
@@ -215,18 +216,18 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     private OfflineCommandExecutor commandExecutor;
 
     @Override
-    protected ProvisioningConfig getDefaultConfig() {
+    protected GalleonProvisioningConfig getDefaultConfig() throws ProvisioningException {
         return null;
     }
 
     @Override
-    protected ProvisioningConfig buildGalleonConfig(ProvisioningManager pm)
+    protected GalleonProvisioningConfig buildGalleonConfig(GalleonBuilder pm)
             throws MojoExecutionException, ProvisioningException {
         if (discoverProvisioningInfo == null) {
             return super.buildGalleonConfig(pm);
         }
         try {
-            return Utils.scanDeployment(discoverProvisioningInfo,
+            try (ScanResults results = Utils.scanDeployment(discoverProvisioningInfo,
                     layers,
                     excludedLayers,
                     featurePacks,
@@ -237,7 +238,9 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
                     Paths.get(project.getBuild().getDirectory()),
                     pm,
                     galleonOptions,
-                    layersConfigurationFileName).getProvisioningConfig();
+                    layersConfigurationFileName)) {
+                return results.getProvisioningConfig();
+            }
         } catch (Exception ex) {
             throw new MojoExecutionException(ex.getLocalizedMessage(), ex);
         }

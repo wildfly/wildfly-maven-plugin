@@ -24,6 +24,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.jboss.galleon</groupId>
+            <artifactId>galleon-core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.wildfly.plugins</groupId>
             <artifactId>wildfly-maven-plugin</artifactId>
             <version>${project.version}</version>

@@ -7,12 +7,9 @@ package org.wildfly.plugin.provision;
 import static org.wildfly.plugin.core.Constants.PLUGIN_PROVISIONING_FILE;
 import static org.wildfly.plugin.core.Constants.STANDALONE_XML;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,19 +30,19 @@ import org.apache.maven.project.MavenProjectHelper;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.jboss.galleon.ProvisioningDescriptionException;
 import org.jboss.galleon.ProvisioningException;
-import org.jboss.galleon.ProvisioningManager;
-import org.jboss.galleon.config.ProvisioningConfig;
+import org.jboss.galleon.api.GalleonBuilder;
+import org.jboss.galleon.api.GalleonFeaturePack;
+import org.jboss.galleon.api.Provisioning;
+import org.jboss.galleon.api.ProvisioningBuilder;
+import org.jboss.galleon.api.config.GalleonProvisioningConfig;
 import org.jboss.galleon.maven.plugin.util.MavenArtifactRepositoryManager;
 import org.jboss.galleon.maven.plugin.util.MvnMessageWriter;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.jboss.galleon.util.IoUtils;
-import org.jboss.galleon.xml.ProvisioningXmlWriter;
 import org.wildfly.channel.UnresolvedMavenArtifactException;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.Utils;
-import org.wildfly.plugin.core.FeaturePack;
 import org.wildfly.plugin.core.GalleonUtils;
 import org.wildfly.plugin.core.MavenRepositoriesEnricher;
 import org.wildfly.plugin.core.PluginProgressTracker;
@@ -138,7 +135,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
      * Use the System property {@code wildfly.provisioning.feature-packs} to provide a comma separated list of feature-packs.
      */
     @Parameter(required = false, alias = "feature-packs", property = PropertyNames.WILDFLY_PROVISIONING_FEATURE_PACKS)
-    List<FeaturePack> featurePacks = Collections.emptyList();
+    List<GalleonFeaturePack> featurePacks = Collections.emptyList();
 
     /**
      * A list of Galleon layers to provision. Can be used when
@@ -286,20 +283,21 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
 
     private void provisionServer(Path home) throws ProvisioningException,
             MojoExecutionException, IOException, XMLStreamException {
-        try (ProvisioningManager pm = ProvisioningManager.builder().addArtifactResolver(artifactResolver)
+        GalleonBuilder galleonBuilder = new GalleonBuilder();
+        galleonBuilder.addArtifactResolver(artifactResolver);
+        GalleonProvisioningConfig config = buildGalleonConfig(galleonBuilder);
+        ProvisioningBuilder builder = galleonBuilder.newProvisioningBuilder(config);
+        try (Provisioning pm = builder
                 .setInstallationHome(home)
                 .setMessageWriter(new MvnMessageWriter(getLog()))
                 .setLogTime(logProvisioningTime)
                 .setRecordState(recordProvisioningState)
                 .build()) {
-            ProvisioningConfig config = buildGalleonConfig(pm);
             if (dryRun) {
                 Path targetPath = Paths.get(project.getBuild().getDirectory());
                 Path file = targetPath.resolve(PLUGIN_PROVISIONING_FILE);
                 getLog().info("Dry-run execution, generating provisioning.xml file: " + file);
-                try (BufferedWriter writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8)) {
-                    ProvisioningXmlWriter.getInstance().write(config, writer);
-                }
+                pm.storeProvisioningConfig(config, targetPath);
                 return;
             }
             getLog().info("Provisioning server in " + home);
@@ -313,22 +311,22 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
             }
             if (!recordProvisioningState) {
                 Path file = home.resolve(PLUGIN_PROVISIONING_FILE);
-                try (FileWriter writer = new FileWriter(file.toFile())) {
-                    ProvisioningXmlWriter.getInstance().write(config, writer);
-                }
+                pm.storeProvisioningConfig(config, file);
             }
         }
     }
 
-    protected ProvisioningConfig buildGalleonConfig(ProvisioningManager pm)
+    protected GalleonProvisioningConfig buildGalleonConfig(GalleonBuilder galleonBuilder)
             throws MojoExecutionException, ProvisioningException {
-        ProvisioningConfig config = null;
+        GalleonProvisioningConfig config;
         Path resolvedProvisioningFile = resolvePath(project, provisioningFile.toPath());
         boolean provisioningFileExists = Files.exists(resolvedProvisioningFile);
         if (featurePacks.isEmpty()) {
             if (provisioningFileExists) {
                 getLog().info("Provisioning server using " + resolvedProvisioningFile + " file.");
-                config = GalleonUtils.buildConfig(resolvedProvisioningFile);
+                try (Provisioning p = galleonBuilder.newProvisioningBuilder(resolvedProvisioningFile).build()) {
+                    config = p.loadProvisioningConfig(resolvedProvisioningFile);
+                }
             } else {
                 config = getDefaultConfig();
                 if (config == null) {
@@ -344,13 +342,13 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
                 throw new MojoExecutionException(
                         "layers-configuration-file-name has been set although no layers are defined.");
             }
-            config = GalleonUtils.buildConfig(pm, featurePacks, layers, excludedLayers, galleonOptions,
+            config = GalleonUtils.buildConfig(galleonBuilder, featurePacks, layers, excludedLayers, galleonOptions,
                     layersConfigurationFileName);
         }
         return config;
     }
 
-    protected ProvisioningConfig getDefaultConfig() throws ProvisioningDescriptionException {
+    protected GalleonProvisioningConfig getDefaultConfig() throws ProvisioningException {
         return GalleonUtils.buildDefaultConfig();
     }
 
