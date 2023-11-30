@@ -1,3 +1,8 @@
+/*
+ * Copyright The WildFly Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 /*!
 
 JSZip v3.7.1 - A JavaScript class for generating and reading zip files
