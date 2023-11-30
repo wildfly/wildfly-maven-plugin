@@ -1,3 +1,8 @@
+/*
+ * Copyright The WildFly Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // copied and adapted from Quarkus ExecUtil.java class at https://github.com/quarkusio/quarkus/blob/main/core/deployment/src/main/java/io/quarkus/deployment/util/ExecUtil.java
 
 package org.wildfly.plugin.provision;

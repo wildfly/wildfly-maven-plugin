@@ -9,8 +9,8 @@ are more than welcome. This includes bug reports, fixes, documentation, etc. Fir
 == Legal
 
 All original contributions to the WildFly Maven Plugin are licensed under the
-https://repository.jboss.org/licenses/lgpl-2.1.txt[ASL - GNU Lesser General Public License v2.1 only], or, if another
-license is specified as governing the file or directory being modified, such other license.
+https://www.apache.org/licenses/LICENSE-2.0[ASL - Apache License], version 2.0 or later, or, if another license is
+specified as governing the file or directory being modified, such other license.
 
 All contributions are subject to the https://developercertificate.org/[Developer Certificate of Origin (DCO)].
 The DCO text is also included verbatim in the [dco.txt](dco.txt) file in the root directory of the repository.
