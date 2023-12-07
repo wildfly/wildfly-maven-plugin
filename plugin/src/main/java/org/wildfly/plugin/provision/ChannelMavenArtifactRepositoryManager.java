@@ -119,8 +119,10 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
                 }
             }
             if (!requireChannel) {
-                log.warn("Resolution of artifact " + artifact.getGroupId() + ":" +
-                        artifact.getArtifactId() + " failed using configured channels. Using original version.");
+                if (log.isDebugEnabled()) {
+                    log.debug("Resolution of artifact " + artifact.getGroupId() + ":" +
+                            artifact.getArtifactId() + " failed using configured channels. Using original version.");
+                }
                 // unable to resolve the artifact through the channel.
                 // if the version is defined, let's resolve it directly
                 if (artifact.getVersion() == null) {
@@ -128,9 +130,11 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
                     throw new MavenUniverseException(ex.getLocalizedMessage(), ex);
                 }
                 try {
-                    log.warn("Using version " + artifact.getVersion() +
-                            " to resolve artifact " + artifact.getGroupId() + ":" +
-                            artifact.getArtifactId());
+                    if (log.isDebugEnabled()) {
+                        log.debug("Using version " + artifact.getVersion() +
+                                " to resolve artifact " + artifact.getGroupId() + ":" +
+                                artifact.getArtifactId());
+                    }
                     org.wildfly.channel.MavenArtifact mavenArtifact = channelSession.resolveDirectMavenArtifact(
                             artifact.getGroupId(), artifact.getArtifactId(), artifact.getExtension(), artifact.getClassifier(),
                             artifact.getVersion());
