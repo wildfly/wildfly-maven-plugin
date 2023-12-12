@@ -106,8 +106,8 @@
         <maven.compiler.source>11</maven.compiler.source>
 
         <!-- galleon properties -->
-        <version.org.jboss.galleon>5.2.2.Final</version.org.jboss.galleon>
-        <version.org.wildfly.glow>1.0.0.Alpha6</version.org.wildfly.glow>
+        <version.org.jboss.galleon>6.0.0.Beta1</version.org.jboss.galleon>
+        <version.org.wildfly.glow>1.0.0.Alpha12</version.org.wildfly.glow>
         <plugin.fork.embedded>true</plugin.fork.embedded>
         <!-- used by tests -->
         <version.org.jboss.logging.slf4j-jboss-logging>1.2.1.Final</version.org.jboss.logging.slf4j-jboss-logging>
@@ -313,7 +313,7 @@
             </dependency>
             <dependency>
                 <groupId>org.jboss.galleon</groupId>
-                <artifactId>galleon-core</artifactId>
+                <artifactId>galleon-api</artifactId>
                 <version>${version.org.jboss.galleon}</version>
             </dependency>
             <dependency>
@@ -421,6 +421,11 @@
                 <version>${version.org.wildfly.glow}</version>
             </dependency>
             <!-- Test dependencies -->
+            <dependency>
+                <groupId>org.jboss.galleon</groupId>
+                <artifactId>galleon-core</artifactId>
+                <version>${version.org.jboss.galleon}</version>
+            </dependency>
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>

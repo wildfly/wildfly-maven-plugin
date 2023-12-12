@@ -5,8 +5,7 @@
 package org.wildfly.plugin.core;
 
 import org.apache.maven.plugin.logging.Log;
-import org.jboss.galleon.ProvisioningManager;
-import org.jboss.galleon.layout.ProvisioningLayoutFactory;
+import org.jboss.galleon.api.Provisioning;
 import org.jboss.galleon.progresstracking.ProgressCallback;
 import org.jboss.galleon.progresstracking.ProgressTracker;
 
@@ -66,16 +65,16 @@ public class PluginProgressTracker<T> implements ProgressCallback<T> {
     public void complete(ProgressTracker<T> tracker) {
     }
 
-    public static void initTrackers(ProvisioningManager pm, Log log) {
-        pm.getLayoutFactory().setProgressCallback(ProvisioningLayoutFactory.TRACK_PACKAGES,
+    public static void initTrackers(Provisioning pm, Log log) {
+        pm.setProgressCallback(org.jboss.galleon.Constants.TRACK_PACKAGES,
                 new PluginProgressTracker<String>(log, "Installing packages", false));
-        pm.getLayoutFactory().setProgressCallback(ProvisioningLayoutFactory.TRACK_CONFIGS,
+        pm.setProgressCallback(org.jboss.galleon.Constants.TRACK_CONFIGS,
                 new PluginProgressTracker<String>(log, "Generating configurations", true));
-        pm.getLayoutFactory().setProgressCallback(ProvisioningLayoutFactory.TRACK_LAYOUT_BUILD,
+        pm.setProgressCallback(org.jboss.galleon.Constants.TRACK_LAYOUT_BUILD,
                 new PluginProgressTracker<String>(log, "Resolving feature-packs", false));
-        pm.getLayoutFactory().setProgressCallback("JBMODULES",
+        pm.setProgressCallback("JBMODULES",
                 new PluginProgressTracker<String>(log, "Resolving artifacts", false));
-        pm.getLayoutFactory().setProgressCallback("JBEXTRACONFIGS",
+        pm.setProgressCallback("JBEXTRACONFIGS",
                 new PluginProgressTracker<String>(log, "Generating extra configurations", true));
     }
 }

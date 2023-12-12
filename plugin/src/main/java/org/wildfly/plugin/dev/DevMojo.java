@@ -60,8 +60,11 @@ import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.galleon.ProvisioningException;
-import org.jboss.galleon.ProvisioningManager;
-import org.jboss.galleon.config.ProvisioningConfig;
+import org.jboss.galleon.api.GalleonBuilder;
+import org.jboss.galleon.api.GalleonFeaturePack;
+import org.jboss.galleon.api.Provisioning;
+import org.jboss.galleon.api.ProvisioningBuilder;
+import org.jboss.galleon.api.config.GalleonProvisioningConfig;
 import org.jboss.galleon.maven.plugin.util.MavenArtifactRepositoryManager;
 import org.jboss.galleon.maven.plugin.util.MvnMessageWriter;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
@@ -79,7 +82,6 @@ import org.wildfly.plugin.core.ContainerDescription;
 import org.wildfly.plugin.core.Deployment;
 import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.core.DeploymentResult;
-import org.wildfly.plugin.core.FeaturePack;
 import org.wildfly.plugin.core.GalleonUtils;
 import org.wildfly.plugin.core.PluginProgressTracker;
 import org.wildfly.plugin.core.ServerHelper;
@@ -314,7 +316,7 @@ public class DevMojo extends AbstractServerStartMojo {
      * {@code wildfly.provisioning.feature-packs} to provide a comma separated list of feature-packs.
      */
     @Parameter(alias = "feature-packs", property = PropertyNames.WILDFLY_PROVISIONING_FEATURE_PACKS)
-    private List<FeaturePack> featurePacks = Collections.emptyList();
+    private List<GalleonFeaturePack> featurePacks = Collections.emptyList();
 
     /**
      * A list of Galleon layers to provision. Can be used when feature-pack-location or feature-packs are set.
@@ -544,18 +546,15 @@ public class DevMojo extends AbstractServerStartMojo {
         return discoverProvisioningInfo != null;
     }
 
-    ProvisioningConfig shouldReprovision() {
+    GalleonProvisioningConfig shouldReprovision() {
         // Remote or no initial Glow scanning
         if (remote || results == null) {
             return null;
         }
-        // References a dummy installation directory
-        Path tmpInstallDir = Paths.get(project.getBuild().getDirectory()).resolve("glow-tmp");
-        try (ProvisioningManager pm = ProvisioningManager.builder().addArtifactResolver(mavenRepoManager)
-                .setInstallationHome(tmpInstallDir)
-                .setMessageWriter(new MvnMessageWriter(getLog()))
-                .build()) {
-            ScanResults newResults = scanDeployment(pm);
+        try {
+            GalleonBuilder galleonBuilder = new GalleonBuilder();
+            galleonBuilder.addArtifactResolver(mavenRepoManager);
+            ScanResults newResults = scanDeployment(galleonBuilder);
             try {
                 if (!results.getDecorators().equals(newResults.getDecorators())) {
                     getLog().info("Set of discovered layers changed, needs to re-provision. New layers: "
@@ -568,6 +567,9 @@ public class DevMojo extends AbstractServerStartMojo {
                     return newResults.getProvisioningConfig();
                 }
             } finally {
+                if (results != null) {
+                    results.close();
+                }
                 results = newResults;
             }
         } catch (Exception ex) {
@@ -578,7 +580,7 @@ public class DevMojo extends AbstractServerStartMojo {
 
     boolean reprovisionAndStart()
             throws IOException, InterruptedException, MojoExecutionException, MojoFailureException, ProvisioningException {
-        ProvisioningConfig newConfig = shouldReprovision();
+        GalleonProvisioningConfig newConfig = shouldReprovision();
         if (newConfig == null) {
             return false;
         }
@@ -588,7 +590,10 @@ public class DevMojo extends AbstractServerStartMojo {
             debug("Deleting existing installation " + installDir);
             IoUtils.recursiveDelete(installDir);
         }
-        try (ProvisioningManager pm = ProvisioningManager.builder().addArtifactResolver(mavenRepoManager)
+        GalleonBuilder galleonBuilder = new GalleonBuilder();
+        galleonBuilder.addArtifactResolver(mavenRepoManager);
+        ProvisioningBuilder builder = galleonBuilder.newProvisioningBuilder(newConfig);
+        try (Provisioning pm = builder
                 .setInstallationHome(installDir)
                 .setMessageWriter(new MvnMessageWriter(getLog()))
                 .build()) {
@@ -610,30 +615,42 @@ public class DevMojo extends AbstractServerStartMojo {
         if (Files.exists(installDir)) {
             IoUtils.recursiveDelete(installDir);
         }
-        try (ProvisioningManager pm = ProvisioningManager.builder().addArtifactResolver(mavenRepoManager)
-                .setInstallationHome(installDir)
-                .setMessageWriter(new MvnMessageWriter(getLog()))
-                .build()) {
-            ProvisioningConfig config;
+        try {
+            GalleonBuilder provider = new GalleonBuilder();
+            provider.addArtifactResolver(mavenRepoManager);
+            GalleonProvisioningConfig config;
             if (featurePacks.isEmpty() && !isDiscoveryEnabled()) {
                 return super.provisionIfRequired(installDir);
             } else {
                 if (!isDiscoveryEnabled()) {
-                    config = GalleonUtils.buildConfig(pm, featurePacks, layers, excludedLayers, galleonOptions,
-                            serverConfig);
+                    config = GalleonUtils.buildConfig(provider, featurePacks, layers, excludedLayers, galleonOptions,
+                            serverConfig == null ? "standalone.xml" : serverConfig);
                 } else {
-                    results = scanDeployment(pm);
+                    results = scanDeployment(provider);
                     config = results.getProvisioningConfig();
                 }
             }
-            provisionServer(pm, config);
+            getLog().info("Provisioning server in " + installDir);
+            try (Provisioning pm = provider.newProvisioningBuilder(config)
+                    .setInstallationHome(installDir)
+                    .setMessageWriter(new MvnMessageWriter(getLog()))
+                    .build()) {
+                PluginProgressTracker.initTrackers(pm, getLog());
+                pm.provision(config);
+                // Check that at least the standalone or domain directories have been generated.
+                if (Files.notExists(installDir.resolve("standalone")) && Files.notExists(installDir.resolve("domain"))) {
+                    getLog().error("Invalid galleon provisioning, no server provisioned in " + installDir + ". Make sure "
+                            + "that the list of Galleon feature-packs and Galleon layers are properly configured.");
+                    throw new MojoExecutionException("Invalid plugin configuration, no server provisioned.");
+                }
+            }
         } catch (Exception e) {
             throw new MojoFailureException(e.getLocalizedMessage(), e);
         }
         return installDir;
     }
 
-    private ScanResults scanDeployment(ProvisioningManager pm) throws Exception {
+    private ScanResults scanDeployment(GalleonBuilder pm) throws Exception {
         return Utils.scanDeployment(discoverProvisioningInfo,
                 layers, excludedLayers, featurePacks, false,
                 getLog(),
@@ -645,7 +662,7 @@ public class DevMojo extends AbstractServerStartMojo {
                 serverConfig);
     }
 
-    private void provisionServer(ProvisioningManager pm, ProvisioningConfig config)
+    private void provisionServer(Provisioning pm, GalleonProvisioningConfig config)
             throws ProvisioningException, MojoExecutionException {
         getLog().info("Provisioning server in " + installDir);
         PluginProgressTracker.initTrackers(pm, getLog());

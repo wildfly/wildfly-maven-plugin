@@ -58,11 +58,7 @@
         </dependency>
         <dependency>
             <groupId>org.jboss.galleon</groupId>
-            <artifactId>galleon-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.galleon</groupId>
-            <artifactId>galleon-maven-universe</artifactId>
+            <artifactId>galleon-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.maven.shared</groupId>
