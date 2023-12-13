@@ -96,13 +96,17 @@ import org.wildfly.plugin.server.ServerType;
 import org.wildfly.plugin.server.VersionComparator;
 
 /**
- * Starts a standalone instance of WildFly and deploys the application to the server. The deployment type myst be a WAR.
+ * Starts a standalone instance of WildFly and deploys the application to the server. The deployment type must be a WAR.
  * Once the server is running, the source directories are monitored for changes. If required the sources will be compiled
  * and the deployment may be redeployed.
  *
  * <p>
  * Note that changes to the POM file are not monitored. If changes are made the POM file, the process will need to be
  * terminated and restarted.
+ * </p>
+ *
+ * <p>
+ * Note that if a WildFly Bootable JAR is packaged, it is ignored by this goal.
  * </p>
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>

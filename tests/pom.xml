@@ -18,6 +18,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>bootable-tests</module>
         <module>standalone-tests</module>
         <module>domain-tests</module>
         <module>shared</module>

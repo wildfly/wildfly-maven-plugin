@@ -16,6 +16,12 @@ public interface PropertyNames {
 
     String BATCH = "wildfly.batch";
 
+    String BOOTABLE_JAR = "wildfly.bootable.jar";
+
+    String BOOTABLE_JAR_INSTALL_CLASSIFIER = "wildfly.bootable.jar.classifier";
+
+    String BOOTABLE_JAR_NAME = "wildfly.bootable.jar.name";
+
     String CHANNELS = "wildfly.channels";
 
     String CHECK_PACKAGING = "wildfly.checkPackaging";

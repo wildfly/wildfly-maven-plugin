@@ -31,6 +31,10 @@ import org.wildfly.plugin.common.PropertyNames;
  * <p>
  * The {@code image} goal relies on a Docker binary to execute all image commands (build, login, push).
  *
+ * <p>
+ * Note that if a WildFly Bootable JAR is packaged, it is ignored when building the image.
+ * </p>
+ *
  * @since 4.0
  */
 @Mojo(name = "image", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME, defaultPhase = LifecyclePhase.PACKAGE)

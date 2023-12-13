@@ -24,6 +24,8 @@
         <version.org.jboss.shrinkwrap.shrinkwrap>1.2.6</version.org.jboss.shrinkwrap.shrinkwrap>
 
         <jboss.home>${project.build.directory}${file.separator}wildfly</jboss.home>
+        <test.class.path>${project.build.testOutputDirectory}</test.class.path>
+        <test.jvm.args>-Dmaven.repo.local=${settings.localRepository}</test.jvm.args>
     </properties>
 
     <licenses>
@@ -92,6 +94,19 @@
     </dependencies>
 
     <build>
+        <testResources>
+            <!-- Process default resources -->
+            <testResource>
+                <directory>src/test/resources</directory>
+                <targetPath>${project.build.testOutputDirectory}</targetPath>
+            </testResource>
+            <!-- Copy the custom modules to the WildFly module directory -->
+            <testResource>
+                <directory>src/test/modules</directory>
+                <filtering>true</filtering>
+                <targetPath>${jboss.home}/modules</targetPath>
+            </testResource>
+        </testResources>
         <plugins>
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -119,11 +134,27 @@
                                     <location>wildfly@maven(org.jboss.universe:community-universe)#${version.org.wildfly}</location>
                                 </feature-pack>
                             </feature-packs>
+                            <record-state>false</record-state>
                             <install-dir>${project.build.directory}/wildfly</install-dir>
                             <plugin-options>
                                 <jboss-fork-embedded>${plugin.fork.embedded}</jboss-fork-embedded>
                             </plugin-options>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- We need to bind a new execution of this to run after provisioning is done so the module.xml file
+                 required for testing is not deleted.
+            -->
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-module</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>testResources</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
@@ -141,6 +172,7 @@
                     <redirectTestOutputToFile>${maven.test.redirectTestOutputToFile}</redirectTestOutputToFile>
                     <systemPropertyVariables>
                         <jboss.home>${jboss.home}</jboss.home>
+                        <test.jvm.args>${test.jvm.args}</test.jvm.args>
                     </systemPropertyVariables>
                 </configuration>
                 <executions>
