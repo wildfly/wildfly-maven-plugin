@@ -30,6 +30,7 @@ import org.jboss.as.controller.client.helpers.Operations;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.jboss.dmr.Property;
+import org.jboss.logging.Logger;
 
 /**
  * Generates a new {@code logging.properties} file based on the logging subsystem model.
@@ -54,9 +55,9 @@ import org.jboss.dmr.Property;
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-// @TODO, we can't use AbstractLogEnabled, it is not in the maven plugin classloader.
-public class BootLoggingConfiguration { // extends AbstractLogEnabled {
+public class BootLoggingConfiguration {
 
+    private static final Logger LOGGER = Logger.getLogger(BootLoggingConfiguration.class);
     private static final Pattern SIZE_PATTERN = Pattern.compile("(\\d+)([kKmMgGbBtT])?");
     private static final String NEW_LINE = System.lineSeparator();
 
@@ -164,11 +165,8 @@ public class BootLoggingConfiguration { // extends AbstractLogEnabled {
                 if (properties.containsKey(key)) {
                     requiredProperties.put(key, properties.get(key));
                 } else {
-                    // @TODO, we can't use AbstractLogEnabled, it is not in the maven plugin classloader.
-                    // getLogger().warn(String.format("The value for the expression \"%s\" could not be resolved " +
-                    // "and may not be set at boot if no default value is available.", entry.getValue()));
-                    System.err.println(String.format("The value for the expression \"%s\" could not be resolved "
-                            + "and may not be set at boot if no default value is available.", entry.getValue()));
+                    LOGGER.warnf("The value for the expression \"%s\" could not be resolved "
+                            + "and may not be set at boot if no default value is available.", entry.getValue());
                 }
                 iter.remove();
             }
@@ -829,12 +827,9 @@ public class BootLoggingConfiguration { // extends AbstractLogEnabled {
                     for (Expression expression : expressions) {
                         for (String key : expression.getKeys()) {
                             if (!properties.containsKey(key)) {
-                                // @TODO, we can't use AbstractLogEnabled, it is not in the maven plugin classloader.
-                                // getLogger().warn(String.format("The path %s is an undefined property. If not set at boot time
-                                // unexpected results may occur.", pathEntry.asString()));
-                                System.err.println(String.format(
+                                LOGGER.warnf(
                                         "The path %s is an undefined property. If not set at boot time unexpected results may occur.",
-                                        pathEntry.asString()));
+                                        pathEntry.asString());
                             } else {
                                 // We use the property name and value directly rather than referencing the path
                                 usedProperties.put(key, properties.get(key));

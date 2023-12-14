@@ -36,13 +36,13 @@ import org.wildfly.glow.ScanResults;
 import org.wildfly.plugin.cli.BaseCommandConfiguration;
 import org.wildfly.plugin.cli.CliSession;
 import org.wildfly.plugin.cli.OfflineCommandExecutor;
+import org.wildfly.plugin.common.MavenJBossLogger;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.StandardOutput;
 import org.wildfly.plugin.common.Utils;
 import org.wildfly.plugin.deployment.MojoDeploymentException;
 import org.wildfly.plugin.deployment.PackageType;
 import org.wildfly.plugins.core.bootablejar.BootableJarSupport;
-import org.wildfly.plugins.core.bootablejar.Log;
 
 /**
  * Provision a server, copy extra content and deploy primary artifact if it
@@ -381,29 +381,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         BootableJarSupport.packageBootableJar(targetJarFile, targetPath,
                 activeConfig, jbossHome,
                 artifactResolver,
-                new MvnMessageWriter(getLog()), new Log() {
-                    @Override
-                    public void warn(String string) {
-                        getLog().warn(string);
-                    }
-
-                    @Override
-                    public void debug(String string) {
-                        if (getLog().isDebugEnabled()) {
-                            getLog().debug(string);
-                        }
-                    }
-
-                    @Override
-                    public void error(String string) {
-                        getLog().error(string);
-                    }
-
-                    @Override
-                    public void info(String string) {
-                        getLog().info(string);
-                    }
-                });
+                new MvnMessageWriter(getLog()), new MavenJBossLogger(getLog()));
         attachJar(targetJarFile);
         getLog().info("Bootable JAR packaging DONE. To run the server: java -jar " + targetJarFile);
 

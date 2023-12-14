@@ -20,7 +20,6 @@ import org.apache.maven.settings.crypto.SettingsDecrypter;
 import org.apache.maven.settings.crypto.SettingsDecryptionResult;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.ModelControllerClientConfiguration;
-import org.wildfly.security.manager.WildFlySecurityManager;
 
 /**
  * The default implementation for connecting to a running WildFly instance
@@ -39,8 +38,11 @@ public abstract class AbstractServerConnection extends AbstractMojo {
     public static final String DEBUG_MESSAGE_SETTINGS_HAS_ID = "Found the server's id in the settings.xml file";
 
     static {
-        // Ensure jboss-logging binds to slf4j
-        WildFlySecurityManager.setPropertyPrivileged("org.jboss.logging.provider", "slf4j");
+        // This is odd, but if not set we should set the JBoss Logging provider to slf4j as that is what Maven uses
+        final String provider = System.getProperty("org.jboss.logging.provider");
+        if (provider == null || provider.isBlank()) {
+            System.setProperty("org.jboss.logging.provider", "slf4j");
+        }
     }
 
     /**

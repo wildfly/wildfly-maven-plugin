@@ -53,6 +53,13 @@ import org.wildfly.plugin.core.PluginProgressTracker;
  * @author jfdenise
  */
 abstract class AbstractProvisionServerMojo extends AbstractMojo {
+    static {
+        // This is odd, but if not set we should set the JBoss Logging provider to slf4j as that is what Maven uses
+        final String provider = System.getProperty("org.jboss.logging.provider");
+        if (provider == null || provider.isBlank()) {
+            System.setProperty("org.jboss.logging.provider", "slf4j");
+        }
+    }
 
     @Component
     RepositorySystem repoSystem;
