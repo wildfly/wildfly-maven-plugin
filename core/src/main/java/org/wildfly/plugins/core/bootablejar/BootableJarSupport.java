@@ -26,6 +26,7 @@ import org.jboss.galleon.universe.maven.MavenUniverseException;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.jboss.galleon.util.IoUtils;
 import org.jboss.galleon.util.ZipUtils;
+import org.jboss.logging.Logger;
 import org.wildfly.plugins.core.cli.CLIForkedBootConfigGenerator;
 import org.wildfly.plugins.core.cli.ForkedCLIUtil;
 
@@ -50,7 +51,7 @@ public class BootableJarSupport {
      */
     public static void packageBootableJar(Path targetJarFile, Path target,
             GalleonProvisioningConfig config, Path serverHome, MavenRepoManager resolver,
-            MessageWriter writer, Log log) throws Exception {
+            MessageWriter writer, Logger log) throws Exception {
         Path contentRootDir = target.resolve("bootable-jar-build-artifacts");
         if (Files.exists(contentRootDir)) {
             IoUtils.recursiveDelete(contentRootDir);
@@ -109,7 +110,8 @@ public class BootableJarSupport {
         Files.deleteIfExists(jbossHome.resolve("README.txt"));
     }
 
-    public static ScannedArtifacts scanArtifacts(Provisioning pm, GalleonProvisioningConfig config, Log log) throws Exception {
+    public static ScannedArtifacts scanArtifacts(Provisioning pm, GalleonProvisioningConfig config, Logger log)
+            throws Exception {
         Set<MavenArtifact> cliArtifacts = new HashSet<>();
         MavenArtifact jbossModules = null;
         MavenArtifact bootArtifact = null;

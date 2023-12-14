@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.jboss.galleon.BaseErrors;
 import org.jboss.galleon.ProvisioningException;
-import org.wildfly.plugins.core.bootablejar.Log;
+import org.jboss.logging.Logger;
 
 /**
  *
@@ -40,7 +40,7 @@ public class ForkedCLIUtil {
         return javaCmd == null ? javaCmd = Paths.get(getJavaHome()).resolve("bin").resolve("java").toString() : javaCmd;
     }
 
-    public static void fork(Log log, String[] artifacts, Class<?> clazz, Path home, Path output, String... args)
+    public static void fork(Logger log, String[] artifacts, Class<?> clazz, Path home, Path output, String... args)
             throws Exception {
         // prepare the classpath
         final StringBuilder cp = new StringBuilder();
