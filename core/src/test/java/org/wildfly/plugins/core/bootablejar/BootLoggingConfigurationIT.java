@@ -541,6 +541,11 @@ public class BootLoggingConfigurationIT {
         op.get("pretty-print").set("${test.pretty.print:false}");
         op.get("exception-output-type").set("${test.exception-output-type:detailed}");
         op.get("zone-id").set("${test.zone.id:GMT}");
+        // Always add a key-override. The reason is WFCORE-6344 causes the property to always be added. However, when
+        // testing with legacy servers, this might not be the case so the test will fail. Simply adding a key-overrides
+        // will get around the failure.
+        final ModelNode keyOverrides = op.get("key-overrides").setEmptyObject();
+        keyOverrides.get("timestamp").set("@timestamp");
         builder.addStep(op);
 
         // Create a file handler
