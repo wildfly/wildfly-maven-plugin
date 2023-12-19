@@ -39,7 +39,10 @@ import org.wildfly.common.Assert;
  * </p>
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
+ *
+ * @deprecated moved to new https://github.com/wildfly/wildfly-plugin-tools project
  */
+@Deprecated(forRemoval = true)
 @SuppressWarnings({ "unused", "WeakerAccess" })
 public class Deployment implements DeploymentDescription, Comparable<Deployment> {
 

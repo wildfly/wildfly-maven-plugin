@@ -29,7 +29,10 @@ import java.io.OutputStream;
  * needs to be consumed and redirected somewhere.
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
+ *
+ * @deprecated moved to new https://github.com/wildfly/wildfly-plugin-tools project
  */
+@Deprecated(forRemoval = true)
 public class ConsoleConsumer implements Runnable {
     private final InputStream in;
     private final OutputStream out;

@@ -30,7 +30,10 @@ import org.jboss.dmr.ModelNode;
  * A default implementation for the {@link ContainerDescription}.
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
+ *
+ * @deprecated moved to new https://github.com/wildfly/wildfly-plugin-tools project
  */
+@Deprecated(forRemoval = true)
 class DefaultContainerDescription implements ContainerDescription {
 
     private final String productName;

@@ -39,7 +39,10 @@ import org.jboss.galleon.xml.ProvisioningXmlParser;
 
 /**
  * @author jdenise
+ *
+ * @deprecated moved to new https://github.com/wildfly/wildfly-plugin-tools project
  */
+@Deprecated(forRemoval = true)
 public class GalleonUtils {
 
     private static final String WILDFLY_DEFAULT_FEATURE_PACK_LOCATION = "wildfly@maven(org.jboss.universe:community-universe)";

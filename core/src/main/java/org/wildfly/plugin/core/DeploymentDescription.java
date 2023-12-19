@@ -25,7 +25,10 @@ import java.util.Set;
  * Represents a default description for a deployment.
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
+ *
+ * @deprecated moved to new https://github.com/wildfly/wildfly-plugin-tools project
  */
+@Deprecated(forRemoval = true)
 @SuppressWarnings("WeakerAccess")
 public interface DeploymentDescription {
 

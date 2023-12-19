@@ -38,7 +38,10 @@ import org.jboss.as.controller.client.ModelControllerClient;
  * </p>
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
+ *
+ * @deprecated moved to new https://github.com/wildfly/wildfly-plugin-tools project
  */
+@Deprecated(forRemoval = true)
 @SuppressWarnings("unused")
 public interface DeploymentManager {
 

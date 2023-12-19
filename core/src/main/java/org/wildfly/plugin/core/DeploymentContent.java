@@ -41,7 +41,10 @@ import org.jboss.dmr.ModelNode;
  * depending on the type of content being used.
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
+ *
+ * @deprecated moved to new https://github.com/wildfly/wildfly-plugin-tools project
  */
+@Deprecated(forRemoval = true)
 abstract class DeploymentContent {
 
     /**
