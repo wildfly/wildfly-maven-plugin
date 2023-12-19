@@ -304,7 +304,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
                 Path targetPath = Paths.get(project.getBuild().getDirectory());
                 Path file = targetPath.resolve(PLUGIN_PROVISIONING_FILE);
                 getLog().info("Dry-run execution, generating provisioning.xml file: " + file);
-                pm.storeProvisioningConfig(config, targetPath);
+                pm.storeProvisioningConfig(config, file);
                 return;
             }
             getLog().info("Provisioning server in " + home);
