@@ -9,7 +9,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,8 +35,7 @@ public class FailOnErrorTest extends AbstractWildFlyServerMojoTest {
             executeCommandsMojo.execute();
             fail("MojoExecutionException expected.");
         } catch (MojoExecutionException e) {
-            InvocationTargetException ex = (InvocationTargetException) e.getCause();
-            assertEquals("org.jboss.as.cli.CommandLineException", ex.getCause().getClass().getName());
+            assertEquals("org.jboss.as.cli.CommandLineException", e.getCause().getClass().getName());
         }
         final ModelNode address = ServerOperations.createAddress("system-property", "propertyFailOnError");
         final ModelNode op = ServerOperations.createReadAttributeOperation(address, "value");
@@ -173,8 +171,7 @@ public class FailOnErrorTest extends AbstractWildFlyServerMojoTest {
             executeCommandsMojo.execute();
             fail("MojoExecutionException expected.");
         } catch (MojoExecutionException e) {
-            InvocationTargetException ex = (InvocationTargetException) e.getCause();
-            assertEquals("org.jboss.as.cli.CommandLineException", ex.getCause().getClass().getName());
+            assertEquals("org.jboss.as.cli.CommandLineException", e.getCause().getClass().getName());
         }
         final ModelNode address = ServerOperations.createAddress("system-property", "scriptFailOnError");
         final ModelNode op = ServerOperations.createReadAttributeOperation(address, "value");

@@ -19,9 +19,9 @@ import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
-import org.wildfly.plugin.core.ServerHelper;
 import org.wildfly.plugin.tests.AbstractWildFlyMojoTest;
 import org.wildfly.plugin.tests.TestEnvironment;
+import org.wildfly.plugin.tools.ServerHelper;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>

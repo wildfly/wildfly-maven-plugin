@@ -9,10 +9,10 @@ package org.wildfly.plugin.core;
  */
 public interface Constants {
 
-    public static final String CLI_RESOLVE_PARAMETERS_VALUES = "--resolve-parameter-values";
-    public static final String CLI_ECHO_COMMAND_ARG = "--echo-command";
-    public static final String PLUGIN_PROVISIONING_FILE = ".wildfly-maven-plugin-provisioning.xml";
-    public static final String STANDALONE = "standalone";
-    public static final String STANDALONE_XML = "standalone.xml";
-    public static final String FORK_EMBEDDED_PROCESS_OPTION = "jboss-fork-embedded";
+    String CLI_RESOLVE_PARAMETERS_VALUES = "--resolve-parameter-values";
+    String CLI_ECHO_COMMAND_ARG = "--echo-command";
+    String PLUGIN_PROVISIONING_FILE = ".wildfly-maven-plugin-provisioning.xml";
+    String STANDALONE = "standalone";
+    String STANDALONE_XML = "standalone.xml";
+    String FORK_EMBEDDED_PROCESS_OPTION = "jboss-fork-embedded";
 }

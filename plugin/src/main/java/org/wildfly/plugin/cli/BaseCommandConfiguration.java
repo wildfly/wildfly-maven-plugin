@@ -108,8 +108,7 @@ public class BaseCommandConfiguration {
         }
 
         /**
-         * Adds the JVM options used if {@link #isFork()} or
-         * {@link #isOffline()} is set to {@code true}.
+         * Adds the JVM options used if running in a forked process.
          *
          * @param jvmOptions the JVM options or {@code null}
          *
@@ -123,8 +122,7 @@ public class BaseCommandConfiguration {
         }
 
         /**
-         * Adds the CLI arguments used if {@link #isFork()} or
-         * {@link #isOffline()} is set to {@code true}.
+         * Adds the CLI arguments used if running in a forked process.
          *
          * @param arguments the CLI arguments or {@code null}
          *
@@ -206,8 +204,7 @@ public class BaseCommandConfiguration {
         }
 
         /**
-         * Sets how the standard output stream should be handled if
-         * {@link #isFork()} or {@link #isOffline()} is set to {@code true}.
+         * Sets how the standard output stream should be handled if running in a forked process.
          *
          * @param stdout the pattern for standard out
          *
@@ -232,12 +229,13 @@ public class BaseCommandConfiguration {
         }
 
         /**
-         * If true resolve expression prior to send the operation to the server
+         * Set to {@code true} to resolve expressions prior to sending the operation to the server.
          *
-         * @param resolveExpression
-         * @return this
+         * @param resolveExpression {@code true} if expressions should be resolved before the operation is sent to the
+         *                              server
+         * @return this configuration
          */
-        public T setResolveExpression(boolean resolveExpression) {
+        public T setResolveExpression(final boolean resolveExpression) {
             this.resolveExpression = resolveExpression;
             return builderInstance();
         }
@@ -281,7 +279,7 @@ public class BaseCommandConfiguration {
     }
 
     /**
-     * Indicates whether or not the commands should be run in a batch or not.
+     * Indicates whether the commands should be run in a batch or not.
      *
      * @return {@code true} if the commands should be executed in a batch,
      *             otherwise {@code false}
@@ -300,8 +298,7 @@ public class BaseCommandConfiguration {
     }
 
     /**
-     * Returns the JVM options used if {@link #isFork()} or {@link #isOffline()}
-     * is set to {@code true}.
+     * Returns the JVM options used if running in a forked process.
      *
      * @return the JVM options
      */
@@ -310,8 +307,7 @@ public class BaseCommandConfiguration {
     }
 
     /**
-     * Returns the CLI arguments used if {@link #isFork()} or
-     * {@link #isOffline()} is set to {@code true}.
+     * Returns the CLI arguments used if running in a forked process.
      *
      * @return the CLI arguments
      */

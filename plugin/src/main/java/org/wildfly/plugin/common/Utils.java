@@ -24,8 +24,8 @@ import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.wildfly.glow.Arguments;
 import org.wildfly.glow.GlowSession;
 import org.wildfly.glow.ScanResults;
-import org.wildfly.plugin.core.GalleonUtils;
 import org.wildfly.plugin.provision.GlowConfig;
+import org.wildfly.plugin.tools.GalleonUtils;
 
 /**
  * A simple utility class.

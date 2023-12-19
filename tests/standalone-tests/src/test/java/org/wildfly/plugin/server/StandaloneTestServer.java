@@ -12,10 +12,10 @@ import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.core.launcher.Launcher;
 import org.wildfly.core.launcher.ProcessHelper;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
-import org.wildfly.plugin.core.ConsoleConsumer;
-import org.wildfly.plugin.core.DeploymentManager;
-import org.wildfly.plugin.core.ServerHelper;
 import org.wildfly.plugin.tests.TestEnvironment;
+import org.wildfly.plugin.tools.ConsoleConsumer;
+import org.wildfly.plugin.tools.DeploymentManager;
+import org.wildfly.plugin.tools.ServerHelper;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>

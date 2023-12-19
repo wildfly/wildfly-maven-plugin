@@ -43,9 +43,10 @@ import org.jboss.galleon.util.IoUtils;
 import org.wildfly.channel.UnresolvedMavenArtifactException;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.Utils;
-import org.wildfly.plugin.core.GalleonUtils;
+import org.wildfly.plugin.core.MavenJBossLogger;
 import org.wildfly.plugin.core.MavenRepositoriesEnricher;
-import org.wildfly.plugin.core.PluginProgressTracker;
+import org.wildfly.plugin.tools.GalleonUtils;
+import org.wildfly.plugin.tools.PluginProgressTracker;
 
 /**
  * Provision a server
@@ -308,7 +309,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
                 return;
             }
             getLog().info("Provisioning server in " + home);
-            PluginProgressTracker.initTrackers(pm, getLog());
+            PluginProgressTracker.initTrackers(pm, new MavenJBossLogger(getLog()));
             pm.provision(config);
             // Check that at least the standalone or domain directories have been generated.
             if (!Files.exists(home.resolve("standalone")) && !Files.exists(home.resolve("domain"))) {

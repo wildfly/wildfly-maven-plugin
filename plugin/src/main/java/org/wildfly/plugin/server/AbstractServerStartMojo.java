@@ -41,9 +41,9 @@ import org.wildfly.plugin.common.Environment;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.StandardOutput;
 import org.wildfly.plugin.common.Utils;
-import org.wildfly.plugin.core.GalleonUtils;
 import org.wildfly.plugin.core.MavenRepositoriesEnricher;
-import org.wildfly.plugin.core.ServerHelper;
+import org.wildfly.plugin.tools.GalleonUtils;
+import org.wildfly.plugin.tools.ServerHelper;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>

@@ -24,10 +24,10 @@ import org.jboss.as.controller.client.helpers.Operations.CompositeOperationBuild
 import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 import org.wildfly.plugin.common.ServerOperations;
-import org.wildfly.plugin.core.DeploymentManager;
-import org.wildfly.plugin.core.ServerHelper;
-import org.wildfly.plugin.core.UndeployDescription;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
+import org.wildfly.plugin.tools.DeploymentManager;
+import org.wildfly.plugin.tools.ServerHelper;
+import org.wildfly.plugin.tools.UndeployDescription;
 
 /**
  * deploy mojo testcase.

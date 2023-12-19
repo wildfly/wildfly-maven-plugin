@@ -22,10 +22,10 @@ import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
-import org.wildfly.plugin.core.DeploymentDescription;
-import org.wildfly.plugin.core.DeploymentManager;
-import org.wildfly.plugin.core.DeploymentResult;
-import org.wildfly.plugin.core.UndeployDescription;
+import org.wildfly.plugin.tools.DeploymentDescription;
+import org.wildfly.plugin.tools.DeploymentManager;
+import org.wildfly.plugin.tools.DeploymentResult;
+import org.wildfly.plugin.tools.UndeployDescription;
 
 /**
  * Undeploys the application to the WildFly Application Server.

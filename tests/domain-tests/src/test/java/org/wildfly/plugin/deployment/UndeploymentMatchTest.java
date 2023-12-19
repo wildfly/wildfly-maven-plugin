@@ -23,11 +23,11 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.wildfly.plugin.core.DeploymentDescription;
-import org.wildfly.plugin.core.DeploymentManager;
-import org.wildfly.plugin.core.DeploymentResult;
-import org.wildfly.plugin.core.UndeployDescription;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
+import org.wildfly.plugin.tools.DeploymentDescription;
+import org.wildfly.plugin.tools.DeploymentManager;
+import org.wildfly.plugin.tools.DeploymentResult;
+import org.wildfly.plugin.tools.UndeployDescription;
 
 /**
  * Matcher Undeployment test case.

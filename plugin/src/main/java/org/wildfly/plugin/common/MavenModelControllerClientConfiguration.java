@@ -18,7 +18,7 @@ import org.wildfly.security.SecurityFactory;
 
 /**
  * A configuration used to connect a {@link org.jboss.as.controller.client.ModelControllerClient} or used to connect a
- * CLI {@link org.jboss.as.cli.CommandContext}.
+ * CLI {@code CommandContext}
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
