@@ -64,19 +64,19 @@ jobs:
       - name: Build and Test on ${{ matrix.java }} - ${{ matrix.wildfly-version }}
         run: mvn clean install '-Dorg.jboss.logmanager.nocolor=true'
       - name: Upload surefire logs for failed run
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: surefire-reports-${{ matrix.os }}-${{ matrix.java }}
           path: '**/surefire-reports/'
       - name: Upload failsafe logs for failed run
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: failsafe-reports-${{ matrix.os }}-${{ matrix.java }}
           path: '**/failsafe-reports/'
       - name: Upload logs for failed run
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: server-logs-${{ matrix.os }}-${{ matrix.java }}
