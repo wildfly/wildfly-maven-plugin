@@ -29,6 +29,7 @@ import org.jboss.galleon.util.StringUtils;
  *
  * @author Alexey Loubyanssky
  */
+@Deprecated(forRemoval = true)
 public class FeaturePack implements DependableCoordinate, ArtifactCoordinate {
 
     private String groupId;

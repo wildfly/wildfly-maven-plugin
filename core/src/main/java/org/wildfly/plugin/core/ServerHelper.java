@@ -44,7 +44,10 @@ import org.wildfly.common.Assert;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
+ *
+ * @deprecated moved to new https://github.com/wildfly/wildfly-plugin-tools project
  */
+@Deprecated(forRemoval = true)
 @SuppressWarnings({ "StaticMethodOnlyUsedInOneClass", "WeakerAccess", "unused", "MagicNumber" })
 public class ServerHelper {
     private static final ModelNode EMPTY_ADDRESS = new ModelNode().setEmptyList();

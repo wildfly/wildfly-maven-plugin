@@ -22,7 +22,10 @@ import java.nio.file.Path;
 /**
  *
  * @author jdenise@redhat.com
+ *
+ * @deprecated moved to new https://github.com/wildfly/wildfly-plugin-tools project
  */
+@Deprecated(forRemoval = true)
 public class Utils {
 
     public static boolean isValidHomeDirectory(final Path path) {

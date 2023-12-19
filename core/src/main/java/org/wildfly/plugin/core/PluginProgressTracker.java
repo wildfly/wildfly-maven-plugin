@@ -25,7 +25,10 @@ import org.jboss.galleon.progresstracking.ProgressTracker;
 /**
  *
  * @author jdenise@redhat.com
+ *
+ * @deprecated moved to new https://github.com/wildfly/wildfly-plugin-tools project
  */
+@Deprecated(forRemoval = true)
 public class PluginProgressTracker<T> implements ProgressCallback<T> {
 
     private static final String DELAYED_EXECUTION_MSG = "Delayed generation, waiting...";

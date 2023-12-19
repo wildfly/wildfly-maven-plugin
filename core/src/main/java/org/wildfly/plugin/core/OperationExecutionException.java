@@ -27,7 +27,10 @@ import org.jboss.dmr.ModelNode;
  * An error indicating an operation has failed to execute.
  *
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
+ *
+ * @deprecated moved to new https://github.com/wildfly/wildfly-plugin-tools project
  */
+@Deprecated(forRemoval = true)
 @SuppressWarnings("WeakerAccess")
 public class OperationExecutionException extends RuntimeException {
     private final ModelNode result;

@@ -22,7 +22,10 @@ import org.jboss.galleon.config.ConfigId;
  * Simple wrapper for configuration ids.
  *
  * @author Emmanuel Hugonnet (c) 2018 Red Hat, inc.
+ *
+ * @deprecated this is no longer needed
  */
+@Deprecated(forRemoval = true)
 public class ConfigurationId {
 
     private String name;
