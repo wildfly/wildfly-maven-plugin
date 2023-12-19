@@ -8,12 +8,14 @@ on:
     branches-ignore:
       - 'dependabot/**'
     paths:
+      - '.github/workflows/ci.yml'
       - 'core/**'
       - 'plugin/**'
       - 'tests/**'
       - '**/pom.xml'
   pull_request:
     paths:
+      - '.github/workflows/ci.yml'
       - 'core/**'
       - 'plugin/**'
       - 'tests/**'
