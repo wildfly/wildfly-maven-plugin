@@ -12,7 +12,7 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.wildfly.plugin.common.PropertyNames;
-import org.wildfly.plugin.core.Deployment;
+import org.wildfly.plugin.tools.Deployment;
 
 /**
  * Redeploys only the application to the WildFly Application Server without first invoking the

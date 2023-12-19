@@ -28,7 +28,7 @@ import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.jboss.galleon.util.PropertyUtils;
 import org.junit.Assert;
 import org.junit.Rule;
-import org.wildfly.plugin.core.Deployment;
+import org.wildfly.plugin.tools.Deployment;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>

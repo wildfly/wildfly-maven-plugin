@@ -17,8 +17,8 @@ import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.InitializationError;
-import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.server.TestServer;
+import org.wildfly.plugin.tools.DeploymentManager;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>

@@ -6,7 +6,7 @@
 package org.wildfly.plugin.server;
 
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.wildfly.plugin.core.DeploymentManager;
+import org.wildfly.plugin.tools.DeploymentManager;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>

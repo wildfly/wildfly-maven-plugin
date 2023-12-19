@@ -57,8 +57,8 @@ import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.wildfly.core.launcher.ProcessHelper;
-import org.wildfly.plugin.core.ServerHelper;
-import org.wildfly.plugins.core.bootablejar.BootableJarSupport;
+import org.wildfly.plugin.tools.ServerHelper;
+import org.wildfly.plugin.tools.bootablejar.BootableJarSupport;
 
 /**
  * A class to construct a properly configured MOJO.

@@ -27,9 +27,9 @@ import org.wildfly.core.launcher.CommandBuilder;
 import org.wildfly.plugin.cli.CommandConfiguration;
 import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.common.PropertyNames;
-import org.wildfly.plugin.core.Deployment;
-import org.wildfly.plugin.core.DeploymentManager;
 import org.wildfly.plugin.deployment.PackageType;
+import org.wildfly.plugin.tools.Deployment;
+import org.wildfly.plugin.tools.DeploymentManager;
 
 /**
  * Starts a standalone instance of WildFly and deploys the application to the server.

@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-import org.wildfly.plugin.core.ConsoleConsumer;
+import org.wildfly.plugin.tools.ConsoleConsumer;
 
 /**
  * Information on how the {@code stdout} should be consumed.

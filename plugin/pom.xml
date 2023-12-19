@@ -160,7 +160,7 @@
             <groupId>org.wildfly.core</groupId>
             <artifactId>wildfly-protocol</artifactId>
             <exclusions>
-                 <exclusion>
+                <exclusion>
                     <groupId>org.jboss.modules</groupId>
                     <artifactId>jboss-modules</artifactId>
                 </exclusion>
@@ -170,6 +170,10 @@
         <dependency>
             <groupId>org.wildfly.plugins</groupId>
             <artifactId>wildfly-plugin-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.plugins</groupId>
+            <artifactId>wildfly-plugin-tools</artifactId>
         </dependency>
         <dependency>
             <groupId>org.wildfly.channel</groupId>

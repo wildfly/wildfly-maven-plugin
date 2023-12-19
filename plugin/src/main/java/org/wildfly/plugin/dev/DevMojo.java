@@ -69,6 +69,7 @@ import org.jboss.galleon.maven.plugin.util.MavenArtifactRepositoryManager;
 import org.jboss.galleon.maven.plugin.util.MvnMessageWriter;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.jboss.galleon.util.IoUtils;
+import org.jboss.logging.Logger;
 import org.twdata.maven.mojoexecutor.MojoExecutor;
 import org.wildfly.channel.UnresolvedMavenArtifactException;
 import org.wildfly.core.launcher.CommandBuilder;
@@ -78,14 +79,7 @@ import org.wildfly.plugin.cli.CommandExecutor;
 import org.wildfly.plugin.common.Environment;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.Utils;
-import org.wildfly.plugin.core.ContainerDescription;
-import org.wildfly.plugin.core.Deployment;
-import org.wildfly.plugin.core.DeploymentManager;
-import org.wildfly.plugin.core.DeploymentResult;
-import org.wildfly.plugin.core.GalleonUtils;
-import org.wildfly.plugin.core.PluginProgressTracker;
-import org.wildfly.plugin.core.ServerHelper;
-import org.wildfly.plugin.core.UndeployDescription;
+import org.wildfly.plugin.core.MavenJBossLogger;
 import org.wildfly.plugin.deployment.PackageType;
 import org.wildfly.plugin.provision.ChannelConfiguration;
 import org.wildfly.plugin.provision.ChannelMavenArtifactRepositoryManager;
@@ -93,7 +87,15 @@ import org.wildfly.plugin.provision.GlowConfig;
 import org.wildfly.plugin.server.AbstractServerStartMojo;
 import org.wildfly.plugin.server.ServerContext;
 import org.wildfly.plugin.server.ServerType;
-import org.wildfly.plugin.server.VersionComparator;
+import org.wildfly.plugin.tools.ContainerDescription;
+import org.wildfly.plugin.tools.Deployment;
+import org.wildfly.plugin.tools.DeploymentManager;
+import org.wildfly.plugin.tools.DeploymentResult;
+import org.wildfly.plugin.tools.GalleonUtils;
+import org.wildfly.plugin.tools.PluginProgressTracker;
+import org.wildfly.plugin.tools.ServerHelper;
+import org.wildfly.plugin.tools.UndeployDescription;
+import org.wildfly.plugin.tools.VersionComparator;
 
 /**
  * Starts a standalone instance of WildFly and deploys the application to the server. The deployment type must be a WAR.
@@ -401,6 +403,7 @@ public class DevMojo extends AbstractServerStartMojo {
     private ScanResults results;
     private Path installDir;
     private boolean requiresWarDeletion;
+    private Logger mavenJBossLogger;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -408,6 +411,7 @@ public class DevMojo extends AbstractServerStartMojo {
         if (!"war".equalsIgnoreCase(packageType.getPackaging())) {
             throw new MojoExecutionException("The dev goal only works for WAR deployments");
         }
+        mavenJBossLogger = new MavenJBossLogger(getLog());
         serverConfig = serverConfig == null ? "standalone.xml" : serverConfig;
         ServerContext context = null;
         if (remote) {
@@ -639,7 +643,7 @@ public class DevMojo extends AbstractServerStartMojo {
                     .setInstallationHome(installDir)
                     .setMessageWriter(new MvnMessageWriter(getLog()))
                     .build()) {
-                PluginProgressTracker.initTrackers(pm, getLog());
+                PluginProgressTracker.initTrackers(pm, mavenJBossLogger);
                 pm.provision(config);
                 // Check that at least the standalone or domain directories have been generated.
                 if (Files.notExists(installDir.resolve("standalone")) && Files.notExists(installDir.resolve("domain"))) {
@@ -669,7 +673,7 @@ public class DevMojo extends AbstractServerStartMojo {
     private void provisionServer(Provisioning pm, GalleonProvisioningConfig config)
             throws ProvisioningException, MojoExecutionException {
         getLog().info("Provisioning server in " + installDir);
-        PluginProgressTracker.initTrackers(pm, getLog());
+        PluginProgressTracker.initTrackers(pm, mavenJBossLogger);
         pm.provision(config);
         // Check that at least the standalone or domain directories have been generated.
         if (Files.notExists(installDir.resolve("standalone")) && Files.notExists(installDir.resolve("domain"))) {
@@ -963,10 +967,9 @@ public class DevMojo extends AbstractServerStartMojo {
         // Load the allowed configuration params if not yet loaded
         if (allowedWarPluginParams.isEmpty()) {
             final String pluginVersion = plugin.getVersion();
-            final VersionComparator comparator = new VersionComparator();
             final Map<String, String> parameters = remote ? WAR_PARAMETERS : EXPLODED_WAR_PARAMETERS;
             allowedWarPluginParams.addAll(parameters.entrySet().stream()
-                    .filter(e -> e.getValue().isEmpty() || comparator.compare(e.getValue(), pluginVersion) <= 0)
+                    .filter(e -> e.getValue().isEmpty() || VersionComparator.compareVersion(e.getValue(), pluginVersion) <= 0)
                     .map(Map.Entry::getKey)
                     .collect(Collectors.toSet()));
         }

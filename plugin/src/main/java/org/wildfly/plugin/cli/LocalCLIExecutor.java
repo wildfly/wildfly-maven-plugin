@@ -31,7 +31,7 @@ import org.apache.maven.plugin.descriptor.PluginDescriptorBuilder;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.galleon.universe.maven.MavenArtifact;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
-import org.wildfly.plugins.core.cli.CLIWrapper;
+import org.wildfly.plugin.tools.cli.CLIWrapper;
 
 /**
  * A CLI executor, resolving CLI artifact from Maven.

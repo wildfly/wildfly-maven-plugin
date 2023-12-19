@@ -22,10 +22,10 @@ import org.jboss.dmr.ModelNode;
 import org.junit.After;
 import org.junit.Test;
 import org.wildfly.plugin.common.ServerOperations;
-import org.wildfly.plugin.core.Deployment;
-import org.wildfly.plugin.core.DeploymentManager;
-import org.wildfly.plugin.core.UndeployDescription;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
+import org.wildfly.plugin.tools.Deployment;
+import org.wildfly.plugin.tools.DeploymentManager;
+import org.wildfly.plugin.tools.UndeployDescription;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>

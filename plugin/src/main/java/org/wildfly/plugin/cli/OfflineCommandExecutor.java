@@ -16,7 +16,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.wildfly.core.launcher.CliCommandBuilder;
 import org.wildfly.plugin.common.StandardOutput;
-import org.wildfly.plugin.core.Utils;
+import org.wildfly.plugin.tools.util.Utils;
 
 /**
  * A command executor for executing offline CLI commands.

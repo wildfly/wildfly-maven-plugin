@@ -36,13 +36,12 @@ import org.wildfly.glow.ScanResults;
 import org.wildfly.plugin.cli.BaseCommandConfiguration;
 import org.wildfly.plugin.cli.CliSession;
 import org.wildfly.plugin.cli.OfflineCommandExecutor;
-import org.wildfly.plugin.common.MavenJBossLogger;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.StandardOutput;
 import org.wildfly.plugin.common.Utils;
 import org.wildfly.plugin.deployment.MojoDeploymentException;
 import org.wildfly.plugin.deployment.PackageType;
-import org.wildfly.plugins.core.bootablejar.BootableJarSupport;
+import org.wildfly.plugin.tools.bootablejar.BootableJarSupport;
 
 /**
  * Provision a server, copy extra content and deploy primary artifact if it
@@ -381,7 +380,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         BootableJarSupport.packageBootableJar(targetJarFile, targetPath,
                 activeConfig, jbossHome,
                 artifactResolver,
-                new MvnMessageWriter(getLog()), new MavenJBossLogger(getLog()));
+                new MvnMessageWriter(getLog()));
         attachJar(targetJarFile);
         getLog().info("Bootable JAR packaging DONE. To run the server: java -jar " + targetJarFile);
 

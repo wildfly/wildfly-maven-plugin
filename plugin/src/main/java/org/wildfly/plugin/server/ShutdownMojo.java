@@ -17,7 +17,7 @@ import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.ServerOperations;
-import org.wildfly.plugin.core.ServerHelper;
+import org.wildfly.plugin.tools.ServerHelper;
 
 /**
  * Shuts down a running WildFly Application Server.

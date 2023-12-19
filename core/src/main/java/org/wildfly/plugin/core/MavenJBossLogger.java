@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.wildfly.plugin.common;
+package org.wildfly.plugin.core;
 
 import java.text.MessageFormat;
 

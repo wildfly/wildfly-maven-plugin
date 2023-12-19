@@ -17,24 +17,8 @@
     <name>WildFly Plugin Core Utilities</name>
 
     <description>
-        Utilities a plugin can use to interact with WildFly container.
+        Utilities for Maven plugins to interact with WildFly.
     </description>
-
-    <properties>
-        <version.org.jboss.shrinkwrap.shrinkwrap>1.2.6</version.org.jboss.shrinkwrap.shrinkwrap>
-
-        <jboss.home>${project.build.directory}${file.separator}wildfly</jboss.home>
-        <test.class.path>${project.build.testOutputDirectory}</test.class.path>
-        <test.jvm.args>-Dmaven.repo.local=${settings.localRepository}</test.jvm.args>
-    </properties>
-
-    <licenses>
-        <license>
-            <name>Apache License Version 2.0</name>
-            <url>https://repository.jboss.org/licenses/apache-2.0.txt</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
 
     <dependencies>
         <dependency>
@@ -46,67 +30,12 @@
             <artifactId>jboss-logging</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.wildfly.common</groupId>
-            <artifactId>wildfly-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.wildfly.core</groupId>
-            <artifactId>wildfly-controller-client</artifactId>
-        </dependency>
-        <!-- Seems to be needed as the controller client is transitively bringing it in -->
-        <dependency>
-            <groupId>org.wildfly.core</groupId>
-            <artifactId>wildfly-protocol</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.galleon</groupId>
-            <artifactId>galleon-api</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.apache.maven.shared</groupId>
             <artifactId>maven-artifact-transfer</artifactId>
-        </dependency>
-        <!-- Test dependencies -->
-        <dependency>
-            <groupId>org.wildfly.core</groupId>
-            <artifactId>wildfly-launcher</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jboss.shrinkwrap</groupId>
-            <artifactId>shrinkwrap-api</artifactId>
-            <version>${version.org.jboss.shrinkwrap.shrinkwrap}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jboss.shrinkwrap</groupId>
-            <artifactId>shrinkwrap-impl-base</artifactId>
-            <version>${version.org.jboss.shrinkwrap.shrinkwrap}</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
     <build>
-        <testResources>
-            <!-- Process default resources -->
-            <testResource>
-                <directory>src/test/resources</directory>
-                <targetPath>${project.build.testOutputDirectory}</targetPath>
-            </testResource>
-            <!-- Copy the custom modules to the WildFly module directory -->
-            <testResource>
-                <directory>src/test/modules</directory>
-                <filtering>true</filtering>
-                <targetPath>${jboss.home}/modules</targetPath>
-            </testResource>
-        </testResources>
         <plugins>
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -117,72 +46,6 @@
                         </manifestEntries>
                     </archive>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.jboss.galleon</groupId>
-                <artifactId>galleon-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>provision-wildfly</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>provision</goal>
-                        </goals>
-                        <configuration>
-                            <feature-packs>
-                                <feature-pack>
-                                    <location>wildfly@maven(org.jboss.universe:community-universe)#${version.org.wildfly}</location>
-                                </feature-pack>
-                            </feature-packs>
-                            <record-state>false</record-state>
-                            <install-dir>${project.build.directory}/wildfly</install-dir>
-                            <plugin-options>
-                                <jboss-fork-embedded>${plugin.fork.embedded}</jboss-fork-embedded>
-                            </plugin-options>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <!-- We need to bind a new execution of this to run after provisioning is done so the module.xml file
-                 required for testing is not deleted.
-            -->
-            <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-module</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>testResources</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <systemProperties>
-                        <test.deployment.dir>${project.build.testOutputDirectory}</test.deployment.dir>
-                    </systemProperties>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <configuration>
-                    <redirectTestOutputToFile>${maven.test.redirectTestOutputToFile}</redirectTestOutputToFile>
-                    <systemPropertyVariables>
-                        <jboss.home>${jboss.home}</jboss.home>
-                        <test.jvm.args>${test.jvm.args}</test.jvm.args>
-                    </systemPropertyVariables>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

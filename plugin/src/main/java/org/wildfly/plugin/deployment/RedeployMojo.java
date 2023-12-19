@@ -11,9 +11,9 @@ import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.wildfly.plugin.core.Deployment;
-import org.wildfly.plugin.core.DeploymentManager;
-import org.wildfly.plugin.core.DeploymentResult;
+import org.wildfly.plugin.tools.Deployment;
+import org.wildfly.plugin.tools.DeploymentManager;
+import org.wildfly.plugin.tools.DeploymentResult;
 
 /**
  * Redeploys the application to the WildFly Application Server.
