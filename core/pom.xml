@@ -52,14 +52,26 @@
 
     <profiles>
         <profile>
-            <id>copy-site</id>
+            <id>generate-site</id>
             <activation>
                 <property>
-                    <name>copy.site</name>
+                    <name>generate.site</name>
                 </property>
             </activation>
             <build>
                 <plugins>
+                    <plugin>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>generate-javadoc</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>javadoc</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
                     <plugin>
                         <artifactId>maven-resources-plugin</artifactId>
                         <executions>
