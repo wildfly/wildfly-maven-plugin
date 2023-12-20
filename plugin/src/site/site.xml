@@ -54,6 +54,7 @@
         <menu name="Project Documentation" inherit="top">
             <item name="JavaDoc" href="apidocs/index.html"/>
             <item name="WildFly" href="https://docs.wildfly.org"/>
+            <item name="WildFly Glow" href="https://docs.wildfly.org/wildfly-glow/"/>
         </menu>
 
         <menu name="Reports" inherit="top">
