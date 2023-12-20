@@ -1,8 +1,3 @@
-/*
- * Copyright The WildFly Authors
- * SPDX-License-Identifier: Apache-2.0
- */
-
 /**
  * Licensed under the MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
