@@ -58,6 +58,10 @@ Of course, patches are welcome, too. Contributors can check out the project from
 [source repository](./scm.html) and will find supplementary information in the
 [guide to helping with Maven](http://maven.apache.org/guides/development/guide-helping.html).
 
+#[[##]]# WildFly Glow
+The WildFly Maven plugin uses WildFly Glow to generate provisioning configuration. For more information on WildFly Glow
+you see the [documentation](https://docs.wildfly.org/wildfly-glow/).
+
 #[[##]]# Examples
 
   To provide you with better understanding of some usages of the ${project.name}, you can take a look into the
