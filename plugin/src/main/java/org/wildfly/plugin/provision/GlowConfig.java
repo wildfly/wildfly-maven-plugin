@@ -25,6 +25,7 @@ public class GlowConfig {
     private String version;
     private boolean suggest;
     private Set<String> layersForJndi = Set.of();
+    private Set<String> excludedArchives = Set.of();
     private boolean failsOnError = true;
     private boolean preview;
 
@@ -38,6 +39,7 @@ public class GlowConfig {
                 .setUserEnabledAddOns(addOns).setBinaries(lst).setSuggest(suggest).setJndiLayers(getLayersForJndi())
                 .setVersion(version)
                 .setTechPreview(preview)
+                .setExcludeArchivesFromScan(excludedArchives)
                 .setOutput(OutputFormat.PROVISIONING_XML);
         if (inProvisioning != null) {
             builder.setProvisoningXML(inProvisioning);
@@ -155,5 +157,19 @@ public class GlowConfig {
      */
     public boolean isPreview() {
         return preview;
+    }
+
+    /**
+     * @return the excludedArchives
+     */
+    public Set<String> getExcludedArchives() {
+        return excludedArchives;
+    }
+
+    /**
+     * @param excludedArchives the excludedArchives to set
+     */
+    public void setExcludedArchives(Set<String> excludedArchives) {
+        this.excludedArchives = Set.copyOf(excludedArchives);
     }
 }
