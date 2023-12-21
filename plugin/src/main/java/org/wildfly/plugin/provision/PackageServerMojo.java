@@ -191,12 +191,16 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
      * <li>profile: {@code ha}. Default being non ha server configuration.</li>
      * <li>suggest: {@code true} | {@code false}. Display addOns that you can use to enhance discovered provisioning
      * configuration. Default to {@code false}.</li>
+     * <li>excludedArchives: List of archives contained in the deployment to exclude when scanning.
+     * Wildcards ({@code *}) are allowed. N.B. Just the name of the archive is matched, do not attempt
+     * to specify a full path within the jar. The following examples would be valid exclusions: {@code my-jar.jar},
+     * {@code *-internal.rar}.</li>
      * <li>version: server version. Default being the latest released version.</li>
      *
      * </ul>
      * </div>
      *
-     * For example, cloud, ha profile with CLI and openapi addOns enabled. mail layer eing explicitly included:
+     * For example, cloud, ha profile with CLI and openapi addOns enabled. mail layer being explicitly included:
      *
      * <pre>
      *   &lt;discover-provisioning-info&gt;
