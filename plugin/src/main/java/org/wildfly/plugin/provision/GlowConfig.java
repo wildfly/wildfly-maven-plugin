@@ -32,7 +32,7 @@ public class GlowConfig {
     public GlowConfig() {
     }
 
-    public Arguments toArguments(Path deployment, Path inProvisioning) {
+    public Arguments toArguments(Path deployment, Path inProvisioning, String layersConfigurationFileName) {
         final Set<String> profiles = profile != null ? Set.of(profile) : Set.of();
         List<Path> lst = List.of(deployment);
         Builder builder = Arguments.scanBuilder().setExecutionContext(context).setExecutionProfiles(profiles)
@@ -43,6 +43,9 @@ public class GlowConfig {
                 .setOutput(OutputFormat.PROVISIONING_XML);
         if (inProvisioning != null) {
             builder.setProvisoningXML(inProvisioning);
+        }
+        if (layersConfigurationFileName != null) {
+            builder.setConfigName(layersConfigurationFileName);
         }
         return builder.build();
     }
