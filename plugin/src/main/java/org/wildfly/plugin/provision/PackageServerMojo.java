@@ -53,8 +53,8 @@ import org.wildfly.plugin.tools.bootablejar.BootableJarSupport;
 @Mojo(name = "package", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME, defaultPhase = LifecyclePhase.PACKAGE)
 public class PackageServerMojo extends AbstractProvisionServerMojo {
 
-    private static final String JAR = "jar";
-    private static final String BOOTABLE_JAR_NAME_RADICAL = "server-";
+    public static final String JAR = "jar";
+    public static final String BOOTABLE_JAR_NAME_RADICAL = "server-";
 
     /**
      * A list of directories to copy content to the provisioned server. If a
