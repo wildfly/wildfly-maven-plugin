@@ -134,7 +134,8 @@ public class Utils {
                 p.storeProvisioningConfig(in, inProvisioningFile);
             }
         }
-        Arguments arguments = discoverProvisioningInfo.toArguments(deploymentContent, inProvisioningFile);
+        Arguments arguments = discoverProvisioningInfo.toArguments(deploymentContent, inProvisioningFile,
+                layersConfigurationFileName);
         log.info("Glow is scanning... ");
         ScanResults results;
         GlowMavenMessageWriter writer = new GlowMavenMessageWriter(log);
