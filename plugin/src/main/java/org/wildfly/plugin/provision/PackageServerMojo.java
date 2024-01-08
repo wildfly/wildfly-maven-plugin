@@ -195,6 +195,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
      * Wildcards ({@code *}) are allowed. N.B. Just the name of the archive is matched, do not attempt
      * to specify a full path within the jar. The following examples would be valid exclusions: {@code my-jar.jar},
      * {@code *-internal.rar}.</li>
+     * <li>verbose: {@code true} | {@code false}. Display more information. The set of rules that selected Galleon layers are
+     * printed. Default to {@code false}.</li>
      * <li>version: server version. Default being the latest released version.</li>
      *
      * </ul>
