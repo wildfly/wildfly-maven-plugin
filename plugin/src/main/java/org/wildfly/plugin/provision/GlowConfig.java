@@ -28,6 +28,7 @@ public class GlowConfig {
     private Set<String> excludedArchives = Set.of();
     private boolean failsOnError = true;
     private boolean preview;
+    private boolean verbose;
 
     public GlowConfig() {
     }
@@ -40,6 +41,7 @@ public class GlowConfig {
                 .setVersion(version)
                 .setTechPreview(preview)
                 .setExcludeArchivesFromScan(excludedArchives)
+                .setVerbose(verbose)
                 .setOutput(OutputFormat.PROVISIONING_XML);
         if (inProvisioning != null) {
             builder.setProvisoningXML(inProvisioning);
@@ -174,5 +176,19 @@ public class GlowConfig {
      */
     public void setExcludedArchives(Set<String> excludedArchives) {
         this.excludedArchives = Set.copyOf(excludedArchives);
+    }
+
+    /**
+     * @param verbose the verbose to set
+     */
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
+    }
+
+    /**
+     * @return the verbose
+     */
+    public boolean isVerbose() {
+        return verbose;
     }
 }
