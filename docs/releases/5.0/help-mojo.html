@@ -10,7 +10,7 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title>WildFly Maven Plugin &#x2013; Provision a server</title>
+    <title>WildFly Maven Plugin &#x2013; wildfly:help</title>
     <link href="./favicon.ico" rel="shortcut icon" type="image/x-icon">
 
     <!-- Metadata -->
@@ -19,14 +19,14 @@
 
     <!-- Facebook Open Graph -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="WildFly Maven Plugin &#x2013; Provision a server">
-    <meta property="og:title" content="WildFly Maven Plugin &#x2013; Provision a server">
+    <meta property="og:site_name" content="WildFly Maven Plugin &#x2013; wildfly:help">
+    <meta property="og:title" content="WildFly Maven Plugin &#x2013; wildfly:help">
     <meta property="og:description" content="WildFly Maven Plugin">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary">
     <meta name="twitter:creator" content="@WildFlyAS">
-    <meta name="twitter:title" content="WildFly Maven Plugin &#x2013; Provision a server">
+    <meta name="twitter:title" content="WildFly Maven Plugin &#x2013; wildfly:help">
     <meta name="twitter:description" content="WildFly Maven Plugin">
 
     <!-- CSS -->
@@ -103,77 +103,112 @@
 </header>
 <main>
     <section id="main-section" class="container flex-grow-1">
-<header class="pb-2 mt-4 mb-2 border-bottom">
- <h1 id="Provision-a-server">Provision a server</h1>
-</header>
-<p>The provision goal allows you to provision a server using Galleon.</p>
-<p>By default the server is provisioned in the <code>target/server</code> directory.</p>
 <section>
- <h2 id="Provision-the-latest-complete-WildFly-installation"><a name="Provision_the_latest_complete_WildFly_installation"></a>Provision the latest complete WildFly installation</h2>
- <p>The example below shows how to produce the latest released WildFly server. No configuration arguments are needed. By default the plugin will provision the latest released version.</p>
- <pre class="border shadow rounded"><code>&lt;project&gt;
-    ...
-    &lt;build&gt;
-        ...
-        &lt;plugins&gt;
-            ...
-            &lt;plugin&gt;
-                &lt;groupId&gt;org.wildfly.plugins&lt;/groupId&gt;
-                &lt;artifactId&gt;wildfly-maven-plugin&lt;/artifactId&gt;
-                &lt;version&gt;5.0.0.Beta2&lt;/version&gt;
-                &lt;executions&gt;
-                    &lt;execution&gt;
-                        &lt;goals&gt;
-                            &lt;goal&gt;provision&lt;/goal&gt;
-                        &lt;/goals&gt;
-                    &lt;/execution&gt;
-                &lt;/executions&gt;
-            &lt;/plugin&gt;
-            ...
-        &lt;/plugins&gt;
-        ...
-    &lt;/build&gt;
-...
-&lt;/project&gt;</code></pre>
-</section>
-<section>
- <h2 id="Provision-a-server-trimmed-with-Galleon-layers"><a name="Provision_a_server_trimmed_with_Galleon_layers"></a>Provision a server trimmed with Galleon layers</h2>
- <p>The example below shows how to produce an WildFly server installation trimmed with Galleon Layers:</p>
- <pre class="border shadow rounded"><code>&lt;project&gt;
-    ...
-    &lt;build&gt;
-        ...
-        &lt;plugins&gt;
-            ...
-            &lt;plugin&gt;
-                &lt;groupId&gt;org.wildfly.plugins&lt;/groupId&gt;
-                &lt;artifactId&gt;wildfly-maven-plugin&lt;/artifactId&gt;
-                &lt;version&gt;5.0.0.Beta2&lt;/version&gt;
-                &lt;configuration&gt;
-                    &lt;feature-packs&gt;
-                        &lt;feature-pack&gt;
-                            &lt;location&gt;wildfly@maven(org.jboss.universe:community-universe)&lt;/location&gt;
-                        &lt;/feature-pack&gt;
-                    &lt;/feature-packs&gt;
-                    &lt;layers&gt;
-                        &lt;!-- jaxrs-server Galleon layer adds the server content required to run JAXRS applications --&gt; 
-                        &lt;layer&gt;jaxrs-server&lt;/layer&gt;
-                    &lt;/layers&gt;
-                &lt;/configuration&gt;
-                &lt;executions&gt;
-                    &lt;execution&gt;
-                        &lt;goals&gt;
-                            &lt;goal&gt;provision&lt;/goal&gt;
-                        &lt;/goals&gt;
-                    &lt;/execution&gt;
-                &lt;/executions&gt;
-            &lt;/plugin&gt;
-            ...
-        &lt;/plugins&gt;
-        ...
-    &lt;/build&gt;
-...
-&lt;/project&gt;</code></pre>
+ <h2 id="wildflyhelp"><a name="wildfly:help"></a>wildfly:help</h2><a name="wildfly:help"></a>
+ <p><strong>Full name</strong>:</p>
+ <p>org.wildfly.plugins:wildfly-maven-plugin:5.0.0.Beta2:help</p>
+ <p><strong>Description</strong>:</p>
+ <p>Display help information on wildfly-maven-plugin. <br> Call <code>mvn wildfly:help -Ddetail=true -Dgoal=&lt;goal-name&gt;</code> to display parameter details.</p>
+ <p><strong>Attributes</strong>:</p>
+ <ul>
+  <li>The goal is thread-safe and supports parallel builds.</li>
+ </ul>
+ <section>
+  <h3 id="Optional-Parameters"><a name="Optional_Parameters"></a>Optional Parameters</h3><a name="Optional_Parameters"></a>
+  <table class="table table-striped table-bordered">
+   <thead>
+    <tr>
+     <th>Name</th>
+     <th>Type</th>
+     <th>Since</th>
+     <th>Description</th>
+    </tr>
+   </thead>
+   <tbody>
+    <tr>
+     <td align="left"><a href="#detail"><code>&lt;detail&gt;</code></a></td>
+     <td><code>boolean</code></td>
+     <td><code>-</code></td>
+     <td>If <code>true</code>, display all settable properties for each goal.<br><strong>Default</strong>: <code>false</code><br><strong>User Property</strong>: <code>detail</code></td>
+    </tr>
+    <tr>
+     <td align="left"><a href="#goal"><code>&lt;goal&gt;</code></a></td>
+     <td><code>String</code></td>
+     <td><code>-</code></td>
+     <td>The name of the goal for which to show help. If unspecified, all goals will be displayed.<br><strong>User Property</strong>: <code>goal</code></td>
+    </tr>
+    <tr>
+     <td align="left"><a href="#indentSize"><code>&lt;indentSize&gt;</code></a></td>
+     <td><code>int</code></td>
+     <td><code>-</code></td>
+     <td>The number of spaces per indentation level, should be positive.<br><strong>Default</strong>: <code>2</code><br><strong>User Property</strong>: <code>indentSize</code></td>
+    </tr>
+    <tr>
+     <td align="left"><a href="#lineLength"><code>&lt;lineLength&gt;</code></a></td>
+     <td><code>int</code></td>
+     <td><code>-</code></td>
+     <td>The maximum length of a display line, should be positive.<br><strong>Default</strong>: <code>80</code><br><strong>User Property</strong>: <code>lineLength</code></td>
+    </tr>
+   </tbody>
+  </table>
+ </section>
+ <section>
+  <h3 id="Parameter-Details"><a name="Parameter_Details"></a>Parameter Details</h3><a name="Parameter_Details"></a><a name="detail"></a>
+  <section>
+   <a name="detail"> </a>
+   <h4 id="detail"><a name="detail"></a><a name="a.3Cdetail.3E"></a>&lt;detail&gt;</h4><a name="a.3Cdetail.3E"></a>
+   <div>
+    If <code>true</code>, display all settable properties for each goal.
+   </div>
+   <ul>
+    <li><strong>Type</strong>: <code>boolean</code></li>
+    <li><strong>Required</strong>: <code>report.plugin.goal.no</code></li>
+    <li><strong>User Property</strong>: <code>detail</code></li>
+    <li><strong>Default</strong>: <code>false</code></li>
+   </ul>
+   <hr>
+  </section><a name="goal"></a>
+  <section>
+   <a name="goal"> </a>
+   <h4 id="goal"><a name="goal"></a><a name="a.3Cgoal.3E"></a>&lt;goal&gt;</h4><a name="a.3Cgoal.3E"></a>
+   <div>
+    The name of the goal for which to show help. If unspecified, all goals will be displayed.
+   </div>
+   <ul>
+    <li><strong>Type</strong>: <code>java.lang.String</code></li>
+    <li><strong>Required</strong>: <code>report.plugin.goal.no</code></li>
+    <li><strong>User Property</strong>: <code>goal</code></li>
+   </ul>
+   <hr>
+  </section><a name="indentSize"></a>
+  <section>
+   <a name="indentSize"> </a>
+   <h4 id="indentSize"><a name="indentSize"></a><a name="a.3CindentSize.3E"></a>&lt;indentSize&gt;</h4><a name="a.3CindentSize.3E"></a>
+   <div>
+    The number of spaces per indentation level, should be positive.
+   </div>
+   <ul>
+    <li><strong>Type</strong>: <code>int</code></li>
+    <li><strong>Required</strong>: <code>report.plugin.goal.no</code></li>
+    <li><strong>User Property</strong>: <code>indentSize</code></li>
+    <li><strong>Default</strong>: <code>2</code></li>
+   </ul>
+   <hr>
+  </section><a name="lineLength"></a>
+  <section>
+   <a name="lineLength"> </a>
+   <h4 id="lineLength"><a name="lineLength"></a><a name="a.3ClineLength.3E"></a>&lt;lineLength&gt;</h4><a name="a.3ClineLength.3E"></a>
+   <div>
+    The maximum length of a display line, should be positive.
+   </div>
+   <ul>
+    <li><strong>Type</strong>: <code>int</code></li>
+    <li><strong>Required</strong>: <code>report.plugin.goal.no</code></li>
+    <li><strong>User Property</strong>: <code>lineLength</code></li>
+    <li><strong>Default</strong>: <code>80</code></li>
+   </ul>
+  </section>
+ </section>
 </section>
     </section>
 </main>
