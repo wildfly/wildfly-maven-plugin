@@ -31,7 +31,7 @@
     </parent>
     <groupId>org.wildfly.plugins</groupId>
     <artifactId>wildfly-maven-plugin-parent</artifactId>
-    <version>4.1.5.Final-SNAPSHOT</version>
+    <version>4.1.5.Final</version>
     <packaging>pom</packaging>
     <name>WildFly Maven Plugin - Parent</name>
 
