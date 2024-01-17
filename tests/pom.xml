@@ -27,7 +27,7 @@
     <parent>
         <groupId>org.wildfly.plugins</groupId>
         <artifactId>wildfly-maven-plugin-parent</artifactId>
-        <version>4.1.5.Final</version>
+        <version>4.1.6.Final-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
