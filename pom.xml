@@ -77,7 +77,7 @@
         <version.org.wildfly.common.wildfly-common>1.7.0.Final</version.org.wildfly.common.wildfly-common>
         <version.org.wildfly.plugin.tools>1.0.0.Beta3</version.org.wildfly.plugin.tools>
         <!-- This version property is also retrieved by plugin at runtime to resolve CLI artifact -->
-        <version.org.wildfly.core>23.0.1.Final</version.org.wildfly.core>
+        <version.org.wildfly.core>23.0.3.Final</version.org.wildfly.core>
         <version.org.wildfly>30.0.0.Final</version.org.wildfly>
         <version.org.wildfly.channel>1.0.5.Final</version.org.wildfly.channel>
         <version.org.wildfly.prospero>1.2.1.Final</version.org.wildfly.prospero>
