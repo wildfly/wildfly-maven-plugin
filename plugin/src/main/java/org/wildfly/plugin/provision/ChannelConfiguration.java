@@ -35,6 +35,8 @@ public class ChannelConfiguration {
 
     private ChannelManifestCoordinate manifest;
 
+    private boolean multipleManifest;
+
     /**
      * @return the manifest
      */
@@ -42,13 +44,19 @@ public class ChannelConfiguration {
         return manifest;
     }
 
-    void setManifest(ChannelManifestCoordinate manifest) {
+    public void setManifest(ChannelManifestCoordinate manifest) {
+        if (this.manifest != null) {
+            multipleManifest = true;
+        }
         this.manifest = manifest;
     }
 
     private void validate() throws MojoExecutionException {
         if (getManifest() == null) {
             throw new MojoExecutionException("Invalid Channel. No manifest specified.");
+        }
+        if (multipleManifest) {
+            throw new MojoExecutionException("Invalid Channel. More than one manifest has been set.");
         }
         ChannelManifestCoordinate coordinates = getManifest();
         if (coordinates.getUrl() == null && coordinates.getGroupId() == null && coordinates.getArtifactId() == null) {
