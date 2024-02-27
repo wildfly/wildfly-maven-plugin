@@ -119,6 +119,24 @@ public class ChannelConfigurationTestCase {
                 // XXX Expected.
             }
         }
+        {
+            try {
+                ChannelConfiguration configuration = new ChannelConfiguration();
+                ChannelManifestCoordinate coordinate = new ChannelManifestCoordinate();
+                Field grpId = ChannelMetadataCoordinate.class.getDeclaredField("groupId");
+                grpId.setAccessible(true);
+                grpId.set(coordinate, "org.example");
+                Field artId = ChannelMetadataCoordinate.class.getDeclaredField("artifactId");
+                artId.setAccessible(true);
+                artId.set(coordinate, "org.example");
+                configuration.setManifest(coordinate);
+                configuration.setManifest(coordinate);
+                configuration.toChannel(Collections.emptyList());
+                throw new Exception("Channel with multiple manifest is invalid");
+            } catch (MojoExecutionException ex) {
+                // XXX Expected.
+            }
+        }
     }
 
     @Test
