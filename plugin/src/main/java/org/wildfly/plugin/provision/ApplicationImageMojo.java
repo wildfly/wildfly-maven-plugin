@@ -30,7 +30,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -39,6 +41,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.wildfly.plugin.common.PropertyNames;
+import org.wildfly.plugin.core.Constants;
 
 /**
  * Build (and push) an application image containing the provisioned server and the deployment.
@@ -230,13 +233,27 @@ public class ApplicationImageMojo extends PackageServerMojo {
         }
 
         String targetName = getDeploymentTargetName();
-        Files.writeString(targetDir.resolve("Dockerfile"),
-                "FROM " + runtimeImage + "\n" +
-                        "COPY --chown=jboss:root " + jbossHome + " $JBOSS_HOME\n" +
-                        "RUN chmod -R ug+rwX $JBOSS_HOME\n" +
-                        "COPY --chown=jboss:root " + getDeploymentContent().getFileName()
-                        + " $JBOSS_HOME/standalone/deployments/" + targetName,
-                StandardCharsets.UTF_8);
+
+        // Create the Dockerfile content
+        final StringBuilder dockerfileContent = new StringBuilder();
+        dockerfileContent.append("FROM ").append(runtimeImage).append('\n')
+                .append("COPY --chown=jboss:root ").append(jbossHome).append(" $JBOSS_HOME\n")
+                .append("RUN chmod -R ug+rwX $JBOSS_HOME\n")
+                .append("COPY --chown=jboss:root ").append(getDeploymentContent().getFileName())
+                .append(" $JBOSS_HOME/standalone/deployments/").append(targetName);
+
+        final List<String> serverArgs = new ArrayList<>();
+        if (!layers.isEmpty() && !layersConfigurationFileName.equals(Constants.STANDALONE_XML)) {
+            serverArgs.add("-c=" + layersConfigurationFileName);
+        } else if (!serverConfig.equals(Constants.STANDALONE_XML)) {
+            serverArgs.add("-c=" + serverConfig);
+        }
+
+        if (!serverArgs.isEmpty()) {
+            dockerfileContent.append('\n').append("ENV SERVER_ARGS=\"").append(String.join(",", serverArgs)).append('"');
+        }
+
+        Files.writeString(targetDir.resolve("Dockerfile"), dockerfileContent, StandardCharsets.UTF_8);
     }
 
     private boolean isImageBinaryAvailable(String imageBinary) {
