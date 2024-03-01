@@ -1,0 +1,38 @@
+<!--
+~ Copyright The WildFly Authors
+~ SPDX-License-Identifier: Apache-2.0
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>testing</groupId>
+    <artifactId>testing</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <configuration>
+                    <feature-packs>
+                        <feature-pack>
+                            <location>wildfly@maven(org.jboss.universe:community-universe)#WF_VERSION</location>
+                        </feature-pack>
+                    </feature-packs>
+                    <layers>
+                        <layer>jaxrs-server</layer>
+                    </layers>
+                    <provisioning-dir>image-layers-server-config</provisioning-dir>
+                    <filename>test.war</filename>
+                    <image>
+                        <group>wildfly-image-layers-server-config-maven-plugin</group>
+                    </image>
+                    <layers-configuration-file-name>standalone-core.xml</layers-configuration-file-name>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
