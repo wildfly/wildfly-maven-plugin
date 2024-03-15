@@ -122,33 +122,37 @@ public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMo
     }
 
     protected Mojo lookupConfiguredMojo(File pom, String goal) throws Exception {
+        return lookupConfiguredMojo(pom.toPath(), goal);
+    }
+
+    protected Mojo lookupConfiguredMojo(final Path pom, final String goal) throws Exception {
         assertNotNull(pom);
-        assertTrue(pom.exists());
+        assertTrue(Files.exists(pom));
         patchPomFile(pom);
         ProjectBuildingRequest buildingRequest = newMavenSession().getProjectBuildingRequest();
         // Need to resolve artifacts for tests that upgrade server components
         buildingRequest.setResolveDependencies(true);
         ProjectBuilder projectBuilder = lookup(ProjectBuilder.class);
-        MavenProject project = projectBuilder.build(pom, buildingRequest).getProject();
+        MavenProject project = projectBuilder.build(pom.toFile(), buildingRequest).getProject();
 
         Mojo mojo = lookupConfiguredMojo(project, goal);
 
         // For some reasons, the configuration item gets ignored in lookupConfiguredMojo
         // explicitly configure it
-        configureMojo(mojo, artifactId, pom);
+        configureMojo(mojo, artifactId, pom.toFile());
 
         return mojo;
     }
 
-    private void patchPomFile(File pom) throws IOException {
+    private void patchPomFile(final Path pom) throws IOException {
         StringBuilder content = new StringBuilder();
-        for (String s : Files.readAllLines(pom.toPath())) {
+        for (String s : Files.readAllLines(pom)) {
             if (s.contains(TEST_REPLACE_WF_VERSION)) {
                 s = s.replace(TEST_REPLACE_WF_VERSION, System.getProperty(WILDFLY_VERSION));
             }
             content.append(s).append(System.lineSeparator());
         }
-        Files.write(pom.toPath(), content.toString().getBytes());
+        Files.write(pom, content.toString().getBytes());
     }
 
     @Before

@@ -116,9 +116,12 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
      * deployment. Defaults to 'standalone.xml'. If {@code layers-configuration-file-name} has been set,
      * this property is ignored and the deployment is deployed inside the configuration referenced from
      * {@code layers-configuration-file-name}.
+     * <p>
+     * The value of this parameter is also ignored if any layers are defined.
+     * </p>
      */
     @Parameter(property = PropertyNames.SERVER_CONFIG, alias = "server-config", defaultValue = STANDALONE_XML)
-    private String serverConfig;
+    String serverConfig;
 
     /**
      * Specifies the name used for the deployment.

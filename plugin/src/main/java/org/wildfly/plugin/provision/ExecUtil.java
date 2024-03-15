@@ -7,10 +7,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.maven.plugin.logging.Log;
+import org.wildfly.plugin.core.ConsoleConsumer;
 
 public class ExecUtil {
 
@@ -54,6 +56,18 @@ public class ExecUtil {
     }
 
     /**
+     * Execute the specified command from within the current directory.
+     *
+     * @param out     the output stream used to consume the console output
+     * @param command The command
+     * @param args    The command arguments
+     * @return true if commands where executed successfully
+     */
+    public static boolean exec(final OutputStream out, String command, String... args) {
+        return exec(out, new File("."), command, args);
+    }
+
+    /**
      * Execute silently the specified command until the given timeout from within the current directory.
      *
      * @param timeout The timeout
@@ -79,6 +93,28 @@ public class ExecUtil {
         try {
             Process process = startProcess(directory, command, args);
             new HandleOutput(process.getInputStream(), log).run();
+            process.waitFor();
+            return process.exitValue() == 0;
+        } catch (InterruptedException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Execute the specified command from within the specified directory.
+     * The method allows specifying an output filter that processes the command output.
+     *
+     * @param out       the output stream used to consume the console output
+     * @param directory The directory
+     * @param command   The command
+     * @param args      The command arguments
+     * @return true if commands where executed successfully
+     */
+    public static boolean exec(final OutputStream out, final File directory, final String command,
+            final String... args) {
+        try {
+            Process process = startProcess(directory, command, args);
+            ConsoleConsumer.start(process.getInputStream(), out);
             process.waitFor();
             return process.exitValue() == 0;
         } catch (InterruptedException e) {
