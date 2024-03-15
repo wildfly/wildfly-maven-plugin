@@ -72,6 +72,16 @@
             <artifactId>maven-resolver-util</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>jakarta.json</groupId>
+            <artifactId>jakarta.json-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency> <!-- json-p ri -->
+            <groupId>org.eclipse.parsson</groupId>
+            <artifactId>parsson</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <!-- to fix slf4j warning when provisioning -->
         <dependency>
@@ -94,6 +104,18 @@
                 <artifactId>maven-deploy-plugin</artifactId>
                 <configuration>
                     <skip>true</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Some tests cannot run more than one MOJO invocation in the same JVM. Some of the configuration
+                         settings, for some reason, do not get reset. For example, in the image tests, the provisioningDir
+                         property is always set to the first one that is executed. For this reason, we need to launch
+                         each test in a new JVM. -->
+                    <forkCount>1</forkCount>
+                    <reuseForks>false</reuseForks>
                 </configuration>
             </plugin>
         </plugins>
