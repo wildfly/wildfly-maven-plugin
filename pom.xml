@@ -79,7 +79,7 @@
         <!-- This version property is also retrieved by plugin at runtime to resolve CLI artifact -->
         <version.org.wildfly.core>23.0.1.Final</version.org.wildfly.core>
         <version.org.wildfly>30.0.0.Final</version.org.wildfly>
-        <version.org.wildfly.channel>1.0.5.Final</version.org.wildfly.channel>
+        <version.org.wildfly.channel>1.1.0.Final</version.org.wildfly.channel>
         <version.org.wildfly.prospero>1.2.1.Final</version.org.wildfly.prospero>
         <!-- maven dependencies -->
         <version.javax.inject.javax.inject>1</version.javax.inject.javax.inject>
