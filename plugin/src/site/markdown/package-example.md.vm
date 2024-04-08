@@ -49,6 +49,44 @@ The example below shows how to produce the latest released ${appServerName} serv
 </project>
 ```
 
+#[[##]]# Galleon options
+
+You have the ability to set some optional Galleon options when provisioning a WildFly Server.
+Galleon options are documented in the [Galleon documentation](http://docs.wildfly.org/galleon/#_built_in_and_product_specific_options) and 
+in the WildFly Galleon plugins [documentation](http://docs.wildfly.org/galleon-plugins/#_galleon_plugins).
+
+Galleon options usage example:
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    ...
+                    <galleon-options>
+                        <!-- Provision a WildFly server that includes features and modules at the preview stability level
+                        <stability-level>preview</stability-level>
+                        <!-- Fork the Galleon provisioning in a separate process -->
+                        <jboss-fork-embedded>true</jboss-fork-embedded>
+                    </galleon-options>
+                </configuration>
+                ...
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```
+
 #[[##]]# Fine tune server configuration and package extra content
 
 The example below shows how to configure the plugin goal to execute CLI commands and copy extra content inside the installed server: 
