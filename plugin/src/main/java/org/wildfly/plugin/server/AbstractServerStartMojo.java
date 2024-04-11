@@ -22,7 +22,7 @@ import org.wildfly.plugin.common.Environment;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.Utils;
 import org.wildfly.plugin.tools.GalleonUtils;
-import org.wildfly.plugin.tools.ServerHelper;
+import org.wildfly.plugin.tools.server.ServerManager;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
@@ -95,7 +95,7 @@ public abstract class AbstractServerStartMojo extends AbstractStartMojo {
     protected Path getServerHome() throws MojoExecutionException, MojoFailureException {
         // Validate the environment
         final Path jbossHome = provisionIfRequired(targetDir.toPath().resolve(provisioningDir));
-        if (!ServerHelper.isValidHomeDirectory(jbossHome)) {
+        if (!ServerManager.isValidHomeDirectory(jbossHome)) {
             throw new MojoExecutionException(String.format("JBOSS_HOME '%s' is not a valid directory.", jbossHome));
         }
         return jbossHome;

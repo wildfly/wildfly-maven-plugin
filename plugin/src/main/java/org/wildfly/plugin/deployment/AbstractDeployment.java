@@ -19,10 +19,10 @@ import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
+import org.wildfly.plugin.tools.ContainerDescription;
 import org.wildfly.plugin.tools.Deployment;
 import org.wildfly.plugin.tools.DeploymentManager;
 import org.wildfly.plugin.tools.DeploymentResult;
-import org.wildfly.plugin.tools.ServerHelper;
 
 /**
  * The default implementation for executing build plans on the server.
@@ -87,7 +87,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
         try (
                 ModelControllerClient client = createClient();
                 MavenModelControllerClientConfiguration configuration = getClientConfiguration()) {
-            final boolean isDomain = ServerHelper.getContainerDescription(client).isDomain();
+            final boolean isDomain = ContainerDescription.lookup(client).isDomain();
             validate(isDomain);
             // Deploy the deployment
             getLog().debug("Executing deployment");

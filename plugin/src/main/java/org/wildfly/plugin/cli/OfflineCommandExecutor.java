@@ -16,7 +16,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.wildfly.core.launcher.CliCommandBuilder;
 import org.wildfly.plugin.common.StandardOutput;
-import org.wildfly.plugin.tools.ServerHelper;
+import org.wildfly.plugin.tools.server.ServerManager;
 
 /**
  * A command executor for executing offline CLI commands.
@@ -39,7 +39,7 @@ public class OfflineCommandExecutor extends AbstractCommandExecutor<BaseCommandC
     @Override
     public void execute(final BaseCommandConfiguration config, MavenRepoManager artifactResolver)
             throws MojoFailureException, MojoExecutionException {
-        if (!ServerHelper.isValidHomeDirectory(config.getJBossHome())) {
+        if (!ServerManager.isValidHomeDirectory(config.getJBossHome())) {
             throw new MojoFailureException("Invalid JBoss Home directory is not valid: " + config.getJBossHome());
         }
         executeInNewProcess(config);

@@ -13,6 +13,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.inject.Inject;
 
@@ -35,7 +38,7 @@ import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.Utils;
 import org.wildfly.plugin.core.MavenRepositoriesEnricher;
-import org.wildfly.plugin.tools.ServerHelper;
+import org.wildfly.plugin.tools.server.ServerManager;
 
 /**
  * Execute commands to the running WildFly Application Server.
@@ -246,13 +249,14 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
         // Check the server state if we're not in offline mode
         if (!offline) {
             try (ModelControllerClient client = createClient()) {
-                final String serverState = ServerHelper.serverState(client);
+                final String serverState = ServerManager.builder().client(client).build().get(timeout, TimeUnit.SECONDS)
+                        .serverState();
                 if (!ClientConstants.CONTROLLER_PROCESS_STATE_RUNNING.equals(serverState)) {
                     getLog().warn(String.format(
                             "The server may be in an unexpected state for further interaction. The current state is %s",
                             serverState));
                 }
-            } catch (IOException e) {
+            } catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
                 final Log log = getLog();
                 log.warn(String.format(
                         "Failed to determine the server-state. The server may be in an unexpected state. Failure: %s",

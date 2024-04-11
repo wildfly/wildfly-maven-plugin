@@ -21,7 +21,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.wildfly.plugin.tests.AbstractWildFlyMojoTest;
 import org.wildfly.plugin.tests.TestEnvironment;
-import org.wildfly.plugin.tools.ServerHelper;
+import org.wildfly.plugin.tools.server.ServerManager;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
@@ -32,21 +32,17 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
     public void shutdown() throws Exception {
         // Ensure the server is shutdown
         try (ModelControllerClient client = createClient()) {
-            boolean isDomain;
-            try {
-                isDomain = ServerHelper.getContainerDescription(client).isDomain();
-            } catch (Exception ignore) {
-                isDomain = false;
+            ServerManager serverManager = ServerManager.builder()
+                    .client(client)
+                    .standalone();
+            if (serverManager.isRunning()) {
+                serverManager.shutdown();
             }
-            // Ensure we shutdown the server
-            if (isDomain) {
-                if (ServerHelper.isDomainRunning(client)) {
-                    ServerHelper.shutdownDomain(client);
-                }
-            } else {
-                if (ServerHelper.isStandaloneRunning(client)) {
-                    ServerHelper.shutdownStandalone(client);
-                }
+            serverManager = ServerManager.builder()
+                    .client(client)
+                    .domain();
+            if (serverManager.isRunning()) {
+                serverManager.shutdown();
             }
         }
     }
@@ -56,10 +52,11 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
         final StartMojo mojo = getStartMojo();
         mojo.execute();
         try (ModelControllerClient client = createClient()) {
+            final ServerManager serverManager = ServerManager.builder().client(client).standalone();
             // Verify the server is running
-            Assert.assertTrue("The start goal did not start the server.", ServerHelper.isStandaloneRunning(client));
+            Assert.assertTrue("The start goal did not start the server.", serverManager.isRunning());
             Assert.assertFalse("This should be a standalone server, but found a domain server.",
-                    ServerHelper.getContainerDescription(client).isDomain());
+                    serverManager.containerDescription().isDomain());
         }
     }
 
@@ -69,16 +66,18 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
         final StartMojo startMojo = getStartMojo();
         startMojo.execute();
         try (ModelControllerClient client = createClient()) {
+            final ServerManager serverManager = ServerManager.builder().client(client).standalone();
             // Verify the server is running
-            Assert.assertTrue("The start goal did not start the server.", ServerHelper.isStandaloneRunning(client));
+            Assert.assertTrue("The start goal did not start the server.", serverManager.isRunning());
         }
 
         // Look up the stop mojo and attempt to stop
         final ShutdownMojo stopMojo = lookupMojoAndVerify("shutdown", "shutdown-pom.xml");
         stopMojo.execute();
         try (ModelControllerClient client = createClient()) {
+            final ServerManager serverManager = ServerManager.builder().client(client).standalone();
             // Verify the server is running
-            Assert.assertFalse("The start goal did not start the server.", ServerHelper.isStandaloneRunning(client));
+            Assert.assertFalse("The start goal did not start the server.", serverManager.isRunning());
         }
     }
 
@@ -90,8 +89,9 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
         setValue(mojo, "addUser", createAddUsers("admin:admin.1234:admin", "user:user.1234:user,mgmt::true"));
         mojo.execute();
         try (ModelControllerClient client = createClient()) {
+            final ServerManager serverManager = ServerManager.builder().client(client).standalone();
             // Verify the server is running
-            Assert.assertTrue("The start goal did not start the server.", ServerHelper.isStandaloneRunning(client));
+            Assert.assertTrue("The start goal did not start the server.", serverManager.isRunning());
         }
 
         final Path standaloneConfigDir = TestEnvironment.WILDFLY_HOME.resolve("standalone").resolve("configuration");
@@ -124,10 +124,11 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
         final StartMojo mojo = getStartMojo("start-domain-pom.xml");
         mojo.execute();
         try (DomainClient client = DomainClient.Factory.create(createClient())) {
+            final ServerManager serverManager = ServerManager.builder().client(client).domain();
             // Verify the server is running
-            Assert.assertTrue("The start goal did not start the server.", ServerHelper.isDomainRunning(client));
+            Assert.assertTrue("The start goal did not start the server.", serverManager.isRunning());
             Assert.assertTrue("This should be a domain server server, but found a standalone server.",
-                    ServerHelper.getContainerDescription(client).isDomain());
+                    serverManager.containerDescription().isDomain());
         }
     }
 
@@ -137,16 +138,18 @@ public class ServerFunctionMojoTest extends AbstractWildFlyMojoTest {
         final StartMojo startMojo = getStartMojo("start-domain-pom.xml");
         startMojo.execute();
         try (DomainClient client = DomainClient.Factory.create(createClient())) {
+            final ServerManager serverManager = ServerManager.builder().client(client).domain();
             // Verify the server is running
-            Assert.assertTrue("The start goal did not start the server.", ServerHelper.isDomainRunning(client));
+            Assert.assertTrue("The start goal did not start the server.", serverManager.isRunning());
         }
 
         // Look up the stop mojo and attempt to stop
         final ShutdownMojo stopMojo = lookupMojoAndVerify("shutdown", "shutdown-pom.xml");
         stopMojo.execute();
         try (DomainClient client = DomainClient.Factory.create(createClient())) {
+            final ServerManager serverManager = ServerManager.builder().client(client).domain();
             // Verify the server is running
-            Assert.assertFalse("The start goal did not start the server.", ServerHelper.isDomainRunning(client));
+            Assert.assertFalse("The start goal did not start the server.", serverManager.isRunning());
         }
     }
 
