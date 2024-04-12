@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.maven.execution.MavenSession;
@@ -25,7 +25,6 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.as.controller.client.helpers.Operations;
-import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.jboss.galleon.maven.plugin.util.MavenArtifactRepositoryManager;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.wildfly.core.launcher.CommandBuilder;
@@ -34,7 +33,7 @@ import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.StandardOutput;
 import org.wildfly.plugin.core.MavenRepositoriesEnricher;
-import org.wildfly.plugin.tools.ServerHelper;
+import org.wildfly.plugin.tools.server.ServerManager;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
@@ -133,6 +132,7 @@ public abstract class AbstractStartMojo extends AbstractServerConnection {
 
     private final AtomicBoolean initialized = new AtomicBoolean();
 
+    protected ServerManager serverManager;
     protected MavenRepoManager mavenRepoManager;
 
     protected void init() throws MojoExecutionException {
@@ -161,7 +161,7 @@ public abstract class AbstractStartMojo extends AbstractServerConnection {
             // Create the server and close the client after the start. The process will continue running even after
             // the maven process may have been finished
             try (ModelControllerClient client = createClient()) {
-                if (ServerHelper.isStandaloneRunning(client) || ServerHelper.isDomainRunning(client)) {
+                if (ServerManager.isRunning(client)) {
                     throw new MojoExecutionException(String.format("%s server is already running?", serverType));
                 }
                 final CommandBuilder commandBuilder = createCommandBuilder(server);
@@ -174,13 +174,16 @@ public abstract class AbstractStartMojo extends AbstractServerConnection {
                 out.getRedirect().ifPresent(launcher::redirectOutput);
 
                 final Process process = launcher.launch();
+                if (serverType == ServerType.DOMAIN) {
+                    serverManager = ServerManager.builder().process(process).client(client).domain();
+                } else {
+                    serverManager = ServerManager.builder().process(process).client(client).standalone();
+                }
                 // Note that if this thread is started and no shutdown goal is executed this stop the stdout and stderr
                 // from being logged any longer. The user was warned in the documentation.
                 out.startConsumer(process);
-                if (serverType == ServerType.DOMAIN) {
-                    ServerHelper.waitForDomain(process, DomainClient.Factory.create(client), startupTimeout);
-                } else {
-                    ServerHelper.waitForStandalone(process, client, startupTimeout);
+                if (!serverManager.waitFor(startupTimeout, TimeUnit.SECONDS)) {
+                    throw new MojoExecutionException(String.format("Server failed to start in %s seconds.", startupTimeout));
                 }
                 if (!process.isAlive()) {
                     throw new MojoExecutionException("The process has been terminated before the start goal has completed.");
@@ -245,17 +248,19 @@ public abstract class AbstractStartMojo extends AbstractServerConnection {
      */
     protected ServerContext actOnServerState(final ModelControllerClient client, final ServerContext context)
             throws IOException, MojoExecutionException, MojoFailureException {
-        final String serverState = ServerHelper.serverState(client);
+        final String serverState = serverManager.serverState();
         if (ClientConstants.CONTROLLER_PROCESS_STATE_RESTART_REQUIRED.equals(serverState)) {
             // Shutdown the server
-            ServerHelper.shutdownStandalone(client, timeout);
+            serverManager.shutdown(timeout);
             // Restart the server process
             return startServer(ServerType.STANDALONE);
         } else if (ClientConstants.CONTROLLER_PROCESS_STATE_RELOAD_REQUIRED.equals(serverState)) {
-            ServerHelper.executeReload(client, Operations.createOperation("reload"));
+            serverManager.executeReload(Operations.createOperation("reload"));
             try {
-                ServerHelper.waitForStandalone(context.process(), client, timeout);
-            } catch (InterruptedException | TimeoutException e) {
+                if (!serverManager.waitFor(startupTimeout, TimeUnit.SECONDS)) {
+                    throw new MojoExecutionException(String.format("Server failed to start in %s seconds.", startupTimeout));
+                }
+            } catch (InterruptedException e) {
                 throw new MojoExecutionException("Failed to wait for standalone server after a reload.", e);
             }
         } else if (!ClientConstants.CONTROLLER_PROCESS_STATE_RUNNING.equals(serverState)) {

@@ -93,9 +93,10 @@ import org.wildfly.plugin.tools.DeploymentManager;
 import org.wildfly.plugin.tools.DeploymentResult;
 import org.wildfly.plugin.tools.GalleonUtils;
 import org.wildfly.plugin.tools.PluginProgressTracker;
-import org.wildfly.plugin.tools.ServerHelper;
 import org.wildfly.plugin.tools.UndeployDescription;
 import org.wildfly.plugin.tools.VersionComparator;
+import org.wildfly.plugin.tools.server.ServerManager;
+import org.wildfly.plugin.tools.server.StandaloneManager;
 
 /**
  * Starts a standalone instance of WildFly and deploys the application to the server. The deployment type must be a WAR.
@@ -450,11 +451,12 @@ public class DevMojo extends AbstractServerStartMojo {
                 }
                 registerDir(watcher, resolveWebAppSourceDir(), new WebAppResourceHandler(webExtensions));
                 try (ModelControllerClient client = createClient()) {
-                    if (!ServerHelper.isStandaloneRunning(client)) {
+                    final StandaloneManager serverManager = ServerManager.builder().client(client).standalone();
+                    if (!serverManager.isRunning()) {
                         throw new MojoExecutionException("No standalone server appears to be running.");
                     }
                     if (remote) {
-                        final ContainerDescription description = ServerHelper.getContainerDescription(client);
+                        final ContainerDescription description = ContainerDescription.lookup(client);
                         getLog().info(String.format("Deploying to remote %s container.", description));
                     }
                     // Execute commands before the deployment is done
@@ -478,7 +480,7 @@ public class DevMojo extends AbstractServerStartMojo {
                         context = actOnServerState(client, context);
                     }
 
-                    final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
+                    final DeploymentManager deploymentManager = serverManager.deploymentManager();
                     final Deployment deployment = getDeploymentContent();
                     try {
                         final DeploymentResult result = deploymentManager.forceDeploy(deployment);
@@ -486,12 +488,12 @@ public class DevMojo extends AbstractServerStartMojo {
                             throw new MojoExecutionException("Failed to deploy content: " + result.getFailureMessage());
                         }
                         if (remote) {
-                            getLog().info(String.format("Deployed %s", deployment.toString()));
+                            getLog().info(String.format("Deployed %s", deployment));
                         }
                         watch(watcher, deploymentManager, deployment);
                     } finally {
                         deploymentManager.undeploy(UndeployDescription.of(deployment));
-                        ServerHelper.shutdownStandalone(client);
+                        serverManager.shutdown();
                     }
                 }
             } catch (IOException e) {
@@ -594,7 +596,7 @@ public class DevMojo extends AbstractServerStartMojo {
         }
         debug("Changes in layers detected, must re-provision the server");
         try (ModelControllerClient client = createClient()) {
-            ServerHelper.shutdownStandalone(client);
+            ServerManager.builder().client(client).standalone().shutdown();
             debug("Deleting existing installation " + installDir);
             IoUtils.recursiveDelete(installDir);
         }

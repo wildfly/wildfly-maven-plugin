@@ -12,6 +12,9 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -23,7 +26,7 @@ import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.wildfly.core.launcher.CliCommandBuilder;
 import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.StandardOutput;
-import org.wildfly.plugin.tools.ServerHelper;
+import org.wildfly.plugin.tools.server.ServerManager;
 
 /**
  * A command executor for executing CLI commands.
@@ -48,7 +51,7 @@ public class CommandExecutor extends AbstractCommandExecutor<CommandConfiguratio
             throws MojoFailureException, MojoExecutionException {
         if (config.isOffline()) {
             // The jbossHome is required for offline CLI
-            if (!ServerHelper.isValidHomeDirectory(config.getJBossHome())) {
+            if (!ServerManager.isValidHomeDirectory(config.getJBossHome())) {
                 throw new MojoFailureException("Invalid JBoss Home directory is not valid: " + config.getJBossHome());
             }
             executeInNewProcess(config);
@@ -65,7 +68,13 @@ public class CommandExecutor extends AbstractCommandExecutor<CommandConfiguratio
         }
         if (config.isAutoReload()) {
             // Reload the server if required
-            ServerHelper.reloadIfRequired(config.getClient(), config.getTimeout());
+            try {
+                ServerManager.builder().client(config.getClient()).build().get(config.getTimeout(), TimeUnit.SECONDS)
+                        .reloadIfRequired(config.getTimeout(),
+                                TimeUnit.SECONDS);
+            } catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
+                throw new MojoExecutionException("Failed to reload server", e);
+            }
         }
     }
 
@@ -89,7 +98,7 @@ public class CommandExecutor extends AbstractCommandExecutor<CommandConfiguratio
     private void executeInProcess(final CommandConfiguration config, MavenRepoManager artifactResolver) throws Exception {
         // The jbossHome is not required, but if defined should be valid
         final Path jbossHome = config.getJBossHome();
-        if (jbossHome != null && !ServerHelper.isValidHomeDirectory(jbossHome)) {
+        if (jbossHome != null && !ServerManager.isValidHomeDirectory(jbossHome)) {
             throw new MojoFailureException("Invalid JBoss Home directory is not valid: " + jbossHome);
         }
         final Properties currentSystemProperties = System.getProperties();

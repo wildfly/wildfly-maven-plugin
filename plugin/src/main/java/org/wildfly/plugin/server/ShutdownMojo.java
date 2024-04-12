@@ -13,11 +13,10 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.jboss.as.controller.client.helpers.domain.DomainClient;
 import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.ServerOperations;
-import org.wildfly.plugin.tools.ServerHelper;
+import org.wildfly.plugin.tools.server.ServerManager;
 
 /**
  * Shuts down a running WildFly Application Server.
@@ -51,27 +50,26 @@ public class ShutdownMojo extends AbstractServerConnection {
             return;
         }
         try (ModelControllerClient client = createClient()) {
-            if (ServerHelper.getContainerDescription(client).isDomain()) {
+            if (ServerManager.isRunning(client)) {
+                final ServerManager serverManager = ServerManager.builder().client(client).build().get(timeout,
+                        TimeUnit.SECONDS);
                 if (reload) {
-                    client.execute(ServerOperations.createOperation("reload-servers"));
-                    ServerHelper.waitForDomain(client, timeout);
+                    if (serverManager.containerDescription().isDomain()) {
+                        client.execute(ServerOperations.createOperation("reload-servers"));
+                    } else {
+                        client.execute(ServerOperations.createOperation(ServerOperations.RELOAD));
+                    }
+                    serverManager.waitFor(timeout, TimeUnit.SECONDS);
                 } else {
-                    ServerHelper.shutdownDomain(DomainClient.Factory.create(client));
+                    serverManager.shutdown();
                 }
-            } else {
-                if (reload) {
-                    client.execute(ServerOperations.createOperation(ServerOperations.RELOAD));
-                    ServerHelper.waitForStandalone(client, timeout);
-                } else {
-                    ServerHelper.shutdownStandalone(client);
+                // Bad hack to get maven to complete it's message output
+                try {
+                    TimeUnit.MILLISECONDS.sleep(500L);
+                } catch (InterruptedException ignore) {
+                    ignore.printStackTrace();
+                    // no-op
                 }
-            }
-            // Bad hack to get maven to complete it's message output
-            try {
-                TimeUnit.MILLISECONDS.sleep(500L);
-            } catch (InterruptedException ignore) {
-                ignore.printStackTrace();
-                // no-op
             }
         } catch (IOException e) {
             throw new MojoExecutionException(String.format("Please make sure a server is running before executing goal " +

@@ -6,17 +6,20 @@
 package org.wildfly.plugin.server;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.helpers.domain.DomainClient;
+import org.junit.Assert;
 import org.wildfly.core.launcher.DomainCommandBuilder;
 import org.wildfly.core.launcher.Launcher;
 import org.wildfly.core.launcher.ProcessHelper;
 import org.wildfly.plugin.tests.TestEnvironment;
 import org.wildfly.plugin.tools.ConsoleConsumer;
 import org.wildfly.plugin.tools.DeploymentManager;
-import org.wildfly.plugin.tools.ServerHelper;
+import org.wildfly.plugin.tools.server.DomainManager;
+import org.wildfly.plugin.tools.server.ServerManager;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
@@ -29,6 +32,7 @@ public class DomainTestServer implements TestServer {
     private volatile Thread shutdownThread;
     private volatile Thread consoleConsumer;
     private volatile DomainClient client;
+    private volatile DomainManager serverManager;
     private volatile DeploymentManager deploymentManager;
 
     @Override
@@ -51,7 +55,10 @@ public class DomainTestServer implements TestServer {
                 client = DomainClient.Factory
                         .create(ModelControllerClient.Factory.create(TestEnvironment.HOSTNAME, TestEnvironment.PORT));
                 currentProcess = process;
-                ServerHelper.waitForDomain(process, client, TestEnvironment.TIMEOUT);
+                serverManager = ServerManager.builder().process(process).client(client).domain();
+                if (!serverManager.waitFor(TestEnvironment.TIMEOUT, TimeUnit.SECONDS)) {
+                    Assert.fail(String.format("Server did not start withing %d seconds.", TestEnvironment.TIMEOUT));
+                }
                 deploymentManager = DeploymentManager.Factory.create(client);
             } catch (Throwable t) {
                 try {
@@ -76,7 +83,7 @@ public class DomainTestServer implements TestServer {
             } catch (Exception ignore) {
             }
             if (STARTED.compareAndSet(true, false)) {
-                ServerHelper.shutdownDomain(client);
+                serverManager.shutdown();
             }
             final Thread consoleConsumer = this.consoleConsumer;
             if (consoleConsumer != null) {

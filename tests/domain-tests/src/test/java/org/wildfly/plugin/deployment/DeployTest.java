@@ -26,8 +26,8 @@ import org.junit.Test;
 import org.wildfly.plugin.common.ServerOperations;
 import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
 import org.wildfly.plugin.tools.DeploymentManager;
-import org.wildfly.plugin.tools.ServerHelper;
 import org.wildfly.plugin.tools.UndeployDescription;
+import org.wildfly.plugin.tools.server.ServerManager;
 
 /**
  * deploy mojo testcase.
@@ -79,7 +79,8 @@ public class DeployTest extends AbstractWildFlyServerMojoTest {
         if (deploymentManager.hasDeployment(DEPLOYMENT_NAME, DEFAULT_SERVER_GROUP)) {
             deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME).addServerGroups(DEFAULT_SERVER_GROUPS));
         }
-        final ModelNode address = ServerHelper.determineHostAddress(client).add("server-config").add("server-one");
+        final ModelNode address = ServerManager.builder().client(client).domain().determineHostAddress().add("server-config")
+                .add("server-one");
         try {
             // Shutdown server-one
             final ModelNode op = ServerOperations.createOperation("stop", address);

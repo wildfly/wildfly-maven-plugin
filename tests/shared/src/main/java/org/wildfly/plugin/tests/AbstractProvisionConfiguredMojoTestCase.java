@@ -57,8 +57,8 @@ import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.wildfly.core.launcher.ProcessHelper;
-import org.wildfly.plugin.tools.ServerHelper;
 import org.wildfly.plugin.tools.bootablejar.BootableJarSupport;
+import org.wildfly.plugin.tools.server.ServerManager;
 
 /**
  * A class to construct a properly configured MOJO.
@@ -362,8 +362,9 @@ public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMo
     private static void shutdown() throws IOException {
         try (ModelControllerClient client = ModelControllerClient.Factory.create(TestEnvironment.HOSTNAME,
                 TestEnvironment.PORT)) {
-            if (ServerHelper.isStandaloneRunning(client)) {
-                ServerHelper.shutdownStandalone(client, (int) TestEnvironment.TIMEOUT);
+            final ServerManager serverManager = ServerManager.builder().client(client).standalone();
+            if (serverManager.isRunning()) {
+                serverManager.shutdown(TestEnvironment.TIMEOUT);
             }
         }
     }
@@ -380,8 +381,9 @@ public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMo
             // Check the server state in all cases. All test cases are provisioning the manager layer.
             try (ModelControllerClient client = ModelControllerClient.Factory.create(TestEnvironment.HOSTNAME,
                     TestEnvironment.PORT)) {
+                final ServerManager serverManager = ServerManager.builder().client(client).standalone();
                 // Wait for the server to start, this calls into the management interface.
-                ServerHelper.waitForStandalone(process, client, TestEnvironment.TIMEOUT);
+                serverManager.waitFor(TestEnvironment.TIMEOUT, TimeUnit.SECONDS);
             }
 
             if (url == null) {

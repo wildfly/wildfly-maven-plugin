@@ -22,7 +22,8 @@ import org.wildfly.plugin.common.AbstractServerConnection;
 import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.ServerOperations;
-import org.wildfly.plugin.tools.ServerHelper;
+import org.wildfly.plugin.tools.ContainerDescription;
+import org.wildfly.plugin.tools.server.ServerManager;
 
 /**
  * Adds a resource
@@ -94,7 +95,7 @@ public class AddResourceMojo extends AbstractServerConnection {
             return;
         }
         // Validate the home directory if required
-        if (jbossHome != null && !ServerHelper.isValidHomeDirectory(jbossHome)) {
+        if (jbossHome != null && !ServerManager.isValidHomeDirectory(jbossHome)) {
             throw new MojoFailureException("Invalid JBoss Home directory is not valid: " + jbossHome);
         }
         try (
@@ -113,7 +114,7 @@ public class AddResourceMojo extends AbstractServerConnection {
     private void processResources(final ModelControllerClient client,
             final MavenModelControllerClientConfiguration configuration, final Resource... resources) throws IOException {
         final Collection<String> profiles = getProfiles();
-        final boolean isDomain = ServerHelper.getContainerDescription(client).isDomain();
+        final boolean isDomain = ContainerDescription.lookup(client).isDomain();
         for (Resource resource : resources) {
             if (isDomain && profiles.isEmpty()) {
                 throw new IllegalStateException("Cannot add resources when no profiles were defined.");
