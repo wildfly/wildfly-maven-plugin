@@ -23,7 +23,7 @@ import org.wildfly.channel.Repository;
  * @author jdenise
  */
 public class ChannelConfiguration {
-    private static final Pattern FILE_MATCHER = Pattern.compile("^(file|http|https)://.*");
+    private static final Pattern FILE_MATCHER = Pattern.compile("^(file:|http://|https://).*");
 
     private ChannelManifestCoordinate manifest;
 
