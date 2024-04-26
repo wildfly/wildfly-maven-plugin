@@ -21,7 +21,9 @@ import java.net.URL;
 import java.util.Collections;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.junit.Assert;
 import org.junit.Test;
+import org.wildfly.channel.Channel;
 import org.wildfly.channel.ChannelManifestCoordinate;
 import org.wildfly.channel.ChannelMetadataCoordinate;
 
@@ -190,6 +192,33 @@ public class ChannelConfigurationTestCase {
             url.set(coordinate, new URL("http://org.example"));
             configuration.setManifest(coordinate);
             configuration.toChannel(Collections.emptyList());
+        }
+    }
+
+    @Test
+    public void testFileUrl() throws Exception {
+        {
+            // Make sure that the notation "file:relative/path" is handled like a file URL, rather than a Maven G:A.
+
+            String url = "file:path/to/manifest.yaml";
+            ChannelConfiguration configuration = new ChannelConfiguration();
+            configuration.set(url);
+            Channel channel = configuration.toChannel(Collections.emptyList());
+
+            Assert.assertNotNull(channel.getManifestCoordinate().getUrl());
+            Assert.assertEquals(url, channel.getManifestCoordinate().getUrl().toExternalForm());
+        }
+
+        {
+            // The notation "file://relative/path" should still be handled like a file URL too.
+
+            String url = "file://path/to/manifest.yaml";
+            ChannelConfiguration configuration = new ChannelConfiguration();
+            configuration.set(url);
+            Channel channel = configuration.toChannel(Collections.emptyList());
+
+            Assert.assertNotNull(channel.getManifestCoordinate().getUrl());
+            Assert.assertEquals(url, channel.getManifestCoordinate().getUrl().toExternalForm());
         }
     }
 }

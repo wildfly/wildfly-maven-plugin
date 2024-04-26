@@ -338,8 +338,39 @@ public class DevMojo extends AbstractServerStartMojo {
 
     /**
      * A list of channels used for resolving artifacts while provisioning.
+     * <p>
+     * Defining a channel:
+     *
+     * <pre>
+     * &lt;channels&gt;
+     *     &lt;channel&gt;
+     *         &lt;manifest&gt;
+     *             &lt;groupId&gt;org.wildfly.channels&lt;/groupId&gt;
+     *             &lt;artifactId&gt;wildfly-30.0&lt;/artifactId&gt;
+     *         &lt;/manifest&gt;
+     *     &lt;/channel&gt;
+     *     &lt;channel&gt;
+     *         &lt;manifest&gt;
+     *             &lt;url&gt;https://example.example.org/channel/30&lt;/url&gt;
+     *         &lt;/manifest&gt;
+     *     &lt;/channel&gt;
+     * &lt;/channels&gt;
+     * </pre>
+     * </p>
+     * <p>
+     * The {@code wildfly.channels} property can be used pass a comma delimited string for the channels. The channel
+     * can be a URL or a Maven GAV. If a Maven GAV is used, the groupId and artifactId are required.
+     * <br>
+     * Examples:
+     *
+     * <pre>
+     *     -Dwildfly.channels=&quot;https://channels.example.org/30&quot;
+     *     -Dwildfly.channels=&quot;https://channels.example.org/30,org.example.channel:updates-30&quot;
+     *     -Dwildfly.channels=&quot;https://channels.example.org/30,org.example.channel:updates-30:1.0.2&quot;
+     * </pre>
+     * </p>
      */
-    @Parameter(alias = "channels")
+    @Parameter(property = PropertyNames.CHANNELS)
     private List<ChannelConfiguration> channels;
 
     /**
@@ -441,7 +472,7 @@ public class DevMojo extends AbstractServerStartMojo {
 
     @Override
     protected MavenRepoManager createMavenRepoManager() throws MojoExecutionException {
-        if (channels == null) {
+        if (channels == null || channels.isEmpty()) {
             return offlineProvisioning ? new MavenArtifactRepositoryManager(repoSystem, session)
                     : new MavenArtifactRepositoryManager(repoSystem, session, repositories);
         } else {
