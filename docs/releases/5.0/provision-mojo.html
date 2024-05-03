@@ -134,34 +134,22 @@
      <td><code>List&lt;ChannelConfiguration&gt;</code></td>
      <td><code>-</code></td>
      <td>A list of channels used for resolving artifacts while provisioning. <p>Defining a channel:</p> <pre class="border shadow rounded">
-       <channels>
-    
-        <channel>
-        
-         <manifest>
-            
-          <groupid>org.wildfly.channels
-          </groupid>
-            
-          <artifactid>wildfly-30.0
-          </artifactid>
-        
-         </manifest>
-    
-        </channel>
-    
-        <channel>
-        
-         <manifest>
-            
-          <url>https://example.example.org/channel/30
-          </url>
-        
-         </manifest>
-    
-        </channel>
-
-       </channels>
+       &lt;channels&gt;
+        &lt;channel&gt;
+         &lt;manifest&gt;
+          &lt;groupid&gt;org.wildfly.channels
+          &lt;/groupid&gt;
+          &lt;artifactid&gt;wildfly-30.0
+          &lt;/artifactid&gt;
+         &lt;/manifest&gt;
+        &lt;/channel&gt;
+        &lt;channel&gt;
+         &lt;manifest&gt;
+          &lt;url&gt;https://example.example.org/channel/30
+          &lt;/url&gt;
+         &lt;/manifest&gt;
+        &lt;/channel&gt;
+       &lt;/channels&gt;
 </pre> <p></p> <p>The <code>wildfly.channels</code> property can be used pass a comma delimited string for the channels. The channel can be a URL or a Maven GAV. If a Maven GAV is used, the groupId and artifactId are required. <br> Examples:</p> <pre class="border shadow rounded">    -Dwildfly.channels="https://channels.example.org/30"
     -Dwildfly.channels="https://channels.example.org/30,org.example.channel:updates-30"
     -Dwildfly.channels="https://channels.example.org/30,org.example.channel:updates-30:1.0.2"
@@ -260,34 +248,22 @@
     A list of channels used for resolving artifacts while provisioning. 
     <p>Defining a channel:</p>
     <pre class="border shadow rounded">
-     <channels>
-    
-      <channel>
-        
-       <manifest>
-            
-        <groupid>org.wildfly.channels
-        </groupid>
-            
-        <artifactid>wildfly-30.0
-        </artifactid>
-        
-       </manifest>
-    
-      </channel>
-    
-      <channel>
-        
-       <manifest>
-            
-        <url>https://example.example.org/channel/30
-        </url>
-        
-       </manifest>
-    
-      </channel>
-
-     </channels>
+     &lt;channels&gt;
+      &lt;channel&gt;
+       &lt;manifest&gt;
+        &lt;groupid&gt;org.wildfly.channels
+        &lt;/groupid&gt;
+        &lt;artifactid&gt;wildfly-30.0
+        &lt;/artifactid&gt;
+       &lt;/manifest&gt;
+      &lt;/channel&gt;
+      &lt;channel&gt;
+       &lt;manifest&gt;
+        &lt;url&gt;https://example.example.org/channel/30
+        &lt;/url&gt;
+       &lt;/manifest&gt;
+      &lt;/channel&gt;
+     &lt;/channels&gt;
 </pre>
     <p></p>
     <p>The <code>wildfly.channels</code> property can be used pass a comma delimited string for the channels. The channel can be a URL or a Maven GAV. If a Maven GAV is used, the groupId and artifactId are required. <br> Examples:</p>

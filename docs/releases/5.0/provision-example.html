@@ -175,6 +175,47 @@
 ...
 &lt;/project&gt;</code></pre>
 </section>
+<section>
+    <h2 id="Provision-a-server-with-specific-Galleon-version"><a name="Provision_a_server_with_specific_Galleon_version"></a>Provision a server with specific Galleon version</h2>
+    <p>The example below shows how to produce an WildFly server installation using a specific Galleon version, e.g., 32.0.0.Beta1:</p>
+    <pre class="border shadow rounded"><code>&lt;project&gt;
+...
+    &lt;build&gt;
+    ...
+    &lt;plugins&gt;
+        ...
+        &lt;plugin&gt;
+            &lt;groupId&gt;org.wildfly.plugins&lt;/groupId&gt;
+            &lt;artifactId&gt;wildfly-maven-plugin&lt;/artifactId&gt;
+            &lt;version&gt;${wildfly.maven.plugin.version}&lt;/version&gt;
+            &lt;executions&gt;
+                &lt;execution&gt;
+                    &lt;id&gt;install-wildfly&lt;/id&gt;
+                    &lt;phase&gt;initialize&lt;/phase&gt;
+                    &lt;goals&gt;
+                        &lt;goal&gt;provision&lt;/goal&gt;
+                    &lt;/goals&gt;
+                &lt;/execution&gt;
+            &lt;/executions&gt;
+            &lt;configuration&gt;
+                &lt;provisioningDir&gt;${jboss.home}&lt;/provisioningDir&gt;
+                &lt;feature-packs&gt;
+                    &lt;feature-pack&gt;
+                        &lt;groupId&gt;org.wildfly&lt;/groupId&gt;
+                        &lt;artifactId&gt;wildfly-galleon-pack&lt;/artifactId&gt;
+                        &lt;version&gt;${wildfly.version}&lt;/version&gt;
+                    &lt;/feature-pack&gt;
+                &lt;/feature-packs&gt;
+            &lt;/configuration&gt;
+        &lt;/plugin&gt;
+        ...
+    &lt;/plugins&gt;
+    ...
+    &lt;/build&gt;
+    ...
+&lt;/project&gt;
+</code></pre>
+</section>
     </section>
 </main>
 <footer class="footer w-100 pt-2 border-top bg-bg-primary">
