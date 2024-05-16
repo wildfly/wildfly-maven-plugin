@@ -71,7 +71,7 @@ Galleon options usage example:
                 <configuration>
                     ...
                     <galleon-options>
-                        <!-- Provision a WildFly server that includes features and modules at the preview stability level
+                        <!-- Provision a WildFly server that includes features and modules at the preview stability level -->
                         <stability-level>preview</stability-level>
                         <!-- Fork the Galleon provisioning in a separate process -->
                         <jboss-fork-embedded>true</jboss-fork-embedded>
