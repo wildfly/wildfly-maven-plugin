@@ -1,0 +1,59 @@
+<!--
+~ Copyright The WildFly Authors
+~ SPDX-License-Identifier: Apache-2.0
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>testing</groupId>
+    <artifactId>testing</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <configuration>
+                    <channels>
+                        <channel>
+                            <manifest>
+                                <groupId>org.wildfly.channels</groupId>
+                                <artifactId>wildfly</artifactId>
+                            </manifest>
+                        </channel>
+                    </channels>
+                    <feature-packs>
+                        <feature-pack>
+                            <location>org.wildfly:wildfly-galleon-pack</location>
+                        </feature-pack>
+                    </feature-packs>
+                    <layers>
+                        <layer>jaxrs-server</layer>
+                    </layers>
+                    <excluded-layers>
+                        <layer>deployment-scanner</layer>
+                    </excluded-layers>
+                    <packaging-scripts>
+                        <packaging-script>
+                            <scripts>
+                                <script>test-package.cli</script>
+                            </scripts>
+                            <commands>
+                                <command>/system-property=org.wildfly.maven.plugin-package-goal:add(value=true)</command>
+                            </commands>
+                        </packaging-script>
+                    </packaging-scripts>
+                    <filename>test.war</filename>
+                    <extra-server-content-dirs>
+                        <dir>extra-content</dir>
+                    </extra-server-content-dirs>
+                    <record-provisioning-state>true</record-provisioning-state>
+                    <provisioning-dir>packaged-channel-server</provisioning-dir>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

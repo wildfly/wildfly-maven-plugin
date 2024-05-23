@@ -36,6 +36,36 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
     }
 
     @Test
+    public void testPackageWithChannel() throws Exception {
+
+        final Mojo packageMojo = lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("package-channel-pom.xml").toFile(),
+                "package");
+
+        packageMojo.execute();
+        Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("packaged-channel-server");
+        Assert.assertTrue(Files.exists(jbossHome.resolve("standalone").resolve("configuration").resolve("foo.txt")));
+        String[] layers = { "jaxrs-server" };
+        String[] excluded = { "deployment-scanner" };
+        checkStandaloneWildFlyHome(jbossHome, 1, layers, excluded, true, "org.wildfly.maven.plugin-package-goal",
+                "org.wildfly.maven.plugin-package-goal-from-script");
+    }
+
+    @Test
+    public void testPackageWithChannelGlow() throws Exception {
+
+        final Mojo packageMojo = lookupConfiguredMojo(
+                AbstractWildFlyMojoTest.getPomFile("package-channel-glow-pom.xml").toFile(),
+                "package");
+
+        packageMojo.execute();
+        Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("packaged-channel-glow-server");
+        Assert.assertTrue(Files.exists(jbossHome.resolve("standalone").resolve("configuration").resolve("foo.txt")));
+        String[] layers = { "ee-core-profile-server" };
+        checkStandaloneWildFlyHome(jbossHome, 1, layers, null, true, "org.wildfly.maven.plugin-package-goal",
+                "org.wildfly.maven.plugin-package-goal-from-script");
+    }
+
+    @Test
     public void testDefaultConfigPackage() throws Exception {
 
         final Mojo packageMojo = lookupConfiguredMojo(
