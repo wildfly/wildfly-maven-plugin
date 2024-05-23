@@ -63,22 +63,22 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
     }
 
     @Component
-    RepositorySystem repoSystem;
+    protected RepositorySystem repoSystem;
 
     @Component
-    MavenProjectHelper projectHelper;
+    protected MavenProjectHelper projectHelper;
 
     @Parameter(defaultValue = "${repositorySystemSession}", readonly = true)
-    RepositorySystemSession repoSession;
+    protected RepositorySystemSession repoSession;
 
     @Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true, required = true)
-    List<RemoteRepository> repositories;
+    protected List<RemoteRepository> repositories;
 
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
-    MavenProject project;
+    protected MavenProject project;
 
     @Parameter(defaultValue = "${session}", readonly = true, required = true)
-    MavenSession session;
+    protected MavenSession session;
 
     /**
      * Arbitrary Galleon options used when provisioning the server. In case you
@@ -94,7 +94,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
      * </pre>
      */
     @Parameter(required = false, alias = "galleon-options")
-    Map<String, String> galleonOptions = Collections.emptyMap();
+    protected Map<String, String> galleonOptions = Collections.emptyMap();
 
     /**
      * Whether to use offline mode when the plugin resolves an artifact. In
@@ -102,26 +102,26 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
      * artifact resolution.
      */
     @Parameter(alias = "offline-provisioning", defaultValue = "false", property = PropertyNames.WILDFLY_PROVISIONING_OFFLINE)
-    boolean offlineProvisioning;
+    protected boolean offlineProvisioning;
 
     /**
      * Whether to log provisioning time at the end
      */
     @Parameter(alias = "log-provisioning-time", defaultValue = "false", property = PropertyNames.WILDFLY_PROVISIONING_LOG_TIME)
-    boolean logProvisioningTime;
+    protected boolean logProvisioningTime;
 
     /**
      * Whether to record provisioning state in .galleon directory.
      */
     @Parameter(alias = "record-provisioning-state", defaultValue = "false", property = PropertyNames.WILDFLY_PROVISIONING_RECORD_STATE)
-    boolean recordProvisioningState;
+    protected boolean recordProvisioningState;
 
     /**
      * Set to {@code true} if you want the goal to be skipped, otherwise
      * {@code false}.
      */
     @Parameter(defaultValue = "false", property = PropertyNames.SKIP_PROVISION)
-    private boolean skip;
+    protected boolean skip;
 
     /**
      * The path to the directory where to provision the server. Can be an absolute path or a path relative to the buildDir.
@@ -136,14 +136,14 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
      * otherwise {@code false}.
      */
     @Parameter(alias = "overwrite-provisioned-server", defaultValue = "false", property = PropertyNames.WILDFLY_PROVISIONING_OVERWRITE_PROVISIONED_SERVER)
-    private boolean overwriteProvisionedServer;
+    protected boolean overwriteProvisionedServer;
 
     /**
      * A list of feature-pack configurations to install, can be combined with layers.
      * Use the System property {@code wildfly.provisioning.feature-packs} to provide a comma separated list of feature-packs.
      */
     @Parameter(required = false, alias = "feature-packs", property = PropertyNames.WILDFLY_PROVISIONING_FEATURE_PACKS)
-    List<GalleonFeaturePack> featurePacks = Collections.emptyList();
+    protected List<GalleonFeaturePack> featurePacks = Collections.emptyList();
 
     /**
      * A list of Galleon layers to provision. Can be used when
@@ -151,7 +151,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
      * Use the System property {@code wildfly.provisioning.layers} to provide a comma separated list of layers.
      */
     @Parameter(alias = "layers", required = false, property = PropertyNames.WILDFLY_PROVISIONING_LAYERS)
-    List<String> layers = Collections.emptyList();
+    protected List<String> layers = Collections.emptyList();
 
     /**
      * A list of Galleon layers to exclude. Can be used when
@@ -160,7 +160,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
      * exclude.
      */
     @Parameter(alias = "excluded-layers", required = false, property = PropertyNames.WILDFLY_PROVISIONING_LAYERS_EXCLUDED)
-    List<String> excludedLayers = Collections.emptyList();
+    protected List<String> excludedLayers = Collections.emptyList();
 
     /**
      * The path to the {@code provisioning.xml} file to use. Note that this cannot be used with the {@code feature-packs}
@@ -168,14 +168,14 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
      * If the provisioning file is not absolute, it has to be relative to the project base directory.
      */
     @Parameter(alias = "provisioning-file", property = PropertyNames.WILDFLY_PROVISIONING_FILE, defaultValue = "${project.basedir}/galleon/provisioning.xml")
-    private File provisioningFile;
+    protected File provisioningFile;
 
     /**
      * The name of the configuration file generated from layers. Default value is {@code standalone.xml}.
      * If no {@code layers} have been configured, setting this parameter is invalid.
      */
     @Parameter(alias = "layers-configuration-file-name", property = PropertyNames.WILDFLY_LAYERS_CONFIGURATION_FILE_NAME, defaultValue = STANDALONE_XML)
-    String layersConfigurationFileName;
+    protected String layersConfigurationFileName;
 
     /**
      * A list of channels used for resolving artifacts while provisioning.
@@ -212,7 +212,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
      * </p>
      */
     @Parameter(alias = "channels", property = PropertyNames.CHANNELS)
-    List<ChannelConfiguration> channels;
+    protected List<ChannelConfiguration> channels;
 
     /**
      * Do not actually provision a server but generate the Galleon provisioning configuration
@@ -221,7 +221,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
      * @since 5.0
      */
     @Parameter(alias = "dry-run")
-    boolean dryRun;
+    protected boolean dryRun;
 
     private Path wildflyDir;
 

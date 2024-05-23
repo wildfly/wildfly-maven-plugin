@@ -5,8 +5,12 @@
 
 package org.wildfly.plugin.common;
 
+import static org.wildfly.plugin.provision.PackageServerMojo.BOOTABLE_JAR_NAME_RADICAL;
+import static org.wildfly.plugin.provision.PackageServerMojo.JAR;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -16,16 +20,20 @@ import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.MavenProjectHelper;
 import org.jboss.galleon.api.GalleonBuilder;
 import org.jboss.galleon.api.GalleonFeaturePack;
 import org.jboss.galleon.api.Provisioning;
 import org.jboss.galleon.api.config.GalleonProvisioningConfig;
+import org.jboss.galleon.maven.plugin.util.MvnMessageWriter;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.wildfly.glow.Arguments;
 import org.wildfly.glow.GlowSession;
 import org.wildfly.glow.ScanResults;
 import org.wildfly.plugin.provision.GlowConfig;
 import org.wildfly.plugin.tools.GalleonUtils;
+import org.wildfly.plugin.tools.bootablejar.BootableJarSupport;
 
 /**
  * A simple utility class.
@@ -129,7 +137,6 @@ public class Utils {
             GalleonProvisioningConfig in = GalleonUtils.buildConfig(pm, featurePacks, layers, excludedLayers, galleonOptions,
                     layersConfigurationFileName);
             inProvisioningFile = glowOutputFolder.resolve("glow-in-provisioning.xml");
-            pm.newProvisioningBuilder(in).build().storeProvisioningConfig(in, outputFolder);
             try (Provisioning p = pm.newProvisioningBuilder(in).build()) {
                 p.storeProvisioningConfig(in, inProvisioningFile);
             }
@@ -166,4 +173,36 @@ public class Utils {
 
         return results;
     }
+
+    public static void packageBootableJar(Path jbossHome,
+            GalleonProvisioningConfig activeConfig,
+            Log log,
+            MavenRepoManager artifactResolver,
+            MavenProject project,
+            MavenProjectHelper helper,
+            String bootableJarInstallArtifactClassifier,
+            String bootableJarName) throws Exception {
+        String jarName = bootableJarName == null ? BOOTABLE_JAR_NAME_RADICAL + BootableJarSupport.BOOTABLE_SUFFIX + "." + JAR
+                : bootableJarName;
+        Path targetPath = Paths.get(project.getBuild().getDirectory());
+        Path targetJarFile = targetPath.toAbsolutePath()
+                .resolve(jarName);
+        Files.deleteIfExists(targetJarFile);
+        BootableJarSupport.packageBootableJar(targetJarFile, targetPath,
+                activeConfig, jbossHome,
+                artifactResolver,
+                new MvnMessageWriter(log));
+        attachJar(targetJarFile, log, project, helper, bootableJarInstallArtifactClassifier);
+        log.info("Bootable JAR packaging DONE. To run the server: java -jar " + targetJarFile);
+    }
+
+    private static void attachJar(Path jarFile, Log log, MavenProject project, MavenProjectHelper helper,
+            String bootableJarInstallArtifactClassifier) {
+        if (log.isDebugEnabled()) {
+            log.debug("Attaching bootable jar " + jarFile + " as a project artifact with classifier "
+                    + bootableJarInstallArtifactClassifier);
+        }
+        helper.attachArtifact(project, JAR, bootableJarInstallArtifactClassifier, jarFile.toFile());
+    }
+
 }
