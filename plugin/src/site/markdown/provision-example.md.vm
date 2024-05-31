@@ -77,3 +77,48 @@ The example below shows how to produce an ${appServerName} server installation t
 ...
 </project>
 ```
+#[[##]]# Provision a server with specific Galleon version
+
+The example below shows how to produce an ${appServerName} server installation using a specific Galleon version, e.g., ${wildflyVersion}
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <provisioning-dir>/opt/server</provisioning-dir>
+                    <feature-packs>
+                        <feature-pack>
+                            <groupId>org.wildfly</groupId>
+                            <artifactId>wildfly-galleon-pack</artifactId>
+                            <version>${wildflyVersion}</version>
+                        </feature-pack>
+                    </feature-packs>
+                    <layers>
+                        <!-- jaxrs-server Galleon layer adds the server content required to run JAXRS applications -->
+                        <layer>jaxrs-server</layer>
+                    </layers>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>install-wildfly</id>
+                        <goals>
+                            <goal>provision</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```

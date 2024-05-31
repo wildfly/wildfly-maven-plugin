@@ -1,0 +1,70 @@
+# Using Channels
+
+Channels can be used to provision a ${appServerName} server in goals that allow channels for provisioning. A
+[WildFly Channel](https://github.com/wildfly-extras/wildfly-channel/blob/main/doc/spec.adoc) is a YAML file of Maven
+GAV's. Channels can be used to provision the latest version of ${appServerName} and/or other components that generate a
+channel manifests.
+
+#[[##]]# Provision the Latest Release
+
+The example below shows how to provision the latest version of ${appServerName}.
+
+```xml
+<plugin>
+    <groupId>${project.groupId}</groupId>
+    <artifactId>${project.artifactId}</artifactId>
+    <version>${project.version}</version>
+    <configuration>
+        <feature-packs>
+            <feature-pack>
+                <groupId>org.wildfly</groupId>
+                <artifactId>wildfly-ee-galleon-pack</artifactId>
+            </feature-pack>
+        </feature-packs>
+        <channels>
+            <channel>
+                <manifest>
+                    <groupId>org.wildfly.channels</groupId>
+                    <artifactId>wildfly-ee</artifactId>
+                </manifest>
+            </channel>
+        </channels>
+    </configuration>
+</plugin>
+```
+
+#[[##]]# Provision Additional Channels
+
+The example below will provision a specific version of ${appServerName} with the latest version of RESTEasy on the
+latest ${resteasyChannelStream}.
+
+```xml
+<plugin>
+    <groupId>${project.groupId}</groupId>
+    <artifactId>${project.artifactId}</artifactId>
+    <version>${project.version}</version>
+    <configuration>
+        <feature-packs>
+            <feature-pack>
+                <groupId>org.wildfly</groupId>
+                <artifactId>wildfly-ee-galleon-pack</artifactId>
+            </feature-pack>
+        </feature-packs>
+        <channels>
+            <channel>
+                <manifest>
+                    <groupId>org.wildfly.channels</groupId>
+                    <artifactId>wildfly-ee</artifactId>
+                    <version>${wildflyVersion}</version>
+                </manifest>
+            </channel>
+            <channel>
+                <manifest>
+                    <groupId>dev.resteasy.channels</groupId>
+                    <artifactId>resteasy-${resteasyChannelStream}</artifactId>
+                </manifest>
+            </channel>
+        </channels>
+    </configuration>
+</plugin>
+```

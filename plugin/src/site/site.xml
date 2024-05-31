@@ -41,6 +41,7 @@
 
         <menu name="Examples" inherit="top">
             <item name="Add Resource Example" href="add-resource-example.html"/>
+            <item name="Channel Example" href="channel-example.html"/>
             <item name="Deploy Application Example" href="deployment-example.html"/>
             <item name="Complex Example" href="complex-example.html"/>
             <item name="Execute Commands Example" href="execute-commands-example.html"/>
