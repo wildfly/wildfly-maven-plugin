@@ -183,19 +183,19 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
      * Defining a channel:
      *
      * <pre>
-     * <channels>
-     *     <channel>
-     *         <manifest>
-     *             <groupId>org.wildfly.channels</groupId>
-     *             <artifactId>wildfly-30.0</artifactId>
-     *         </manifest>
-     *     </channel>
-     *     <channel>
-     *         <manifest>
-     *             <url>https://example.example.org/channel/30</url>
-     *         </manifest>
-     *     </channel>
-     * </channels>
+     * &lt;channels&gt;
+     *   &lt;channel&gt;
+     *       &lt;manifest&gt;
+     *           &lt;groupId&gt;org.wildfly.channels&lt;/groupId&gt;
+     *           &lt;artifactId&gt;wildfly-30.0&lt;/artifactId&gt;
+     *       &lt;/manifest&gt;
+     *   &lt;/channel&gt;
+     *   &lt;channel&gt;
+     *       &lt;manifest&gt;
+     *           &lt;url&gt;https://example.example.org/channel/30&lt;/url&gt;
+     *       &lt;/manifest&gt;
+     *   &lt;/channel&gt;
+     * &lt;/channels&gt;
      * </pre>
      * </p>
      * <p>
