@@ -33,8 +33,9 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.jboss.galleon</groupId>
-                <artifactId>galleon-maven-plugin</artifactId>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <version>${project.version}</version>
                 <executions>
                     <execution>
                         <id>provision-wildfly</id>
@@ -48,10 +49,10 @@
                                     <location>wildfly@maven(org.jboss.universe:community-universe)#${version.org.wildfly}</location>
                                 </feature-pack>
                             </feature-packs>
-                            <install-dir>${project.build.directory}/wildfly</install-dir>
-                            <plugin-options>
+                            <provisioning-dir>${project.build.directory}/wildfly</provisioning-dir>
+                            <galleon-options>
                                 <jboss-fork-embedded>${plugin.fork.embedded}</jboss-fork-embedded>
-                            </plugin-options>
+                            </galleon-options>
                         </configuration>
                     </execution>
                 </executions>

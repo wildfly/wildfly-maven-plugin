@@ -78,7 +78,7 @@
         <version.org.wildfly.plugin.tools>1.1.0.Final</version.org.wildfly.plugin.tools>
         <!-- This version property is also retrieved by plugin at runtime to resolve CLI artifact -->
         <version.org.wildfly.core>23.0.3.Final</version.org.wildfly.core>
-        <version.org.wildfly>30.0.0.Final</version.org.wildfly>
+        <version.org.wildfly>32.0.1.Final</version.org.wildfly>
         <version.org.wildfly.channel>1.1.0.Final</version.org.wildfly.channel>
         <version.org.wildfly.prospero>1.2.1.Final</version.org.wildfly.prospero>
         <!-- maven dependencies -->
@@ -169,11 +169,6 @@
                     <configuration>
                         <redirectTestOutputToFile>${maven.test.redirectTestOutputToFile}</redirectTestOutputToFile>
                     </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.jboss.galleon</groupId>
-                    <artifactId>galleon-maven-plugin</artifactId>
-                    <version>${version.org.jboss.galleon}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
