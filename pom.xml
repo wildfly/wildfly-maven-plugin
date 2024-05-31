@@ -124,6 +124,7 @@
         <!-- documentation properties -->
         <appServerName>WildFly</appServerName>
         <pluginPrefix>wildfly</pluginPrefix>
+        <wildflyVersion>${version.org.wildfly}</wildflyVersion>
 
         <wildfly.scm.connection>scm:git://github.com/wildfly/wildfly-maven-plugin.git</wildfly.scm.connection>
         <wildfly.scm.developer.connection>scm:git:git@github.com:wildfly/wildfly-maven-plugin.git
