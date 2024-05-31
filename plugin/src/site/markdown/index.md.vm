@@ -69,6 +69,8 @@ you see the [documentation](https://docs.wildfly.org/wildfly-glow/).
 
   * [Deployment Example](./deployment-example.html)
 
+  * [Channel Example](./channel-example.html)
+
   * [Adding Resources Example](./add-resource-example.html)
 
   * [Complex Examples](./complex-example.html)
