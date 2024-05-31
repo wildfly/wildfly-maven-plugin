@@ -169,7 +169,11 @@ public abstract class AbstractStartMojo extends AbstractServerConnection {
                 final Launcher launcher = Launcher.of(commandBuilder)
                         .setRedirectErrorStream(true);
                 if (env != null) {
-                    launcher.addEnvironmentVariables(env);
+                    for (Map.Entry<String, String> entry : env.entrySet()) {
+                        if (entry.getKey() != null && entry.getValue() != null) {
+                            launcher.addEnvironmentVariable(entry.getKey(), entry.getValue());
+                        }
+                    }
                 }
                 out.getRedirect().ifPresent(launcher::redirectOutput);
 
