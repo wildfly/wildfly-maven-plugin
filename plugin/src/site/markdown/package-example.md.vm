@@ -114,7 +114,7 @@ The example below shows how to configure the plugin goal to execute CLI commands
                     <packaging-scripts>
                         <!-- Commands and scripts are executed in the context of an embedded-server. 
                         You don't need to start and stop the embedded-server. -->
-                        <execution>
+                        <packaging-script>
                             <!-- List of commands -->
                             <commands>
                                 <command>/system-property=org.jboss.example.runtime:write-attribute(name=dev)</command>
@@ -131,7 +131,7 @@ The example below shows how to configure the plugin goal to execute CLI commands
                                 <script>config.cli</script>
                                 <script>config2.cli</script>
                             </scripts>
-                        </execution>
+                        </packaging-script>
                     </packaging-scripts>
                     <!-- A list of directory that contains content to copy to the server. Each directory must contain a 
                      directory structure that complies with the server directory structure. 
