@@ -29,6 +29,12 @@
                     <image>
                         <group>wildfly-maven-plugin</group>
                     </image>
+                    <labels>
+                        <version>1.0</version>
+                        <description>This text illustrates \
+that label-values can span multiple lines.</description>
+                        <quoted.line>I have &quot;quoted myself&quot; here.</quoted.line>
+                    </labels>
                 </configuration>
             </plugin>
         </plugins>

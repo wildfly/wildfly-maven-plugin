@@ -16,6 +16,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -94,6 +95,35 @@ public class ApplicationImageMojo extends PackageServerMojo {
      */
     @Parameter(alias = "image")
     private ApplicationImageInfo image;
+
+    /**
+     * Adds labels to the generated Dockerfile. Each label will be added as a new line with the prefix of {@code LABEL}.
+     * For example:
+     *
+     * <pre>
+     * &lt;labels&gt;
+     *     &lt;version&gt;1.0&lt;/version&gt;
+     *     &lt;description&gt;This is only for testing purposes, \
+     * do not deploy&lt;/description&gt;
+     * &lt;/labels&gt;
+     * </pre>
+     *
+     * Will generate:
+     *
+     * <pre>
+     * LABEL description="This is only for testing purposes, \
+     * do not deploy"
+     * LABEL version="1.0"
+     * </pre>
+     * <p>
+     * The map is always sorted by the key and the values are always wrapped in quotes and quotes within the value are
+     * escaped.
+     * </p>
+     *
+     * @since 5.0.1
+     */
+    @Parameter(property = "wildfly.image.labels")
+    private Map<String, String> labels;
 
     @Override
     protected String getGoal() {
@@ -223,8 +253,13 @@ public class ApplicationImageMojo extends PackageServerMojo {
 
         // Create the Dockerfile content
         final StringBuilder dockerfileContent = new StringBuilder();
-        dockerfileContent.append("FROM ").append(runtimeImage).append('\n')
-                .append("COPY --chown=jboss:root ").append(jbossHome).append(" $JBOSS_HOME\n")
+        dockerfileContent.append("FROM ").append(runtimeImage).append('\n');
+        if (labels != null) {
+            labels.forEach(
+                    (key, value) -> dockerfileContent.append("LABEL ").append(key).append("=\"")
+                            .append(value.replace("\"", "\\\"")).append("\"\n"));
+        }
+        dockerfileContent.append("COPY --chown=jboss:root ").append(jbossHome).append(" $JBOSS_HOME\n")
                 .append("RUN chmod -R ug+rwX $JBOSS_HOME\n")
                 .append("COPY --chown=jboss:root ").append(getDeploymentContent().getFileName())
                 .append(" $JBOSS_HOME/standalone/deployments/").append(targetName);
