@@ -8,8 +8,10 @@ import static org.wildfly.plugin.provision.ExecUtil.execSilentWithTimeout;
 import static org.wildfly.plugin.tests.AbstractWildFlyMojoTest.getPomFile;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.List;
 
 import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -36,7 +38,12 @@ public class ImageTest extends AbstractImageTest {
             imageMojo.execute();
             Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("image-server");
             assertTrue(jbossHome.toFile().exists());
-
+            Path dockerFile = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("Dockerfile");
+            assertTrue(dockerFile.toFile().exists());
+            List<String> dockerfileLines = Files.readAllLines(dockerFile);
+            assertEquals("LABEL version=\"1.0\"", dockerfileLines.get(1));
+            assertEquals("LABEL description=\"This text illustrates \\", dockerfileLines.get(2));
+            assertEquals("that label-values can span multiple lines.\"", dockerfileLines.get(3));
             final ByteArrayOutputStream stdout = new ByteArrayOutputStream();
             assertTrue(ExecUtil.exec(stdout, binary, "inspect", "wildfly-maven-plugin/testing"));
             assertEnvironmentUnset(stdout, "SERVER_ARGS=-c=");

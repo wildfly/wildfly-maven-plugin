@@ -29,6 +29,11 @@
                     <image>
                         <group>wildfly-maven-plugin</group>
                     </image>
+                    <labels>
+                        <label>version="1.0"</label>
+                        <label>description="This text illustrates \
+that label-values can span multiple lines."</label>
+                    </labels>
                 </configuration>
             </plugin>
         </plugins>

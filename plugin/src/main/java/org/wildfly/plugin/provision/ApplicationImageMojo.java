@@ -6,6 +6,7 @@ package org.wildfly.plugin.provision;
 
 import static java.lang.String.format;
 import static java.lang.String.join;
+import static org.wildfly.plugin.common.PropertyNames.WILDFLY_IMAGE_LABELS;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -15,6 +16,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -94,6 +96,9 @@ public class ApplicationImageMojo extends PackageServerMojo {
      */
     @Parameter(alias = "image")
     private ApplicationImageInfo image;
+
+    @Parameter(property = WILDFLY_IMAGE_LABELS, alias = "labels", required = false)
+    private List<String> labels = Collections.emptyList();
 
     @Override
     protected String getGoal() {
@@ -223,8 +228,13 @@ public class ApplicationImageMojo extends PackageServerMojo {
 
         // Create the Dockerfile content
         final StringBuilder dockerfileContent = new StringBuilder();
-        dockerfileContent.append("FROM ").append(runtimeImage).append('\n')
-                .append("COPY --chown=jboss:root ").append(jbossHome).append(" $JBOSS_HOME\n")
+        dockerfileContent.append("FROM ").append(runtimeImage).append('\n');
+        if (labels != null) {
+            for (String label : labels) {
+                dockerfileContent.append("LABEL ").append(label).append("\n");
+            }
+        }
+        dockerfileContent.append("COPY --chown=jboss:root ").append(jbossHome).append(" $JBOSS_HOME\n")
                 .append("RUN chmod -R ug+rwX $JBOSS_HOME\n")
                 .append("COPY --chown=jboss:root ").append(getDeploymentContent().getFileName())
                 .append(" $JBOSS_HOME/standalone/deployments/").append(targetName);
