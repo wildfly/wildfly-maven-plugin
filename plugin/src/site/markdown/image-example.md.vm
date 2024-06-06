@@ -4,12 +4,12 @@ The `image` goal allows you to build an application image that contains a server
 This application image contains your application ready to run on the cloud in a containerized platform such as Kubernetes.
 
 The operations related to the image are executing using a Docker binary. This can be explicitly set with the
-`<image><docker-binary>` element. It can also be overridden with the `wildfly.image.binary` property. If no binary is
+`<docker-binary>` element. It can also be overridden with the `wildfly.image.binary` property. If no binary is
 defined in the configuration, an attempt will be made to determine a default binary. First `docker` is attempted to be
 resolved. If it cannot be resolved, then `podman` is attempted. If neither can be resolved an error will occur.
 
 By default, the `image` goal will only build the application image.
-To push it to a container registry, you must configure the `<image><push>` element with to `true`.
+To push it to a container registry, you must configure the `<push>` element with to `true`.
 
 #[[##]]# Build an application image
 
@@ -90,13 +90,10 @@ The example below shows how to configure the `image` goal to push the applicaiti
                     <layers>
                         <layer>jaxrs-server</layer>
                     </layers>
-                    <image>
-                        <push>true</push>
-                        <registry>quay.io</registry>
-                        <group>${user.name}</group>
-                        <user>${user.name}</user>
-                        <password>${my.secret.password}</password>
-                    </image>
+                    <push>true</push>
+                    <registry>quay.io</registry>
+                    <group>${user.name}</group>
+                    <registryId>quay-io</registryId>
                 </configuration>
                 <executions>
                     <execution>
@@ -116,9 +113,10 @@ The example below shows how to configure the `image` goal to push the applicaiti
 
 When `mvn package` is executed, the `image` goal will build the image with the name `quay.io/jdoe/my-app` (`jdoe` being the name
 of the user running the Maven commands).
-Before the image is pushed, it will login to `quay.io` using the credentials specified by `<image><user>` and `<image><password>`.
-As it is not recommended to store credentials in clear in the `pom.xml`, we use a System propery (`my.secret.password`) to pass it when Maven is executed
-(with `mvn package -Dmy.secret.password="********").
+Before the image is pushed, it will login to `quay.io` using the credentials specified by `<registryId>`. The
+`<registryId>` defines the name of a `<server>` in your `settings.xml` file which may include encrypted passwords. While
+there is a `<user>` and `<password>` option, using a server in your `settings.xml` is the preferred way to authenticate
+with your registry.
 
 
 #[[##]]# Configure the JDK version used by the application image.
@@ -126,7 +124,7 @@ As it is not recommended to store credentials in clear in the `pom.xml`, we use 
 The application image is based on a runtime image provided by WildFly that contains all the runtimes required to run WildFly and your application.Push an application image to a container registry.
 At the moment, WildFly provides runtime images for OpenJDK 11 and OpenJDK 17.
 
-By default, the `image` goal uses the OpenJDK 11 runtime image. It is possible to use the OpenJDK 17 image instead by configuring the `<image><jdk-version>` to `17` as shown in the example below:
+By default, the `image` goal uses the OpenJDK 11 runtime image. It is possible to use the OpenJDK 17 image instead by configuring the `<jdk-version>` to `17` as shown in the example below:
 
 ```xml
 <project>
@@ -149,9 +147,7 @@ By default, the `image` goal uses the OpenJDK 11 runtime image. It is possible t
                     <layers>
                         <layer>jaxrs-server</layer>
                     </layers>
-                    <image>
-                        <jdk-version>17</jdk-version>
-                    </image>
+                    <jdk-version>17</jdk-version>
                 </configuration>
                 <executions>
                     <execution>

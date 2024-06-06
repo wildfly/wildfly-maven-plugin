@@ -25,10 +25,8 @@
                         <layer>jaxrs-server</layer>
                     </layers>
                     <provisioning-dir>image-server</provisioning-dir>
-                    <image>
-                        <group>wildfly-maven-plugin</group>
-                        <docker-binary>focker-is-not-docker</docker-binary>
-                    </image>
+                    <group>wildfly-maven-plugin</group>
+                    <docker-binary>focker-is-not-docker</docker-binary>
                 </configuration>
             </plugin>
         </plugins>
