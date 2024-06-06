@@ -41,9 +41,10 @@ public class ImageTest extends AbstractImageTest {
             Path dockerFile = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("Dockerfile");
             assertTrue(dockerFile.toFile().exists());
             List<String> dockerfileLines = Files.readAllLines(dockerFile);
-            assertEquals("LABEL version=\"1.0\"", dockerfileLines.get(1));
-            assertEquals("LABEL description=\"This text illustrates \\", dockerfileLines.get(2));
-            assertEquals("that label-values can span multiple lines.\"", dockerfileLines.get(3));
+            assertLineContains(dockerfileLines, 1, "LABEL description=\"This text illustrates \\");
+            assertLineContains(dockerfileLines, 2, "that label-values can span multiple lines.\"");
+            assertLineContains(dockerfileLines, 3, "LABEL quoted.line=\"I have \\\"quoted myself\\\" here.\"");
+            assertLineContains(dockerfileLines, 4, "LABEL version=\"1.0\"");
             final ByteArrayOutputStream stdout = new ByteArrayOutputStream();
             assertTrue(ExecUtil.exec(stdout, binary, "inspect", "wildfly-maven-plugin/testing"));
             assertEnvironmentUnset(stdout, "SERVER_ARGS=-c=");
@@ -58,5 +59,12 @@ public class ImageTest extends AbstractImageTest {
         final Mojo imageMojo = lookupConfiguredMojo(
                 getPomFile("image-unknown-docker-binary-pom.xml").toFile(), "image");
         imageMojo.execute();
+    }
+
+    private static void assertLineContains(final List<String> dockerfileLines, final int index, final String expected) {
+        assertEquals(
+                String.format("Expected Dockerfile to contain %s at line %d%n%s", expected, index,
+                        String.join(System.lineSeparator(), dockerfileLines)),
+                expected, dockerfileLines.get(index));
     }
 }

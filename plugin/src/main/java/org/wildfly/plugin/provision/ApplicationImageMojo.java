@@ -6,7 +6,6 @@ package org.wildfly.plugin.provision;
 
 import static java.lang.String.format;
 import static java.lang.String.join;
-import static org.wildfly.plugin.common.PropertyNames.WILDFLY_IMAGE_LABELS;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -16,8 +15,8 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -97,8 +96,34 @@ public class ApplicationImageMojo extends PackageServerMojo {
     @Parameter(alias = "image")
     private ApplicationImageInfo image;
 
-    @Parameter(property = WILDFLY_IMAGE_LABELS, alias = "labels", required = false)
-    private List<String> labels = Collections.emptyList();
+    /**
+     * Adds labels to the generated Dockerfile. Each label will be added as a new line with the prefix of {@code LABEL}.
+     * For example:
+     *
+     * <pre>
+     * &lt;labels&gt;
+     *     &lt;version&gt;1.0&lt;/version&gt;
+     *     &lt;description&gt;This is only for testing purposes, \
+     * do not deploy&lt;/description&gt;
+     * &lt;/labels&gt;
+     * </pre>
+     *
+     * Will generate:
+     *
+     * <pre>
+     * LABEL description="This is only for testing purposes, \
+     * do not deploy"
+     * LABEL version="1.0"
+     * </pre>
+     * <p>
+     * The map is always sorted by the key and the values are always wrapped in quotes and quotes within the value are
+     * escaped.
+     * </p>
+     *
+     * @since 5.0.1
+     */
+    @Parameter(property = "wildfly.image.labels")
+    private Map<String, String> labels;
 
     @Override
     protected String getGoal() {
@@ -230,9 +255,9 @@ public class ApplicationImageMojo extends PackageServerMojo {
         final StringBuilder dockerfileContent = new StringBuilder();
         dockerfileContent.append("FROM ").append(runtimeImage).append('\n');
         if (labels != null) {
-            for (String label : labels) {
-                dockerfileContent.append("LABEL ").append(label).append("\n");
-            }
+            labels.forEach(
+                    (key, value) -> dockerfileContent.append("LABEL ").append(key).append("=\"")
+                            .append(value.replace("\"", "\\\"")).append("\"\n"));
         }
         dockerfileContent.append("COPY --chown=jboss:root ").append(jbossHome).append(" $JBOSS_HOME\n")
                 .append("RUN chmod -R ug+rwX $JBOSS_HOME\n")
