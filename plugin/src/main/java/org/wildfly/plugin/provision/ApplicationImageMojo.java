@@ -14,9 +14,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -24,6 +25,11 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.settings.Server;
+import org.apache.maven.settings.Settings;
+import org.apache.maven.settings.crypto.DefaultSettingsDecryptionRequest;
+import org.apache.maven.settings.crypto.SettingsDecrypter;
+import org.apache.maven.settings.crypto.SettingsDecryptionResult;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.core.Constants;
 
@@ -42,11 +48,24 @@ import org.wildfly.plugin.core.Constants;
  * @since 4.0
  */
 @Mojo(name = "image", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME, defaultPhase = LifecyclePhase.PACKAGE)
+@SuppressWarnings({ "deprecated", "removal" })
 public class ApplicationImageMojo extends PackageServerMojo {
 
     public static final int DOCKER_CMD_CHECK_TIMEOUT = 3000;
 
     /**
+     * Provides a reference to the settings file.
+     */
+    @Parameter(property = "settings", readonly = true, required = true, defaultValue = "${settings}")
+    private Settings settings;
+
+    @Inject
+    private SettingsDecrypter settingsDecrypter;
+
+    /**
+     * <p>
+     * <strong>NOTE: If this is used the other parameters for this goal will be ignored.</strong>
+     * </p>
      * The configuration of the application image.
      * <p>
      * The {@code image} goal accepts the following configuration:
@@ -92,9 +111,110 @@ public class ApplicationImageMojo extends PackageServerMojo {
      *   &lt;password&gt;${my.secret.password}&lt;/password&gt;
      * &lt;/image&gt;
      * </pre>
+     *
+     * @deprecated 5.0.1 use the matching configuration parameters instead of this complex object. The simple migration is
+     *                 to remove the surrounding {@code <image>} tags. The one exception is {@code <name>} needs to
+     *                 change to {@code <image-name>}
      */
     @Parameter(alias = "image")
+    @Deprecated(forRemoval = true, since = "5.0.1")
     private ApplicationImageInfo image;
+
+    /**
+     * Whether the application image should be built (default is {@code true}).
+     *
+     * @since 5.0.1
+     */
+    @Parameter(defaultValue = "true", property = "wildfly.image.build")
+    private boolean build;
+
+    /**
+     * Whether the application image should be pushed.
+     *
+     * @since 5.0.1
+     */
+    @Parameter(defaultValue = "false", property = "wildfly.image.push")
+    private boolean push;
+
+    /**
+     * Determine which WildFly runtime image to use so that the application runs with the specified JDK. Note this must
+     * be a valid JDK version.
+     *
+     * @since 5.0.1
+     */
+    @Parameter(alias = "jdk-version", property = "wildfly.image.jdk.version")
+    private String jdkVersion;
+
+    /**
+     * The group part of the name of the application image.
+     *
+     * @since 5.0.1
+     */
+    @Parameter(property = "wildfly.image.group")
+    private String group;
+
+    /**
+     * The name part of the application image. If not set, the value of the artifactId (in lower case) is used.
+     *
+     * @since 5.0.1
+     */
+    @Parameter(alias = "image-name", property = "wildfly.image.name")
+    private String imageName;
+
+    /**
+     * The tag part of the application image (default is @{code latest}.
+     *
+     * @since 5.0.1
+     */
+    @Parameter(defaultValue = "latest", property = "wildfly.image.tag")
+    private String tag;
+
+    /**
+     * The container registry.
+     * <p>
+     * If set, the registry is added to the application name. If the image is pushed and the registry is not set, it
+     * defaults to the registry defined in your docker configuration.
+     * </p>
+     *
+     * @since 5.0.1
+     */
+    @Parameter(property = "wildfly.image.registry")
+    private String registry;
+
+    /**
+     * Specifies the id of the registry server for the username and password to be retrieved from the {@code settings.xml}
+     * file.
+     *
+     * @since 5.0.1
+     */
+    @Parameter(alias = "registry-id", property = "wildfly.image.registry.id")
+    private String registryId;
+
+    /**
+     * The username to login to the container registry.
+     *
+     * @since 5.0.1
+     */
+    @Parameter(property = "wildfly.image.user")
+    private String user;
+
+    /**
+     * The user password to login to the container registry.
+     *
+     * @since 5.0.1
+     */
+    @Parameter
+    private String password;
+
+    /**
+     * The binary used to build and push images. If not explicitly set, there will be an attempt to determine the binary
+     * to use. The first attempt will be to check the {@code docker} command. If that command is not available,
+     * {@code podman} is attempted. If neither is available an error will occur if attempting to build or push an image.
+     *
+     * @since 5.0.1
+     */
+    @Parameter(alias = "docker-binary", property = PropertyNames.WILDFLY_IMAGE_BINARY)
+    private String dockerBinary;
 
     /**
      * Adds labels to the generated Dockerfile. Each label will be added as a new line with the prefix of {@code LABEL}.
@@ -140,6 +260,31 @@ public class ApplicationImageMojo extends PackageServerMojo {
 
         if (image == null) {
             image = new ApplicationImageInfo();
+            image.build = this.build;
+            image.dockerBinary = this.dockerBinary;
+            image.group = this.group;
+            image.jdkVersion = this.jdkVersion;
+            image.name = this.imageName;
+            image.push = this.push;
+            image.registry = this.registry;
+            image.tag = this.tag;
+            if (user == null && settings != null && registryId != null) {
+                final Server server = settings.getServer(registryId);
+                if (server != null) {
+                    image.user = server.getUsername();
+                    image.password = decrypt(server);
+                } else {
+                    getLog().warn(String.format("No server %s found in settings.", registryId));
+                    image.user = this.user;
+                    image.password = this.password;
+                }
+            } else {
+                image.user = this.user;
+                image.password = this.password;
+            }
+        } else {
+            getLog().warn(
+                    "You are using the deprecated image parameter. The image parameters will be ignored if defined outside of the image tag.");
         }
 
         try {
@@ -155,14 +300,16 @@ public class ApplicationImageMojo extends PackageServerMojo {
                 return;
             }
             // Check if the binary was set via a property
-            image.setDockerBinary(project.getProperties().getProperty(PropertyNames.WILDFLY_IMAGE_BINARY,
-                    System.getProperty(PropertyNames.WILDFLY_IMAGE_BINARY)));
+            if (image.dockerBinary == null) {
+                image.setDockerBinary(project.getProperties().getProperty(PropertyNames.WILDFLY_IMAGE_BINARY,
+                        System.getProperty(PropertyNames.WILDFLY_IMAGE_BINARY)));
+            }
 
             final String imageBinary = image.getDockerBinary();
             if (imageBinary == null) {
                 throw new MojoExecutionException("Could not locate a binary to build the image with. Please check your " +
                         "installation and either set the path to the binary in your PATH environment variable or define the " +
-                        "define the fully qualified path in your configuration, <image><docker-binary>/path/to/docker</docker-binary></image>. "
+                        "define the fully qualified path in your configuration, <docker-binary>/path/to/docker</docker-binary>. "
                         +
                         "The path can also be defined with the -Dwildfly.image.binary=/path/to/docker system property.");
             }
@@ -197,7 +344,7 @@ public class ApplicationImageMojo extends PackageServerMojo {
     private void logToRegistry() throws MojoExecutionException {
         String registry = image.registry;
         if (registry == null) {
-            getLog().info("Registry was not set. Using docker.io");
+            getLog().info(String.format("Registry was not set. Using default for %s.", image.getDockerBinary()));
         }
         if (image.user != null && image.password != null) {
             String[] dockerArgs = new String[] {
@@ -208,10 +355,8 @@ public class ApplicationImageMojo extends PackageServerMojo {
             boolean loginSuccessful = ExecUtil.exec(getLog(), image.getDockerBinary(), dockerArgs);
             if (!loginSuccessful) {
                 throw new MojoExecutionException(
-                        String.format("Could not log to the container registry with the command %s %s %s",
-                                image.getDockerBinary(),
-                                String.join(" ", Arrays.copyOf(dockerArgs, dockerArgs.length - 1)),
-                                "*******"));
+                        String.format("Could not log to the container registry with the command: %s login %s -u %s -p *****",
+                                image.getDockerBinary(), registry, image.user));
             }
         }
     }
@@ -291,5 +436,10 @@ public class ApplicationImageMojo extends PackageServerMojo {
         }
 
         return true;
+    }
+
+    private String decrypt(final Server server) {
+        SettingsDecryptionResult decrypt = settingsDecrypter.decrypt(new DefaultSettingsDecryptionRequest(server));
+        return decrypt.getServer().getPassword();
     }
 }

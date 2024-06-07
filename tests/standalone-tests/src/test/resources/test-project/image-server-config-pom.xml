@@ -23,9 +23,7 @@
                     </feature-packs>
                     <provisioning-dir>image-server-config</provisioning-dir>
                     <filename>test.war</filename>
-                    <image>
-                        <group>wildfly-image-server-config-maven-plugin</group>
-                    </image>
+                    <group>wildfly-image-server-config-maven-plugin</group>
                     <server-config>standalone-microprofile.xml</server-config>
                 </configuration>
             </plugin>

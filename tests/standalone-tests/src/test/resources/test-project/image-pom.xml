@@ -26,9 +26,7 @@
                     </layers>
                     <provisioning-dir>image-server</provisioning-dir>
                     <filename>test.war</filename>
-                    <image>
-                        <group>wildfly-maven-plugin</group>
-                    </image>
+                    <group>wildfly-maven-plugin</group>
                     <labels>
                         <version>1.0</version>
                         <description>This text illustrates \

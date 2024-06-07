@@ -8,6 +8,7 @@ package org.wildfly.plugin.provision;
  * This class holds all configuration to build and push application image
  * from the {@code image} goal.
  */
+@Deprecated(forRemoval = true)
 public class ApplicationImageInfo {
 
     /**
@@ -25,22 +26,22 @@ public class ApplicationImageInfo {
      * If the value is not set, the `latest` tag of the WildFly runtime image is used.
      * Accepted values are "11", "17".
      */
-    private String jdkVersion;
+    protected String jdkVersion;
 
     /**
      * The group part of the name of the application image.
      */
-    private String group;
+    protected String group;
 
     /**
      * The name part of the application image. If not set, the value of the artifactId (in lower case) is used.
      */
-    private String name;
+    protected String name;
 
     /**
      * The tag part of the application image (default is @{code latest}.
      */
-    private String tag = "latest";
+    protected String tag = "latest";
 
     /**
      * The container registry.
@@ -66,7 +67,7 @@ public class ApplicationImageInfo {
      * {@code podman} is attempted. If neither is available {@code null} will be set as the default and an error will
      * occur if attempting to build or push an image.
      */
-    private String dockerBinary;
+    protected String dockerBinary;
 
     String getApplicationImageName(String artifactId) {
         String registry = this.registry != null ? this.registry + "/" : "";
@@ -83,11 +84,7 @@ public class ApplicationImageInfo {
         if (jdkVersion == null) {
             runtimeImageTag = "latest";
         } else {
-            switch (jdkVersion) {
-                case "17":
-                case "11":
-                    runtimeImageTag = "latest-jdk" + jdkVersion;
-            }
+            runtimeImageTag = "latest-jdk" + jdkVersion;
         }
         return runtimeImageName + runtimeImageTag;
     }

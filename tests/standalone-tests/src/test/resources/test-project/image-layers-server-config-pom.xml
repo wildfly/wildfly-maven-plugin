@@ -26,9 +26,7 @@
                     </layers>
                     <provisioning-dir>image-layers-server-config</provisioning-dir>
                     <filename>test.war</filename>
-                    <image>
-                        <group>wildfly-image-layers-server-config-maven-plugin</group>
-                    </image>
+                    <group>wildfly-image-layers-server-config-maven-plugin</group>
                     <layers-configuration-file-name>standalone-core.xml</layers-configuration-file-name>
                 </configuration>
             </plugin>
