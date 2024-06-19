@@ -173,6 +173,10 @@
             <artifactId>maven-resolver</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.wildfly.channel</groupId>
+            <artifactId>gpg-validator</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.wildfly.prospero</groupId>
             <artifactId>prospero-metadata</artifactId>
         </dependency>
