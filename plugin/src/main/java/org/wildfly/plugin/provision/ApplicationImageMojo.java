@@ -4,15 +4,13 @@
  */
 package org.wildfly.plugin.provision;
 
+import static com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer.DEFAULT_MODIFICATION_TIME_PROVIDER;
 import static java.lang.String.format;
 import static java.lang.String.join;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,13 +31,24 @@ import org.apache.maven.settings.crypto.SettingsDecryptionResult;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.core.Constants;
 
+import com.google.cloud.tools.jib.api.Containerizer;
+import com.google.cloud.tools.jib.api.DockerDaemonImage;
+import com.google.cloud.tools.jib.api.ImageReference;
+import com.google.cloud.tools.jib.api.Jib;
+import com.google.cloud.tools.jib.api.JibContainerBuilder;
+import com.google.cloud.tools.jib.api.RegistryImage;
+import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath;
+import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer;
+import com.google.cloud.tools.jib.api.buildplan.FilePermissions;
+import com.google.cloud.tools.jib.api.buildplan.FilePermissionsProvider;
+import com.google.cloud.tools.jib.api.buildplan.OwnershipProvider;
+
 /**
  * Build (and push) an application image containing the provisioned server and the deployment.
  * <p>
  * The {@code image} goal extends the {@code package} goal, building and pushing the image occurs after the server
  * is provisioned and the deployment deployed in it.
  * <p>
- * The {@code image} goal relies on a Docker binary to execute all image commands (build, login, push).
  *
  * <p>
  * Note that if a WildFly Bootable JAR is packaged, it is ignored when building the image.
@@ -50,8 +59,6 @@ import org.wildfly.plugin.core.Constants;
 @Mojo(name = "image", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME, defaultPhase = LifecyclePhase.PACKAGE)
 @SuppressWarnings({ "deprecated", "removal" })
 public class ApplicationImageMojo extends PackageServerMojo {
-
-    public static final int DOCKER_CMD_CHECK_TIMEOUT = 3000;
 
     /**
      * Provides a reference to the settings file.
@@ -84,10 +91,7 @@ public class ApplicationImageMojo extends PackageServerMojo {
      *     --&gt;
      *   &lt;push&gt;true&lt;/push&gt;
      *
-     *   &lt;!-- (optional) The binary used to perform image commands (build, login, push) (default is "docker") --&gt;
-     *   &lt;docker-binary&gt;docker&lt;/docker-binary&gt;
-     *
-     *   &lt;!-- (optional) the JDK version used by the application. Allowed values are "11" and "17". If unspecified, the "latest" tag is used to determine the JDK version used by WildFly runtime image --&gt;
+     *   &lt;!-- (optional) the JDK version used by the application. Allowed values are "11", "17", and "21". If unspecified, the "latest" tag is used to determine the JDK version used by WildFly runtime image --&gt;
      *   &lt;jdk-version&gt;11&lt;/jdk-version&gt;
      *
      *   &lt;!-- (optional) The group part of the name of the application image --&gt;
@@ -213,8 +217,22 @@ public class ApplicationImageMojo extends PackageServerMojo {
      *
      * @since 5.0.1
      */
+    @Deprecated(forRemoval = true, since = "5.0.2")
     @Parameter(alias = "docker-binary", property = PropertyNames.WILDFLY_IMAGE_BINARY)
     private String dockerBinary;
+
+    /**
+     * The list of architectures of the images (If not set, it defaults to {@code amd64,arm64}).
+     *
+     * Multiple architectures does not work with Docker or Podman.
+     * To build multiarch images, you must specify a registry and push the image ({@code registry} must be set and {@code push}
+     * must be true).
+     * Only `linux` operating system is supported.
+     *
+     * @since 5.0.1
+     */
+    @Parameter(alias = "archs", property = PropertyNames.WILDFLY_IMAGE_ARCHS)
+    private String archs = "amd64,arm64";
 
     /**
      * Adds labels to the generated Dockerfile. Each label will be added as a new line with the prefix of {@code LABEL}.
@@ -249,6 +267,11 @@ public class ApplicationImageMojo extends PackageServerMojo {
     protected String getGoal() {
         return "image";
     }
+
+    private static final FilePermissionsProvider PERMISSIONS_PROVIDER = (sourcePath, destinationPath) -> FilePermissions
+            .fromOctalString("775");
+
+    private static final OwnershipProvider JBOSS_ROOT_OWNER = (sourcePath, destinationPath) -> "jboss:root";
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -288,80 +311,26 @@ public class ApplicationImageMojo extends PackageServerMojo {
         }
 
         try {
-            // The Dockerfile is always generated when the image goal is run.
-            // This allows the user to then use the generated Dockerfile in other contexts than Maven.
-            String runtimeImage = this.image.getWildFlyRuntimeImage();
-            getLog().info(format("Generating Dockerfile %s from base image %s",
-                    Paths.get(project.getBuild().getDirectory()).resolve("Dockerfile"),
-                    runtimeImage));
-            generateDockerfile(runtimeImage, Paths.get(project.getBuild().getDirectory()), provisioningDir);
-
             if (!image.build) {
                 return;
             }
-            // Check if the binary was set via a property
-            if (image.dockerBinary == null) {
-                image.setDockerBinary(project.getProperties().getProperty(PropertyNames.WILDFLY_IMAGE_BINARY,
-                        System.getProperty(PropertyNames.WILDFLY_IMAGE_BINARY)));
-            }
 
-            final String imageBinary = image.getDockerBinary();
-            if (imageBinary == null) {
-                throw new MojoExecutionException("Could not locate a binary to build the image with. Please check your " +
-                        "installation and either set the path to the binary in your PATH environment variable or define the " +
-                        "define the fully qualified path in your configuration, <docker-binary>/path/to/docker</docker-binary>. "
-                        +
-                        "The path can also be defined with the -Dwildfly.image.binary=/path/to/docker system property.");
-            }
-            if (!isImageBinaryAvailable(imageBinary)) {
-                throw new MojoExecutionException(
-                        String.format("Unable to build application image with %1$s. Please check your %1$s installation",
-                                imageBinary));
-            }
-
+            String runtimeImage = this.image.getWildFlyRuntimeImage();
             String image = this.image.getApplicationImageName(project.getArtifactId());
 
-            boolean buildSuccess = buildApplicationImage(image);
+            Path serverDir = Paths.get(project.getBuild().getDirectory(), provisioningDir);
+            // FIXME we should continue to support images built with docker/podman
+            boolean buildSuccess = buildApplicationImageWithJib(image, runtimeImage, archs, serverDir, getDeploymentContent());
             if (!buildSuccess) {
                 throw new MojoExecutionException(String.format("Unable to build application image %s", image));
             }
             getLog().info(String.format("Successfully built application image %s", image));
-
-            if (this.image.push) {
-                logToRegistry();
-
-                boolean pushSuccess = pushApplicationImage(image);
-                if (!pushSuccess) {
-                    throw new MojoExecutionException(String.format("Unable to push application image %s", image));
-                }
-                getLog().info(String.format("Successfully pushed application image %s", image));
-            }
         } catch (IOException e) {
             throw new MojoExecutionException(e.getLocalizedMessage(), e);
         }
     }
 
-    private void logToRegistry() throws MojoExecutionException {
-        String registry = image.registry;
-        if (registry == null) {
-            getLog().info(String.format("Registry was not set. Using default for %s.", image.getDockerBinary()));
-        }
-        if (image.user != null && image.password != null) {
-            String[] dockerArgs = new String[] {
-                    "login", registry,
-                    "-u", image.user,
-                    "-p", image.password
-            };
-            boolean loginSuccessful = ExecUtil.exec(getLog(), image.getDockerBinary(), dockerArgs);
-            if (!loginSuccessful) {
-                throw new MojoExecutionException(
-                        String.format("Could not log to the container registry with the command: %s login %s -u %s -p *****",
-                                image.getDockerBinary(), registry, image.user));
-            }
-        }
-    }
-
-    private boolean buildApplicationImage(String image) throws IOException {
+    private boolean buildApplicationImageWithDocker(String image) throws IOException {
         getLog().info(format("Building application image %s using %s.", image, this.image.getDockerBinary()));
         String[] dockerArgs = new String[] { "build", "-t", image, "." };
 
@@ -372,70 +341,70 @@ public class ApplicationImageMojo extends PackageServerMojo {
 
     }
 
-    private boolean pushApplicationImage(String image) {
-        getLog().info(format("Pushing application image %s using %s.", image, this.image.getDockerBinary()));
+    private boolean buildApplicationImageWithJib(String image, String runtimeImage, String archs, Path wildflyDirectory,
+            Path deployment)
+            throws IOException {
 
-        String[] dockerArgs = new String[] { "push", image };
-
-        getLog().info(format("Executing the following command to push application image: '%s %s'", this.image.getDockerBinary(),
-                join(" ", dockerArgs)));
-        return ExecUtil.exec(getLog(), Paths.get(project.getBuild().getDirectory()).toFile(), this.image.getDockerBinary(),
-                dockerArgs);
-    }
-
-    private void generateDockerfile(String runtimeImage, Path targetDir, String wildflyDirectory)
-            throws IOException, MojoExecutionException {
-
-        Path jbossHome = Path.of(wildflyDirectory);
-        // Docker requires the source file be relative to the context directory. From the documentation:
-        // The <src> path must be inside the context of the build; you cannot COPY ../something /something, because
-        // the first step of a docker build is to send the context directory (and subdirectories) to the docker daemon.
-        if (jbossHome.isAbsolute()) {
-            jbossHome = targetDir.relativize(jbossHome);
-        }
-
-        String targetName = getDeploymentTargetName();
-
-        // Create the Dockerfile content
-        final StringBuilder dockerfileContent = new StringBuilder();
-        dockerfileContent.append("FROM ").append(runtimeImage).append('\n');
-        if (labels != null) {
-            labels.forEach(
-                    (key, value) -> dockerfileContent.append("LABEL ").append(key).append("=\"")
-                            .append(value.replace("\"", "\\\"")).append("\"\n"));
-        }
-        dockerfileContent.append("COPY --chown=jboss:root ").append(jbossHome).append(" $JBOSS_HOME\n")
-                .append("RUN chmod -R ug+rwX $JBOSS_HOME\n")
-                .append("COPY --chown=jboss:root ").append(getDeploymentContent().getFileName())
-                .append(" $JBOSS_HOME/standalone/deployments/").append(targetName);
-
-        final List<String> serverArgs = new ArrayList<>();
-        if (!layers.isEmpty() && !layersConfigurationFileName.equals(Constants.STANDALONE_XML)) {
-            serverArgs.add("-c=" + layersConfigurationFileName);
-        } else if (!serverConfig.equals(Constants.STANDALONE_XML)) {
-            serverArgs.add("-c=" + serverConfig);
-        }
-
-        if (!serverArgs.isEmpty()) {
-            dockerfileContent.append('\n').append("ENV SERVER_ARGS=\"").append(String.join(",", serverArgs)).append('"');
-        }
-
-        Files.writeString(targetDir.resolve("Dockerfile"), dockerfileContent, StandardCharsets.UTF_8);
-    }
-
-    private boolean isImageBinaryAvailable(String imageBinary) {
+        getLog().info(format("Building application image %s.", image));
         try {
-            if (!ExecUtil.execSilentWithTimeout(Duration.ofMillis(DOCKER_CMD_CHECK_TIMEOUT), imageBinary, "-v")) {
+            ImageReference imageRef = ImageReference.parse(image);
+            Containerizer containerizer;
 
-                getLog().warn(format("'%1$s -v' returned an error code. Make sure your %1$s binary is correct", imageBinary));
-                return false;
+            if (push) {
+                RegistryImage registryImage = RegistryImage.named(image);
+                if (user != null && password != null) {
+                    registryImage.addCredential(user, password);
+                }
+                containerizer = Containerizer.to(registryImage);
+            } else {
+                DockerDaemonImage dockerDaemon = DockerDaemonImage.named(imageRef);
+                containerizer = Containerizer.to(dockerDaemon);
             }
-        } catch (Exception e) {
-            getLog().warn(format("No %s binary found or general error: %s", imageBinary, e));
-            return false;
-        }
 
-        return true;
+            FileEntriesLayer serverLayer = FileEntriesLayer.builder()
+                    .setName("wildfly")
+                    .addEntryRecursive(wildflyDirectory, AbsoluteUnixPath.get("/opt/server/"),
+                            PERMISSIONS_PROVIDER,
+                            DEFAULT_MODIFICATION_TIME_PROVIDER,
+                            JBOSS_ROOT_OWNER)
+                    .build();
+
+            FileEntriesLayer deploymentLayer = FileEntriesLayer.builder()
+                    .setName("deployment")
+                    .addEntryRecursive(deployment, AbsoluteUnixPath.get("/opt/server/standalone/deployments"),
+                            PERMISSIONS_PROVIDER,
+                            DEFAULT_MODIFICATION_TIME_PROVIDER,
+                            JBOSS_ROOT_OWNER)
+                    .build();
+
+            JibContainerBuilder builder = Jib.from(runtimeImage);
+
+            final List<String> serverArgs = new ArrayList<>();
+            if (!layers.isEmpty() && !layersConfigurationFileName.equals(Constants.STANDALONE_XML)) {
+                serverArgs.add("-c=" + layersConfigurationFileName);
+            } else if (!serverConfig.equals(Constants.STANDALONE_XML)) {
+                serverArgs.add("-c=" + serverConfig);
+            }
+
+            if (!serverArgs.isEmpty()) {
+                builder.addEnvironmentVariable("SERVER_ARGS", String.join(",", serverArgs));
+            }
+
+            builder.addFileEntriesLayer(serverLayer)
+                    .addFileEntriesLayer(deploymentLayer)
+                    .setLabels(labels);
+            if (archs != null) {
+                for (String arch : archs.split(",")) {
+                    builder.addPlatform(arch.trim(), "linux");
+                }
+            }
+
+            builder.containerize(containerizer);
+
+            return true;
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
     }
 
     private String decrypt(final Server server) {

@@ -8,7 +8,6 @@ import static org.wildfly.plugin.provision.ExecUtil.execSilentWithTimeout;
 import static org.wildfly.plugin.tests.AbstractWildFlyMojoTest.getPomFile;
 
 import java.io.ByteArrayOutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
@@ -38,16 +37,10 @@ public class ImageTest extends AbstractImageTest {
             imageMojo.execute();
             Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("image-server");
             assertTrue(jbossHome.toFile().exists());
-            Path dockerFile = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("Dockerfile");
-            assertTrue(dockerFile.toFile().exists());
-            List<String> dockerfileLines = Files.readAllLines(dockerFile);
-            assertLineContains(dockerfileLines, 1, "LABEL description=\"This text illustrates \\");
-            assertLineContains(dockerfileLines, 2, "that label-values can span multiple lines.\"");
-            assertLineContains(dockerfileLines, 3, "LABEL quoted.line=\"I have \\\"quoted myself\\\" here.\"");
-            assertLineContains(dockerfileLines, 4, "LABEL version=\"1.0\"");
             final ByteArrayOutputStream stdout = new ByteArrayOutputStream();
             assertTrue(ExecUtil.exec(stdout, binary, "inspect", "wildfly-maven-plugin/testing"));
             assertEnvironmentUnset(stdout, "SERVER_ARGS=-c=");
+            // TODO assert labels are set on the stdout
         } finally {
 
             exec(binary, "rmi", "wildfly-maven-plugin/testing");
