@@ -15,7 +15,7 @@ public class GlowMavenMessageWriter implements GlowMessageWriter {
 
     private final Log log;
 
-    GlowMavenMessageWriter(Log log) {
+    public GlowMavenMessageWriter(Log log) {
         this.log = log;
     }
 
