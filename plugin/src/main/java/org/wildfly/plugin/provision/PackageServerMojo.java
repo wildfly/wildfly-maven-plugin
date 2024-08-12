@@ -231,6 +231,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
      * <p>
      * Note that the produced fat JAR is ignored when running the {@code dev},{@code image},{@code start} or {@code run} goals.
      * </p>
+     *
+     * @since 5.0
      */
     @Parameter(alias = "bootable-jar", required = false, property = PropertyNames.BOOTABLE_JAR)
     private boolean bootableJar;
@@ -238,6 +240,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     /**
      * When {@code bootable-jar} is set to true, use this parameter to name the generated jar file.
      * The jar file is named by default {@code server-bootable.jar}.
+     *
+     * @since 5.0
      */
     @Parameter(alias = "bootable-jar-name", required = false, property = PropertyNames.BOOTABLE_JAR_NAME)
     private String bootableJarName;
@@ -246,6 +250,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
      * When {@code bootable-jar} is set to true, the bootable JAR artifact is attached to the project with the classifier
      * 'bootable'. Use this parameter to
      * configure the classifier.
+     *
+     * @since 5.0
      */
     @Parameter(alias = "bootable-jar-install-artifact-classifier", property = PropertyNames.BOOTABLE_JAR_INSTALL_CLASSIFIER, defaultValue = BootableJarSupport.BOOTABLE_SUFFIX)
     private String bootableJarInstallArtifactClassifier;
