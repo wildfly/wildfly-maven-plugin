@@ -30,6 +30,8 @@ import org.wildfly.plugin.tools.bootablejar.BootableJarSupport;
  * <p/>
  * The purpose of this goal is to start a WildFly Application Server packaged as a Bootable JAR for testing during the maven
  * lifecycle.
+ *
+ * @since 5.0
  */
 @Mojo(name = "start-jar", requiresDependencyResolution = ResolutionScope.RUNTIME)
 public class StartJarMojo extends AbstractStartMojo {
