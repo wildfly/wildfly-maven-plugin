@@ -177,7 +177,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.wildfly.plugins</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>wildfly-plugin-core</artifactId>
         </dependency>
         <dependency>
