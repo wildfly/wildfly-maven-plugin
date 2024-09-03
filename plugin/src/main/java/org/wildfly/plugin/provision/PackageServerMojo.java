@@ -17,7 +17,10 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.inject.Inject;
 
@@ -31,6 +34,7 @@ import org.jboss.galleon.ProvisioningException;
 import org.jboss.galleon.api.GalleonBuilder;
 import org.jboss.galleon.api.config.GalleonProvisioningConfig;
 import org.jboss.galleon.maven.plugin.util.MvnMessageWriter;
+import org.jboss.galleon.universe.maven.MavenUniverseException;
 import org.jboss.galleon.util.IoUtils;
 import org.wildfly.glow.ScanResults;
 import org.wildfly.plugin.cli.BaseCommandConfiguration;
@@ -172,7 +176,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     private boolean skip;
 
     /**
-     * Skip deploying the deployment after the server is provisioned ({@code false} by default).
+     * Skip deploying the deployments after the server is provisioned ({@code false} by default).
      */
     @Parameter(defaultValue = "false", property = PropertyNames.SKIP_PACKAGE_DEPLOYMENT)
     protected boolean skipDeployment;
@@ -268,10 +272,34 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     @Parameter(alias = "bootable-jar-install-artifact-classifier", property = PropertyNames.BOOTABLE_JAR_INSTALL_CLASSIFIER, defaultValue = BootableJarSupport.BOOTABLE_SUFFIX)
     private String bootableJarInstallArtifactClassifier;
 
+    /**
+     * A list of deployments to deploy.
+     * A deployment is expected to be a Maven project dependency. The dependency type must be one of the following types:
+     * {@code ear}, {@code jar}, {@code rar} or {@code war}.
+     * If the deployment is not found or if the type is not supported, an exception is thrown.
+     * If no deployment name is specified, the name of the resolved artifact file is used.
+     *
+     * <pre>
+     *   &lt;deployments&gt;
+     *     &lt;deployment&gt;
+     *       &lt;groupId&gt;deployment groupId&lt;/groupId&gt;
+     *       &lt;artifactId&gt;deployment artifactId&lt;/artifactId&gt;
+     *       &lt;type&gt;ear|jar|rar|war&lt;/type&gt;
+     *       &lt;classifier&gt;Optional classifier&lt;/classifier&gt;
+     *       &lt;name&gt;Optional deployment name&lt;/name&gt;
+     *     &lt;/deployment&gt;
+     *   &lt;/deployments&gt;
+     * </pre>
+     */
+    @Parameter(alias = "deployments", required = false)
+    private List<DeploymentConfiguration> deployments = new ArrayList<>();
+
     @Inject
     private OfflineCommandExecutor commandExecutor;
 
     private GalleonProvisioningConfig config;
+    private Map<String, Path> deploymentPaths;
+    private DeploymentResolution deploymentResolution;
 
     @Override
     protected GalleonProvisioningConfig getDefaultConfig() throws ProvisioningException {
@@ -292,13 +320,22 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
                     + "discovering provisioning information for the 'cloud' execution context.");
         }
         try {
+            List<Path> allDeployments = new ArrayList<>();
+            Path primaryDeployment = getDeploymentContent();
+            if (primaryDeployment != null) {
+                allDeployments.add(primaryDeployment);
+            }
+            Map<String, Path> extraDeps = getDeployments();
+            if (!extraDeps.isEmpty()) {
+                allDeployments.addAll(extraDeps.values());
+            }
             try (ScanResults results = Utils.scanDeployment(discoverProvisioningInfo,
                     layers,
                     excludedLayers,
                     featurePacks,
                     dryRun,
                     getLog(),
-                    getDeploymentContent(),
+                    allDeployments,
                     artifactResolver,
                     Paths.get(project.getBuild().getDirectory()),
                     pm,
@@ -323,7 +360,44 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
             getLog().debug(String.format("Skipping " + getGoal() + " of %s:%s", project.getGroupId(), project.getArtifactId()));
             return;
         }
+        deploymentResolution = DeploymentResolution.getInstance(project);
         super.execute();
+    }
+
+    private void deploy(Path deploymentContent, String targetName) throws MojoDeploymentException {
+        if (Files.exists(deploymentContent)) {
+            Path standaloneDeploymentDir = Path.of(provisioningDir, "standalone", "deployments");
+            if (!standaloneDeploymentDir.isAbsolute()) {
+                standaloneDeploymentDir = Path.of(project.getBuild().getDirectory()).resolve(standaloneDeploymentDir);
+            }
+            try {
+                Path deploymentTarget = standaloneDeploymentDir.resolve(targetName);
+                getLog().info("Copy deployment " + deploymentContent + " to " + deploymentTarget);
+                Files.copy(deploymentContent, deploymentTarget, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                throw new MojoDeploymentException("Could not copy deployment in provisioned server", e);
+            }
+        } else {
+            getLog().warn("The file " + deploymentContent + " doesn't exist, it will be not deployed.");
+        }
+    }
+
+    private Map<String, Path> getDeployments() throws MavenUniverseException, MojoExecutionException {
+        if (deploymentPaths == null) {
+            deploymentPaths = new LinkedHashMap<>();
+            for (DeploymentConfiguration c : deployments) {
+                Path p;
+                File f = deploymentResolution.getFile(c.getGroupId(), c.getArtifactId(), c.getClassifier(),
+                        c.getType());
+                if (f == null) {
+                    throw new MojoExecutionException("Deployment not found " + c);
+                }
+                p = f.toPath();
+                String deploymentName = c.getName() == null ? p.getFileName().toString() : c.getName();
+                deploymentPaths.put(deploymentName, p);
+            }
+        }
+        return deploymentPaths;
     }
 
     @Override
@@ -343,19 +417,18 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         }
 
         if (!skipDeployment) {
-            final Path deploymentContent = getDeploymentContent();
-            if (Files.exists(deploymentContent)) {
-                Path standaloneDeploymentDir = Path.of(provisioningDir, "standalone", "deployments");
-                if (!standaloneDeploymentDir.isAbsolute()) {
-                    standaloneDeploymentDir = Path.of(project.getBuild().getDirectory()).resolve(standaloneDeploymentDir);
+            Path primaryDeployment = getDeploymentContent();
+            if (primaryDeployment != null) {
+                deploy(primaryDeployment, getDeploymentTargetName());
+            }
+            // Handle extra deployments
+            try {
+                Map<String, Path> extraPaths = getDeployments();
+                for (Entry<String, Path> p : extraPaths.entrySet()) {
+                    deploy(p.getValue(), p.getKey());
                 }
-                try {
-                    Path deploymentTarget = standaloneDeploymentDir.resolve(getDeploymentTargetName());
-                    getLog().info("Copy deployment " + deploymentContent + " to " + deploymentTarget);
-                    Files.copy(deploymentContent, deploymentTarget, StandardCopyOption.REPLACE_EXISTING);
-                } catch (IOException e) {
-                    throw new MojoDeploymentException("Could not copy deployment in provisioned server", e);
-                }
+            } catch (Exception ex) {
+                throw new MojoExecutionException(ex.getLocalizedMessage(), ex);
             }
         }
 
@@ -509,6 +582,9 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
 
     protected Path getDeploymentContent() throws MojoExecutionException {
         final PackageType packageType = PackageType.resolve(project);
+        if (packageType.getPackaging().equals("pom")) {
+            return null;
+        }
         final String filename;
         if (this.filename == null) {
             filename = String.format("%s.%s", project.getBuild().getFinalName(), packageType.getFileExtension());
