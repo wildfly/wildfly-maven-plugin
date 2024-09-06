@@ -28,6 +28,7 @@ public class ChannelConfiguration {
     private ChannelManifestCoordinate manifest;
 
     private boolean multipleManifest;
+    private String name;
 
     /**
      * @return the manifest
@@ -56,6 +57,16 @@ public class ChannelConfiguration {
                         "A channel must be a Maven GAV in the format groupId:artifactId:version. The groupId and artifactId are both required.");
             }
         }
+    }
+
+    /**
+     * Set the name of the channel.
+     * This information is stored in the .installation directory of the provisioned server.
+     *
+     * @param name The name of the channel. Can be {@code null}.
+     */
+    public void setName(final String name) {
+        this.name = name;
     }
 
     public void setManifest(ChannelManifestCoordinate manifest) {
@@ -103,6 +114,6 @@ public class ChannelConfiguration {
         for (RemoteRepository r : repositories) {
             repos.add(new Repository(r.getId(), r.getUrl()));
         }
-        return new Channel(null, null, null, repos, getManifest(), null, null);
+        return new Channel(name, null, null, repos, getManifest(), null, null);
     }
 }
