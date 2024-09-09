@@ -160,55 +160,54 @@ public abstract class AbstractStartMojo extends AbstractServerConnection {
             final StandardOutput out = standardOutput();
             // Create the server and close the client after the start. The process will continue running even after
             // the maven process may have been finished
-            try (ModelControllerClient client = createClient()) {
-                if (ServerManager.isRunning(client)) {
-                    throw new MojoExecutionException(String.format("%s server is already running?", serverType));
-                }
-                final CommandBuilder commandBuilder = createCommandBuilder(server);
-                log.info(String.format("%s server is starting up.", serverType));
-                final Launcher launcher = Launcher.of(commandBuilder)
-                        .setRedirectErrorStream(true);
-                if (env != null) {
-                    for (Map.Entry<String, String> entry : env.entrySet()) {
-                        if (entry.getKey() != null && entry.getValue() != null) {
-                            launcher.addEnvironmentVariable(entry.getKey(), entry.getValue());
-                        }
-                    }
-                }
-                out.getRedirect().ifPresent(launcher::redirectOutput);
-
-                final Process process = launcher.launch();
-                if (serverType == ServerType.DOMAIN) {
-                    serverManager = ServerManager.builder().process(process).client(client).domain();
-                } else {
-                    serverManager = ServerManager.builder().process(process).client(client).standalone();
-                }
-                // Note that if this thread is started and no shutdown goal is executed this stop the stdout and stderr
-                // from being logged any longer. The user was warned in the documentation.
-                out.startConsumer(process);
-                if (!serverManager.waitFor(startupTimeout, TimeUnit.SECONDS)) {
-                    throw new MojoExecutionException(String.format("Server failed to start in %s seconds.", startupTimeout));
-                }
-                if (!process.isAlive()) {
-                    throw new MojoExecutionException("The process has been terminated before the start goal has completed.");
-                }
-                return new ServerContext() {
-                    @Override
-                    public Process process() {
-                        return process;
-                    }
-
-                    @Override
-                    public CommandBuilder commandBuilder() {
-                        return commandBuilder;
-                    }
-
-                    @Override
-                    public Path jbossHome() {
-                        return server;
-                    }
-                };
+            final ModelControllerClient client = createClient();
+            if (ServerManager.isRunning(client)) {
+                throw new MojoExecutionException(String.format("%s server is already running?", serverType));
             }
+            final CommandBuilder commandBuilder = createCommandBuilder(server);
+            log.info(String.format("%s server is starting up.", serverType));
+            final Launcher launcher = Launcher.of(commandBuilder)
+                    .setRedirectErrorStream(true);
+            if (env != null) {
+                for (Map.Entry<String, String> entry : env.entrySet()) {
+                    if (entry.getKey() != null && entry.getValue() != null) {
+                        launcher.addEnvironmentVariable(entry.getKey(), entry.getValue());
+                    }
+                }
+            }
+            out.getRedirect().ifPresent(launcher::redirectOutput);
+
+            final Process process = launcher.launch();
+            if (serverType == ServerType.DOMAIN) {
+                serverManager = ServerManager.builder().process(process).client(client).domain();
+            } else {
+                serverManager = ServerManager.builder().process(process).client(client).standalone();
+            }
+            // Note that if this thread is started and no shutdown goal is executed this stop the stdout and stderr
+            // from being logged any longer. The user was warned in the documentation.
+            out.startConsumer(process);
+            if (!serverManager.waitFor(startupTimeout, TimeUnit.SECONDS)) {
+                throw new MojoExecutionException(String.format("Server failed to start in %s seconds.", startupTimeout));
+            }
+            if (!process.isAlive()) {
+                throw new MojoExecutionException("The process has been terminated before the start goal has completed.");
+            }
+            return new ServerContext() {
+                @Override
+                public Process process() {
+                    return process;
+                }
+
+                @Override
+                public CommandBuilder commandBuilder() {
+                    return commandBuilder;
+                }
+
+                @Override
+                public Path jbossHome() {
+                    return server;
+                }
+            };
         } catch (MojoExecutionException e) {
             throw e;
         } catch (Exception e) {
