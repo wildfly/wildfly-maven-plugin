@@ -162,8 +162,8 @@ public abstract class AbstractServerConnection extends AbstractMojo {
         }
         final ModelControllerClientConfiguration.Builder builder = new ModelControllerClientConfiguration.Builder()
                 .setProtocol(protocol)
-                .setHostName(hostname)
-                .setPort(port)
+                .setHostName(getManagementHostName())
+                .setPort(getManagementPort())
                 .setConnectionTimeout(timeout * 1000);
         if (authenticationConfig != null) {
             try {
@@ -173,6 +173,14 @@ public abstract class AbstractServerConnection extends AbstractMojo {
             }
         }
         return new MavenModelControllerClientConfiguration(builder.build(), username, password);
+    }
+
+    protected int getManagementPort() {
+        return port;
+    }
+
+    protected String getManagementHostName() {
+        return hostname;
     }
 
     private String decrypt(final Server server) {

@@ -268,6 +268,38 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
         }
     }
 
+    @Override
+    protected int getManagementPort() {
+        // Check the java-opts for a management port override
+        if (javaOpts != null) {
+            for (String opt : javaOpts) {
+                if (opt.startsWith("-Djboss.management.http.port=") || opt.startsWith("-Djboss.management.https.port=")) {
+                    final int equals = opt.indexOf('=');
+                    return Integer.parseInt(opt.substring(equals + 1).trim());
+                }
+                if (opt.startsWith("-Djboss.socket.binding.port-offset=")) {
+                    final int equals = opt.indexOf('=');
+                    return super.getManagementPort() + Integer.parseInt(opt.substring(equals + 1).trim());
+                }
+            }
+        }
+        return super.getManagementPort();
+    }
+
+    @Override
+    protected String getManagementHostName() {
+        // Check the java-opts for a management port override
+        if (javaOpts != null) {
+            for (String opt : javaOpts) {
+                if (opt.startsWith("-Djboss.bind.address.management=")) {
+                    final int equals = opt.indexOf('=');
+                    return opt.substring(equals + 1).trim();
+                }
+            }
+        }
+        return super.getManagementHostName();
+    }
+
     /**
      * Allows the {@link #javaOpts} to be set as a string. The string is assumed to be space delimited.
      *
