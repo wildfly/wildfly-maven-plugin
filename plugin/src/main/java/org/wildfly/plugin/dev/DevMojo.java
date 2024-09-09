@@ -909,7 +909,15 @@ public class DevMojo extends AbstractServerStartMojo {
         boolean compileNeeded = true;
         for (String goal : mavenSession.getGoals()) {
             if (POST_COMPILE_PHASES.contains(goal)) {
-                compileNeeded = false;
+                // The compile phase has happened before this goal. However, the <name> parameter may have been
+                // configured on the dev goal, but the <build><finalName/></build> may not have been overridden. If that
+                // is the case, we need to compile again. We will log a message for informational purposes.
+                compileNeeded = Files.notExists(resolveWarLocation());
+                if (compileNeeded) {
+                    getLog().info(String.format(
+                            "The project builds finalName, \"%s\", does not match the <name> configuration parameter of \"%s\". This will require the a second build.",
+                            resolveProjectDeploymentName(), name));
+                }
                 break;
             }
             if (goal.endsWith("wildfly:" + goal())) {
@@ -1053,9 +1061,7 @@ public class DevMojo extends AbstractServerStartMojo {
 
     // The directory name also contains the extension, required for Glow scanning.
     private Path resolveWarLocation() {
-        final PackageType packageType = PackageType.resolve(project);
-        final String filename = String.format("%s.%s", project.getBuild()
-                .getFinalName(), packageType.getFileExtension());
+        final String filename = resolveProjectDeploymentName();
         String runtimeName = this.name == null || this.name.isBlank() ? filename : this.name;
         return Path.of(project.getBuild().getDirectory()).resolve(runtimeName);
     }
@@ -1064,6 +1070,12 @@ public class DevMojo extends AbstractServerStartMojo {
     // With the war goal, the directory doesn't contain the file extension.
     private Path resolveWarDir() {
         return Path.of(project.getBuild().getDirectory()).resolve(project.getBuild().getFinalName());
+    }
+
+    private String resolveProjectDeploymentName() {
+        final PackageType packageType = PackageType.resolve(project);
+        return String.format("%s.%s", project.getBuild()
+                .getFinalName(), packageType.getFileExtension());
     }
 
     private void debug(final String format, final Object... args) {
