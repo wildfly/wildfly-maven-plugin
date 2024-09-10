@@ -1,2 +1,14 @@
-module:org.wildfly.plugin.core
+org.wildfly.plugin.cli
+org.wildfly.plugin.common
 org.wildfly.plugin.core
+org.wildfly.plugin.deployment
+org.wildfly.plugin.deployment.resource
+org.wildfly.plugin.dev
+org.wildfly.plugin.generated
+org.wildfly.plugin.provision
+org.wildfly.plugin.server
+org.wildfly.plugin.tools
+org.wildfly.plugin.tools.bootablejar
+org.wildfly.plugin.tools.cli
+org.wildfly.plugin.tools.server
+org.wildfly.plugin.tools.util

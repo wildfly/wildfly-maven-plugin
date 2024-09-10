@@ -1,1 +1,0 @@
-moduleSearchIndex = [{"l":"org.wildfly.plugin.core"}]
