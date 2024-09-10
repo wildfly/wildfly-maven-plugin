@@ -107,7 +107,7 @@ public class Utils {
             List<GalleonFeaturePack> featurePacks,
             boolean dryRun,
             Log log,
-            Path deploymentContent,
+            List<Path> deploymentContents,
             MavenRepoManager artifactResolver,
             Path outputFolder,
             GalleonBuilder pm,
@@ -119,7 +119,7 @@ public class Utils {
         if (!excludedLayers.isEmpty()) {
             throw new MojoExecutionException("excluded layers must be empty when enabling glow");
         }
-        if (!Files.exists(deploymentContent)) {
+        if (deploymentContents.isEmpty()) {
             throw new MojoExecutionException("A deployment is expected when enabling glow layer discovery");
         }
         Path inProvisioningFile = null;
@@ -134,7 +134,7 @@ public class Utils {
                 p.storeProvisioningConfig(in, inProvisioningFile);
             }
         }
-        Arguments arguments = discoverProvisioningInfo.toArguments(deploymentContent, inProvisioningFile,
+        Arguments arguments = discoverProvisioningInfo.toArguments(deploymentContents, inProvisioningFile,
                 layersConfigurationFileName);
         log.info("Glow is scanning... ");
         ScanResults results;

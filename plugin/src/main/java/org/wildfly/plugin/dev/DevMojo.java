@@ -661,10 +661,12 @@ public class DevMojo extends AbstractServerStartMojo {
     }
 
     private ScanResults scanDeployment(GalleonBuilder pm) throws Exception {
+        List<Path> lst = new ArrayList<>();
+        lst.add(resolveWarLocation());
         return Utils.scanDeployment(discoverProvisioningInfo,
                 layers, excludedLayers, featurePacks, false,
                 getLog(),
-                resolveWarLocation(),
+                lst,
                 mavenRepoManager,
                 Paths.get(project.getBuild().getDirectory()),
                 pm,
