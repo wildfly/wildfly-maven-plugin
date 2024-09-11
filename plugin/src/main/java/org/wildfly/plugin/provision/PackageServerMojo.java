@@ -229,7 +229,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     private GlowConfig discoverProvisioningInfo;
 
     /**
-     * Package the provisioned server into a WildFly Bootable JAR.
+     * Package the provisioned server into a WildFly Bootable JAR. In order to produce a hollow jar (a jar that doesn't contain
+     * a deployment) set the { @code skipDeployment } parameter.
      * <p>
      * Note that the produced fat JAR is ignored when running the {@code dev},{@code image},{@code start} or {@code run} goals.
      * </p>
