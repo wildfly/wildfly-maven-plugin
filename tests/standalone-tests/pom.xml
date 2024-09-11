@@ -82,7 +82,11 @@
             <artifactId>parsson</artifactId>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.wildfly.channel</groupId>
+            <artifactId>channel-core</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- to fix slf4j warning when provisioning -->
         <dependency>
             <groupId>org.jboss.slf4j</groupId>
