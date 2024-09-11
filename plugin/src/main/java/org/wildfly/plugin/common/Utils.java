@@ -119,8 +119,12 @@ public class Utils {
         if (!excludedLayers.isEmpty()) {
             throw new MojoExecutionException("excluded layers must be empty when enabling glow");
         }
-        if (!Files.exists(deploymentContent)) {
+        if (!Files.exists(deploymentContent) && !discoverProvisioningInfo.isIgnoreDeployment()) {
             throw new MojoExecutionException("A deployment is expected when enabling glow layer discovery");
+        }
+        if (discoverProvisioningInfo.isIgnoreDeployment()) {
+            log.warn(
+                    "The deployment will be not analyzed, WildFly Glow will produce a server based on configured add-ons and the default base layer.");
         }
         Path inProvisioningFile = null;
         Path glowOutputFolder = outputFolder.resolve("glow-scan");

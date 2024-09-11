@@ -201,6 +201,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
      * <li>verbose: {@code true} | {@code false}. Display more information. The set of rules that selected Galleon layers are
      * printed. Default to {@code false}.</li>
      * <li>version: server version. Default being the latest released version.</li>
+     * <li>ignoreDeployment: The deployment will be not analyzed. A server based on the configured add-ons and the default base
+     * layer is provisioned. Default to {@code false}.</li>
      *
      * </ul>
      * </div>

@@ -5,6 +5,7 @@
 package org.wildfly.plugin.provision;
 
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -29,13 +30,14 @@ public class GlowConfig {
     private boolean failsOnError = true;
     private boolean preview;
     private boolean verbose;
+    private boolean ignoreDeployment;
 
     public GlowConfig() {
     }
 
     public Arguments toArguments(Path deployment, Path inProvisioning, String layersConfigurationFileName) {
         final Set<String> profiles = profile != null ? Set.of(profile) : Set.of();
-        List<Path> lst = List.of(deployment);
+        List<Path> lst = ignoreDeployment ? Collections.emptyList() : List.of(deployment);
         Builder builder = Arguments.scanBuilder().setExecutionContext(context).setExecutionProfiles(profiles)
                 .setUserEnabledAddOns(addOns).setBinaries(lst).setSuggest(suggest).setJndiLayers(getLayersForJndi())
                 .setVersion(version)
@@ -190,5 +192,19 @@ public class GlowConfig {
      */
     public boolean isVerbose() {
         return verbose;
+    }
+
+    /**
+     * @param ignoreDeployment the ignoreDeployment to set
+     */
+    public void setIgnoreDeployment(boolean ignoreDeployment) {
+        this.ignoreDeployment = ignoreDeployment;
+    }
+
+    /**
+     * @return the ignoreDeployment
+     */
+    public boolean isIgnoreDeployment() {
+        return ignoreDeployment;
     }
 }
