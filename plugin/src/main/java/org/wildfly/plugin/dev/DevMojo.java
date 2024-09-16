@@ -20,6 +20,7 @@ import static org.twdata.maven.mojoexecutor.MojoExecutor.version;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -377,6 +378,12 @@ public class DevMojo extends AbstractServerStartMojo {
     @Parameter(property = PropertyNames.CHANNELS)
     private List<ChannelConfiguration> channels;
 
+    @Parameter(alias = "keyserver-urls")
+    protected List<URL> keyserverUrls = Collections.emptyList();
+
+    @Parameter(alias = "trusted-keyring")
+    protected Path trustedKeyring;
+
     /**
      * Specifies the name used for the deployment.
      * <p>
@@ -520,6 +527,8 @@ public class DevMojo extends AbstractServerStartMojo {
             try {
                 return new ChannelMavenArtifactRepositoryManager(channels,
                         repoSystem, session, repositories,
+                        keyserverUrls,
+                        trustedKeyring,
                         getLog(), offlineProvisioning);
             } catch (MalformedURLException | UnresolvedMavenArtifactException ex) {
                 throw new MojoExecutionException(ex.getLocalizedMessage(), ex);

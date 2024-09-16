@@ -9,20 +9,24 @@ import static org.wildfly.channel.maven.VersionResolverFactory.DEFAULT_REPOSITOR
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -46,7 +50,11 @@ import org.wildfly.channel.NoStreamFoundException;
 import org.wildfly.channel.Repository;
 import org.wildfly.channel.UnresolvedMavenArtifactException;
 import org.wildfly.channel.VersionResult;
+import org.wildfly.channel.gpg.GpgSignatureValidator;
+import org.wildfly.channel.gpg.GpgSignatureValidatorListener;
+import org.wildfly.channel.gpg.Keyserver;
 import org.wildfly.channel.maven.VersionResolverFactory;
+import org.wildfly.channel.spi.ArtifactIdentifier;
 import org.wildfly.channel.spi.ChannelResolvable;
 import org.wildfly.prospero.metadata.ManifestVersionRecord;
 import org.wildfly.prospero.metadata.ManifestVersionResolver;
@@ -63,11 +71,16 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
     private final RepositorySystem system;
     private final DefaultRepositorySystemSession session;
     private final List<RemoteRepository> repositories;
+    private final Set<String> artifactSources = new HashSet<>();
+    private final Path gpgKeyring;
 
     public ChannelMavenArtifactRepositoryManager(List<ChannelConfiguration> channels,
             RepositorySystem system,
             RepositorySystemSession contextSession,
-            List<RemoteRepository> repositories, Log log, boolean offline)
+            List<RemoteRepository> repositories,
+            List<URL> keystoreUrls,
+            Path gpgKeyring,
+            Log log, boolean offline)
             throws MalformedURLException, UnresolvedMavenArtifactException, MojoExecutionException {
         if (channels.isEmpty()) {
             throw new MojoExecutionException("No channel specified.");
@@ -75,6 +88,7 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
         this.log = log;
         session = MavenRepositorySystemUtils.newSession();
         this.repositories = repositories;
+        this.gpgKeyring = gpgKeyring;
         session.setLocalRepositoryManager(contextSession.getLocalRepositoryManager());
         session.setOffline(offline);
         Map<String, RemoteRepository> mapping = new HashMap<>();
@@ -91,7 +105,20 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
             }
             return rep;
         };
-        VersionResolverFactory factory = new VersionResolverFactory(system, session, mapper);
+        final GpgSignatureValidator signatureValidator = new GpgSignatureValidator(new GpgKeyring(gpgKeyring),
+                new Keyserver(keystoreUrls));
+        VersionResolverFactory factory = new VersionResolverFactory(system, session, signatureValidator, mapper);
+        signatureValidator.addListener(new GpgSignatureValidatorListener() {
+            @Override
+            public void artifactSignatureCorrect(ArtifactIdentifier artifact, PGPPublicKey publicKey) {
+                artifactSources.add(GpgKeyring.describeImportedKeys(publicKey));
+            }
+
+            @Override
+            public void artifactSignatureInvalid(ArtifactIdentifier artifact, PGPPublicKey publicKey) {
+
+            }
+        });
         channelSession = new ChannelSession(this.channels, factory);
         localCachePath = contextSession.getLocalRepositoryManager().getRepository().getBasedir().toPath();
         this.system = system;
@@ -186,9 +213,17 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
 
     public void done(Path home) throws MavenUniverseException, IOException {
         ChannelManifest channelManifest = channelSession.getRecordedChannel();
-        final ManifestVersionRecord currentVersions = new ManifestVersionResolver(localCachePath, system)
+        final ManifestVersionRecord currentVersions = new ManifestVersionResolver(localCachePath, system,
+                new GpgSignatureValidator(new GpgKeyring(gpgKeyring)))
                 .getCurrentVersions(channels);
         ProsperoMetadataUtils.generate(home, channels, channelManifest, currentVersions);
+
+        if (!this.artifactSources.isEmpty()) {
+            log.info("Resolved artifacts were signed by:");
+            for (String artifactSource : this.artifactSources) {
+                log.info("  * " + artifactSource);
+            }
+        }
     }
 
     @Override

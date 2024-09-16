@@ -6,7 +6,6 @@ package org.wildfly.plugin.provision;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -14,11 +13,13 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.wildfly.channel.Channel;
 import org.wildfly.channel.ChannelManifestCoordinate;
-import org.wildfly.channel.Repository;
 
 /**
  * A channel configuration. Contains a {@code manifest} composed of a {@code groupId}, an {@code artifactId}
  * an optional {@code version} or a {@code url}.
+ *
+ * Optionally can declare if the channel requires GPG signature validation ({@code gpgCheck}) and a list of GPG public
+ * keys used to verify them ({@code gpgUrls}).
  *
  * @author jdenise
  */
@@ -29,6 +30,10 @@ public class ChannelConfiguration {
 
     private boolean multipleManifest;
     private String name;
+
+    private boolean gpgCheck;
+
+    private List<URL> gpgUrls;
 
     /**
      * @return the manifest
@@ -110,10 +115,18 @@ public class ChannelConfiguration {
 
     public Channel toChannel(List<RemoteRepository> repositories) throws MojoExecutionException {
         validate();
-        List<Repository> repos = new ArrayList<>();
-        for (RemoteRepository r : repositories) {
-            repos.add(new Repository(r.getId(), r.getUrl()));
+        final Channel.Builder builder = new Channel.Builder()
+                .setManifestCoordinate(getManifest())
+                .setGpgCheck(gpgCheck);
+
+        if (gpgUrls != null) {
+            gpgUrls.stream().map(URL::toExternalForm).forEach(builder::addGpgUrl);
         }
-        return new Channel(name, null, null, repos, getManifest(), null, null);
+
+        for (RemoteRepository r : repositories) {
+            builder.addRepository(r.getId(), r.getUrl());
+        }
+
+        return builder.build();
     }
 }
