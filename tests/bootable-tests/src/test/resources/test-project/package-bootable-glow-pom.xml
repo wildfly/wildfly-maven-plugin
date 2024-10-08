@@ -20,6 +20,7 @@
                     <record-provisioning-state>true</record-provisioning-state>
                     <provisioning-dir>packaged-bootable-glow-server</provisioning-dir>
                     <bootable-jar>true</bootable-jar>
+                    <bootable-jar-name>server-bootable.jar</bootable-jar-name>
                     <discover-provisioning-info>
                         <addOns>
                             <addOn>openapi</addOn>

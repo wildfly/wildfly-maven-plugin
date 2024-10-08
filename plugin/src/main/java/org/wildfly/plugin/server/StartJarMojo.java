@@ -22,8 +22,6 @@ import org.wildfly.plugin.common.Environment;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.StandardOutput;
 import org.wildfly.plugin.common.Utils;
-import org.wildfly.plugin.provision.PackageServerMojo;
-import org.wildfly.plugin.tools.bootablejar.BootableJarSupport;
 
 /**
  * Starts a WildFly Application Server packaged as Bootable JAR.
@@ -62,9 +60,12 @@ public class StartJarMojo extends AbstractStartMojo {
 
     /**
      * When {@code bootable-jar} is set to true, use this parameter to name the generated jar file.
-     * The jar file is named by default {@code server-bootable.jar}.
+     * <p>
+     * Note that since 5.1 the default name changed from {@code server-bootable.jar} to
+     * {@code ${project.artifactId}-bootable.jar}.
+     * </p>
      */
-    @Parameter(alias = "bootable-jar-name", required = false, property = PropertyNames.BOOTABLE_JAR_NAME)
+    @Parameter(alias = "bootable-jar-name", property = PropertyNames.BOOTABLE_JAR_NAME, defaultValue = "${project.artifactId}-bootable.jar")
     private String bootableJarName;
 
     @Override
@@ -131,9 +132,7 @@ public class StartJarMojo extends AbstractStartMojo {
 
     @Override
     protected Path getServerHome() throws MojoExecutionException, MojoFailureException {
-        String jarName = bootableJarName == null ? PackageServerMojo.BOOTABLE_JAR_NAME_RADICAL +
-                BootableJarSupport.BOOTABLE_SUFFIX + "." + PackageServerMojo.JAR
-                : bootableJarName;
+        String jarName = bootableJarName;
         Path targetPath = Paths.get(project.getBuild().getDirectory());
         Path jarFile = targetPath.toAbsolutePath()
                 .resolve(jarName);

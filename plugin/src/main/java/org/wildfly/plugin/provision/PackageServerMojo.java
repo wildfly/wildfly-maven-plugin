@@ -53,7 +53,9 @@ import org.wildfly.plugin.tools.bootablejar.BootableJarSupport;
 @Mojo(name = "package", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME, defaultPhase = LifecyclePhase.PACKAGE)
 public class PackageServerMojo extends AbstractProvisionServerMojo {
 
+    @Deprecated(forRemoval = true, since = "5.1")
     public static final String JAR = "jar";
+    @Deprecated(forRemoval = true, since = "5.1")
     public static final String BOOTABLE_JAR_NAME_RADICAL = "server-";
 
     /**
@@ -242,11 +244,14 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
 
     /**
      * When {@code bootable-jar} is set to true, use this parameter to name the generated jar file.
-     * The jar file is named by default {@code server-bootable.jar}.
+     * <p>
+     * Note that since 5.1 the default name changed from {@code server-bootable.jar} to
+     * {@code ${project.artifactId}-bootable.jar}.
+     * </p>
      *
      * @since 5.0
      */
-    @Parameter(alias = "bootable-jar-name", required = false, property = PropertyNames.BOOTABLE_JAR_NAME)
+    @Parameter(alias = "bootable-jar-name", property = PropertyNames.BOOTABLE_JAR_NAME, defaultValue = "${project.artifactId}-bootable.jar")
     private String bootableJarName;
 
     /**
@@ -385,12 +390,11 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
             getLog().debug("Attaching bootable jar " + jarFile + " as a project artifact with classifier "
                     + bootableJarInstallArtifactClassifier);
         }
-        projectHelper.attachArtifact(project, JAR, bootableJarInstallArtifactClassifier, jarFile.toFile());
+        projectHelper.attachArtifact(project, "jar", bootableJarInstallArtifactClassifier, jarFile.toFile());
     }
 
     private void packageBootableJar(Path jbossHome, GalleonProvisioningConfig activeConfig) throws Exception {
-        String jarName = bootableJarName == null ? BOOTABLE_JAR_NAME_RADICAL + BootableJarSupport.BOOTABLE_SUFFIX + "." + JAR
-                : bootableJarName;
+        String jarName = bootableJarName;
         Path targetPath = Paths.get(project.getBuild().getDirectory());
         Path targetJarFile = targetPath.toAbsolutePath()
                 .resolve(jarName);
