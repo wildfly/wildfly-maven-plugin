@@ -133,7 +133,6 @@ public class Utils {
             GalleonProvisioningConfig in = GalleonUtils.buildConfig(pm, featurePacks, layers, excludedLayers, galleonOptions,
                     layersConfigurationFileName);
             inProvisioningFile = glowOutputFolder.resolve("glow-in-provisioning.xml");
-            pm.newProvisioningBuilder(in).build().storeProvisioningConfig(in, outputFolder);
             try (Provisioning p = pm.newProvisioningBuilder(in).build()) {
                 p.storeProvisioningConfig(in, inProvisioningFile);
             }
