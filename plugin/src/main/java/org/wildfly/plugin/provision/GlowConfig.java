@@ -20,6 +20,8 @@ import org.wildfly.glow.ScanArguments.Builder;
 @SuppressWarnings("unused")
 public class GlowConfig {
 
+    static final String CLOUD_CONTEXT = "cloud";
+
     private String context = "bare-metal";
     private String profile;
     private Set<String> addOns = Set.of();

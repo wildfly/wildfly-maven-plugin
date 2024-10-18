@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.apache.maven.plugin.Mojo;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Test;
 import org.wildfly.plugin.tests.AbstractProvisionConfiguredMojoTestCase;
 import org.wildfly.plugin.tests.AbstractWildFlyMojoTest;
@@ -60,5 +61,20 @@ public class PackageBootableTest extends AbstractProvisionConfiguredMojoTestCase
         String deploymentName = "test.war";
         checkJar(AbstractWildFlyMojoTest.getBaseDir(), BOOTABLE_JAR_NAME, deploymentName,
                 true, layers, null, true);
+    }
+
+    @Test
+    public void testGlowCloudPackage() throws Exception {
+
+        final Mojo packageMojo = lookupConfiguredMojo(
+                AbstractWildFlyMojoTest.getPomFile("package-bootable-glow-cloud-pom.xml").toFile(), "package");
+        try {
+            packageMojo.execute();
+            throw new Exception("Should have failed!");
+        } catch (MojoExecutionException ex) {
+            // XXX OK expected
+            assertEquals("The option 'bootableJar' must not be set when " +
+                    "discovering provisioning information for the 'cloud' execution context.", ex.getMessage());
+        }
     }
 }
