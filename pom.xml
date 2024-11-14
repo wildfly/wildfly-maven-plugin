@@ -134,7 +134,7 @@
 
         <!-- Other properties -->
         <maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
-        <release.short.version>5.0</release.short.version>
+        <release.short.version>5.1</release.short.version>
         <docs.directory>${project.basedir}/../docs/releases/${release.short.version}</docs.directory>
     </properties>
 

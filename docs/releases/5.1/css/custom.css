@@ -1,0 +1,16 @@
+/*
+ * Copyright The WildFly Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+
+a {
+    color: #f0ca4d !important;
+}
+a:hover {
+     color: #fff !important;
+ }
+
+.navbar-text {
+    color: #aaa; !important;
+}
