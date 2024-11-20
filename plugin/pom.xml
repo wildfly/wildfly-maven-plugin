@@ -141,7 +141,7 @@
             <artifactId>wildfly-controller-client</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.wildfly.core</groupId>
+            <groupId>org.wildfly.launcher</groupId>
             <artifactId>wildfly-launcher</artifactId>
         </dependency>
         <!-- Seems to be needed as the controller client is transitively bringing it in -->
