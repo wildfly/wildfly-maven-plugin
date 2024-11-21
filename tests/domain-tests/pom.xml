@@ -10,7 +10,7 @@
     <parent>
         <groupId>org.wildfly.plugins</groupId>
         <artifactId>wildfly-maven-plugin-tests</artifactId>
-        <version>5.1.0.Beta1-SNAPSHOT</version>
+        <version>5.1.0.Alpha2</version>
     </parent>
 
     <artifactId>wildfly-maven-plugin-domain-tests</artifactId>
