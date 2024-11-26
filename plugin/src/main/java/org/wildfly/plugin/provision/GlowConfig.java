@@ -25,6 +25,7 @@ public class GlowConfig {
     private String context = "bare-metal";
     private String profile;
     private Set<String> addOns = Set.of();
+    private Set<String> spaces = Set.of();
     private String version;
     private boolean suggest;
     private Set<String> layersForJndi = Set.of();
@@ -46,6 +47,7 @@ public class GlowConfig {
                 .setTechPreview(preview)
                 .setExcludeArchivesFromScan(excludedArchives)
                 .setVerbose(verbose)
+                .setSpaces(spaces)
                 .setOutput(OutputFormat.PROVISIONING_XML);
         if (inProvisioning != null) {
             builder.setProvisoningXML(inProvisioning);
@@ -96,6 +98,20 @@ public class GlowConfig {
      */
     public void setAddOns(Set<String> addOns) {
         this.addOns = Set.copyOf(addOns);
+    }
+
+    /**
+     * @return the spaces
+     */
+    public Set<String> getSpaces() {
+        return spaces;
+    }
+
+    /**
+     * @param spaces the spaces to set
+     */
+    public void setSpaces(Set<String> spaces) {
+        this.spaces = Set.copyOf(spaces);
     }
 
     /**

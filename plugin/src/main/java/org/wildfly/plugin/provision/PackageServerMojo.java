@@ -207,6 +207,9 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
      * <li>version: server version. Default being the latest released version.</li>
      * <li>ignoreDeployment: The deployment will be not analyzed. A server based on the configured add-ons and the default base
      * layer is provisioned. Default to {@code false}.</li>
+     * <li>spaces: List of spaces to enable. A space brings extra galleon feature-packs to the provisioning (eg:
+     * {@code incubating} to
+     * include the feature-packs that are in the incubating state.</li>
      *
      * </ul>
      * </div>
