@@ -150,15 +150,13 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
     }
 
     @Test
-    public void testMultipleDeploymentsInvalidPackage() throws Exception {
+    public void testMultipleDeploymentsMissingPackage() throws Exception {
         final Mojo packageMojo = lookupConfiguredMojo(
-                AbstractWildFlyMojoTest.getPomFile("package-multiple-deployments-invalid-pom.xml").toFile(), "package");
-        try {
-            packageMojo.execute();
-            throw new Exception("Execution should have failed");
-        } catch (MojoExecutionException ex) {
-            // XXX OK, expected.
-            Assert.assertTrue(ex.getLocalizedMessage().contains("Deployment not found org.foo:bar:war"));
-        }
+                AbstractWildFlyMojoTest.getPomFile("package-multiple-deployments-missing-pom.xml").toFile(), "package");
+        String[] layers = { "jaxrs-server" };
+        packageMojo.execute();
+        Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target")
+                .resolve("packaged-multiple-deployments-missing-server");
+        checkStandaloneWildFlyHome(jbossHome, 1, layers, null, true);
     }
 }

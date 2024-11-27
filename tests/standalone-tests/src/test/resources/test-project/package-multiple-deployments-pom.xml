@@ -17,6 +17,26 @@
             <scope>system</scope>
             <systemPath>${basedir}/dummy.jar</systemPath>
         </dependency>
+        <dependency>
+            <groupId>testing</groupId>
+            <artifactId>dummy-test</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/dummy-test.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>testing</groupId>
+            <artifactId>dummy-test-common</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/dummy-test-common.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.11.3</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -27,13 +47,11 @@
                     <filename>test.war</filename>
                     <record-provisioning-state>true</record-provisioning-state>
                     <provisioning-dir>packaged-multiple-deployments-server</provisioning-dir>
-                    <deployments>
-                        <deployment>
-                            <groupId>testing</groupId>
-                            <artifactId>dummy</artifactId>
-                            <type>jar</type>
-                        </deployment>
-                    </deployments>
+                    <included-dependencies>
+                        <included>!testing:*test*</included>
+                        <included>::jar</included>
+                    </included-dependencies>
+                    <excluded-dependency-scope>test</excluded-dependency-scope>
                     <feature-packs>
                         <feature-pack>
                             <location>wildfly@maven(org.jboss.universe:community-universe)#WF_VERSION</location>

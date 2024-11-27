@@ -9,6 +9,16 @@
     <groupId>testing</groupId>
     <artifactId>testing</artifactId>
     <version>0.1.0-SNAPSHOT</version>
+    <dependencies>
+        <dependency>
+            <groupId>org.foo</groupId>
+            <artifactId>bar</artifactId>
+            <version>1.0</version>
+            <type>jar</type>
+            <scope>system</scope>
+            <systemPath>${basedir}/dummy.jar</systemPath>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
@@ -18,14 +28,10 @@
                 <configuration>
                     <filename>test.war</filename>
                     <record-provisioning-state>true</record-provisioning-state>
-                    <provisioning-dir>packaged-multiple-deployments-invalid-server</provisioning-dir>
-                    <deployments>
-                        <deployment>
-                            <groupId>org.foo</groupId>
-                            <artifactId>bar</artifactId>
-                            <type>war</type>
-                        </deployment>
-                    </deployments>
+                    <provisioning-dir>packaged-multiple-deployments-missing-server</provisioning-dir>
+                    <included-dependencies>
+                        <include>org.foo:bar:war</include>
+                    </included-dependencies>
                     <feature-packs>
                         <feature-pack>
                             <location>wildfly@maven(org.jboss.universe:community-universe)#WF_VERSION</location>
