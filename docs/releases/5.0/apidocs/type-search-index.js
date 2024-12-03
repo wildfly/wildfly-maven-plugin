@@ -1,1 +1,0 @@
-typeSearchIndex = [{"l":"All Classes","url":"allclasses-index.html"},{"p":"org.wildfly.plugin.core","l":"Constants"},{"p":"org.wildfly.plugin.core","l":"MavenJBossLogger"},{"p":"org.wildfly.plugin.core","l":"MavenRepositoriesEnricher"}]
