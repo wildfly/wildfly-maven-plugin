@@ -77,7 +77,7 @@
         <version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>3.3.0
         </version.org.apache.maven.plugin-testing.maven-plugin-testing-harness>
         <version.org.apache.maven.plugin-tools>3.7.0</version.org.apache.maven.plugin-tools>
-        <version.org.apache.maven.shared>0.10.1</version.org.apache.maven.shared>
+        <version.org.apache.maven.shared>0.13.1</version.org.apache.maven.shared>
         <version.org.apache.maven.shared.filter>3.4.0</version.org.apache.maven.shared.filter>
         <version.org.apache.maven.resolver>1.9.18</version.org.apache.maven.resolver>
         <version.org.codehaus.plexus>3.5.1</version.org.codehaus.plexus>
