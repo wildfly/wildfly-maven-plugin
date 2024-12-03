@@ -44,6 +44,7 @@
                     </extra-server-content-dirs>
                     <record-provisioning-state>true</record-provisioning-state>
                     <provisioning-dir>packaged-invalid-dep2-server</provisioning-dir>
+                    <overwrite-provisioned-server>true</overwrite-provisioned-server>
                 </configuration>
             </plugin>
         </plugins>

@@ -6,6 +6,7 @@ package org.wildfly.plugin.bootable;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -42,7 +43,7 @@ public class PackageBootableTest extends AbstractProvisionConfiguredMojoTestCase
         String deploymentName = "ROOT.war";
         Path rootWar = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve(deploymentName);
         Path testWar = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("test.war");
-        Files.copy(testWar, rootWar);
+        Files.copy(testWar, rootWar, StandardCopyOption.REPLACE_EXISTING);
         Files.delete(testWar);
         packageMojo.execute();
         String[] layers = { "jaxrs-server" };

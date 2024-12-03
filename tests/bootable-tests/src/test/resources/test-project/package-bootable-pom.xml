@@ -43,6 +43,7 @@
                     <record-provisioning-state>true</record-provisioning-state>
                     <provisioning-dir>packaged-bootable-server</provisioning-dir>
                     <bootable-jar>true</bootable-jar>
+                    <overwrite-provisioned-server>true</overwrite-provisioned-server>
                 </configuration>
             </plugin>
         </plugins>
