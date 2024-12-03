@@ -186,8 +186,7 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
 
     public void done(Path home) throws MavenUniverseException, IOException {
         ChannelManifest channelManifest = channelSession.getRecordedChannel();
-        final ManifestVersionRecord currentVersions = new ManifestVersionResolver(localCachePath, system)
-                .getCurrentVersions(channels);
+        final ManifestVersionRecord currentVersions = ManifestVersionResolver.getCurrentVersions(channelSession);
         ProsperoMetadataUtils.generate(home, channels, channelManifest, currentVersions);
     }
 
