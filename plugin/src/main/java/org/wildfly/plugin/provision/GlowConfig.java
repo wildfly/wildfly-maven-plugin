@@ -38,11 +38,11 @@ public class GlowConfig {
     public GlowConfig() {
     }
 
-    public Arguments toArguments(Path deployment, Path inProvisioning, String layersConfigurationFileName) {
+    public Arguments toArguments(List<Path> lst, Path inProvisioning, String layersConfigurationFileName) {
         final Set<String> profiles = profile != null ? Set.of(profile) : Set.of();
-        List<Path> lst = ignoreDeployment ? Collections.emptyList() : List.of(deployment);
+        List<Path> deployments = ignoreDeployment ? Collections.emptyList() : lst;
         Builder builder = Arguments.scanBuilder().setExecutionContext(context).setExecutionProfiles(profiles)
-                .setUserEnabledAddOns(addOns).setBinaries(lst).setSuggest(suggest).setJndiLayers(getLayersForJndi())
+                .setUserEnabledAddOns(addOns).setBinaries(deployments).setSuggest(suggest).setJndiLayers(getLayersForJndi())
                 .setVersion(version)
                 .setTechPreview(preview)
                 .setExcludeArchivesFromScan(excludedArchives)

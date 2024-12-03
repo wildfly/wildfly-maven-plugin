@@ -96,6 +96,46 @@ The example below shows how to produce the latest released ${appServerName} serv
 </project>
 ```
 
+#[[##]]# [WildFly Glow](https://github.com/wildfly/wildfly-glow) integration
+
+You can configure the plugin to discover the Galleon configuration. Galleon feature-packs and layers required by your deployment(s)
+are discovered from the deployment(s) binary file(s).
+
+This [documentation](https://docs.wildfly.org/wildfly-glow/) contains more information on WildFly Glow and the plugin configuration.
+
+Provisioning of a server with discovery enabled. 
+In this example the primary deployment is analyzed to produce the server:
+
+```xml
+<project>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <discover-provisioning-info/>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>package</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```
+
 #[[##]]# Galleon options
 
 You have the ability to set some optional Galleon options when provisioning a WildFly Server.
@@ -230,7 +270,104 @@ In this example we are using the special 'ROOT.war' runtime-name to reference th
                     <layers>
                         <layer>jaxrs-server</layer>
                     </layers>
-                    <runtime-name>ROOT.war</runtime-name>
+                    <name>ROOT.war</name>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>package</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            ...
+        </plugins>
+        ...
+    </build>
+...
+</project>
+```
+
+#[[##]]# Deploying multiple deployments
+
+By default, only the project itself is deployed to the provisioned server. You can add additional deployments by adding
+a project dependency and including specific, excluding specific or scope based dependencies in your deployment.
+
+The following options can be used to include/exclude dependencies to be deployed to a packaged container:
+
+* `<included-dependencies/>`
+* `<excluded-dependencies/>`
+* `<included-dependency-scope/>`
+* `<excluded-dependency-scope/>`
+
+```xml
+<project>
+    ...
+    <dependencies>
+      <dependency>
+        <groupId>jakarta.ws.rs</groupId>
+        <artifactId>jakarta.ws.rs-api</artifactId>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.example.jdbc</groupId>
+        <artifactId>example-driver</artifactId>
+        <version>1.0.0.Final</version>
+      </dependency>
+      <dependency>
+        <groupId>org.example</groupId>
+        <artifactId>example-common</artifactId>
+        <version>1.0.0.Final</version>
+        <type>war</type>
+      </dependency>
+      <dependency>
+        <groupId>org.example</groupId>
+        <artifactId>example</artifactId>
+        <version>1.0.0.Final</version>
+        <type>war</type>
+      </dependency>
+      <dependency>
+        <groupId>org.example.jdbc</groupId>
+        <artifactId>example-test-driver</artifactId>
+        <version>1.0.0.Final</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+    ...
+    <build>
+        ...
+        <plugins>
+            ...
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <included-dependencies>
+                        <included>!org.example.jdbc:*test*</included>
+                        <included>org.example.jdbc</included>
+                        <!-- Include all WAR's -->
+                        <included>::war</type>
+                    </included-dependencies>
+                    <excluded-dependencies>
+                        <excluded>:example-common</excluded>
+                    </excluded-dependencies>
+                    <excluded-dependency-scope>test</excluded-dependency-scope>
+                    <feature-packs>
+                        <feature-pack>
+                            <location>wildfly@maven(org.jboss.universe:community-universe)</location>
+                        </feature-pack>
+                    </feature-packs>
+                    <layers>
+                        <layer>jaxrs-server</layer>
+                    </layers>
+                    <!-- Defines the name for this projects deployment -->
+                    <name>ROOT.war</name>
                 </configuration>
                 <executions>
                     <execution>

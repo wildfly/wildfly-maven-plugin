@@ -138,4 +138,25 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
                     + "A runtime-name has been set that indicates that a deployment is expected. "));
         }
     }
+
+    @Test
+    public void testMultipleDeploymentsPackage() throws Exception {
+        final Mojo packageMojo = lookupConfiguredMojo(
+                AbstractWildFlyMojoTest.getPomFile("package-multiple-deployments-pom.xml").toFile(), "package");
+        String[] layers = { "jaxrs-server" };
+        packageMojo.execute();
+        Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("packaged-multiple-deployments-server");
+        checkStandaloneWildFlyHome(jbossHome, 2, layers, null, true);
+    }
+
+    @Test
+    public void testMultipleDeploymentsMissingPackage() throws Exception {
+        final Mojo packageMojo = lookupConfiguredMojo(
+                AbstractWildFlyMojoTest.getPomFile("package-multiple-deployments-missing-pom.xml").toFile(), "package");
+        String[] layers = { "jaxrs-server" };
+        packageMojo.execute();
+        Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target")
+                .resolve("packaged-multiple-deployments-missing-server");
+        checkStandaloneWildFlyHome(jbossHome, 1, layers, null, true);
+    }
 }

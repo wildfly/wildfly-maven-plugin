@@ -17,16 +17,27 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.resolver.filter.AndArtifactFilter;
+import org.apache.maven.artifact.resolver.filter.ArtifactFilter;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.shared.artifact.filter.PatternExcludesArtifactFilter;
+import org.apache.maven.shared.artifact.filter.PatternIncludesArtifactFilter;
+import org.apache.maven.shared.artifact.filter.ScopeArtifactFilter;
 import org.jboss.galleon.ProvisioningException;
 import org.jboss.galleon.api.GalleonBuilder;
 import org.jboss.galleon.api.config.GalleonProvisioningConfig;
@@ -44,8 +55,17 @@ import org.wildfly.plugin.deployment.PackageType;
 import org.wildfly.plugin.tools.bootablejar.BootableJarSupport;
 
 /**
- * Provision a server, copy extra content and deploy primary artifact if it
- * exists
+ * Provision a server, copy extra content and deploy primary artifact if it exists.
+ * <p>
+ * Additional deployments can also be resolved from the dependencies. Use the {@code <included-dependencies/>},
+ * {@code <excluded-dependencies/>}, {@code <included-dependency-scope/>} and/or {@code <excluded-dependency-scope/>}
+ * to deploy additional artifacts to the packaged server.
+ * </p>
+ * <p>
+ * Note the {@code <included-dependencies/>}, {@code <excluded-dependencies/>}, {@code included-dependency-scope} and
+ * {@code <excluded-ependency-scope/>} configuration properties are chained together and all checks must pass to be
+ * included as additional deployments.
+ * </p>
  *
  * @author jfdenise
  * @since 3.0
@@ -172,7 +192,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     private boolean skip;
 
     /**
-     * Skip deploying the deployment after the server is provisioned ({@code false} by default).
+     * Skip deploying the deployments after the server is provisioned ({@code false} by default).
      */
     @Parameter(defaultValue = "false", property = PropertyNames.SKIP_PACKAGE_DEPLOYMENT)
     protected boolean skipDeployment;
@@ -271,6 +291,66 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     @Parameter(alias = "bootable-jar-install-artifact-classifier", property = PropertyNames.BOOTABLE_JAR_INSTALL_CLASSIFIER, defaultValue = BootableJarSupport.BOOTABLE_SUFFIX)
     private String bootableJarInstallArtifactClassifier;
 
+    /**
+     * A list of the dependencies to include as deployments. These dependencies must be defined as dependencies in the
+     * project.
+     *
+     * <p>
+     * The pattern is {@code groupId:artifactId:type:classifier:version}. Each type may be left blank. A pattern can
+     * be prefixed with a {@code !} to negatively match the pattern. Note that it is best practice to place negative
+     * checks first.
+     * </p>
+     *
+     * <pre>
+     *     &lt;included-dependencies&gt;
+     *         &lt;included&gt;!org.wildfly.examples:*test*&lt;/included&gt;
+     *         &lt;included&gt;::war&lt;/included&gt;
+     *         &lt;included&gt;org.wildfly.examples&lt;/included&gt;
+     *     &lt;/included-dependencies&gt;
+     * </pre>
+     *
+     * @since 5.1
+     */
+    @Parameter(alias = "included-dependencies", property = "wildfly.included.dependencies")
+    private Set<String> includedDependencies = Set.of();
+
+    /**
+     * A list of the dependencies to exclude as deployments.
+     *
+     * <p>
+     * The pattern is {@code groupId:artifactId:type:classifier:version}. Each type may be left blank. A pattern can
+     * be prefixed with a {@code !} to negatively match the pattern. Note that it is best practice to place negative
+     * checks first.
+     * </p>
+     *
+     * <pre>
+     *     &lt;excluded-dependencies&gt;
+     *         &lt;excluded&gt;!org.wildfly.examples:*test*&lt;/excluded&gt;
+     *         &lt;excluded&gt;::jar&lt;/excluded&gt;
+     *     &lt;/excluded-dependencies&gt;
+     * </pre>
+     *
+     * @since 5.1
+     */
+    @Parameter(alias = "excluded-dependencies", property = "wildfly.excluded.dependencies")
+    private Set<String> excludedDependencies = Set.of();
+
+    /**
+     * Defines the scope of the dependencies to be included as deployments. This will deploy all dependencies defined
+     * in the scope to the packaged server. However, this does assume the dependency passes the
+     * {@code <included-dependencies/>}, {@code <excluded-dependencies/>} and {@code <excluded-dependency-scope/>} checks.
+     */
+    @Parameter(alias = "included-dependency-scope", property = "wildfly.included.dependency.scope")
+    private String includedDependencyScope;
+
+    /**
+     * Defines the scope of the dependencies to be excluded as deployments. This will deploy all dependencies
+     * <em>not</em> defined in the scope to the packaged server. However, this does assume the dependency passes the
+     * {@code <included-dependencies/>}, {@code <excluded-dependencies/>} and {@code <included-dependency-scope/>} checks.
+     */
+    @Parameter(alias = "excluded-dependency-scope", property = "wildfly.excluded.dependency.scope")
+    private String excludedDependencyScope;
+
     @Inject
     private OfflineCommandExecutor commandExecutor;
 
@@ -295,13 +375,22 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
                     + "discovering provisioning information for the 'cloud' execution context.");
         }
         try {
+            List<Path> allDeployments = new ArrayList<>();
+            Path primaryDeployment = getDeploymentContent();
+            if (primaryDeployment != null) {
+                allDeployments.add(primaryDeployment);
+            }
+            Map<String, Path> extraDeps = getDeployments();
+            if (!extraDeps.isEmpty()) {
+                allDeployments.addAll(extraDeps.values());
+            }
             try (ScanResults results = Utils.scanDeployment(discoverProvisioningInfo,
                     layers,
                     excludedLayers,
                     featurePacks,
                     dryRun,
                     getLog(),
-                    getDeploymentContent(),
+                    allDeployments,
                     artifactResolver,
                     Paths.get(project.getBuild().getDirectory()),
                     pm,
@@ -329,6 +418,54 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         super.execute();
     }
 
+    private void deploy(Path deploymentContent, String targetName) throws MojoDeploymentException {
+        if (Files.exists(deploymentContent)) {
+            Path standaloneDeploymentDir = Path.of(provisioningDir, "standalone", "deployments");
+            if (!standaloneDeploymentDir.isAbsolute()) {
+                standaloneDeploymentDir = Path.of(project.getBuild().getDirectory()).resolve(standaloneDeploymentDir);
+            }
+            try {
+                Path deploymentTarget = standaloneDeploymentDir.resolve(targetName);
+                getLog().info("Copy deployment " + deploymentContent + " to " + deploymentTarget);
+                Files.copy(deploymentContent, deploymentTarget, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                throw new MojoDeploymentException("Could not copy deployment in provisioned server", e);
+            }
+        } else {
+            getLog().warn("The file " + deploymentContent + " doesn't exist, it will be not deployed.");
+        }
+    }
+
+    private Map<String, Path> getDeployments() throws MojoExecutionException {
+        final List<ArtifactFilter> filters = new ArrayList<>();
+        if (!includedDependencies.isEmpty()) {
+            filters.add(new PatternIncludesArtifactFilter(includedDependencies));
+        }
+        if (!excludedDependencies.isEmpty()) {
+            filters.add(new PatternExcludesArtifactFilter(excludedDependencies));
+        }
+        if (includedDependencyScope != null) {
+            filters.add(createScopeFilter(includedDependencyScope, true));
+        }
+        if (excludedDependencyScope != null) {
+            filters.add(createScopeFilter(excludedDependencyScope, false));
+        }
+        final ArtifactFilter filter = new AndArtifactFilter(filters);
+        final Set<Artifact> deployments = project.getArtifacts().stream()
+                .filter(filter::include)
+                .collect(Collectors.toSet());
+        final Map<String, Path> deploymentPaths = new LinkedHashMap<>();
+        for (var artifact : deployments) {
+            final File f = artifact.getFile();
+            if (f == null) {
+                throw new MojoExecutionException("Deployment not found " + artifact);
+            }
+            final Path p = f.toPath();
+            deploymentPaths.put(p.getFileName().toString(), p);
+        }
+        return deploymentPaths;
+    }
+
     @Override
     protected void serverProvisioned(Path jbossHome) throws MojoExecutionException, MojoFailureException {
         try {
@@ -346,19 +483,18 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         }
 
         if (!skipDeployment) {
-            final Path deploymentContent = getDeploymentContent();
-            if (Files.exists(deploymentContent)) {
-                Path standaloneDeploymentDir = Path.of(provisioningDir, "standalone", "deployments");
-                if (!standaloneDeploymentDir.isAbsolute()) {
-                    standaloneDeploymentDir = Path.of(project.getBuild().getDirectory()).resolve(standaloneDeploymentDir);
+            Path primaryDeployment = getDeploymentContent();
+            if (primaryDeployment != null) {
+                deploy(primaryDeployment, getDeploymentTargetName());
+            }
+            // Handle extra deployments
+            try {
+                Map<String, Path> extraPaths = getDeployments();
+                for (Entry<String, Path> p : extraPaths.entrySet()) {
+                    deploy(p.getValue(), p.getKey());
                 }
-                try {
-                    Path deploymentTarget = standaloneDeploymentDir.resolve(getDeploymentTargetName());
-                    getLog().info("Copy deployment " + deploymentContent + " to " + deploymentTarget);
-                    Files.copy(deploymentContent, deploymentTarget, StandardCopyOption.REPLACE_EXISTING);
-                } catch (IOException e) {
-                    throw new MojoDeploymentException("Could not copy deployment in provisioned server", e);
-                }
+            } catch (Exception ex) {
+                throw new MojoExecutionException(ex.getLocalizedMessage(), ex);
             }
         }
 
@@ -512,6 +648,9 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
 
     protected Path getDeploymentContent() throws MojoExecutionException {
         final PackageType packageType = PackageType.resolve(project);
+        if (packageType.isIgnored()) {
+            return null;
+        }
         final String filename;
         if (this.filename == null) {
             filename = String.format("%s.%s", project.getBuild().getFinalName(), packageType.getFileExtension());
@@ -540,6 +679,28 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         IoUtils.recursiveDelete(tmp);
         Path log = jbossHome.resolve("standalone").resolve("log");
         IoUtils.recursiveDelete(log);
+    }
+
+    private static ArtifactFilter createScopeFilter(final String scope, final boolean includeScope) {
+        final ScopeArtifactFilter filter = new ScopeArtifactFilter();
+        switch (scope) {
+            case Artifact.SCOPE_COMPILE:
+                filter.setIncludeCompileScope(true);
+                break;
+            case Artifact.SCOPE_PROVIDED:
+                filter.setIncludeProvidedScope(true);
+                break;
+            case Artifact.SCOPE_RUNTIME:
+                filter.setIncludeRuntimeScope(true);
+                break;
+            case Artifact.SCOPE_TEST:
+                filter.setIncludeTestScope(true);
+                break;
+            case Artifact.SCOPE_SYSTEM:
+                filter.setIncludeSystemScope(true);
+                break;
+        }
+        return includeScope ? filter : artifact -> !filter.include(artifact);
     }
 
 }
