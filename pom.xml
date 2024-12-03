@@ -28,18 +28,6 @@
         <url>https://issues.redhat.com/browse/WFMP</url>
     </issueManagement>
 
-    <!-- required when provisioning the server for tests, using Galleon plugin to be removed when WF doesn't require them -->
-    <repositories>
-        <repository>
-            <id>nexus</id>
-            <url>https://repository.jboss.org/nexus/content/groups/public</url>
-        </repository>
-        <repository>
-            <id>redhat-ga</id>
-            <url>https://maven.repository.redhat.com/ga/</url>
-        </repository>
-    </repositories>
-
     <mailingLists>
         <mailingList>
             <name>JBoss User List</name>
@@ -145,6 +133,15 @@
         <module>plugin</module>
         <module>tests</module>
     </modules>
+
+    <!-- Required for provisioning WildFly -->
+    <repositories>
+        <repository>
+            <id>jboss-public-repository-group</id>
+            <name>JBoss Public Repository Group</name>
+            <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+        </repository>
+    </repositories>
 
     <build>
         <pluginManagement>
