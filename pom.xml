@@ -86,6 +86,7 @@
 
         <version.org.eclipse.sisu>0.3.5</version.org.eclipse.sisu>
         <version.org.twdata.maven>2.4.0</version.org.twdata.maven>
+        <version.org.jboss.logmanager.commons-logging-jboss-logmanager>1.0.3.Final</version.org.jboss.logmanager.commons-logging-jboss-logmanager>
 
         <!-- other dependencies -->
         <version.com.bernardomg.maven.skins>2.3.3</version.com.bernardomg.maven.skins>
@@ -507,6 +508,11 @@
                 <groupId>org.jboss.slf4j</groupId>
                 <artifactId>slf4j-jboss-logging</artifactId>
                 <version>${version.org.jboss.logging.slf4j-jboss-logging}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.logmanager</groupId>
+                <artifactId>commons-logging-jboss-logmanager</artifactId>
+                <version>${version.org.jboss.logmanager.commons-logging-jboss-logmanager}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

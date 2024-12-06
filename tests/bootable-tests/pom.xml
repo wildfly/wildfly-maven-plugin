@@ -72,6 +72,12 @@
             <artifactId>maven-resolver-util</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- to fix ClassNotFoundException org.jboss.logmanager.LogManager in plexus -->
+        <dependency>
+            <groupId>org.jboss.logmanager</groupId>
+            <artifactId>commons-logging-jboss-logmanager</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- to fix slf4j warning when provisioning -->
         <dependency>
             <groupId>org.jboss.slf4j</groupId>
