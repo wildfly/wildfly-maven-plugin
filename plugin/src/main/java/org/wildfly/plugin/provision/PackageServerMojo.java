@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.resolver.filter.AndArtifactFilter;
 import org.apache.maven.artifact.resolver.filter.ArtifactFilter;
+import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -70,7 +71,8 @@ import org.wildfly.plugin.tools.bootablejar.BootableJarSupport;
  * @author jfdenise
  * @since 3.0
  */
-@Mojo(name = "package", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME, defaultPhase = LifecyclePhase.PACKAGE)
+// Note we need the ResolutionScope to be "test" in order for the MavenProject.getArtifacts() to return all dependencies
+@Mojo(name = "package", requiresDependencyResolution = ResolutionScope.TEST, defaultPhase = LifecyclePhase.PACKAGE)
 public class PackageServerMojo extends AbstractProvisionServerMojo {
 
     @Deprecated(forRemoval = true, since = "5.1")
@@ -356,6 +358,9 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
 
     private GalleonProvisioningConfig config;
 
+    // Used to only collect additional deployments once
+    private Map<String, Path> deployments;
+
     @Override
     protected GalleonProvisioningConfig getDefaultConfig() throws ProvisioningException {
         return null;
@@ -437,7 +442,19 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     }
 
     private Map<String, Path> getDeployments() throws MojoExecutionException {
+        // Check if we've already processed the deployments
+        if (deployments != null) {
+            return deployments;
+        }
         final List<ArtifactFilter> filters = new ArrayList<>();
+        // Map the dependencies to a known key format
+        final Set<String> dependenciesIds = project.getDependencies()
+                .stream()
+                .map(PackageServerMojo::createKey)
+                .collect(Collectors.toSet());
+        // Create a filter to only allow artifacts which are included as dependencies
+        final ArtifactFilter dependencyFilter = artifact -> dependenciesIds.contains(createKey(artifact));
+        filters.add(dependencyFilter);
         if (!includedDependencies.isEmpty()) {
             filters.add(new PatternIncludesArtifactFilter(includedDependencies));
         }
@@ -451,7 +468,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
             filters.add(createScopeFilter(excludedDependencyScope, false));
         }
         final ArtifactFilter filter = new AndArtifactFilter(filters);
-        final Set<Artifact> deployments = project.getArtifacts().stream()
+        final Set<Artifact> projectArtifacts = project.getArtifacts();
+        final Set<Artifact> deployments = projectArtifacts.stream()
                 .filter(filter::include)
                 .collect(Collectors.toSet());
         final Map<String, Path> deploymentPaths = new LinkedHashMap<>();
@@ -463,7 +481,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
             final Path p = f.toPath();
             deploymentPaths.put(p.getFileName().toString(), p);
         }
-        return deploymentPaths;
+        return this.deployments = Map.copyOf(deploymentPaths);
     }
 
     @Override
@@ -701,6 +719,38 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
                 break;
         }
         return includeScope ? filter : artifact -> !filter.include(artifact);
+    }
+
+    private static String createKey(final Dependency dependency) {
+        final StringBuilder key = new StringBuilder()
+                .append(dependency.getGroupId())
+                .append(':')
+                .append(dependency.getArtifactId())
+                .append(':')
+                .append(dependency.getType());
+        if (dependency.getClassifier() != null) {
+            key.append(':')
+                    .append(dependency.getClassifier());
+        }
+        key.append(':')
+                .append(dependency.getVersion());
+        return key.toString();
+    }
+
+    private static String createKey(final Artifact artifact) {
+        final StringBuilder key = new StringBuilder()
+                .append(artifact.getGroupId())
+                .append(':')
+                .append(artifact.getArtifactId())
+                .append(':')
+                .append(artifact.getType());
+        if (artifact.getClassifier() != null) {
+            key.append(':')
+                    .append(artifact.getClassifier());
+        }
+        key.append(':')
+                .append(artifact.getVersion());
+        return key.toString();
     }
 
 }
