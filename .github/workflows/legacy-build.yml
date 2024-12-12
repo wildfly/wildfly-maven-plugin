@@ -38,7 +38,7 @@ jobs:
           cache: 'maven'
           distribution: 'temurin'
       - name: Build and Test on ${{ matrix.java }} - ${{ matrix.wildfly-version }}
-        run: mvn clean install '-Dorg.jboss.logmanager.nocolor=true' '-Dversion.org.wildfly=${{ matrix.wildfly-version }}'
+        run: mvn clean install '-Dorg.jboss.logmanager.nocolor=true' '-Dversion.org.wildfly=${{ matrix.wildfly-version }}' '-Dskip.channel.tests'
       - name: Upload surefire logs for failed run
         uses: actions/upload-artifact@v4
         if: failure()

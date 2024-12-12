@@ -21,12 +21,13 @@
                             <manifest>
                                 <groupId>org.wildfly.channels</groupId>
                                 <artifactId>wildfly</artifactId>
+                                <version>WF_VERSION</version>
                             </manifest>
                         </channel>
                     </channels>
                     <feature-packs>
                         <feature-pack>
-                            <location>org.wildfly:wildfly-galleon-pack</location>
+                            <location>org.wildfly:wildfly-galleon-pack:WF_VERSION</location>
                         </feature-pack>
                     </feature-packs>
                     <layers>
