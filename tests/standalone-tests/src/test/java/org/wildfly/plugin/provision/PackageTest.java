@@ -11,6 +11,8 @@ import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.wildfly.plugin.categories.ChannelsRequired;
 import org.wildfly.plugin.tests.AbstractProvisionConfiguredMojoTestCase;
 import org.wildfly.plugin.tests.AbstractWildFlyMojoTest;
 
@@ -36,6 +38,7 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
     }
 
     @Test
+    @Category(ChannelsRequired.class)
     public void testPackageWithChannel() throws Exception {
 
         final Mojo packageMojo = lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("package-channel-pom.xml").toFile(),
@@ -137,6 +140,17 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
             Assert.assertTrue(ex.getLocalizedMessage().contains("No deployment found with name foo.jar. "
                     + "A runtime-name has been set that indicates that a deployment is expected. "));
         }
+    }
+
+    @Test
+    public void testNoMultipleDeploymentsPackage() throws Exception {
+        final Mojo packageMojo = lookupConfiguredMojo(
+                AbstractWildFlyMojoTest.getPomFile("package-no-multiple-deployments-pom.xml").toFile(), "package");
+        String[] layers = { "jaxrs-server" };
+        packageMojo.execute();
+        Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target")
+                .resolve("packaged-no-multiple-deployments-server");
+        checkStandaloneWildFlyHome(jbossHome, 1, layers, null, true);
     }
 
     @Test
