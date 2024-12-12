@@ -1,0 +1,63 @@
+<!--
+~ Copyright The WildFly Authors
+~ SPDX-License-Identifier: Apache-2.0
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>testing</groupId>
+    <artifactId>testing</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <dependencies>
+        <dependency>
+            <groupId>testing</groupId>
+            <artifactId>dummy</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/dummy.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>testing</groupId>
+            <artifactId>dummy-test</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/dummy-test.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>testing</groupId>
+            <artifactId>dummy-test-common</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/dummy-test-common.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.11.3</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <configuration>
+                    <filename>test.war</filename>
+                    <record-provisioning-state>true</record-provisioning-state>
+                    <provisioning-dir>packaged-no-multiple-deployments-server</provisioning-dir>
+                    <feature-packs>
+                        <feature-pack>
+                            <location>wildfly@maven(org.jboss.universe:community-universe)#WF_VERSION</location>
+                        </feature-pack>
+                    </feature-packs>
+                    <layers>
+                        <layer>jaxrs-server</layer>
+                    </layers>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

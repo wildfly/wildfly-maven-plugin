@@ -140,6 +140,17 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
     }
 
     @Test
+    public void testNoMultipleDeploymentsPackage() throws Exception {
+        final Mojo packageMojo = lookupConfiguredMojo(
+                AbstractWildFlyMojoTest.getPomFile("package-no-multiple-deployments-pom.xml").toFile(), "package");
+        String[] layers = { "jaxrs-server" };
+        packageMojo.execute();
+        Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target")
+                .resolve("packaged-no-multiple-deployments-server");
+        checkStandaloneWildFlyHome(jbossHome, 1, layers, null, true);
+    }
+
+    @Test
     public void testMultipleDeploymentsPackage() throws Exception {
         final Mojo packageMojo = lookupConfiguredMojo(
                 AbstractWildFlyMojoTest.getPomFile("package-multiple-deployments-pom.xml").toFile(), "package");

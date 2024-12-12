@@ -446,6 +446,11 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         if (deployments != null) {
             return deployments;
         }
+        // If no filters are defined, we do not want to include any additional deployments.
+        if (includedDependencies.isEmpty() && excludedDependencies.isEmpty() && includedDependencyScope == null
+                && excludedDependencyScope == null) {
+            return Map.of();
+        }
         final List<ArtifactFilter> filters = new ArrayList<>();
         // Map the dependencies to a known key format
         final Set<String> dependenciesIds = project.getDependencies()
