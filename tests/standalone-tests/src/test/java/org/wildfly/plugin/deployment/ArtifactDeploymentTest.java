@@ -72,7 +72,7 @@ public class ArtifactDeploymentTest extends AbstractWildFlyServerMojoTest {
         if (deploymentManager.hasDeployment(artifactName)) {
             deploymentManager.undeploy(UndeployDescription.of(artifactName));
         }
-        mojo.project.setDependencyArtifacts(Collections.singleton(createArtifact(classifier)));
+        mojo.project.setArtifacts(Collections.singleton(createArtifact(classifier)));
 
         mojo.execute();
 
@@ -91,7 +91,7 @@ public class ArtifactDeploymentTest extends AbstractWildFlyServerMojoTest {
         if (!deploymentManager.hasDeployment(artifactName)) {
             deploymentManager.deploy(Deployment.of(Paths.get(BASE_CONFIG_DIR, artifactName)));
         }
-        mojo.project.setDependencyArtifacts(Collections.singleton(createArtifact(classifier)));
+        mojo.project.setArtifacts(Collections.singleton(createArtifact(classifier)));
 
         mojo.execute();
 

@@ -51,7 +51,6 @@ import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.descriptor.MojoDescriptor;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -223,7 +222,7 @@ public class DevMojo extends AbstractServerStartMojo {
             Map.entry("workDirectory", ""));
     private final Map<WatchKey, WatchContext> watchedDirectories = new HashMap<>();
 
-    @Component
+    @Inject
     private BuildPluginManager pluginManager;
 
     @Inject
