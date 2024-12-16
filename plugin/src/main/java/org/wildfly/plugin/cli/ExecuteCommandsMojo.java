@@ -23,7 +23,6 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -181,7 +180,7 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     @Parameter(alias = "auto-reload", defaultValue = "true", property = PropertyNames.AUTO_RELOAD)
     private boolean autoReload;
 
-    @Component
+    @Inject
     RepositorySystem repoSystem;
 
     @Parameter(defaultValue = "${repositorySystemSession}", readonly = true, required = true)

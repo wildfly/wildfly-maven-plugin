@@ -96,7 +96,7 @@ public class UndeployArtifactMojo extends AbstractServerConnection {
         }
         final String deploymentName;
         if (name == null) {
-            final Set<Artifact> dependencies = project.getDependencyArtifacts();
+            final Set<Artifact> dependencies = project.getArtifacts();
             Artifact artifact = null;
             for (final Artifact a : dependencies) {
                 if (Objects.equals(a.getArtifactId(), artifactId) &&
