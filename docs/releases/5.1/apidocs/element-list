@@ -10,5 +10,6 @@ org.wildfly.plugin.server
 org.wildfly.plugin.tools
 org.wildfly.plugin.tools.bootablejar
 org.wildfly.plugin.tools.cli
+org.wildfly.plugin.tools.client
 org.wildfly.plugin.tools.server
 org.wildfly.plugin.tools.util

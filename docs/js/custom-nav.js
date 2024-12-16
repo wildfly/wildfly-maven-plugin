@@ -13,7 +13,7 @@
         }
         // Create the map of current releases
         const versions = new Map([
-            ["5.1", "(beta)"],
+            ["5.1", "(stable)"],
             ["5.0", "(stable)"],
             ["4.2", "(stable)"],
             ["4.1", "(stable)"]
