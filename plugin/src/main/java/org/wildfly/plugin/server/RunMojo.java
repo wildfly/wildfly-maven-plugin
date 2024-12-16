@@ -131,7 +131,7 @@ public class RunMojo extends AbstractServerStartMojo {
                 final Deployment deployment = Deployment.of(deploymentContent)
                         .setName(name)
                         .setRuntimeName(runtimeName);
-                final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
+                final DeploymentManager deploymentManager = DeploymentManager.create(client);
                 deploymentManager.forceDeploy(deployment);
             } catch (MojoExecutionException | MojoFailureException e) {
                 if (process != null) {

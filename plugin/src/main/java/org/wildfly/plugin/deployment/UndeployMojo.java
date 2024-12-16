@@ -20,7 +20,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.common.AbstractServerConnection;
-import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.tools.DeploymentDescription;
 import org.wildfly.plugin.tools.DeploymentManager;
@@ -105,11 +104,9 @@ public class UndeployMojo extends AbstractServerConnection {
             getLog().debug(String.format("Ignoring packaging type %s.", packageType.getPackaging()));
         } else {
             final DeploymentResult result;
-            try (
-                    ModelControllerClient client = createClient();
-                    MavenModelControllerClientConfiguration configuration = getClientConfiguration()) {
+            try (ModelControllerClient client = createClient()) {
                 final boolean failOnMissing = !ignoreMissingDeployment;
-                final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
+                final DeploymentManager deploymentManager = DeploymentManager.create(client);
                 if (matchPattern == null) {
                     result = deploymentManager.undeploy(
                             UndeployDescription.of(name).addServerGroups(getServerGroups()).setFailOnMissing(failOnMissing));

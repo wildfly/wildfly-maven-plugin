@@ -22,9 +22,9 @@ import javax.inject.Singleton;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.controller.client.ModelControllerClientConfiguration;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.wildfly.core.launcher.CliCommandBuilder;
-import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.StandardOutput;
 import org.wildfly.plugin.tools.server.ServerManager;
 
@@ -81,11 +81,11 @@ public class CommandExecutor extends AbstractCommandExecutor<CommandConfiguratio
     @Override
     protected int executeInNewProcess(final CommandConfiguration config, final Path scriptFile, final StandardOutput stdout)
             throws MojoExecutionException, IOException {
-        try (MavenModelControllerClientConfiguration clientConfiguration = config.getClientConfiguration()) {
+        try (ModelControllerClientConfiguration clientConfiguration = config.getClientConfiguration()) {
 
             final CliCommandBuilder builder = createCommandBuilder(config, scriptFile);
             if (!config.isOffline()) {
-                builder.setConnection(clientConfiguration.getController());
+                builder.setConnection(getController(clientConfiguration));
             }
             // Configure the authentication config url if defined
             if (clientConfiguration != null && clientConfiguration.getAuthenticationConfigUri() != null) {
@@ -172,5 +172,21 @@ public class CommandExecutor extends AbstractCommandExecutor<CommandConfiguratio
             throw new IllegalStateException("Failed to initialize CLI context", e);
         }
         return commandContext;
+    }
+
+    private static String getController(final ModelControllerClientConfiguration configuration) {
+        final StringBuilder controller = new StringBuilder();
+        if (configuration.getProtocol() != null) {
+            controller.append(configuration.getProtocol()).append("://");
+        }
+        if (configuration.getHost() != null) {
+            controller.append(configuration.getHost());
+        } else {
+            controller.append("localhost");
+        }
+        if (configuration.getPort() > 0) {
+            controller.append(':').append(configuration.getPort());
+        }
+        return controller.toString();
     }
 }
