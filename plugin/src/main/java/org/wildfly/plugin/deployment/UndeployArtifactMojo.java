@@ -21,7 +21,6 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.common.AbstractServerConnection;
-import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.tools.DeploymentManager;
 import org.wildfly.plugin.tools.DeploymentResult;
@@ -115,11 +114,9 @@ public class UndeployArtifactMojo extends AbstractServerConnection {
             deploymentName = name;
         }
         final DeploymentResult result;
-        try (
-                ModelControllerClient client = createClient();
-                MavenModelControllerClientConfiguration configuration = getClientConfiguration();) {
+        try (ModelControllerClient client = createClient()) {
             final boolean failOnMissing = !ignoreMissingDeployment;
-            final DeploymentManager deploymentManager = DeploymentManager.Factory.create(client);
+            final DeploymentManager deploymentManager = DeploymentManager.create(client);
             result = deploymentManager.undeploy(
                     UndeployDescription.of(deploymentName).addServerGroups(getServerGroups()).setFailOnMissing(failOnMissing));
         } catch (IOException e) {

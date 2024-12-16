@@ -7,7 +7,7 @@ package org.wildfly.plugin.cli;
 import java.util.function.Supplier;
 
 import org.jboss.as.controller.client.ModelControllerClient;
-import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
+import org.jboss.as.controller.client.ModelControllerClientConfiguration;
 
 /**
  * The configuration used to execute CLI commands.
@@ -17,7 +17,7 @@ import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 public class CommandConfiguration extends BaseCommandConfiguration {
 
     private final Supplier<ModelControllerClient> client;
-    private final Supplier<MavenModelControllerClientConfiguration> clientConfiguration;
+    private final Supplier<ModelControllerClientConfiguration> clientConfiguration;
     private final boolean fork;
     private final boolean offline;
 
@@ -27,13 +27,13 @@ public class CommandConfiguration extends BaseCommandConfiguration {
             extends BaseCommandConfiguration.AbstractBuilder<T> {
 
         private final Supplier<ModelControllerClient> client;
-        private final Supplier<MavenModelControllerClientConfiguration> clientConfiguration;
+        private final Supplier<ModelControllerClientConfiguration> clientConfiguration;
         private boolean fork;
         private boolean offline;
         private boolean autoReload;
 
         AbstractBuilder(final Supplier<ModelControllerClient> clientSupplier,
-                final Supplier<MavenModelControllerClientConfiguration> clientConfigurationSupplier) {
+                final Supplier<ModelControllerClientConfiguration> clientConfigurationSupplier) {
             this.client = clientSupplier;
             this.clientConfiguration = clientConfigurationSupplier;
         }
@@ -92,7 +92,7 @@ public class CommandConfiguration extends BaseCommandConfiguration {
     public static class Builder extends AbstractBuilder<Builder> {
 
         Builder(Supplier<ModelControllerClient> clientSupplier,
-                Supplier<MavenModelControllerClientConfiguration> clientConfigurationSupplier) {
+                Supplier<ModelControllerClientConfiguration> clientConfigurationSupplier) {
             super(clientSupplier, clientConfigurationSupplier);
         }
 
@@ -121,7 +121,7 @@ public class CommandConfiguration extends BaseCommandConfiguration {
      * @return a new command configuration Builder.
      */
     public static Builder of(final Supplier<ModelControllerClient> clientSupplier,
-            final Supplier<MavenModelControllerClientConfiguration> clientConfigurationSupplier) {
+            final Supplier<ModelControllerClientConfiguration> clientConfigurationSupplier) {
         return new Builder(clientSupplier, clientConfigurationSupplier);
     }
 
@@ -139,7 +139,7 @@ public class CommandConfiguration extends BaseCommandConfiguration {
      *
      * @return the management client configuration
      */
-    public MavenModelControllerClientConfiguration getClientConfiguration() {
+    public ModelControllerClientConfiguration getClientConfiguration() {
         return clientConfiguration.get();
     }
 

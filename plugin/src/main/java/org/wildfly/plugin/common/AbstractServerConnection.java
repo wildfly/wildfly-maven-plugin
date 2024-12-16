@@ -20,6 +20,7 @@ import org.apache.maven.settings.crypto.SettingsDecrypter;
 import org.apache.maven.settings.crypto.SettingsDecryptionResult;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.client.ModelControllerClientConfiguration;
+import org.wildfly.plugin.tools.client.ClientCallbackHandler;
 
 /**
  * The default implementation for connecting to a running WildFly instance
@@ -131,7 +132,7 @@ public abstract class AbstractServerConnection extends AbstractMojo {
      *
      * @return the configuration to use
      */
-    protected synchronized MavenModelControllerClientConfiguration getClientConfiguration() {
+    protected synchronized ModelControllerClientConfiguration getClientConfiguration() {
         final Log log = getLog();
         String username = this.username;
         String password = this.password;
@@ -171,8 +172,10 @@ public abstract class AbstractServerConnection extends AbstractMojo {
             } catch (URISyntaxException e) {
                 throw new RuntimeException("Failed to create URI from " + authenticationConfig, e);
             }
+        } else {
+            builder.setHandler(new ClientCallbackHandler(username, password));
         }
-        return new MavenModelControllerClientConfiguration(builder.build(), username, password);
+        return builder.build();
     }
 
     protected int getManagementPort() {

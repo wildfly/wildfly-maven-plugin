@@ -17,7 +17,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.wildfly.plugin.common.AbstractServerConnection;
-import org.wildfly.plugin.common.MavenModelControllerClientConfiguration;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.tools.ContainerDescription;
 import org.wildfly.plugin.tools.Deployment;
@@ -84,9 +83,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
             getLog().debug(String.format("Skipping deployment of %s:%s", project.getGroupId(), project.getArtifactId()));
             return;
         }
-        try (
-                ModelControllerClient client = createClient();
-                MavenModelControllerClientConfiguration configuration = getClientConfiguration()) {
+        try (ModelControllerClient client = createClient()) {
             final boolean isDomain = ContainerDescription.lookup(client).isDomain();
             validate(isDomain);
             // Deploy the deployment
@@ -94,7 +91,7 @@ abstract class AbstractDeployment extends AbstractServerConnection {
 
             final Deployment deployment = configureDeployment(createDeployment());
 
-            final DeploymentResult result = executeDeployment(DeploymentManager.Factory.create(client), deployment);
+            final DeploymentResult result = executeDeployment(DeploymentManager.create(client), deployment);
             if (!result.successful()) {
                 throw new MojoExecutionException(
                         String.format("Failed to execute goal %s: %s", goal(), result.getFailureMessage()));
