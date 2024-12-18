@@ -81,6 +81,7 @@
         <version.org.apache.maven.shared.filter>3.4.0</version.org.apache.maven.shared.filter>
         <version.org.apache.maven.resolver>1.9.18</version.org.apache.maven.resolver>
         <version.org.codehaus.plexus>4.0.2</version.org.codehaus.plexus>
+        <version.org.codehaus.plexus-xml>4.0.4</version.org.codehaus.plexus-xml>
         <!-- maven dependencies only required by tests -->
         <version.org.apache.maven.wagon>3.5.3</version.org.apache.maven.wagon>
 
@@ -328,6 +329,12 @@
                 <groupId>org.codehaus.plexus</groupId>
                 <artifactId>plexus-utils</artifactId>
                 <version>${version.org.codehaus.plexus}</version>
+            </dependency>
+            <!-- Required for the dev goal and the maven-execute dependency -->
+            <dependency>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-xml</artifactId>
+                <version>${version.org.codehaus.plexus-xml}</version>
             </dependency>
             <dependency>
                 <groupId>org.jboss.galleon</groupId>
