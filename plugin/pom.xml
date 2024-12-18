@@ -136,9 +136,15 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- Required for the dev goal and the maven-execute dependency -->
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-utils</artifactId>
+        </dependency>
+        <!-- Required for the dev goal and the maven-execute dependency -->
+        <dependency>
+            <groupId>org.codehaus.plexus</groupId>
+            <artifactId>plexus-xml</artifactId>
         </dependency>
         <dependency>
             <groupId>org.wildfly.core</groupId>
