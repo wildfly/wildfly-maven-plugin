@@ -67,6 +67,7 @@ import org.wildfly.plugin.tools.server.ServerManager;
 @RunWith(JUnit4.class)
 public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMojoTestCase {
     private static final String TEST_REPLACE_WF_VERSION = "WF_VERSION";
+    private static final String TEST_REPLACE_LOC_WF_VERSION = "#WF_VERSION";
     private static final String TEST_REPLACE_BASE_DIR_ABSOLUTE_URL = "WF_BASE_DIR_ABSOLUTE_URL";
     static final String WILDFLY_VERSION = "wildfly.test.version";
     private final String artifactId;
@@ -151,6 +152,15 @@ public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMo
     private void patchPomFile(final Path pom) throws IOException {
         StringBuilder content = new StringBuilder();
         for (String s : Files.readAllLines(pom)) {
+            if (s.contains(TEST_REPLACE_LOC_WF_VERSION)) {
+                String version = System.getProperty(WILDFLY_VERSION);
+                if (version == null || version.isBlank()) {
+                    version = "";
+                } else {
+                    version = "#" + version;
+                }
+                s = s.replace(TEST_REPLACE_LOC_WF_VERSION, version);
+            }
             if (s.contains(TEST_REPLACE_WF_VERSION)) {
                 s = s.replace(TEST_REPLACE_WF_VERSION, System.getProperty(WILDFLY_VERSION));
             }

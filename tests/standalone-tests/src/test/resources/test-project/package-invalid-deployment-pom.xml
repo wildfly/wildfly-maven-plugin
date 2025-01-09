@@ -44,6 +44,10 @@
                     <record-provisioning-state>true</record-provisioning-state>
                     <provisioning-dir>packaged-invalid-dep-server</provisioning-dir>
                     <overwrite-provisioned-server>true</overwrite-provisioned-server>
+                    <galleon-options>
+                        <!-- Fork the process to avoid a two controller-client's from being on the class path -->
+                        <jboss-fork-embedded>true</jboss-fork-embedded>
+                    </galleon-options>
                 </configuration>
             </plugin>
         </plugins>

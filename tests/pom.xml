@@ -28,6 +28,12 @@
         <jboss.home>${project.build.directory}${file.separator}wildfly</jboss.home>
 
         <wildfly.test.config.dir>${project.build.testOutputDirectory}</wildfly.test.config.dir>
+
+        <wildfly.feature.pack.groupId>org.wildfly</wildfly.feature.pack.groupId>
+        <wildfly.feature.pack.artifactId>wildfly-ee-galleon-pack</wildfly.feature.pack.artifactId>
+
+        <wildfly.channel.manifest.groupId>org.wildfly.channels</wildfly.channel.manifest.groupId>
+        <wildfly.channel.manifest.artifactId>wildfly-ee</wildfly.channel.manifest.artifactId>
     </properties>
 
     <build>
@@ -36,6 +42,19 @@
                 <groupId>${project.groupId}</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <version>${project.version}</version>
+                <configuration>
+                    <feature-packs>
+                        <feature-pack>
+                            <groupId>${wildfly.feature.pack.groupId}</groupId>
+                            <artifactId>${wildfly.feature.pack.artifactId}</artifactId>
+                            <version>${version.org.wildfly}</version>
+                        </feature-pack>
+                    </feature-packs>
+                    <provisioning-dir>${project.build.directory}/wildfly</provisioning-dir>
+                    <galleon-options>
+                        <jboss-fork-embedded>${plugin.fork.embedded}</jboss-fork-embedded>
+                    </galleon-options>
+                </configuration>
                 <executions>
                     <execution>
                         <id>provision-wildfly</id>
@@ -43,17 +62,6 @@
                         <goals>
                             <goal>provision</goal>
                         </goals>
-                        <configuration>
-                            <feature-packs>
-                                <feature-pack>
-                                    <location>wildfly@maven(org.jboss.universe:community-universe)#${version.org.wildfly}</location>
-                                </feature-pack>
-                            </feature-packs>
-                            <provisioning-dir>${project.build.directory}/wildfly</provisioning-dir>
-                            <galleon-options>
-                                <jboss-fork-embedded>${plugin.fork.embedded}</jboss-fork-embedded>
-                            </galleon-options>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -73,5 +81,66 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>skip-channel-tests</id>
+            <activation>
+                <property>
+                    <name>skip.channel.tests</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <excludedGroups>org.wildfly.plugin.categories.ChannelsRequired</excludedGroups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>wildfly-channels</id>
+            <activation>
+                <property>
+                    <name>!version.org.wildfly</name>
+                </property>
+            </activation>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>${project.groupId}</groupId>
+                        <artifactId>wildfly-maven-plugin</artifactId>
+                        <version>${project.version}</version>
+                        <executions>
+                            <execution>
+                                <id>provision-wildfly</id>
+                                <phase>generate-test-resources</phase>
+                                <goals>
+                                    <goal>provision</goal>
+                                </goals>
+                                <configuration>
+                                    <channels>
+                                        <!-- If the version.org.wildfly is blank the newest version of WildFly will be used. Otherwise, be
+                                             explicit.
+                                         -->
+                                        <channel>
+                                            <manifest>
+                                                <groupId>${wildfly.channel.manifest.groupId}</groupId>
+                                                <artifactId>${wildfly.channel.manifest.artifactId}</artifactId>
+                                                <version>${version.org.wildfly}</version>
+                                            </manifest>
+                                        </channel>
+                                    </channels>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

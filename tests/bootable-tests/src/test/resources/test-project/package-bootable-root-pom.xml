@@ -43,6 +43,10 @@
                     <provisioning-dir>packaged-root-bootable-server</provisioning-dir>
                     <bootable-jar>true</bootable-jar>
                     <bootable-jar-name>jar-root.jar</bootable-jar-name>
+                    <galleon-options>
+                        <!-- Fork the process to avoid a two controller-client's from being on the class path -->
+                        <jboss-fork-embedded>true</jboss-fork-embedded>
+                    </galleon-options>
                 </configuration>
             </plugin>
         </plugins>

@@ -25,6 +25,10 @@
                     <filename>test.war</filename>
                     <group>wildfly-image-server-config-maven-plugin</group>
                     <server-config>standalone-microprofile.xml</server-config>
+                    <galleon-options>
+                        <!-- Fork the process to avoid a two controller-client's from being on the class path -->
+                        <jboss-fork-embedded>true</jboss-fork-embedded>
+                    </galleon-options>
                 </configuration>
             </plugin>
         </plugins>

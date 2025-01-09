@@ -27,6 +27,10 @@
                     <provisioning-dir>image-server</provisioning-dir>
                     <group>wildfly-maven-plugin</group>
                     <docker-binary>focker-is-not-docker</docker-binary>
+                    <galleon-options>
+                        <!-- Fork the process to avoid a two controller-client's from being on the class path -->
+                        <jboss-fork-embedded>true</jboss-fork-embedded>
+                    </galleon-options>
                 </configuration>
             </plugin>
         </plugins>

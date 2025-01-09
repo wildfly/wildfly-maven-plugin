@@ -67,7 +67,7 @@
         <!-- This version property is also retrieved by plugin at runtime to resolve CLI artifact -->
         <version.org.wildfly.core>25.0.2.Final</version.org.wildfly.core>
         <version.org.wildfly.launcher>1.0.0.Final</version.org.wildfly.launcher>
-        <version.org.wildfly>32.0.1.Final</version.org.wildfly>
+        <version.org.wildfly/>
         <version.org.wildfly.channel>1.2.1.Final</version.org.wildfly.channel>
         <version.org.wildfly.prospero>1.3.0.Final</version.org.wildfly.prospero>
         <!-- maven dependencies -->
@@ -99,8 +99,9 @@
 
         <!-- Require at least Java 11 to compile -->
         <jdk.min.version>11</jdk.min.version>
-        <maven.compiler.target>11</maven.compiler.target>
-        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.release>11</maven.compiler.release>
+        <maven.compiler.target>${maven.compiler.release}</maven.compiler.target>
+        <maven.compiler.source>${maven.compiler.release}</maven.compiler.source>
 
         <!-- galleon properties -->
         <version.org.jboss.galleon>6.0.4.Final</version.org.jboss.galleon>
@@ -116,7 +117,7 @@
         <appServerName>WildFly</appServerName>
         <pluginPrefix>wildfly</pluginPrefix>
         <resteasyChannelStream>6.2</resteasyChannelStream>
-        <wildflyVersion>${version.org.wildfly}</wildflyVersion>
+        <wildflyVersion>35.0.0.Final</wildflyVersion>
 
         <wildfly.scm.connection>scm:git://github.com/wildfly/wildfly-maven-plugin.git</wildfly.scm.connection>
         <wildfly.scm.developer.connection>scm:git:git@github.com:wildfly/wildfly-maven-plugin.git
@@ -519,6 +520,15 @@
     </dependencyManagement>
 
     <profiles>
+        <profile>
+            <id>wildfly-34</id>
+            <activation>
+                <jdk>(,17)</jdk>
+            </activation>
+            <properties>
+                <version.org.wildfly>34.0.1.Final</version.org.wildfly>
+            </properties>
+        </profile>
         <profile>
             <id>release</id>
             <activation>
