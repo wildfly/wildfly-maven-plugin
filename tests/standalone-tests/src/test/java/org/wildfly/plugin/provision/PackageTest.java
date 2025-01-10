@@ -13,6 +13,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.wildfly.plugin.categories.ChannelsRequired;
+import org.wildfly.plugin.categories.SecurityManagerRequired;
 import org.wildfly.plugin.tests.AbstractProvisionConfiguredMojoTestCase;
 import org.wildfly.plugin.tests.AbstractWildFlyMojoTest;
 
@@ -53,7 +54,9 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
                 "org.wildfly.maven.plugin-package-goal-from-script");
     }
 
+    // This test provisions WildFly 32 which does not boot on Java SE 24 without security manager support.
     @Test
+    @Category(SecurityManagerRequired.class)
     public void testPackageWithChannelGlow() throws Exception {
 
         final Mojo packageMojo = lookupConfiguredMojo(

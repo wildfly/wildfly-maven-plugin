@@ -83,6 +83,22 @@
 
     <profiles>
         <profile>
+            <id>security-manager-required</id>
+            <activation>
+                <jdk>[24,)</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <excludedGroups>org.wildfly.plugin.categories.SecurityManagerRequired</excludedGroups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <id>skip-channel-tests</id>
             <activation>
                 <property>
