@@ -1,0 +1,99 @@
+# This workflow will build a Java project with Maven
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+
+name: WildFly Maven Plugin - Nightly CI
+
+on:
+  push:
+    branches-ignore:
+      - 'dependabot/**'
+    paths:
+      - '.github/workflows/nightly-ci.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/nightly-ci.yml'
+
+  schedule:
+    - cron: '0 2 * * *' # Every day at 03:00 UTC
+
+# Only run the latest job
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+
+jobs:
+  nightly-build-test:
+    name: ${{ matrix.os }}-jdk${{ matrix.java }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest ]
+        java: ['17', '21']
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          cache: 'maven'
+          distribution: 'temurin'
+      - name: Build and Test on ${{ matrix.java }} - ${{ matrix.wildfly-version }}
+        run: mvn clean install '-Dorg.jboss.logmanager.nocolor=true'
+      - name: Upload surefire logs for failed run
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: surefire-reports-${{ matrix.os }}-${{ matrix.java }}
+          path: '**/surefire-reports/'
+      - name: Upload failsafe logs for failed run
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: failsafe-reports-${{ matrix.os }}-${{ matrix.java }}
+          path: '**/failsafe-reports/'
+      - name: Upload logs for failed run
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: server-logs-${{ matrix.os }}-${{ matrix.java }}
+          path: '**/*.log'
+
+  nightly-latest-java:
+    name: nightly-jdk${{ matrix.java }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['23', '24-ea']
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          cache: 'maven'
+          distribution: 'temurin'
+      - name: Build and Test on ${{ matrix.java }} - ${{ matrix.wildfly-version }}
+        run: mvn clean install '-Dorg.jboss.logmanager.nocolor=true'
+      - name: Upload surefire logs for failed run
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: surefire-reports-latest-${{ matrix.java }}
+          path: '**/surefire-reports/'
+      - name: Upload failsafe logs for failed run
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: failsafe-reports-latest-${{ matrix.java }}
+          path: '**/failsafe-reports/'
+      - name: Upload logs for failed run
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: server-logs-latest-${{ matrix.java }}
+          path: '**/*.log'
