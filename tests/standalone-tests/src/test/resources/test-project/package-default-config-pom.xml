@@ -23,6 +23,10 @@
                     </feature-packs>
                     <record-provisioning-state>true</record-provisioning-state>
                     <provisioning-dir>packaged-default-config-server</provisioning-dir>
+                    <galleon-options>
+                        <!-- Fork the process to avoid a two controller-client's from being on the class path -->
+                        <jboss-fork-embedded>true</jboss-fork-embedded>
+                    </galleon-options>
                 </configuration>
             </plugin>
         </plugins>

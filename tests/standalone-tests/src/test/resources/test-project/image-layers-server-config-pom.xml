@@ -28,6 +28,10 @@
                     <filename>test.war</filename>
                     <group>wildfly-image-layers-server-config-maven-plugin</group>
                     <layers-configuration-file-name>standalone-core.xml</layers-configuration-file-name>
+                    <galleon-options>
+                        <!-- Fork the process to avoid a two controller-client's from being on the class path -->
+                        <jboss-fork-embedded>true</jboss-fork-embedded>
+                    </galleon-options>
                 </configuration>
             </plugin>
         </plugins>

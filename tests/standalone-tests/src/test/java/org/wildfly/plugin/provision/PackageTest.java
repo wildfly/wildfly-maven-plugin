@@ -16,6 +16,7 @@ import org.wildfly.plugin.categories.ChannelsRequired;
 import org.wildfly.plugin.tests.AbstractProvisionConfiguredMojoTestCase;
 import org.wildfly.plugin.tests.AbstractWildFlyMojoTest;
 
+@Category(ChannelsRequired.class)
 public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
 
     public PackageTest() {
@@ -38,7 +39,6 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
     }
 
     @Test
-    @Category(ChannelsRequired.class)
     public void testPackageWithChannel() throws Exception {
 
         final Mojo packageMojo = lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("package-channel-pom.xml").toFile(),

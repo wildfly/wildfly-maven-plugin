@@ -50,7 +50,7 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
       - name: Build with Maven Java ${{ matrix.java }}
-        run: mvn clean install '-Dorg.jboss.logmanager.nocolor=true' '-Dserver.version=${{steps.wildfly-nightly.outputs.wildfly-version}}'
+        run: mvn clean install '-Dorg.jboss.logmanager.nocolor=true' '-Dversion.org.wildfly=${{steps.wildfly-nightly.outputs.wildfly-version}}'
       - name: Upload surefire reports
         uses: actions/upload-artifact@v4
         if: failure()

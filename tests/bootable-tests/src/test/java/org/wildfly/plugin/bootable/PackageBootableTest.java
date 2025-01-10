@@ -11,9 +11,12 @@ import java.nio.file.StandardCopyOption;
 import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.wildfly.plugin.categories.ChannelsRequired;
 import org.wildfly.plugin.tests.AbstractProvisionConfiguredMojoTestCase;
 import org.wildfly.plugin.tests.AbstractWildFlyMojoTest;
 
+@Category(ChannelsRequired.class)
 public class PackageBootableTest extends AbstractProvisionConfiguredMojoTestCase {
 
     private static final String BOOTABLE_JAR_NAME = "server-bootable.jar";
