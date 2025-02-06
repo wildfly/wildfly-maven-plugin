@@ -151,7 +151,6 @@
                 <plugin>
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <configuration>
-                        <additionalJOption>--no-module-directories</additionalJOption>
                         <doclint>none</doclint>
                     </configuration>
                 </plugin>
