@@ -67,7 +67,6 @@ import org.jboss.galleon.api.config.GalleonProvisioningConfig;
 import org.jboss.galleon.maven.plugin.util.MavenArtifactRepositoryManager;
 import org.jboss.galleon.maven.plugin.util.MvnMessageWriter;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
-import org.jboss.galleon.util.IoUtils;
 import org.jboss.logging.Logger;
 import org.twdata.maven.mojoexecutor.MojoExecutor;
 import org.wildfly.channel.UnresolvedMavenArtifactException;
@@ -305,7 +304,7 @@ public class DevMojo extends AbstractServerStartMojo {
     private boolean offlineProvisioning;
 
     /**
-     * Set to {@code true} if you want to delete the existing server referenced from the {@code provisioningDir} and provision a
+     * Set to {@code true} if you want to delete the existing server referenced from the {@code jbossHome} and provision a
      * new one,
      * otherwise {@code false}. When { @code discover-provisioning-info } is set to {@code true}, this option is enforced to be
      * {@code true}.
@@ -401,7 +400,6 @@ public class DevMojo extends AbstractServerStartMojo {
 
     private String warGoal = MAVEN_EXPLODED_GOAL;
     private ScanResults results;
-    private Path installDir;
     private boolean requiresWarDeletion;
     private Logger mavenJBossLogger;
 
@@ -413,6 +411,7 @@ public class DevMojo extends AbstractServerStartMojo {
         }
         mavenJBossLogger = new MavenJBossLogger(getLog());
         serverConfig = serverConfig == null ? "standalone.xml" : serverConfig;
+        boolean startServer = false;
         ServerContext context = null;
         if (remote) {
             init();
@@ -424,7 +423,7 @@ public class DevMojo extends AbstractServerStartMojo {
                     getLog().info("Layer discovery has been enabled, overwriteProvisionedServer has been set to true");
                 }
             } else {
-                context = startServer(ServerType.STANDALONE);
+                startServer = true;
             }
         }
         try {
@@ -439,7 +438,7 @@ public class DevMojo extends AbstractServerStartMojo {
                 requiresWarDeletion = !remote;
             }
             // We must start the server after compilation occurred to get a deployment to scan
-            if (!remote && isDiscoveryEnabled()) {
+            if (startServer) {
                 context = startServer(ServerType.STANDALONE);
             }
             try (final WatchService watcher = FileSystems.getDefault().newWatchService()) {
@@ -593,17 +592,18 @@ public class DevMojo extends AbstractServerStartMojo {
         if (newConfig == null) {
             return false;
         }
+        final Path jbossHome = resolveJBossHome();
         debug("Changes in layers detected, must re-provision the server");
         try (ModelControllerClient client = createClient()) {
             ServerManager.builder().client(client).standalone().shutdown();
-            debug("Deleting existing installation " + installDir);
-            IoUtils.recursiveDelete(installDir);
+            debug("Deleting existing installation " + jbossHome);
+            deleteRecursively(jbossHome);
         }
         GalleonBuilder galleonBuilder = new GalleonBuilder();
         galleonBuilder.addArtifactResolver(mavenRepoManager);
         ProvisioningBuilder builder = galleonBuilder.newProvisioningBuilder(newConfig);
         try (Provisioning pm = builder
-                .setInstallationHome(installDir)
+                .setInstallationHome(jbossHome)
                 .setMessageWriter(new MvnMessageWriter(getLog()))
                 .build()) {
             provisionServer(pm, newConfig);
@@ -614,15 +614,21 @@ public class DevMojo extends AbstractServerStartMojo {
 
     @Override
     protected Path provisionIfRequired(final Path installDir) throws MojoFailureException, MojoExecutionException {
+        if (!isAllowProvisioning()) {
+            return installDir;
+        }
         // This is called for the initial start of the server.
-        this.installDir = installDir;
         if (!overwriteProvisionedServer && Files.exists(installDir)) {
             getLog().info(String.format("A server already exists in %s, provisioning for %s:%s", installDir,
                     project.getGroupId(), project.getArtifactId()));
             return installDir;
         }
         if (Files.exists(installDir)) {
-            IoUtils.recursiveDelete(installDir);
+            try {
+                deleteRecursively(installDir);
+            } catch (IOException ex) {
+                throw new MojoExecutionException("Failed to delete directory " + installDir, ex);
+            }
         }
         try {
             GalleonBuilder provider = new GalleonBuilder();
@@ -659,6 +665,11 @@ public class DevMojo extends AbstractServerStartMojo {
         return installDir;
     }
 
+    @Override
+    protected boolean isAllowProvisioning() {
+        return overwriteProvisionedServer || super.isAllowProvisioning();
+    }
+
     private ScanResults scanDeployment(GalleonBuilder pm) throws Exception {
         List<Path> lst = new ArrayList<>();
         lst.add(resolveWarLocation());
@@ -675,6 +686,7 @@ public class DevMojo extends AbstractServerStartMojo {
 
     private void provisionServer(Provisioning pm, GalleonProvisioningConfig config)
             throws ProvisioningException, MojoExecutionException {
+        final Path installDir = resolveJBossHome();
         getLog().info("Provisioning server in " + installDir);
         PluginProgressTracker.initTrackers(pm, mavenJBossLogger);
         pm.provision(config);
