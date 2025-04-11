@@ -36,10 +36,11 @@ public abstract class AbstractServerStartMojo extends AbstractStartMojo {
     protected File targetDir;
 
     /**
-     * The WildFly Application Server's home directory. If not used, WildFly will be downloaded.
+     * The WildFly Application Server's home directory. If not set, a server will be provisioned in the
+     * <code>${project.build.directory}/server</code>.
      */
     @Parameter(alias = "jboss-home", property = PropertyNames.JBOSS_HOME)
-    protected String jbossHome;
+    private String jbossHome;
 
     /**
      * The feature pack location. See the <a href="https://docs.wildfly.org/galleon/#_feature_pack_location">documentation</a>
@@ -64,11 +65,17 @@ public abstract class AbstractServerStartMojo extends AbstractStartMojo {
 
     /**
      * The directory name inside the buildDir where to provision the default server.
-     * By default the server is provisioned into the 'server' directory.
+     * By default, the server is provisioned into the 'server' directory.
+     * <p>
+     * This parameter has been deprecated in favor of using the {@code <jbossHome/>} parameter. If both are defined,
+     * this parameter will be ignored.
+     * </p>
      *
      * @since 3.0
+     * @deprecated use jbossHome setting
      */
-    @Parameter(alias = "provisioning-dir", property = PropertyNames.WILDFLY_PROVISIONING_DIR, defaultValue = Utils.WILDFLY_DEFAULT_DIR)
+    @Deprecated(forRemoval = true)
+    @Parameter(alias = "provisioning-dir", property = PropertyNames.WILDFLY_PROVISIONING_DIR)
     private String provisioningDir;
 
     /**
@@ -91,10 +98,12 @@ public abstract class AbstractServerStartMojo extends AbstractStartMojo {
     @Parameter(alias = "add-user", property = "wildfly.add-user")
     private AddUser addUser;
 
+    private Path cachedJBossHome;
+    private boolean allowProvisioning;
+
     @Override
     protected Path getServerHome() throws MojoExecutionException, MojoFailureException {
-        // Validate the environment
-        final Path jbossHome = provisionIfRequired(targetDir.toPath().resolve(provisioningDir));
+        final Path jbossHome = provisionIfRequired(resolveJBossHome());
         if (!ServerManager.isValidHomeDirectory(jbossHome)) {
             throw new MojoExecutionException(String.format("JBOSS_HOME '%s' is not a valid directory.", jbossHome));
         }
@@ -211,19 +220,18 @@ public abstract class AbstractServerStartMojo extends AbstractStartMojo {
     }
 
     protected Path provisionIfRequired(final Path installDir) throws MojoFailureException, MojoExecutionException {
-        if (jbossHome != null) {
-            // we do not need to download WildFly
-            return Paths.get(jbossHome);
-        }
-        try {
-            if (!Files.exists(installDir)) {
-                getLog().info("Provisioning default server in " + installDir);
-                GalleonUtils.provision(installDir, resolveFeaturePackLocation(), version, mavenRepoManager);
+        if (isAllowProvisioning()) {
+            try {
+                if (!Files.exists(installDir)) {
+                    getLog().info("Provisioning default server in " + installDir);
+                    GalleonUtils.provision(installDir, resolveFeaturePackLocation(), version, mavenRepoManager);
+                }
+                return installDir;
+            } catch (ProvisioningException ex) {
+                throw new MojoFailureException(ex.getLocalizedMessage(), ex);
             }
-            return installDir;
-        } catch (ProvisioningException ex) {
-            throw new MojoFailureException(ex.getLocalizedMessage(), ex);
         }
+        return resolveJBossHome();
     }
 
     private void addUsers(final Path wildflyHome, final Path javaHome) throws IOException {
@@ -244,5 +252,40 @@ public abstract class AbstractServerStartMojo extends AbstractStartMojo {
      */
     protected String getDefaultFeaturePackLocation() {
         return "wildfly@maven(org.jboss.universe:community-universe)";
+    }
+
+    /**
+     * Indicates if provisioning should be allowed or not.
+     * <p>
+     * Provisioning is said to be allowed if the JBoss Home directory does not exist and does not already have a server
+     * provisioned in it.
+     * </p>
+     *
+     * @return {@code true} if provisioning is allowed, otherwise {@code false}
+     */
+    protected boolean isAllowProvisioning() {
+        resolveJBossHome();
+        return allowProvisioning;
+    }
+
+    /**
+     * Resolves the JBoss Home directory.
+     *
+     * @return the JBoss Home directory
+     */
+    protected Path resolveJBossHome() {
+        if (cachedJBossHome == null) {
+            if (jbossHome == null) {
+                if (provisioningDir == null) {
+                    cachedJBossHome = Path.of(project.getBuild().getDirectory(), Utils.WILDFLY_DEFAULT_DIR);
+                } else {
+                    cachedJBossHome = Path.of(project.getBuild().getDirectory(), provisioningDir);
+                }
+            } else {
+                cachedJBossHome = Path.of(jbossHome);
+            }
+            allowProvisioning = !ServerManager.isValidHomeDirectory(cachedJBossHome);
+        }
+        return cachedJBossHome;
     }
 }
