@@ -268,6 +268,8 @@
             </plugin>
             <plugin>
                 <artifactId>maven-site-plugin</artifactId>
+                <!-- Currently required to override as the skin breaks in 3.21, see WFMP-299 -->
+                <version>3.20.0</version>
                 <dependencies>
                     <dependency>
                         <!-- Docs Maven Skin -->
