@@ -279,7 +279,7 @@ public abstract class AbstractServerStartMojo extends AbstractStartMojo {
                 if (provisioningDir == null) {
                     cachedJBossHome = Path.of(project.getBuild().getDirectory(), Utils.WILDFLY_DEFAULT_DIR);
                 } else {
-                    cachedJBossHome = Path.of(project.getBuild().getDirectory(), provisioningDir);
+                    cachedJBossHome = Path.of(project.getBuild().getDirectory()).resolve(provisioningDir);
                 }
             } else {
                 cachedJBossHome = Path.of(jbossHome);
