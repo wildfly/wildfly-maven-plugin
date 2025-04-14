@@ -194,7 +194,7 @@
                     <dependency>
                         <groupId>org.wildfly.tools</groupId>
                         <artifactId>ide-config</artifactId>
-                        <version>1.0.4.Final</version>
+                        <version>1.0.5.Final</version>
                     </dependency>
                 </dependencies>
                 <configuration>
