@@ -174,6 +174,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
      * The name of the configuration file generated from layers. Default value is {@code standalone.xml}.
      * If no {@code layers} have been configured, setting this parameter is invalid.
      */
+    // TODO (jrp) what is the difference between this and serverConfig?
     @Parameter(alias = "layers-configuration-file-name", property = PropertyNames.WILDFLY_LAYERS_CONFIGURATION_FILE_NAME, defaultValue = STANDALONE_XML)
     String layersConfigurationFileName;
 
