@@ -69,7 +69,7 @@
         <version.org.wildfly.launcher>1.0.2.Final</version.org.wildfly.launcher>
         <version.org.wildfly/>
         <version.org.wildfly.channel>1.2.2.Final</version.org.wildfly.channel>
-        <version.org.wildfly.prospero>1.3.0.Final</version.org.wildfly.prospero>
+        <version.org.wildfly.prospero>1.3.1.Final</version.org.wildfly.prospero>
         <!-- maven dependencies -->
         <version.javax.inject.javax.inject>1</version.javax.inject.javax.inject>
         <version.org.apache.maven.maven-core>3.9.9</version.org.apache.maven.maven-core>
