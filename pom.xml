@@ -65,7 +65,7 @@
         <version.org.wildfly.common.wildfly-common>1.7.0.Final</version.org.wildfly.common.wildfly-common>
         <version.org.wildfly.plugin.tools>1.2.2.Final</version.org.wildfly.plugin.tools>
         <!-- This version property is also retrieved by plugin at runtime to resolve CLI artifact -->
-        <version.org.wildfly.core>28.0.0.Final</version.org.wildfly.core>
+        <version.org.wildfly.core>28.0.1.Final</version.org.wildfly.core>
         <version.org.wildfly.launcher>1.0.2.Final</version.org.wildfly.launcher>
         <version.org.wildfly/>
         <version.org.wildfly.channel>1.2.2.Final</version.org.wildfly.channel>
