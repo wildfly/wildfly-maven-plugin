@@ -432,6 +432,12 @@ public class DevMojo extends AbstractServerStartMojo {
                 triggerResources();
                 triggerCompile();
                 triggerWarGoal();
+                // If WildFly Glow is enabled, we need to provision the server
+                if (isDiscoveryEnabled()) {
+                    init();
+                    provisionIfRequired(resolveJBossHome());
+                    startServer = true;
+                }
             } else {
                 // First update will imply to delete the war and redeploy it.
                 // in the remote case, we have a war and must keep it.
