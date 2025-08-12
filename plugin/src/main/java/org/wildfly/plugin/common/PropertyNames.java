@@ -52,6 +52,8 @@ public interface PropertyNames {
 
     String IGNORE_MISSING_DEPLOYMENT = "undeploy.ignoreMissingDeployment";
 
+    String INCLUDE_DEPLOYMENT = "wildfly.provision.include.deployment";
+
     String JAVA_HOME = "java.home";
 
     String JBOSS_HOME = "jboss-as.home"; // TODO (jrp) look at this one
