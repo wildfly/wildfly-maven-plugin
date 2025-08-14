@@ -59,7 +59,7 @@ mvn ${pluginPrefix}:dev
 
 #[[##]]# The `${pluginPrefix}:package` Goal
 
-The `${pluginPrefix}:package` goal will provision a server, execute CLI commands and deploy your application.
+The `${pluginPrefix}:package` goal will provision a server or a Bootable JAR (an executable fat JAR), execute CLI commands and deploy your application.
 
 To execute the package goal type the following on the command line:
 

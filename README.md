@@ -10,6 +10,7 @@ A Maven plug-in for WildFly Application Server. This plugin allows you to:
   * Run a standalone server within Maven
   * Galleon provisioning of a server.
   * Packaging of a fully configured server containing application deployment.
+  * Packaging of a fully configured server and application as a Bootable JAR (an executable fat JAR).
 
 Plugin documentation is at https://docs.wildfly.org/wildfly-maven-plugin
 
