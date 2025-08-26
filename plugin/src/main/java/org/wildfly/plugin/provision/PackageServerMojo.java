@@ -48,6 +48,7 @@ import org.wildfly.glow.ScanResults;
 import org.wildfly.plugin.cli.BaseCommandConfiguration;
 import org.wildfly.plugin.cli.CliSession;
 import org.wildfly.plugin.cli.OfflineCommandExecutor;
+import org.wildfly.plugin.common.Environment;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.StandardOutput;
 import org.wildfly.plugin.common.Utils;
@@ -574,7 +575,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         BootableJarSupport.packageBootableJar(targetJarFile, targetPath,
                 activeConfig, jbossHome,
                 artifactResolver,
-                new MvnMessageWriter(getLog()));
+                new MvnMessageWriter(getLog()),
+                Environment.MINIMAL_STABILITY_LEVEL);
         attachJar(targetJarFile);
         getLog().info("Bootable JAR packaging DONE. To run the server: java -jar " + targetJarFile);
 
@@ -615,7 +617,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         if (!layersConfigurationFileName.equals(STANDALONE_XML)) {
             serverConfigName = layersConfigurationFileName;
         }
-        offlineCommands.add("embed-server --server-config=" + serverConfigName);
+        offlineCommands.add(
+                "embed-server --server-config=" + serverConfigName + " --stability=" + Environment.MINIMAL_STABILITY_LEVEL);
         offlineCommands.addAll(commands);
         offlineCommands.add("stop-embedded-server");
         return offlineCommands;

@@ -20,16 +20,30 @@
                         <feature-pack>
                             <location>wildfly@maven(org.jboss.universe:community-universe)#WF_VERSION</location>
                         </feature-pack>
+                        <feature-pack>
+                            <location>org.wildfly.extras.grpc:wildfly-grpc-feature-pack:GRPC_VERSION</location>
+                        </feature-pack>
                     </feature-packs>
                     <layers>
                         <layer>jaxrs-server</layer>
+                        <layer>grpc</layer>
                     </layers>
+                    <packaging-scripts>
+                        <packaging-script>
+                            <scripts>
+                                <script>test-package.cli</script>
+                            </scripts>
+                            <commands>
+                                <command>/system-property=org.wildfly.maven.plugin-package-goal:add(value=true)</command>
+                            </commands>
+                        </packaging-script>
+                    </packaging-scripts>
                     <filename>test.war</filename>
-                    <bootable-jar-name>server-bootable.jar</bootable-jar-name>
+                    <extra-server-content-dirs>
+                        <dir>extra-content</dir>
+                    </extra-server-content-dirs>
                     <record-provisioning-state>true</record-provisioning-state>
-                    <provisioning-dir>packaged-bootable-server</provisioning-dir>
-                    <bootable-jar>true</bootable-jar>
-                    <overwrite-provisioned-server>true</overwrite-provisioned-server>
+                    <provisioning-dir>packaged-grpc-server</provisioning-dir>
                     <galleon-options>
                         <!-- Fork the process to avoid a two controller-client's from being on the class path -->
                         <jboss-fork-embedded>true</jboss-fork-embedded>
