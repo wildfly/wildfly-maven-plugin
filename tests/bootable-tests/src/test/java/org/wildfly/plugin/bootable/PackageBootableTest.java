@@ -81,4 +81,16 @@ public class PackageBootableTest extends AbstractProvisionConfiguredMojoTestCase
                     "discovering provisioning information for the 'cloud' execution context.", ex.getMessage());
         }
     }
+
+    @Test
+    public void testGrpcPackage() throws Exception {
+
+        final Mojo packageMojo = lookupConfiguredMojo(
+                AbstractWildFlyMojoTest.getPomFile("package-bootable-grpc-pom.xml").toFile(), "package");
+        packageMojo.execute();
+        String[] layers = { "jaxrs-server", "grpc" };
+        String deploymentName = "test.war";
+        checkJar(AbstractWildFlyMojoTest.getBaseDir(), BOOTABLE_JAR_NAME, deploymentName,
+                true, layers, null, true);
+    }
 }

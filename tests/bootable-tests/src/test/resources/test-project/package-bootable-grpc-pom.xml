@@ -20,9 +20,13 @@
                         <feature-pack>
                             <location>wildfly@maven(org.jboss.universe:community-universe)#WF_VERSION</location>
                         </feature-pack>
+                        <feature-pack>
+                            <location>org.wildfly.extras.grpc:wildfly-grpc-feature-pack:GRPC_VERSION</location>
+                        </feature-pack>
                     </feature-packs>
                     <layers>
                         <layer>jaxrs-server</layer>
+                        <layer>grpc</layer>
                     </layers>
                     <filename>test.war</filename>
                     <bootable-jar-name>server-bootable.jar</bootable-jar-name>
