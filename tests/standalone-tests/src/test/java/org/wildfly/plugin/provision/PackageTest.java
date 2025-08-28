@@ -176,4 +176,16 @@ public class PackageTest extends AbstractProvisionConfiguredMojoTestCase {
                 .resolve("packaged-multiple-deployments-missing-server");
         checkStandaloneWildFlyHome(jbossHome, 1, layers, null, true);
     }
+
+    @Test
+    public void testGrpcPackage() throws Exception {
+        final Mojo packageMojo = lookupConfiguredMojo(AbstractWildFlyMojoTest.getPomFile("package-grpc-pom.xml").toFile(),
+                "package");
+        packageMojo.execute();
+        Path jbossHome = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("packaged-grpc-server");
+        Assert.assertTrue(Files.exists(jbossHome.resolve("standalone").resolve("configuration").resolve("foo.txt")));
+        String[] layers = { "jaxrs-server", "grpc" };
+        checkStandaloneWildFlyHome(jbossHome, 1, layers, null, true, "org.wildfly.maven.plugin-package-goal",
+                "org.wildfly.maven.plugin-package-goal-from-script");
+    }
 }

@@ -67,9 +67,11 @@ import org.wildfly.plugin.tools.server.ServerManager;
 @RunWith(JUnit4.class)
 public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMojoTestCase {
     private static final String TEST_REPLACE_WF_VERSION = "WF_VERSION";
+    private static final String TEST_REPLACE_GRPC_VERSION = "GRPC_VERSION";
     private static final String TEST_REPLACE_LOC_WF_VERSION = "#WF_VERSION";
     private static final String TEST_REPLACE_BASE_DIR_ABSOLUTE_URL = "WF_BASE_DIR_ABSOLUTE_URL";
     static final String WILDFLY_VERSION = "wildfly.test.version";
+    static final String GRPC_VERSION = "grpc.test.version";
     private final String artifactId;
 
     protected AbstractProvisionConfiguredMojoTestCase(String artifactId) {
@@ -163,6 +165,9 @@ public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMo
             }
             if (s.contains(TEST_REPLACE_WF_VERSION)) {
                 s = s.replace(TEST_REPLACE_WF_VERSION, System.getProperty(WILDFLY_VERSION));
+            }
+            if (s.contains(TEST_REPLACE_GRPC_VERSION)) {
+                s = s.replace(TEST_REPLACE_GRPC_VERSION, System.getProperty(GRPC_VERSION));
             }
             if (s.contains(TEST_REPLACE_BASE_DIR_ABSOLUTE_URL)) {
                 s = s.replace(TEST_REPLACE_BASE_DIR_ABSOLUTE_URL, pom.getParent().toUri().toString());

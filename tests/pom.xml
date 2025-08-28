@@ -73,6 +73,7 @@
                         <jboss.home>${jboss.home}</jboss.home>
                         <jboss-as.home>${jboss.home}</jboss-as.home>
                         <wildfly.test.version>${version.org.wildfly}</wildfly.test.version>
+                        <grpc.test.version>${grpcVersion}</grpc.test.version>
                         <wildfly.management.port>10099</wildfly.management.port>
                         <wildfly.test.config.dir>${wildfly.test.config.dir}</wildfly.test.config.dir>
                     </systemPropertyVariables>
