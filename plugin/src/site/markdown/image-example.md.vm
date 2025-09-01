@@ -121,7 +121,7 @@ with your registry.
 
 #[[##]]# Configure the JDK version used by the application image.
 
-The application image is based on a runtime image provided by WildFly that contains all the runtimes required to run WildFly and your application.Push an application image to a container registry.
+For Bootable JAR server, the application image is based on the OpenJDK runtime image. For WildFly server installation, the application image is based on a runtime image provided by WildFly that contains all the runtimes required to run WildFly and your application.Push an application image to a container registry.
 
 You can override the JDK version used, see the <a href="https://docs.wildfly.org/wildfly-container/">WildFly documentation</a>
 for supported versions. The below example uses the Java 21 version of the image using the `<jdk-version/>` configuration property.

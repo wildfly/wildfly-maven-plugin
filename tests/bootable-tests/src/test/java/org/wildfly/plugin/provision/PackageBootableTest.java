@@ -2,14 +2,13 @@
  * Copyright The WildFly Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.wildfly.plugin.bootable;
+package org.wildfly.plugin.provision;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 import org.apache.maven.plugin.Mojo;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.wildfly.plugin.categories.ChannelsRequired;
@@ -71,14 +70,11 @@ public class PackageBootableTest extends AbstractProvisionConfiguredMojoTestCase
 
         final Mojo packageMojo = lookupConfiguredMojo(
                 AbstractWildFlyMojoTest.getPomFile("package-bootable-glow-cloud-pom.xml").toFile(), "package");
-        try {
-            packageMojo.execute();
-            throw new Exception("Should have failed!");
-        } catch (MojoExecutionException ex) {
-            // XXX OK expected
-            assertEquals("The option 'bootableJar' must not be set when " +
-                    "discovering provisioning information for the 'cloud' execution context.", ex.getMessage());
-        }
+        String[] layers = { "ee-core-profile-server" };
+        packageMojo.execute();
+        String deploymentName = "test.war";
+        checkJar(AbstractWildFlyMojoTest.getBaseDir(), BOOTABLE_JAR_NAME, deploymentName,
+                true, layers, null, true);
     }
 
     @Test

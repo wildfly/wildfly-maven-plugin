@@ -88,6 +88,15 @@ public class ApplicationImageInfo {
         return runtimeImageName + runtimeImageTag;
     }
 
+    String getOpenJDKRuntimeImage() {
+        String runtimeImageName = "registry.access.redhat.com/ubi9/openjdk-";
+        String jdkImageVersion = "21";
+        if (jdkVersion != null) {
+            jdkImageVersion = jdkVersion;
+        }
+        return runtimeImageName + jdkImageVersion + "-runtime:latest";
+    }
+
     String getDockerBinary() {
         if (dockerBinary == null) {
             dockerBinary = ExecUtil.resolveImageBinary();

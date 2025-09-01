@@ -212,9 +212,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
      * <ul>
      * <li>addOns: List of addOn to enable. An addOn brings extra galleon layers to the provisioning (eg: {@code wildfly-cli} to
      * include CLI.</li>
-     * <li>context: {@code bare-metal} or {@code cloud}. Default to {@code bare-metal}. Note that if the context is set to
-     * {@code cloud}
-     * and the plugin option {@code bootable-jar} is set, the plugin execution will abort.</li>
+     * <li>context: {@code bare-metal} or {@code cloud}. Default to {@code bare-metal}.</li>
      * <li>failsOnError: true|false. If errors are detected (missing datasource, missing messaging broker, ambiguous JNDI call,
      * provisioning is aborted. Default to {@code false}</li>
      * <li>layersForJndi: List of Galleon layers required by some JNDI calls located in your application.</li>
@@ -261,17 +259,15 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
 
     /**
      * Package the provisioned server into a WildFly Bootable JAR. In order to produce a hollow jar (a jar that doesn't contain
-     * a deployment) set the { @code skipDeployment } parameter. A server packaged as bootable JAR is suited to run on
-     * bare-metal.
-     * When provisioning a server for the cloud, this option shouldn't be set.
+     * a deployment) set the { @code skipDeployment } parameter.
      * <p>
-     * Note that the produced fat JAR is ignored when running the {@code dev},{@code image},{@code start} or {@code run} goals.
+     * Note that the produced fat JAR is ignored when running the {@code dev},{@code start} or {@code run} goals.
      * </p>
      *
      * @since 5.0
      */
     @Parameter(alias = "bootable-jar", required = false, property = PropertyNames.BOOTABLE_JAR)
-    private boolean bootableJar;
+    protected boolean bootableJar;
 
     /**
      * When {@code bootable-jar} is set to true, use this parameter to name the generated jar file.
@@ -283,7 +279,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
      * @since 5.0
      */
     @Parameter(alias = "bootable-jar-name", property = PropertyNames.BOOTABLE_JAR_NAME, defaultValue = "${project.artifactId}-bootable.jar")
-    private String bootableJarName;
+    protected String bootableJarName;
 
     /**
      * When {@code bootable-jar} is set to true, the bootable JAR artifact is attached to the project with the classifier
@@ -384,12 +380,6 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         if (discoverProvisioningInfo == null) {
             config = super.buildGalleonConfig(pm);
             return config;
-        }
-        if (discoverProvisioningInfo.getContext() != null &&
-                GlowConfig.CLOUD_CONTEXT.equals(discoverProvisioningInfo.getContext()) &&
-                bootableJar) {
-            throw new MojoExecutionException("The option 'bootableJar' must not be set when "
-                    + "discovering provisioning information for the 'cloud' execution context.");
         }
         try {
             List<Path> allDeployments = new ArrayList<>();

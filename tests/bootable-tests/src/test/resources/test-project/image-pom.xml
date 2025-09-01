@@ -1,0 +1,46 @@
+<!--
+    ~ Copyright The WildFly Authors
+    ~ SPDX-License-Identifier: Apache-2.0
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>testing</groupId>
+    <artifactId>testing</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <configuration>
+                    <feature-packs>
+                        <feature-pack>
+                            <location>wildfly@maven(org.jboss.universe:community-universe)#WF_VERSION</location>
+                        </feature-pack>
+                    </feature-packs>
+                    <layers>
+                        <layer>jaxrs-server</layer>
+                    </layers>
+                    <bootable-jar>true</bootable-jar>
+                    <bootable-jar-name>image-bootable.jar</bootable-jar-name>
+                    <filename>test.war</filename>
+                    <group>wildfly-maven-plugin</group>
+                    <labels>
+                        <version>1.0</version>
+                        <description>This text illustrates \
+that label-values can span multiple lines.</description>
+                        <quoted.line>I have &quot;quoted myself&quot; here.</quoted.line>
+                    </labels>
+                    <galleon-options>
+                        <!-- Fork the process to avoid a two controller-client's from being on the class path -->
+                        <jboss-fork-embedded>true</jboss-fork-embedded>
+                    </galleon-options>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
