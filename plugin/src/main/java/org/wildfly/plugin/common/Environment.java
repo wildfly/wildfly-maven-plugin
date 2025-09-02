@@ -25,10 +25,6 @@ import org.wildfly.security.manager.WildFlySecurityManager;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 public class Environment {
-
-    // Used when starting an embedded server
-    public static final String MINIMAL_STABILITY_LEVEL = "experimental";
-
     private static final String[] MODULAR_JVM_ARGUMENTS = {
             "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED",
             "--add-exports=jdk.unsupported/sun.reflect=ALL-UNNAMED",

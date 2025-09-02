@@ -31,7 +31,6 @@ import org.apache.maven.plugin.descriptor.PluginDescriptorBuilder;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.galleon.universe.maven.MavenArtifact;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
-import org.wildfly.plugin.common.Environment;
 import org.wildfly.plugin.tools.cli.CLIWrapper;
 
 /**
@@ -61,7 +60,7 @@ public class LocalCLIExecutor {
         originalCl = Thread.currentThread().getContextClassLoader();
         cliCl = new URLClassLoader(cp, originalCl);
         Thread.currentThread().setContextClassLoader(cliCl);
-        cliWrapper = new CLIWrapper(jbossHome, resolveExpression, cliCl, null, Environment.MINIMAL_STABILITY_LEVEL);
+        cliWrapper = new CLIWrapper(jbossHome, resolveExpression, cliCl);
     }
 
     private static URL resolveCLI(MavenRepoManager artifactResolver) throws Exception {

@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -98,6 +99,14 @@ public abstract class AbstractServerStartMojo extends AbstractStartMojo {
     @Parameter(alias = "add-user", property = "wildfly.add-user")
     private AddUser addUser;
 
+    /**
+     * Defines the stability level when starting a server.
+     *
+     * @since 5.1.3.Final
+     */
+    @Parameter(property = "wildfly.stability")
+    private String stability;
+
     private Path cachedJBossHome;
     private boolean allowProvisioning;
 
@@ -151,6 +160,10 @@ public abstract class AbstractServerStartMojo extends AbstractStartMojo {
 
         if (Utils.isNotNullOrEmpty(moduleOptions)) {
             commandBuilder.setModuleOptions(moduleOptions);
+        }
+
+        if (stability != null) {
+            commandBuilder.setStability(stability.toLowerCase(Locale.ROOT));
         }
 
         final Path javaHomePath = (this.javaHome == null ? Paths.get(System.getProperty("java.home"))

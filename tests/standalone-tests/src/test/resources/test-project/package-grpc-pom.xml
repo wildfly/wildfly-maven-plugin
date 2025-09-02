@@ -42,6 +42,7 @@
                     <extra-server-content-dirs>
                         <dir>extra-content</dir>
                     </extra-server-content-dirs>
+                    <stability>preview</stability>
                     <record-provisioning-state>true</record-provisioning-state>
                     <provisioning-dir>packaged-grpc-server</provisioning-dir>
                     <galleon-options>

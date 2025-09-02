@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -48,7 +49,6 @@ import org.wildfly.glow.ScanResults;
 import org.wildfly.plugin.cli.BaseCommandConfiguration;
 import org.wildfly.plugin.cli.CliSession;
 import org.wildfly.plugin.cli.OfflineCommandExecutor;
-import org.wildfly.plugin.common.Environment;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.StandardOutput;
 import org.wildfly.plugin.common.Utils;
@@ -354,6 +354,16 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     @Parameter(alias = "excluded-dependency-scope", property = "wildfly.excluded.dependency.scope")
     private String excludedDependencyScope;
 
+    /**
+     * Defines the stability level used for {@code <packagingScripts/>}. Please note that when you define a stability
+     * level less than the default for the server you're using, you must define the {@code --stability} argument when
+     * booting the JAR.
+     *
+     * @since 5.1.3.Final
+     */
+    @Parameter(property = "wildfly.stability")
+    private String stability;
+
     @Inject
     private OfflineCommandExecutor commandExecutor;
 
@@ -525,7 +535,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         // CLI execution
         try {
             if (!packagingScripts.isEmpty()) {
-                getLog().info("Excuting CLI commands and scripts");
+                getLog().info("Executing CLI commands and scripts");
                 for (CliSession session : packagingScripts) {
                     List<File> wrappedScripts = wrapOfflineScripts(session.getScripts());
                     try {
@@ -575,8 +585,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         BootableJarSupport.packageBootableJar(targetJarFile, targetPath,
                 activeConfig, jbossHome,
                 artifactResolver,
-                new MvnMessageWriter(getLog()),
-                Environment.MINIMAL_STABILITY_LEVEL);
+                new MvnMessageWriter(getLog()), stability == null ? null : stability);
         attachJar(targetJarFile);
         getLog().info("Bootable JAR packaging DONE. To run the server: java -jar " + targetJarFile);
 
@@ -617,8 +626,12 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         if (!layersConfigurationFileName.equals(STANDALONE_XML)) {
             serverConfigName = layersConfigurationFileName;
         }
-        offlineCommands.add(
-                "embed-server --server-config=" + serverConfigName + " --stability=" + Environment.MINIMAL_STABILITY_LEVEL);
+        if (stability != null) {
+            offlineCommands.add(
+                    "embed-server --server-config=" + serverConfigName + " --stability=" + stability.toLowerCase(Locale.ROOT));
+        } else {
+            offlineCommands.add("embed-server --server-config=" + serverConfigName);
+        }
         offlineCommands.addAll(commands);
         offlineCommands.add("stop-embedded-server");
         return offlineCommands;
