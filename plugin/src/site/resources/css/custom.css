@@ -7,10 +7,43 @@
 a {
     color: #f0ca4d !important;
 }
+
 a:hover {
-     color: #fff !important;
- }
+    color: #fff !important;
+}
 
 .navbar-text {
-    color: #aaa; !important;
+    color: #aaa !important;
+}
+
+.commonhaus-footer .commonhaus-logo {
+    grid-column: 7/13;
+    grid-row: 1;
+    justify-self: center;
+    align-self: center
+}
+
+.commonhaus-footer .commonhaus-logo img {
+    height: 30px
+}
+
+@media screen and (max-width: 1024px) {
+    .commonhaus-footer .commonhaus-logo {
+        grid-column: 6/12;
+        justify-self: center
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .commonhaus-footer .commonhaus-logo {
+        grid-column: 5/11
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .commonhaus-footer .commonhaus-logo {
+        grid-column: 1/13;
+        justify-self: center;
+        order: 1
+    }
 }

@@ -26,7 +26,6 @@
                 <menu>Examples</menu>
                 <menu>Project Documentation</menu>
                 <menu>Reports</menu>
-                <menu>Releases</menu>
             </topNav>
         </skinConfig>
     </custom>
@@ -62,10 +61,15 @@
             <item name="Project Information" href="project-info.html"/>
             <item name="Project Reports" href="project-reports.html"/>
         </menu>
-
-        <menu name="Releases" inherit="top">
-            <item name="placeholder" href="../../"/>
-        </menu>
-        <footer><![CDATA[<div class="float-md-end"><a href="https://www.redhat.com/"><span class="fw-bold btn-link">Sponsored by</span> <img class="img-fluid" src="https://www.wildfly.org/assets/img/redhat_reversed.svg"></a></div>]]></footer>
+        <!--<footer><![CDATA[<div class="float-md-end"><a href="https://www.commonhaus.org/" target="_blank"><img src="https://raw.githubusercontent.com/commonhaus/artwork/main/foundation/brand/svg/CF_logo_horizontal_single_reverse.svg"></a></div>]]></footer> -->
+        <footer><![CDATA[
+        <div class="content commonhaus-footer">
+          <div class="float-md-end">
+            <span class="commonhaus-logo">
+              <a href="https://www.commonhaus.org/" target="_blank"><img src="https://raw.githubusercontent.com/commonhaus/artwork/main/foundation/brand/svg/CF_logo_horizontal_single_reverse.svg"/></a>
+            </span>
+          </div>
+        </div>
+]]></footer>
     </body>
 </project>

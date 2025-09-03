@@ -49,6 +49,11 @@
         <url>${wildfly.scm.url}</url>
     </scm>
 
+    <organization>
+        <name>WildFly Community</name>
+        <url>https://wildfly.org</url>
+    </organization>
+
     <licenses>
         <license>
             <name>Apache License 2.0</name>
@@ -56,6 +61,15 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+
+    <developers>
+        <developer>
+            <id>wildfly.org</id>
+            <name>WildFly Community</name>
+            <organization>wildfly.org</organization>
+            <organizationUrl>https://wildfly.org</organizationUrl>
+        </developer>
+    </developers>
 
 
     <properties>
@@ -121,7 +135,7 @@
         <appServerName>WildFly</appServerName>
         <pluginPrefix>wildfly</pluginPrefix>
         <resteasyChannelStream>6.2</resteasyChannelStream>
-        <wildflyVersion>35.0.0.Final</wildflyVersion>
+        <wildflyVersion>37.0.0.Final</wildflyVersion>
 
         <wildfly.scm.connection>scm:git://github.com/wildfly/wildfly-maven-plugin.git</wildfly.scm.connection>
         <wildfly.scm.developer.connection>scm:git:git@github.com:wildfly/wildfly-maven-plugin.git
@@ -130,9 +144,7 @@
 
         <!-- Other properties -->
         <maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
-        <release.short.version>5.1</release.short.version>
         <skipFormatting>false</skipFormatting>
-        <docs.directory>${project.basedir}/../docs/releases/${release.short.version}</docs.directory>
         <!-- required by test -->
         <grpcVersion>0.1.12.Final</grpcVersion>
 
