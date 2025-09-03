@@ -40,13 +40,12 @@ jobs:
           distribution: 'temurin'
       - name: Generate JavaDoc
         run: |
-          cd plugin
           mvn -B -ntp clean -Pjboss-release site
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          # Upload the JavaDoc's
-          path: 'target/site/'
+          # Upload the site
+          path: 'plugin/target/site/'
   # Single deploy job since we're just deploying
   deploy:
     environment:
