@@ -27,7 +27,7 @@
     </prerequisites>
 
     <!-- The url and scm need to be defined here as the site plugin appends the maven module name -->
-    <url>http://www.wildfly.org</url>
+    <url>https://www.wildfly.org</url>
     <scm>
         <connection>${wildfly.scm.connection}</connection>
         <developerConnection>${wildfly.scm.developer.connection}</developerConnection>
