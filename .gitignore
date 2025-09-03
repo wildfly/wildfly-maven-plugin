@@ -21,3 +21,7 @@ nb-configuration.xml
 
 # Maven site files
 **/velocity.log
+
+# Release files
+*.releaseBackup
+release.properties
