@@ -4,8 +4,7 @@
   ~ SPDX-License-Identifier: Apache-2.0
   -->
 
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.jboss</groupId>
@@ -14,7 +13,7 @@
     </parent>
     <groupId>org.wildfly.plugins</groupId>
     <artifactId>wildfly-maven-plugin-parent</artifactId>
-    <version>5.1.4.Final-SNAPSHOT</version>
+    <version>5.1.4.Alpha1</version>
     <packaging>pom</packaging>
     <name>WildFly Maven Plugin - Parent</name>
 
@@ -47,7 +46,8 @@
         <connection>${wildfly.scm.connection}</connection>
         <developerConnection>${wildfly.scm.developer.connection}</developerConnection>
         <url>${wildfly.scm.url}</url>
-    </scm>
+      <tag>v5.1.4.Alpha1</tag>
+  </scm>
 
     <organization>
         <name>WildFly Community</name>
@@ -81,7 +81,7 @@
         <!-- This version property is also retrieved by plugin at runtime to resolve CLI artifact -->
         <version.org.wildfly.core>28.0.0.Final</version.org.wildfly.core>
         <version.org.wildfly.launcher>1.0.2.Final</version.org.wildfly.launcher>
-        <version.org.wildfly/>
+        <version.org.wildfly />
         <version.org.wildfly.channel>1.2.2.Final</version.org.wildfly.channel>
         <version.org.wildfly.prospero>1.3.1.Final</version.org.wildfly.prospero>
         <!-- maven dependencies -->
@@ -268,7 +268,7 @@
                     <excludes>**/HelpMojo.java</excludes>
                     <failsOnError>true</failsOnError>
                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                    <useFile/>
+                    <useFile />
                 </configuration>
                 <dependencies>
                     <dependency>
