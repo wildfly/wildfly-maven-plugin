@@ -9,7 +9,7 @@
     <parent>
         <groupId>org.wildfly.plugins</groupId>
         <artifactId>wildfly-maven-plugin-parent</artifactId>
-        <version>5.1.4.Final</version>
+        <version>5.1.5.Final-SNAPSHOT</version>
     </parent>
 
     <artifactId>wildfly-maven-plugin</artifactId>
@@ -31,7 +31,7 @@
         <connection>${wildfly.scm.connection}</connection>
         <developerConnection>${wildfly.scm.developer.connection}</developerConnection>
         <url>${wildfly.scm.url}</url>
-      <tag>v5.1.4.Final</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <build>
