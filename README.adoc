@@ -1,0 +1,54 @@
+= WildFly Application Server Maven Plugin
+
+A Maven plug-in for WildFly Application Server. This plugin allows you to:
+
+* Deploy, redeploy or undeploy your application
+* Add resources
+* Deploy and undeploy artifacts
+* Execute CLI commands
+* Run a standalone server within Maven
+* Galleon provisioning of a server.
+* Packaging of a fully configured server containing application deployment.
+* Packaging of a fully configured server and application as a Bootable JAR (an executable fat JAR).
+
+Plugin documentation is at https://docs.wildfly.org/wildfly-maven-plugin
+
+Issues can be filed at https://issues.redhat.com/browse/WFMP
+
+== License
+
+* link:LICENSE.txt[ASLv2]
+
+== Releasing
+
+Releasing this project requires access to https://repository.jboss.org/nexust[JBoss Nexus].
+
+To perform a release ensure you're on the correct branch and that branch is up to date. Once done you can simply use
+the `release.sh` bash script.
+
+[source,bash]
+----
+./release.sh -r 5.1.4.Final -d 5.1.5.Final-SNAPSHOT
+----
+
+If this was successful, instructions will be printed on the console with the next set of instructions for processing.
+
+[source,base]
+----
+...
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  02:59 min
+[INFO] Finished at: 2025-09-04T13:32:25-07:00
+[INFO] ------------------------------------------------------------------------
+
+Your release has been successful. Check the validation after 13:42:25 on https://repository.jboss.org/nexus.
+Once validation is successful, execute the following command:
+
+git checkout v5.1.4.Final
+mvn nxrm3:staging-move -Dmaven.repo.local="/tmp/m2/repository/wildfly-maven-plugin"
+git checkout main
+git push upstream main
+git push upstream v5.1.4.Final
+----
