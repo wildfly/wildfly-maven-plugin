@@ -81,6 +81,20 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
     MavenSession session;
 
     /**
+     * Package the provisioned server into a WildFly Bootable JAR. In order to produce a hollow jar (a jar that doesn't contain
+     * a deployment) set the { @code skipDeployment } parameter. A server packaged as bootable JAR is suited to run on
+     * bare-metal.
+     * When provisioning a server for the cloud, this option shouldn't be set.
+     * <p>
+     * Note that the produced fat JAR is ignored when running the {@code dev},{@code image},{@code start} or {@code run} goals.
+     * </p>
+     *
+     * @since 5.0
+     */
+    @Parameter(alias = "bootable-jar", required = false, property = PropertyNames.BOOTABLE_JAR)
+    boolean bootableJar;
+
+    /**
      * Arbitrary Galleon options used when provisioning the server. In case you
      * are building a large amount of server in the same maven session, it
      * is strongly advised to set 'jboss-fork-embedded' option to 'true' in
@@ -241,6 +255,10 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
         if (!overwriteProvisionedServer && Files.exists(wildflyDir)) {
             getLog().info(String.format("A server already exists in " + wildflyDir + ", skipping " + getGoal() +
                     " of %s:%s", project.getGroupId(), project.getArtifactId()));
+            if (bootableJar) {
+                getLog().warn(String.format("Skipping " + getGoal() + " of bootable jar for %s:%s", project.getGroupId(),
+                        project.getArtifactId()));
+            }
             return;
         }
         enrichRepositories();
