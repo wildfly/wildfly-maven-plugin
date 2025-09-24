@@ -71,7 +71,9 @@ import org.wildfly.plugin.tools.bootablejar.BootableJarSupport;
  *
  * @author jfdenise
  * @since 3.0
+ * @deprecated Use the {@code provision} goal
  */
+@Deprecated(forRemoval = true, since = "5.1")
 // Note we need the ResolutionScope to be "test" in order for the MavenProject.getArtifacts() to return all dependencies
 @Mojo(name = "package", requiresDependencyResolution = ResolutionScope.TEST, defaultPhase = LifecyclePhase.PACKAGE)
 public class PackageServerMojo extends AbstractProvisionServerMojo {
