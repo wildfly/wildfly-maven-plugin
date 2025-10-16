@@ -24,7 +24,6 @@ public class ApplicationImageInfo {
     /**
      * Determine which WildFly runtime image to use so that the application runs with the specified JDK.
      * If the value is not set, the `latest` tag of the WildFly runtime image is used.
-     * Accepted values are "11", "17".
      */
     protected String jdkVersion;
 

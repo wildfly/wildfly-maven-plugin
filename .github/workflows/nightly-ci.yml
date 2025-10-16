@@ -30,7 +30,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest ]
-        java: ['17', '21']
+        java: ['17', '21', '25']
 
     steps:
       - uses: actions/checkout@v5
@@ -59,41 +59,4 @@ jobs:
         if: failure()
         with:
           name: server-logs-${{ matrix.os }}-${{ matrix.java }}
-          path: '**/*.log'
-
-  nightly-latest-java:
-    name: nightly-jdk${{ matrix.java }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        java: ['23', '24-ea']
-
-    steps:
-      - uses: actions/checkout@v5
-      - name: Set up JDK ${{ matrix.java }}
-        uses: actions/setup-java@v5
-        with:
-          java-version: ${{ matrix.java }}
-          cache: 'maven'
-          distribution: 'temurin'
-      - name: Build and Test on ${{ matrix.java }} - ${{ matrix.wildfly-version }}
-        run: mvn clean install '-Dorg.jboss.logmanager.nocolor=true'
-      - name: Upload surefire logs for failed run
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: surefire-reports-latest-${{ matrix.java }}
-          path: '**/surefire-reports/'
-      - name: Upload failsafe logs for failed run
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: failsafe-reports-latest-${{ matrix.java }}
-          path: '**/failsafe-reports/'
-      - name: Upload logs for failed run
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: server-logs-latest-${{ matrix.java }}
           path: '**/*.log'

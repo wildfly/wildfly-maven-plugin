@@ -87,8 +87,8 @@ public class ApplicationImageMojo extends PackageServerMojo {
      *   &lt;!-- (optional) The binary used to perform image commands (build, login, push) (default is "docker") --&gt;
      *   &lt;docker-binary&gt;docker&lt;/docker-binary&gt;
      *
-     *   &lt;!-- (optional) the JDK version used by the application. Allowed values are "11" and "17". If unspecified, the "latest" tag is used to determine the JDK version used by WildFly runtime image --&gt;
-     *   &lt;jdk-version&gt;11&lt;/jdk-version&gt;
+     *   &lt;!-- (optional) the JDK version used by the application.  If unspecified, the "latest" tag is used to determine the JDK version used by WildFly runtime image --&gt;
+     *   &lt;jdk-version&gt;21&lt;/jdk-version&gt;
      *
      *   &lt;!-- (optional) The group part of the name of the application image --&gt;
      *   &lt;group&gt;${user.name}&lt;/group&gt;

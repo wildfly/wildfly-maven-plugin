@@ -42,11 +42,6 @@ public class DomainTestServer implements TestServer {
                 final DomainCommandBuilder commandBuilder = DomainCommandBuilder.of(TestEnvironment.WILDFLY_HOME)
                         .setBindAddressHint("management", TestEnvironment.HOSTNAME)
                         .addHostControllerJavaOption("-Djboss.management.http.port=" + TestEnvironment.PORT);
-
-                // Workaround for WFCORE-4121
-                if (TestEnvironment.isModularJvm()) {
-                    commandBuilder.addHostControllerJavaOptions(TestEnvironment.getModularJvmArguments());
-                }
                 final Process process = Launcher.of(commandBuilder)
                         .setRedirectErrorStream(true)
                         .launch();

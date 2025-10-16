@@ -8,8 +8,6 @@ package org.wildfly.plugin.tests;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.jboss.logging.Logger;
 import org.wildfly.plugin.common.Environment;
@@ -46,7 +44,6 @@ public class TestEnvironment extends Environment {
      * The default server startup timeout specified by {@code wildfly.timeout}, default is 60 seconds.
      */
     public static final long TIMEOUT;
-    private static final boolean IS_MODULAR_JVM;
 
     static {
         final Logger logger = Logger.getLogger(TestEnvironment.class);
@@ -82,23 +79,6 @@ public class TestEnvironment extends Environment {
             logger.debugf(e, "Invalid timeout: %s", timeout);
             throw new RuntimeException("Invalid timeout: " + timeout, e);
         }
-        final String javaVersion = System.getProperty("java.specification.version");
-        int vmVersion;
-        try {
-            final Matcher matcher = Pattern.compile("^(?:1\\.)?(\\d+)$").matcher(javaVersion);
-            if (matcher.find()) {
-                vmVersion = Integer.valueOf(matcher.group(1));
-            } else {
-                throw new RuntimeException("Unknown version of jvm " + javaVersion);
-            }
-        } catch (Exception e) {
-            vmVersion = 8;
-        }
-        IS_MODULAR_JVM = vmVersion > 8;
-    }
-
-    public static boolean isModularJvm() {
-        return IS_MODULAR_JVM;
     }
 
     public static boolean isValidWildFlyHome(final Path wildflyHome) {
