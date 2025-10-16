@@ -107,7 +107,7 @@
         <version.junit.junit>4.13.2</version.junit.junit>
         <version.org.mockito.mockito>5.19.0</version.org.mockito.mockito>
 
-        <version.formatter.maven.plugin>2.23.0</version.formatter.maven.plugin>
+        <version.formatter.maven.plugin>2.29.0</version.formatter.maven.plugin>
         <version.impsort.maven.plugin>1.9.0</version.impsort.maven.plugin>
         <version.nexus.staging.maven.plugin>1.6.13</version.nexus.staging.maven.plugin>
 
