@@ -103,7 +103,7 @@
         <version.org.twdata.maven>2.4.1</version.org.twdata.maven>
 
         <!-- other dependencies -->
-        <version.com.bernardomg.maven.skins>2.3.3</version.com.bernardomg.maven.skins>
+        <version.com.bernardomg.maven.skins>2.4.1</version.com.bernardomg.maven.skins>
         <version.junit.junit>4.13.2</version.junit.junit>
 
         <version.formatter.maven.plugin>2.29.0</version.formatter.maven.plugin>
