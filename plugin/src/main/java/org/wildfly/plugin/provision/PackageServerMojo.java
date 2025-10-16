@@ -259,20 +259,6 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     private GlowConfig discoverProvisioningInfo;
 
     /**
-     * Package the provisioned server into a WildFly Bootable JAR. In order to produce a hollow jar (a jar that doesn't contain
-     * a deployment) set the { @code skipDeployment } parameter. A server packaged as bootable JAR is suited to run on
-     * bare-metal.
-     * When provisioning a server for the cloud, this option shouldn't be set.
-     * <p>
-     * Note that the produced fat JAR is ignored when running the {@code dev},{@code image},{@code start} or {@code run} goals.
-     * </p>
-     *
-     * @since 5.0
-     */
-    @Parameter(alias = "bootable-jar", required = false, property = PropertyNames.BOOTABLE_JAR)
-    private boolean bootableJar;
-
-    /**
      * When {@code bootable-jar} is set to true, use this parameter to name the generated jar file.
      * <p>
      * Note that since 5.1 the default name changed from {@code server-bootable.jar} to
