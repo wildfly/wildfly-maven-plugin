@@ -44,7 +44,7 @@ We use this information to acknowledge your contributions in release announcemen
 If you have not done so on this machine, you need to:
 
 * Install Git and configure your GitHub access
-* Install Java SDK 11+ (OpenJDK recommended)
+* Install Java SDK 17+ (OpenJDK recommended)
 
 === IDE Config and Code Style
 
