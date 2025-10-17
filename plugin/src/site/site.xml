@@ -17,7 +17,6 @@
             <descriptionUrl>WildFly Maven Plugin</descriptionUrl>
             <twitterSite>@WildFlyAS</twitterSite>
             <customStyle>./css/custom.css</customStyle>
-            <customScript>../../js/custom-nav.js</customScript>
             <bootswatchStyle>slate</bootswatchStyle>
             <shine>bg-primary</shine>
             <customHighlightStyle>rainbow</customHighlightStyle>
