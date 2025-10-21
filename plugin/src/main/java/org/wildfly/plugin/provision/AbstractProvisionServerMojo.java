@@ -310,7 +310,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
             }
             getLog().info("Provisioning server in " + home);
             PluginProgressTracker.initTrackers(pm, new MavenJBossLogger(getLog()));
-            pm.provision(config);
+            pm.provision(config, galleonOptions);
             // Check that at least the standalone or domain directories have been generated.
             if (!Files.exists(home.resolve("standalone")) && !Files.exists(home.resolve("domain"))) {
                 getLog().error("Invalid galleon provisioning, no server provisioned in " + home + ". Make sure "
