@@ -351,9 +351,14 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
                         "layers-configuration-file-name has been set although no layers are defined.");
             }
             config = GalleonUtils.buildConfig(galleonBuilder, featurePacks, layers, excludedLayers, galleonOptions,
-                    layersConfigurationFileName);
+                    layersConfigurationFileName, getProvisionedConfigurationFileName(layersConfigurationFileName));
         }
         return config;
+    }
+
+    // By default the name of the provisioned file is the same as the configuration to provision
+    protected String getProvisionedConfigurationFileName(String layersConfigurationFileName) {
+        return layersConfigurationFileName;
     }
 
     protected GalleonProvisioningConfig getDefaultConfig() throws ProvisioningException {

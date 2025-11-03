@@ -113,6 +113,24 @@ public class Utils {
             GalleonBuilder pm,
             Map<String, String> galleonOptions,
             String layersConfigurationFileName) throws Exception {
+        return scanDeployment(discoverProvisioningInfo, layers, excludedLayers, featurePacks,
+                dryRun, log, deploymentContents, artifactResolver, outputFolder,
+                pm, galleonOptions, layersConfigurationFileName, layersConfigurationFileName);
+    }
+
+    public static ScanResults scanDeployment(GlowConfig discoverProvisioningInfo,
+            List<String> layers,
+            List<String> excludedLayers,
+            List<GalleonFeaturePack> featurePacks,
+            boolean dryRun,
+            Log log,
+            List<Path> deploymentContents,
+            MavenRepoManager artifactResolver,
+            Path outputFolder,
+            GalleonBuilder pm,
+            Map<String, String> galleonOptions,
+            String layersConfigurationFileName,
+            String provisionedConfigFileName) throws Exception {
         if (!layers.isEmpty()) {
             throw new MojoExecutionException("layers must be empty when enabling glow");
         }
@@ -131,7 +149,7 @@ public class Utils {
         Files.createDirectories(glowOutputFolder);
         if (!featurePacks.isEmpty()) {
             GalleonProvisioningConfig in = GalleonUtils.buildConfig(pm, featurePacks, layers, excludedLayers, galleonOptions,
-                    layersConfigurationFileName);
+                    layersConfigurationFileName, provisionedConfigFileName);
             inProvisioningFile = glowOutputFolder.resolve("glow-in-provisioning.xml");
             try (Provisioning p = pm.newProvisioningBuilder(in).build()) {
                 p.storeProvisioningConfig(in, inProvisioningFile);

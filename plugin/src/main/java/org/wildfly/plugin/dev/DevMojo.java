@@ -16,6 +16,7 @@ import static org.twdata.maven.mojoexecutor.MojoExecutor.executionEnvironment;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.groupId;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.plugin;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.version;
+import static org.wildfly.plugin.core.Constants.STANDALONE_XML;
 
 import java.io.File;
 import java.io.IOException;
@@ -645,7 +646,7 @@ public class DevMojo extends AbstractServerStartMojo {
             } else {
                 if (!isDiscoveryEnabled()) {
                     config = GalleonUtils.buildConfig(provider, featurePacks, layers, excludedLayers, galleonOptions,
-                            serverConfig == null ? "standalone.xml" : serverConfig);
+                            serverConfig == null ? STANDALONE_XML : serverConfig);
                 } else {
                     results = scanDeployment(provider);
                     config = results.getProvisioningConfig();
@@ -687,7 +688,7 @@ public class DevMojo extends AbstractServerStartMojo {
                 Paths.get(project.getBuild().getDirectory()),
                 pm,
                 galleonOptions,
-                serverConfig);
+                serverConfig == null ? STANDALONE_XML : serverConfig);
     }
 
     private void provisionServer(Provisioning pm, GalleonProvisioningConfig config)

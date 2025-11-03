@@ -411,7 +411,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
                     Paths.get(project.getBuild().getDirectory()),
                     pm,
                     galleonOptions,
-                    layersConfigurationFileName)) {
+                    layersConfigurationFileName,
+                    getProvisionedConfigurationFileName(layersConfigurationFileName))) {
                 config = results.getProvisioningConfig();
                 return config;
             }
@@ -774,4 +775,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         return key.toString();
     }
 
+    @Override
+    protected String getProvisionedConfigurationFileName(String layersConfigurationFileName) {
+        return bootableJar ? STANDALONE_XML : layersConfigurationFileName;
+    }
 }

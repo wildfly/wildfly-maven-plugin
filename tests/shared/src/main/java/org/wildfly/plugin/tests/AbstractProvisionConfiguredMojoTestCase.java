@@ -274,6 +274,24 @@ public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMo
         try {
             wildflyHome = checkAndGetWildFlyHome(dir, fileName, deploymentName, expectDeployment, layers,
                     excludedLayers,
+                    "standalone.xml",
+                    stateRecorded,
+                    configTokens);
+        } finally {
+            if (wildflyHome != null) {
+                IoUtils.recursiveDelete(wildflyHome);
+            }
+        }
+    }
+
+    protected void checkJar(Path dir, String fileName, String deploymentName, boolean expectDeployment,
+            String[] layers, String[] excludedLayers, String configName, boolean stateRecorded, String... configTokens)
+            throws Exception {
+        Path wildflyHome = null;
+        try {
+            wildflyHome = checkAndGetWildFlyHome(dir, fileName, deploymentName, expectDeployment, layers,
+                    excludedLayers,
+                    configName,
                     stateRecorded,
                     configTokens);
         } finally {
@@ -284,7 +302,8 @@ public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMo
     }
 
     protected Path checkAndGetWildFlyHome(Path dir, String fileName, String deploymentName, boolean expectDeployment,
-            String[] layers, String[] excludedLayers, boolean stateRecorded, String... configTokens) throws Exception {
+            String[] layers, String[] excludedLayers, String configName, boolean stateRecorded, String... configTokens)
+            throws Exception {
         Path tmpDir = Files.createTempDirectory("bootable-jar-test-unzipped");
         Path wildflyHome = Files.createTempDirectory("bootable-jar-test-unzipped-" + BootableJarSupport.BOOTABLE_SUFFIX);
         try {
@@ -317,7 +336,7 @@ public abstract class AbstractProvisionConfiguredMojoTestCase extends AbstractMo
                     GalleonProvisioningConfig configDescription = provisioning.loadProvisioningConfig(pFile);
                     GalleonConfigurationWithLayers config = null;
                     for (GalleonConfigurationWithLayers c : configDescription.getDefinedConfigs()) {
-                        if (c.getModel().equals("standalone") && c.getName().equals("standalone.xml")) {
+                        if (c.getModel().equals("standalone") && c.getName().equals(configName)) {
                             config = c;
                         }
                     }
