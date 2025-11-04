@@ -47,7 +47,6 @@ public class PackageBootableTest extends AbstractProvisionConfiguredMojoTestCase
         Path rootWar = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve(deploymentName);
         Path testWar = AbstractWildFlyMojoTest.getBaseDir().resolve("target").resolve("test.war");
         Files.copy(testWar, rootWar, StandardCopyOption.REPLACE_EXISTING);
-        Files.delete(testWar);
         packageMojo.execute();
         String[] layers = { "jaxrs-server" };
         String fileName = "jar-root.jar";
@@ -92,5 +91,17 @@ public class PackageBootableTest extends AbstractProvisionConfiguredMojoTestCase
         String deploymentName = "test.war";
         checkJar(AbstractWildFlyMojoTest.getBaseDir(), BOOTABLE_JAR_NAME, deploymentName,
                 true, layers, null, true);
+    }
+
+    @Test
+    public void testConfigNamePackage() throws Exception {
+
+        final Mojo packageMojo = lookupConfiguredMojo(
+                AbstractWildFlyMojoTest.getPomFile("package-bootable-config-name-pom.xml").toFile(), "package");
+        packageMojo.execute();
+        String[] layers = { "microprofile-config" };
+        String deploymentName = "test.war";
+        checkJar(AbstractWildFlyMojoTest.getBaseDir(), BOOTABLE_JAR_NAME, deploymentName,
+                true, layers, null, "standalone-ha.xml", true, "jgroups");
     }
 }

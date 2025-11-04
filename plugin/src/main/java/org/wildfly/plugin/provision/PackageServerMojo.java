@@ -54,6 +54,7 @@ import org.wildfly.plugin.common.StandardOutput;
 import org.wildfly.plugin.common.Utils;
 import org.wildfly.plugin.deployment.MojoDeploymentException;
 import org.wildfly.plugin.deployment.PackageType;
+import org.wildfly.plugin.tools.GalleonUtils;
 import org.wildfly.plugin.tools.bootablejar.BootableJarSupport;
 
 /**
@@ -411,7 +412,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
                     Paths.get(project.getBuild().getDirectory()),
                     pm,
                     galleonOptions,
-                    layersConfigurationFileName)) {
+                    layersConfigurationFileName,
+                    getProvisionedConfigurationFileName(layersConfigurationFileName))) {
                 config = results.getProvisioningConfig();
                 return config;
             }
@@ -559,7 +561,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
                 }
             }
 
-            cleanupServer(jbossHome);
+            GalleonUtils.cleanupServer(jbossHome);
             if (bootableJar) {
                 packageBootableJar(jbossHome, config);
             }
@@ -711,15 +713,6 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         return deployment;
     }
 
-    private static void cleanupServer(Path jbossHome) throws IOException {
-        Path history = jbossHome.resolve("standalone").resolve("configuration").resolve("standalone_xml_history");
-        IoUtils.recursiveDelete(history);
-        Path tmp = jbossHome.resolve("standalone").resolve("tmp");
-        IoUtils.recursiveDelete(tmp);
-        Path log = jbossHome.resolve("standalone").resolve("log");
-        IoUtils.recursiveDelete(log);
-    }
-
     private static ArtifactFilter createScopeFilter(final String scope, final boolean includeScope) {
         final ScopeArtifactFilter filter = new ScopeArtifactFilter();
         switch (scope) {
@@ -774,4 +767,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         return key.toString();
     }
 
+    @Override
+    protected String getProvisionedConfigurationFileName(String layersConfigurationFileName) {
+        return bootableJar ? STANDALONE_XML : layersConfigurationFileName;
+    }
 }

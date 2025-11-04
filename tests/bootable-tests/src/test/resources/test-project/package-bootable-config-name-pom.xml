@@ -1,0 +1,51 @@
+<!--
+    ~ Copyright The WildFly Authors
+    ~ SPDX-License-Identifier: Apache-2.0
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>testing</groupId>
+    <artifactId>testing</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <configuration>
+                    <feature-packs>
+                        <feature-pack>
+                            <location>wildfly@maven(org.jboss.universe:community-universe)#WF_VERSION</location>
+                            <inheritConfigs>false</inheritConfigs>
+                            <inheritPackages>false</inheritPackages>
+                            <includedConfigs>
+                                <config>
+                                    <name>standalone-ha.xml</name>
+                                    <model>standalone</model>
+                                </config>
+                            </includedConfigs>
+                        </feature-pack>
+                    </feature-packs>
+                    <layers>
+                        <layer>microprofile-config</layer>
+                    </layers>
+                    <filename>test.war</filename>
+                    <layers-configuration-file-name>standalone-ha.xml</layers-configuration-file-name>
+                    <bootable-jar-name>server-bootable.jar</bootable-jar-name>
+                    <record-provisioning-state>true</record-provisioning-state>
+                    <provisioning-dir>packaged-bootable-server-config-name</provisioning-dir>
+                    <bootable-jar>true</bootable-jar>
+                    <overwrite-provisioned-server>true</overwrite-provisioned-server>
+                    <galleon-options>
+                        <!-- Fork the process to avoid a two controller-client's from being on the class path -->
+                        <jboss-fork-embedded>true</jboss-fork-embedded>
+                    </galleon-options>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

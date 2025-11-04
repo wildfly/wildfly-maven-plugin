@@ -4,6 +4,7 @@
  */
 package org.wildfly.plugin.provision;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -11,6 +12,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.wildfly.plugin.tools.GalleonUtils;
 
 /**
  * Provision a server.
@@ -28,6 +30,11 @@ public class ProvisionServerMojo extends AbstractProvisionServerMojo {
 
     @Override
     protected void serverProvisioned(Path jbossHome) throws MojoExecutionException, MojoFailureException {
+        try {
+            GalleonUtils.cleanupServer(jbossHome);
+        } catch (IOException ex) {
+            throw new MojoExecutionException(ex);
+        }
     }
 
 }
