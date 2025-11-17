@@ -54,6 +54,9 @@ import org.wildfly.plugin.tools.PluginProgressTracker;
  * @author jfdenise
  */
 abstract class AbstractProvisionServerMojo extends AbstractMojo {
+
+    private static final String MAVEN_REPO_LOCAL = "maven.repo.local";
+
     static {
         // This is odd, but if not set we should set the JBoss Logging provider to slf4j as that is what Maven uses
         final String provider = System.getProperty("org.jboss.logging.provider");
@@ -261,6 +264,12 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
                     + " must be an absolute path or a child directory relative to the project build directory.");
         }
         IoUtils.recursiveDelete(wildflyDir);
+        final String originalMavenRepoLocal = System.getProperty(MAVEN_REPO_LOCAL);
+        // JBoss Modules requires this system property in case a custom settings.xml
+        // that references a custom local repository is set.
+        if (originalMavenRepoLocal == null) {
+            System.setProperty(MAVEN_REPO_LOCAL, session.getSettings().getLocalRepository());
+        }
         try {
             try {
                 provisionServer(wildflyDir);
@@ -278,6 +287,9 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
             // the module.path system property has been set and needs to be cleared for
             // in same JVM next execution.
             System.clearProperty("module.path");
+            if (originalMavenRepoLocal == null) {
+                System.clearProperty(MAVEN_REPO_LOCAL);
+            }
         }
     }
 
