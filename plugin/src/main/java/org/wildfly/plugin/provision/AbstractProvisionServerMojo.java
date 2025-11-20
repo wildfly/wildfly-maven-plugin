@@ -134,14 +134,6 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
     protected String provisioningDir;
 
     /**
-     * Set to {@code true} if you want to delete the existing server referenced from the {@code provisioningDir} and provision a
-     * new one,
-     * otherwise {@code false}.
-     */
-    @Parameter(alias = "overwrite-provisioned-server", defaultValue = "false", property = PropertyNames.WILDFLY_PROVISIONING_OVERWRITE_PROVISIONED_SERVER)
-    private boolean overwriteProvisionedServer;
-
-    /**
      * A list of feature-pack configurations to install, can be combined with layers.
      * Use the System property {@code wildfly.provisioning.feature-packs} to provide a comma separated list of feature-packs.
      */
@@ -241,24 +233,8 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
         }
         Path targetPath = Paths.get(project.getBuild().getDirectory());
         wildflyDir = targetPath.resolve(provisioningDir).normalize();
-        if (!overwriteProvisionedServer && Files.exists(wildflyDir)) {
-            getLog().info(String.format("A server already exists in " + wildflyDir + ", skipping " + getGoal() +
-                    " of %s:%s", project.getGroupId(), project.getArtifactId()));
-            return;
-        }
         enrichRepositories();
-        if (channels == null || channels.isEmpty()) {
-            artifactResolver = offlineProvisioning ? new MavenArtifactRepositoryManager(repoSystem, repoSession)
-                    : new MavenArtifactRepositoryManager(repoSystem, repoSession, repositories);
-        } else {
-            try {
-                artifactResolver = new ChannelMavenArtifactRepositoryManager(channels,
-                        repoSystem, repoSession, repositories,
-                        getLog(), offlineProvisioning);
-            } catch (MalformedURLException | UnresolvedMavenArtifactException ex) {
-                throw new MojoExecutionException(ex.getLocalizedMessage(), ex);
-            }
-        }
+        initializeArtifactResolver();
         if (!Paths.get(provisioningDir).isAbsolute() && (targetPath.equals(wildflyDir) || !wildflyDir.startsWith(targetPath))) {
             throw new MojoExecutionException("provisioning-dir " + provisioningDir
                     + " must be an absolute path or a child directory relative to the project build directory.");
@@ -289,6 +265,21 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
             System.clearProperty("module.path");
             if (originalMavenRepoLocal == null) {
                 System.clearProperty(MAVEN_REPO_LOCAL);
+            }
+        }
+    }
+
+    protected void initializeArtifactResolver() throws MojoExecutionException {
+        if (channels == null || channels.isEmpty()) {
+            artifactResolver = offlineProvisioning ? new MavenArtifactRepositoryManager(repoSystem, repoSession)
+                    : new MavenArtifactRepositoryManager(repoSystem, repoSession, repositories);
+        } else {
+            try {
+                artifactResolver = new ChannelMavenArtifactRepositoryManager(channels,
+                        repoSystem, repoSession, repositories,
+                        getLog(), offlineProvisioning);
+            } catch (MalformedURLException | UnresolvedMavenArtifactException ex) {
+                throw new MojoExecutionException(ex.getLocalizedMessage(), ex);
             }
         }
     }

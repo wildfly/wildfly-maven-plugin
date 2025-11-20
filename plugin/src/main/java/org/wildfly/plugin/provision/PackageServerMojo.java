@@ -5,6 +5,7 @@
 package org.wildfly.plugin.provision;
 
 import static org.wildfly.plugin.core.Constants.CLI_ECHO_COMMAND_ARG;
+import static org.wildfly.plugin.core.Constants.PLUGIN_PROVISIONING_FILE;
 import static org.wildfly.plugin.core.Constants.STANDALONE;
 import static org.wildfly.plugin.core.Constants.STANDALONE_XML;
 
@@ -42,6 +43,7 @@ import org.apache.maven.shared.artifact.filter.PatternIncludesArtifactFilter;
 import org.apache.maven.shared.artifact.filter.ScopeArtifactFilter;
 import org.jboss.galleon.ProvisioningException;
 import org.jboss.galleon.api.GalleonBuilder;
+import org.jboss.galleon.api.Provisioning;
 import org.jboss.galleon.api.config.GalleonProvisioningConfig;
 import org.jboss.galleon.maven.plugin.util.MvnMessageWriter;
 import org.jboss.galleon.util.IoUtils;
@@ -365,6 +367,14 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     @Parameter(property = "wildfly.stability")
     private String stability;
 
+    /**
+     * Set to {@code true} if you want to delete the existing server referenced from the {@code provisioningDir} and provision a
+     * new one,
+     * otherwise {@code false}.
+     */
+    @Parameter(alias = "overwrite-provisioned-server", defaultValue = "false", property = PropertyNames.WILDFLY_PROVISIONING_OVERWRITE_PROVISIONED_SERVER)
+    private boolean overwriteProvisionedServer;
+
     @Inject
     private OfflineCommandExecutor commandExecutor;
 
@@ -433,7 +443,44 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
             getLog().debug(String.format("Skipping " + getGoal() + " of %s:%s", project.getGroupId(), project.getArtifactId()));
             return;
         }
+
+        Path targetPath = Paths.get(project.getBuild().getDirectory());
+        Path wildflyDir = targetPath.resolve(provisioningDir).normalize();
+        if (!overwriteProvisionedServer && Files.exists(wildflyDir)) {
+            Path targetJarFile = targetPath.toAbsolutePath().resolve(bootableJarName);
+            if (bootableJar && !Files.exists(targetJarFile)) {
+                getLog().info(String.format("A server already exists in " + wildflyDir +
+                        ", but bootable JAR doesn't exist. Creating bootable JAR from existing server."));
+                packageBootableJarFromExistingServer(wildflyDir);
+            } else {
+                getLog().info(String.format("A server already exists in " + wildflyDir + ", skipping " + getGoal() +
+                        " of %s:%s", project.getGroupId(), project.getArtifactId()));
+            }
+            return;
+        }
+
         super.execute();
+    }
+
+    private void packageBootableJarFromExistingServer(Path wildflyDir) throws MojoExecutionException {
+        try {
+            Path provisioningXml = wildflyDir.resolve(PLUGIN_PROVISIONING_FILE);
+            if (!Files.exists(provisioningXml)) {
+                throw new MojoExecutionException("Cannot create bootable JAR: provisioning configuration not found at "
+                        + provisioningXml);
+            }
+
+            enrichRepositories();
+            initializeArtifactResolver();
+            GalleonBuilder galleonBuilder = new GalleonBuilder();
+            galleonBuilder.addArtifactResolver(artifactResolver);
+            try (Provisioning p = galleonBuilder.newProvisioningBuilder(provisioningXml).build()) {
+                GalleonProvisioningConfig config = p.loadProvisioningConfig(provisioningXml);
+                packageBootableJar(wildflyDir, config);
+            }
+        } catch (Exception ex) {
+            throw new MojoExecutionException("Failed to create bootable JAR from existing server", ex);
+        }
     }
 
     private void deploy(Path deploymentContent, String targetName) throws MojoDeploymentException {
