@@ -13,6 +13,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,21 +78,26 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
         this.repositories = repositories;
         session.setLocalRepositoryManager(contextSession.getLocalRepositoryManager());
         session.setOffline(offline);
-        Map<String, RemoteRepository> mapping = new HashMap<>();
-        for (RemoteRepository r : repositories) {
-            mapping.put(r.getId(), r);
-        }
         for (ChannelConfiguration channelConfiguration : channels) {
-            this.channels.add(channelConfiguration.toChannel(repositories));
+            this.channels.add(channelConfiguration.toChannel(offline ? Collections.emptyList() : repositories));
         }
-        Function<Repository, RemoteRepository> mapper = r -> {
-            RemoteRepository rep = mapping.get(r.getId());
-            if (rep == null) {
-                rep = DEFAULT_REPOSITORY_MAPPER.apply(r);
+        VersionResolverFactory factory;
+        if (offline) {
+            factory = new VersionResolverFactory(system, session);
+        } else {
+            Map<String, RemoteRepository> mapping = new HashMap<>();
+            for (RemoteRepository r : repositories) {
+                mapping.put(r.getId(), r);
             }
-            return rep;
-        };
-        VersionResolverFactory factory = new VersionResolverFactory(system, session, mapper);
+            Function<Repository, RemoteRepository> mapper = r -> {
+                RemoteRepository rep = mapping.get(r.getId());
+                if (rep == null) {
+                    rep = DEFAULT_REPOSITORY_MAPPER.apply(r);
+                }
+                return rep;
+            };
+            factory = new VersionResolverFactory(system, session, mapper);
+        }
         channelSession = new ChannelSession(this.channels, factory);
         localCachePath = contextSession.getLocalRepositoryManager().getRepository().getBasedir().toPath();
         this.system = system;
