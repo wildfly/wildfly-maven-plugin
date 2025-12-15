@@ -52,13 +52,13 @@ jobs:
       - name: Build with Maven Java ${{ matrix.java }}
         run: mvn clean install '-Dorg.jboss.logmanager.nocolor=true' '-Dversion.org.wildfly=${{steps.wildfly-nightly.outputs.wildfly-version}}'
       - name: Upload surefire reports
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: surefire-reports-${{ matrix.os }}-${{ matrix.java }}
           path: '**/surefire-reports/*'
       - name: Upload server logs
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: server-logs-${{ matrix.os }}-${{ matrix.java }}
