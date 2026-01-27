@@ -23,7 +23,7 @@
                     <bootable-jar-name>server-bootable.jar</bootable-jar-name>
                     <discover-provisioning-info>
                         <context>cloud</context>
-                        <version>WF_VERSION</version>
+                        <version>${version.org.wildfly}</version>
                     </discover-provisioning-info>
                 </configuration>
             </plugin>

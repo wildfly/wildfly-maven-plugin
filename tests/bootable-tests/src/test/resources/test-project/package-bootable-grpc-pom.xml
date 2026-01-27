@@ -18,10 +18,10 @@
                 <configuration>
                     <feature-packs>
                         <feature-pack>
-                            <location>wildfly@maven(org.jboss.universe:community-universe)#WF_VERSION</location>
+                            <location>${wildfly.test.universe.location}</location>
                         </feature-pack>
                         <feature-pack>
-                            <location>org.wildfly.extras.grpc:wildfly-grpc-feature-pack:GRPC_VERSION</location>
+                            <location>org.wildfly.extras.grpc:wildfly-grpc-feature-pack:${grpc.test.version}</location>
                         </feature-pack>
                     </feature-packs>
                     <layers>

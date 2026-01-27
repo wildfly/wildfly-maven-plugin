@@ -17,6 +17,7 @@
                 <groupId>org.wildfly.plugins</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
+                    <jboss-home>${jboss.home}</jboss-home>
                     <stdout>System.out</stdout>
                 </configuration>
             </plugin>

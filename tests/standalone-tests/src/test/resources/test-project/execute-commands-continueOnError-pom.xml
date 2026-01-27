@@ -16,6 +16,7 @@
                 <groupId>org.wildfly.plugins</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
+                    <jboss-home>${jboss.home}</jboss-home>
                     <failOnError>false</failOnError>
                     <commands>
                         <command>/system-property=propertyContinueOnError:add(value="initial value")</command>

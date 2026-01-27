@@ -18,7 +18,7 @@
                 <configuration>
                     <feature-packs>
                         <feature-pack>
-                            <location>wildfly@maven(org.jboss.universe:community-universe)#WF_VERSION</location>
+                            <location>${wildfly.test.universe.location}</location>
                             <inherit-configs>true</inherit-configs>
                             <inherit-packages>true</inherit-packages>
                         </feature-pack>

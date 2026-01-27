@@ -8,6 +8,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>testing</groupId>
     <artifactId>testing</artifactId>
+    <packaging>war</packaging>
     <version>0.1.0-SNAPSHOT</version>
 
     <build>
@@ -16,18 +17,10 @@
                 <groupId>org.wildfly.plugins</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
-                    <feature-packs>
-                        <feature-pack>
-                            <location>${wildfly.test.universe.location}</location>
-                        </feature-pack>
-                    </feature-packs>
-                    <record-provisioning-state>true</record-provisioning-state>
-                    <provisioning-dir>packaged-default-config-server</provisioning-dir>
-                    <galleon-options>
-                        <!-- Fork the process to avoid a two controller-client's from being on the class path -->
-                        <jboss-fork-embedded>true</jboss-fork-embedded>
-                    </galleon-options>
+                    <content-url>${test.project.baseuri}/target/test.war</content-url>
+                    <checkPackaging>false</checkPackaging>
                 </configuration>
+
             </plugin>
         </plugins>
     </build>

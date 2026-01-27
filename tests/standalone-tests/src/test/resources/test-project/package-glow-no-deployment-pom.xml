@@ -23,7 +23,7 @@
                             <addOn>openapi</addOn>
                         </addOns>
                         <ignoreDeployment>true</ignoreDeployment>
-                        <version>WF_VERSION</version>
+                        <version>${version.org.wildfly}</version>
                     </discover-provisioning-info>
                     <galleon-options>
                         <!-- Fork the process to avoid a two controller-client's from being on the class path -->

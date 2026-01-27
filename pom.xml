@@ -77,7 +77,7 @@
         <version.org.jboss.logging.jboss-logging>3.6.2.Final</version.org.jboss.logging.jboss-logging>
         <version.org.wildfly.checkstyle-config>1.0.8.Final</version.org.wildfly.checkstyle-config>
         <version.org.wildfly.common.wildfly-common>1.7.0.Final</version.org.wildfly.common.wildfly-common>
-        <version.org.wildfly.plugin.tools>2.0.0.Alpha2</version.org.wildfly.plugin.tools>
+        <version.org.wildfly.plugin.tools>2.0.0.Alpha3</version.org.wildfly.plugin.tools>
         <!-- This version property is also retrieved by plugin at runtime to resolve CLI artifact -->
         <version.org.wildfly.core>31.0.1.Final</version.org.wildfly.core>
         <version.org.wildfly.launcher>1.0.2.Final</version.org.wildfly.launcher>
@@ -103,6 +103,7 @@
 
         <!-- other dependencies -->
         <version.com.bernardomg.maven.skins>2.4.1</version.com.bernardomg.maven.skins>
+        <version.org.junit.jupitor>6.0.2</version.org.junit.jupitor>
         <version.junit.junit>4.13.2</version.junit.junit>
 
         <version.central.publishing.maven.plugin>0.10.0</version.central.publishing.maven.plugin>
@@ -171,6 +172,13 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${version.org.junit.jupitor}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>javax.inject</groupId>
                 <artifactId>javax.inject</artifactId>
@@ -520,6 +528,11 @@
                     <includeResources>true</includeResources>
                     <removeTrailingWhitespace>true</removeTrailingWhitespace>
                     <skip>${skipFormatting}</skip>
+                    <excludes>
+                        <!-- Exclude binary files from formatting -->
+                        <exclude>**/*.war</exclude>
+                        <exclude>**/*.jar</exclude>
+                    </excludes>
                 </configuration>
                 <executions>
                     <execution>
