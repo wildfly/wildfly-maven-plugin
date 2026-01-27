@@ -5,39 +5,47 @@
 
 package org.wildfly.plugin.deployment;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.Collections;
 
-import javax.inject.Inject;
-
+import org.apache.maven.api.plugin.testing.Basedir;
+import org.apache.maven.api.plugin.testing.InjectMojo;
+import org.apache.maven.api.plugin.testing.MojoTest;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DefaultArtifact;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.jboss.dmr.ModelNode;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.wildfly.plugin.common.ServerOperations;
-import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
+import org.wildfly.plugin.tests.TestEnvironment;
 import org.wildfly.plugin.tools.Deployment;
 import org.wildfly.plugin.tools.DeploymentManager;
 import org.wildfly.plugin.tools.UndeployDescription;
+import org.wildfly.plugin.tools.server.ServerManager;
+import org.wildfly.testing.junit.extension.annotation.ServerResource;
+import org.wildfly.testing.junit.extension.annotation.WildFlyTest;
 
 /**
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
-public class ArtifactDeploymentTest extends AbstractWildFlyServerMojoTest {
+@MojoTest
+@WildFlyTest
+@Basedir(TestEnvironment.TEST_PROJECT_PATH)
+public class ArtifactDeploymentTest {
 
     private final String artifactName = "dummy.jar";
 
-    @Inject
+    @ServerResource
+    private ServerManager serverManager;
+
+    @ServerResource
     private DeploymentManager deploymentManager;
 
-    @After
+    @AfterEach
     public void cleanup() throws Exception {
         if (deploymentManager.hasDeployment(artifactName)) {
             deploymentManager.undeploy(UndeployDescription.of(artifactName));
@@ -45,26 +53,26 @@ public class ArtifactDeploymentTest extends AbstractWildFlyServerMojoTest {
     }
 
     @Test
-    public void testDeploy() throws Exception {
-        final DeployArtifactMojo mojo = lookupMojoAndVerify("deploy-artifact", "deploy-artifact-pom.xml");
+    @InjectMojo(goal = "deploy-artifact", pom = "deploy-artifact-pom.xml")
+    public void testDeploy(final DeployArtifactMojo mojo) throws Exception {
         testDeploy(mojo, null);
     }
 
     @Test
-    public void testDeployWithClassifier() throws Exception {
-        final DeployArtifactMojo mojo = lookupMojoAndVerify("deploy-artifact", "deploy-artifact-classifier-pom.xml");
+    @InjectMojo(goal = "deploy-artifact", pom = "deploy-artifact-classifier-pom.xml")
+    public void testDeployWithClassifier(final DeployArtifactMojo mojo) throws Exception {
         testDeploy(mojo, "classifier");
     }
 
     @Test
-    public void testUndeploy() throws Exception {
-        final UndeployArtifactMojo mojo = lookupMojoAndVerify("undeploy-artifact", "deploy-artifact-pom.xml");
+    @InjectMojo(goal = "undeploy-artifact", pom = "deploy-artifact-pom.xml")
+    public void testUndeploy(final UndeployArtifactMojo mojo) throws Exception {
         testUndeploy(mojo, null);
     }
 
     @Test
-    public void testUndeployWithClassifier() throws Exception {
-        final UndeployArtifactMojo mojo = lookupMojoAndVerify("undeploy-artifact", "deploy-artifact-classifier-pom.xml");
+    @InjectMojo(goal = "undeploy-artifact", pom = "deploy-artifact-classifier-pom.xml")
+    public void testUndeployWithClassifier(final UndeployArtifactMojo mojo) throws Exception {
         testUndeploy(mojo, "classifier");
     }
 
@@ -77,32 +85,32 @@ public class ArtifactDeploymentTest extends AbstractWildFlyServerMojoTest {
         mojo.execute();
 
         // Verify deployed
-        assertTrue("Deployment " + artifactName + " was not deployed", deploymentManager.hasDeployment(artifactName));
+        assertTrue(deploymentManager.hasDeployment(artifactName), "Deployment " + artifactName + " was not deployed");
 
         // /deployment=test.war :read-attribute(name=status)
         final ModelNode address = ServerOperations.createAddress("deployment", artifactName);
         final ModelNode op = ServerOperations.createReadAttributeOperation(address, "status");
-        final ModelNode result = executeOperation(op);
+        final ModelNode result = serverManager.executeOperation(op);
 
-        assertEquals("OK", ServerOperations.readResultAsString(result));
+        assertEquals("OK", result.asString());
     }
 
     private void testUndeploy(final UndeployArtifactMojo mojo, final String classifier) throws Exception {
         if (!deploymentManager.hasDeployment(artifactName)) {
-            deploymentManager.deploy(Deployment.of(Paths.get(BASE_CONFIG_DIR, artifactName)));
+            deploymentManager.deploy(Deployment.of(Paths.get(TestEnvironment.TEST_PROJECT_PATH, artifactName)));
         }
         mojo.project.setArtifacts(Collections.singleton(createArtifact(classifier)));
 
         mojo.execute();
 
         // Verify undeployed
-        assertFalse("Deployment " + artifactName + " was not undeployed", deploymentManager.hasDeployment(artifactName));
+        assertFalse(deploymentManager.hasDeployment(artifactName), "Deployment " + artifactName + " was not undeployed");
     }
 
     private Artifact createArtifact(final String classifier) {
         final Artifact artifact = new DefaultArtifact("dummy", "dummy", "1.0.0", "provided", "jar", classifier,
                 new DefaultArtifactHandler());
-        artifact.setFile(new File(BASE_CONFIG_DIR, artifactName));
+        artifact.setFile(new File(TestEnvironment.TEST_PROJECT_PATH, artifactName));
         return artifact;
     }
 }

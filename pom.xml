@@ -103,6 +103,7 @@
 
         <!-- other dependencies -->
         <version.com.bernardomg.maven.skins>2.4.1</version.com.bernardomg.maven.skins>
+        <version.org.junit.jupitor>6.0.2</version.org.junit.jupitor>
         <version.junit.junit>4.13.2</version.junit.junit>
 
         <version.central.publishing.maven.plugin>0.10.0</version.central.publishing.maven.plugin>
@@ -171,6 +172,13 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${version.org.junit.jupitor}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>javax.inject</groupId>
                 <artifactId>javax.inject</artifactId>
@@ -520,6 +528,11 @@
                     <includeResources>true</includeResources>
                     <removeTrailingWhitespace>true</removeTrailingWhitespace>
                     <skip>${skipFormatting}</skip>
+                    <excludes>
+                        <!-- Exclude binary files from formatting -->
+                        <exclude>**/*.war</exclude>
+                        <exclude>**/*.jar</exclude>
+                    </excludes>
                 </configuration>
                 <executions>
                     <execution>

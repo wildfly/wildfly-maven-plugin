@@ -17,6 +17,7 @@
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
                     <offline>true</offline>
+                    <jboss-home>${jboss.home}</jboss-home>
                     <scripts>
                         <script>test-offline.cli</script>
                     </scripts>

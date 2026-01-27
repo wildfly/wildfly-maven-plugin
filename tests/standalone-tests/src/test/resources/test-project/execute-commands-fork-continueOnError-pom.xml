@@ -17,13 +17,14 @@
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
                     <fork>true</fork>
+                    <jboss-home>${jboss.home}</jboss-home>
                     <failOnError>false</failOnError>
                     <commands>
                         <command>/system-property=propertyContinueOnError:add(value="initial value")</command>
                         <command>/system-property=propertyContinueOnError:add(value="second value")</command>
                         <command>/system-property=propertyContinueOnError:write-attribute(name=value, value="continue on error")</command>
                         <command>module remove --name=org.wildfly.plugin.tests</command>
-                        <command>module add --name=org.wildfly.plugin.tests --dependencies=org.jboss.logging --resources=${project.build.directory}${file.separator}test.jar</command>
+                        <command>module add --name=org.wildfly.plugin.tests --dependencies=org.jboss.logging --resources=${test.project.basedir}${file.separator}target${file.separator}test.jar</command>
                         <command>try</command>
                         <command>/system-property=propertyContinueOnError.in.try:add(value="initial value")</command>
                         <command>/system-property=propertyContinueOnError.in.try:add(value="second value")</command>

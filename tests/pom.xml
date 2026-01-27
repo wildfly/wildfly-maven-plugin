@@ -25,8 +25,6 @@
     <properties>
         <jboss.home>${project.build.directory}${file.separator}wildfly</jboss.home>
 
-        <wildfly.test.config.dir>${project.build.testOutputDirectory}</wildfly.test.config.dir>
-
         <wildfly.feature.pack.groupId>org.wildfly</wildfly.feature.pack.groupId>
         <wildfly.feature.pack.artifactId>wildfly-ee-galleon-pack</wildfly.feature.pack.artifactId>
 
@@ -36,6 +34,17 @@
         <!-- Skip deploying tests -->
         <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
     </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.wildfly.testing</groupId>
+                <artifactId>wildfly-testing-tools-bom</artifactId>
+                <version>1.0.0.Alpha1</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <plugins>
@@ -75,8 +84,6 @@
                         <jboss-as.home>${jboss.home}</jboss-as.home>
                         <wildfly.test.version>${version.org.wildfly}</wildfly.test.version>
                         <grpc.test.version>${grpcVersion}</grpc.test.version>
-                        <wildfly.management.port>10099</wildfly.management.port>
-                        <wildfly.test.config.dir>${wildfly.test.config.dir}</wildfly.test.config.dir>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>

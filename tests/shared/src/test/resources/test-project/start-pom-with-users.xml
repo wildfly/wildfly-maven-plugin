@@ -1,0 +1,48 @@
+<!--
+    ~ Copyright The WildFly Authors
+    ~ SPDX-License-Identifier: Apache-2.0
+-->
+
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>testing</groupId>
+    <artifactId>testing</artifactId>
+    <packaging>war</packaging>
+    <version>0.1.0-SNAPSHOT</version>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <configuration>
+                    <jboss-home>${jboss.home}</jboss-home>
+                    <stdout>System.out</stdout>
+                    <add-user>
+                        <users>
+                            <!-- "admin:admin.1234:admin", "user:user.1234:user,mgmt::true" -->
+                            <user>
+                                <username>admin</username>
+                                <password>admin.12345</password>
+                                <groups>
+                                    <group>admin</group>
+                                </groups>
+                            </user>
+                            <user>
+                                <username>user</username>
+                                <password>user.12345</password>
+                                <groups>
+                                    <group>user</group>
+                                    <group>mgmt</group>
+                                </groups>
+                                <application-user>true</application-user>
+                            </user>
+                        </users>
+                    </add-user>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
