@@ -290,11 +290,15 @@ public class ApplicationImageMojo extends PackageServerMojo {
         try {
             // The Dockerfile is always generated when the image goal is run.
             // This allows the user to then use the generated Dockerfile in other contexts than Maven.
-            String runtimeImage = this.image.getWildFlyRuntimeImage();
+            String runtimeImage = bootableJar ? this.image.getOpenJDKRuntimeImage() : this.image.getWildFlyRuntimeImage();
             getLog().info(format("Generating Dockerfile %s from base image %s",
                     Paths.get(project.getBuild().getDirectory()).resolve("Dockerfile"),
                     runtimeImage));
-            generateDockerfile(runtimeImage, Paths.get(project.getBuild().getDirectory()), provisioningDir);
+            if (bootableJar) {
+                generateBootableJarDockerfile(runtimeImage, Paths.get(project.getBuild().getDirectory()), bootableJarName);
+            } else {
+                generateDockerfile(runtimeImage, Paths.get(project.getBuild().getDirectory()), provisioningDir);
+            }
 
             if (!image.build) {
                 return;
@@ -420,6 +424,30 @@ public class ApplicationImageMojo extends PackageServerMojo {
             dockerfileContent.append('\n').append("ENV SERVER_ARGS=\"").append(String.join(",", serverArgs)).append('"');
         }
 
+        Files.writeString(targetDir.resolve("Dockerfile"), dockerfileContent, StandardCharsets.UTF_8);
+    }
+
+    private void generateBootableJarDockerfile(String runtimeImage, Path targetDir, String bootableJar)
+            throws IOException, MojoExecutionException {
+
+        Path bootableJarPath = Path.of(bootableJar);
+        // Docker requires the source file be relative to the context directory. From the documentation:
+        // The <src> path must be inside the context of the build; you cannot COPY ../something /something, because
+        // the first step of a docker build is to send the context directory (and subdirectories) to the docker daemon.
+        if (bootableJarPath.isAbsolute()) {
+            bootableJarPath = targetDir.relativize(bootableJarPath);
+        }
+
+        // Create the Dockerfile content
+        final StringBuilder dockerfileContent = new StringBuilder();
+        dockerfileContent.append("FROM ").append(runtimeImage).append('\n');
+        if (labels != null) {
+            labels.forEach(
+                    (key, value) -> dockerfileContent.append("LABEL ").append(key).append("=\"")
+                            .append(value.replace("\"", "\\\"")).append("\"\n"));
+        }
+        dockerfileContent.append("COPY --chown=default:root ").append(bootableJarPath).append(" /deployments\n");
+        dockerfileContent.append("CMD $JBOSS_CONTAINER_JAVA_RUN_MODULE/run-java.sh $JAVA_ARGS\n");
         Files.writeString(targetDir.resolve("Dockerfile"), dockerfileContent, StandardCharsets.UTF_8);
     }
 
