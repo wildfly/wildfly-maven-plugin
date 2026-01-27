@@ -21,34 +21,58 @@ Issues can be filed at https://issues.redhat.com/browse/WFMP
 
 == Releasing
 
-Releasing this project requires access to https://repository.jboss.org/nexust[JBoss Nexus].
+Releasing the project requires permission to deploy to Maven Central see https://central.sonatype.org/publish/requirements/[Maven Central Release Requirements].
+Once everything is setup, you simply need to run the `./release.sh` script. There are two required parameters:
 
-To perform a release ensure you're on the correct branch and that branch is up to date. Once done you can simply use
-the `release.sh` bash script.
+1. `-r` or `--release` which is the version you want to release
+2. `-d` or `--development` which is the next development version.
+
+By default, the release version cannot contain `SNAPSHOT` and the development version, must contain `SNAPSHOT`.
 
 [source,bash]
+.Example Command
 ----
-./release.sh -r 5.1.4.Final -d 5.1.5.Final-SNAPSHOT
+./release.sh -r 1.0.0.Final -d 1.0.1.Final-SNAPSHOT
 ----
 
-If this was successful, instructions will be printed on the console with the next set of instructions for processing.
+=== Supported Arguments
 
-[source,base]
-----
-...
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time:  02:59 min
-[INFO] Finished at: 2025-09-04T13:32:25-07:00
-[INFO] ------------------------------------------------------------------------
+|===
+|Argument | Requires Value | Description
 
-Your release has been successful. Check the validation after 13:42:25 on https://repository.jboss.org/nexus.
-Once validation is successful, execute the following command:
+| `-d`, `--development`
+| Yes
+| The next version for the development cycle.
 
-git checkout v5.1.4.Final
-mvn nxrm3:staging-move -Dmaven.repo.local="/tmp/m2/repository/wildfly-maven-plugin"
-git checkout main
-git push upstream main
-git push upstream v5.1.4.Final
-----
+| `-f`, `--force`
+| No
+| Forces to allow a SNAPSHOT suffix in release version and not require one for the development version.
+
+| `-h`, `--help`
+| N/A
+| Displays this help
+
+| `--notes-start-tag`
+| Unused
+| Passes the `--notes-from-tag` and the argument to the `gh create release` command.
+
+| `-p`, `--prerelease`
+| Unused
+| Passes the `--prerelease` to the `gh create release` command.
+
+| `-r`, `--release`
+| Yes
+| The version to be released. Also used for the tag.
+
+| `--dry-run`
+| No
+| Executes the release in as a dry-run. Nothing will be updated or pushed.
+
+| `-v`, `--verbose`
+| No
+| Prints verbose output.
+
+|===
+
+
+Any additional arguments are considered arguments for the Maven command.

@@ -41,7 +41,7 @@ jobs:
       - name: Generate JavaDoc
         run: |
           cd plugin
-          mvn -B -ntp clean -Pjboss-release site
+          mvn -B -ntp clean -Pcentral-release site
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
