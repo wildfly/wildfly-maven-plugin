@@ -24,6 +24,8 @@ import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.wildfly.glow.Arguments;
 import org.wildfly.glow.GlowSession;
 import org.wildfly.glow.ScanResults;
+import org.wildfly.glow.error.ErrorLevel;
+import org.wildfly.glow.error.IdentifiedError;
 import org.wildfly.plugin.provision.GlowConfig;
 import org.wildfly.plugin.tools.GalleonUtils;
 
@@ -178,11 +180,14 @@ public class Utils {
         }
         if (results.getErrorSession().hasErrors()) {
             if (discoverProvisioningInfo.isFailsOnError()) {
-                results.close();
-                throw new MojoExecutionException("Error detected by WildFly Glow. Aborting.");
-            } else {
-                log.warn("Some erros have been identified, check logs.");
+                for (IdentifiedError error : results.getErrorSession().getErrors()) {
+                    if (error.getErrorLevel() == ErrorLevel.ERROR) {
+                        results.close();
+                        throw new MojoExecutionException("Error detected by WildFly Glow. Aborting.");
+                    }
+                }
             }
+            log.warn("Some errors have been identified, check logs.");
         }
 
         return results;
