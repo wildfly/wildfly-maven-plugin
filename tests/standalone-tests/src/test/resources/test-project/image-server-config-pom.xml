@@ -18,7 +18,7 @@
                 <configuration>
                     <feature-packs>
                         <feature-pack>
-                            <location>wildfly@maven(org.jboss.universe:community-universe)#WF_VERSION</location>
+                            <location>${wildfly.test.universe.location}</location>
                         </feature-pack>
                     </feature-packs>
                     <provisioning-dir>image-server-config</provisioning-dir>
