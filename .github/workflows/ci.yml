@@ -46,40 +46,33 @@ jobs:
           mvn -B validate -Pformat-check -Denforcer.skip=true
 
   build:
-    name: ${{ matrix.os }}-jdk${{ matrix.java }}-${{ matrix.wildfly-version }}
+    name: ${{ matrix.os }}
     needs: format-check
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest ]
-        java: ['17', '21', '25']
 
     steps:
       - uses: actions/checkout@v6
-      - name: Set up JDK ${{ matrix.java }}
+      - name: Set up JDKs
         uses: actions/setup-java@v5
         with:
-          java-version: ${{ matrix.java }}
           cache: 'maven'
           distribution: 'temurin'
-      - name: Build and Test on ${{ matrix.java }} - ${{ matrix.wildfly-version }}
-        run: mvn clean install '-Dorg.jboss.logmanager.nocolor=true'
-      - name: Upload surefire logs for failed run
+          java-version: |
+            17
+            21
+            25
+      - name: Build and Test on ${{ matrix.os }}
+        run: mvn clean install '-Dorg.jboss.logmanager.nocolor=true' '-Djava17.home=${{env.JAVA_HOME_17_X64}}' '-Djava21.home=${{env.JAVA_HOME_21_X64}}' '-Djava25.home=${{env.JAVA_HOME_25_X64}}'
+      - name: Upload test logs for failed run
         uses: actions/upload-artifact@v6
         if: failure()
         with:
-          name: surefire-reports-${{ matrix.os }}-${{ matrix.java }}
-          path: '**/surefire-reports/'
-      - name: Upload failsafe logs for failed run
-        uses: actions/upload-artifact@v6
-        if: failure()
-        with:
-          name: failsafe-reports-${{ matrix.os }}-${{ matrix.java }}
-          path: '**/failsafe-reports/'
-      - name: Upload logs for failed run
-        uses: actions/upload-artifact@v6
-        if: failure()
-        with:
-          name: server-logs-${{ matrix.os }}-${{ matrix.java }}
-          path: '**/*.log'
+          name: failure-report-${{ matrix.os }}
+          path: |
+            '**/surefire-reports/'
+            '**/failsafe-reports/'
+            '**/*.log'
