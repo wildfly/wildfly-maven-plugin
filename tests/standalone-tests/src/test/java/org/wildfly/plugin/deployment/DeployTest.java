@@ -5,145 +5,150 @@
 
 package org.wildfly.plugin.deployment;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.wildfly.plugin.tests.TestEnvironment.DEPLOYMENT_NAME;
 
-import javax.inject.Inject;
-
+import org.apache.maven.api.plugin.testing.Basedir;
+import org.apache.maven.api.plugin.testing.InjectMojo;
+import org.apache.maven.api.plugin.testing.MojoTest;
 import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.dmr.ModelNode;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.wildfly.plugin.common.ServerOperations;
-import org.wildfly.plugin.tests.AbstractWildFlyServerMojoTest;
+import org.wildfly.plugin.tests.TestEnvironment;
 import org.wildfly.plugin.tools.DeploymentManager;
 import org.wildfly.plugin.tools.UndeployDescription;
+import org.wildfly.plugin.tools.server.ServerManager;
+import org.wildfly.testing.junit.extension.annotation.ServerResource;
+import org.wildfly.testing.junit.extension.annotation.WildFlyTest;
 
 /**
  * deploy mojo testcase.
  *
  * @author <a href="mailto:heinz.wilming@akquinet.de">Heinz Wilming</a>
  */
-public class DeployTest extends AbstractWildFlyServerMojoTest {
+@MojoTest
+@WildFlyTest
+@Basedir(TestEnvironment.TEST_PROJECT_PATH)
+public class DeployTest {
 
-    @Inject
+    @ServerResource
+    private ServerManager serverManager;
+
+    @ServerResource
     private DeploymentManager deploymentManager;
 
+    @AfterEach
+    public void cleanup() throws Exception {
+        if (deploymentManager.hasDeployment(DEPLOYMENT_NAME)) {
+            deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME));
+        }
+    }
+
     @Test
-    public void testDeploy() throws Exception {
+    @InjectMojo(goal = "deploy", pom = "deploy-webarchive-pom.xml")
+    public void testDeploy(final DeployMojo deployMojo) throws Exception {
 
         // Make sure the archive is not deployed
         if (deploymentManager.hasDeployment(DEPLOYMENT_NAME)) {
             deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME));
         }
 
-        final AbstractDeployment deployMojo = lookupMojoAndVerify("deploy", "deploy-webarchive-pom.xml");
-
         deployMojo.execute();
 
         // Verify deployed
-        assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed", deploymentManager.hasDeployment(DEPLOYMENT_NAME));
+        assertTrue(deploymentManager.hasDeployment(DEPLOYMENT_NAME), "Deployment " + DEPLOYMENT_NAME + " was not deployed");
 
         // /deployment=test.war :read-attribute(name=status)
         final ModelNode address = ServerOperations.createAddress("deployment", DEPLOYMENT_NAME);
         final ModelNode op = ServerOperations.createReadAttributeOperation(address, "status");
-        final ModelNode result = executeOperation(op);
+        final ModelNode result = serverManager.executeOperation(op);
 
-        assertEquals("OK", ServerOperations.readResultAsString(result));
-        deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME));
+        assertEquals("OK", result.asString());
     }
 
     @Test
-    public void testForceDeploy() throws Exception {
+    @InjectMojo(goal = "deploy", pom = "deploy-webarchive-pom.xml")
+    public void testForceDeploy(final DeployMojo deployMojo) throws Exception {
 
         // Make sure the archive is not deployed
         if (!deploymentManager.hasDeployment(DEPLOYMENT_NAME)) {
-            deploymentManager.deploy(getDeployment());
+            deploymentManager.deploy(TestEnvironment.getDeployment());
         }
-
-        final AbstractDeployment deployMojo = lookupMojoAndVerify("deploy", "deploy-webarchive-pom.xml");
 
         deployMojo.execute();
 
         // Verify deployed
-        assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed", deploymentManager.hasDeployment(DEPLOYMENT_NAME));
+        assertTrue(deploymentManager.hasDeployment(DEPLOYMENT_NAME), "Deployment " + DEPLOYMENT_NAME + " was not deployed");
 
         // /deployment=test.war :read-attribute(name=status)
         final ModelNode address = ServerOperations.createAddress("deployment", DEPLOYMENT_NAME);
         final ModelNode op = ServerOperations.createReadAttributeOperation(address, "status");
-        final ModelNode result = executeOperation(op);
+        final ModelNode result = serverManager.executeOperation(op);
 
-        assertEquals("OK", ServerOperations.readResultAsString(result));
-        deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME));
+        assertEquals("OK", result.asString());
     }
 
     @Test
-    public void testDeployWithRuntimeName() throws Exception {
+    @InjectMojo(goal = "deploy", pom = "deploy-webarchive-with-runtime-name-pom.xml")
+    public void testDeployWithRuntimeName(final DeployMojo deployMojo) throws Exception {
         // Make sure the archive is not deployed
         if (deploymentManager.hasDeployment(DEPLOYMENT_NAME)) {
             deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME));
         }
 
-        final AbstractDeployment deployMojo = lookupMojoAndVerify("deploy", "deploy-webarchive-with-runtime-name-pom.xml");
-
         deployMojo.execute();
 
         // Verify deployed
-        assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed", deploymentManager.hasDeployment(DEPLOYMENT_NAME));
+        assertTrue(deploymentManager.hasDeployment(DEPLOYMENT_NAME), "Deployment " + DEPLOYMENT_NAME + " was not deployed");
 
         // /deployment=test.war :read-attribute(name=status)
         final ModelNode address = ServerOperations.createAddress("deployment", DEPLOYMENT_NAME);
         final ModelNode op = ServerOperations.createReadResourceOperation(address);
         op.get(ClientConstants.INCLUDE_RUNTIME).set(true);
-        final ModelNode result = executeOperation(op);
+        final ModelNode result = serverManager.executeOperation(op);
 
-        if (!ServerOperations.isSuccessfulOutcome(result)) {
-            fail(ServerOperations.getFailureDescriptionAsString(result));
-        }
-
-        assertEquals("OK", ServerOperations.readResult(result).get("status").asString());
-        assertEquals("test-runtime.war", ServerOperations.readResult(result).get("runtime-name").asString());
-        deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME));
+        assertEquals("OK", result.get("status").asString());
+        assertEquals("test-runtime.war", result.get("runtime-name").asString());
     }
 
     @Test
-    public void testRedeploy() throws Exception {
+    @InjectMojo(goal = "redeploy", pom = "redeploy-webarchive-pom.xml")
+    public void testRedeploy(final RedeployMojo deployMojo) throws Exception {
 
         // Make sure the archive is deployed
         if (!deploymentManager.hasDeployment(DEPLOYMENT_NAME)) {
-            deploymentManager.deploy(getDeployment());
+            deploymentManager.deploy(TestEnvironment.getDeployment());
         }
-
-        final AbstractDeployment deployMojo = lookupMojoAndVerify("redeploy", "redeploy-webarchive-pom.xml");
 
         deployMojo.execute();
 
         // Verify deployed
-        assertTrue("Deployment " + DEPLOYMENT_NAME + " was not deployed", deploymentManager.hasDeployment(DEPLOYMENT_NAME));
+        assertTrue(deploymentManager.hasDeployment(DEPLOYMENT_NAME), "Deployment " + DEPLOYMENT_NAME + " was not deployed");
 
         // /deployment=test.war :read-attribute(name=status)
         final ModelNode address = ServerOperations.createAddress("deployment", DEPLOYMENT_NAME);
         final ModelNode op = ServerOperations.createReadAttributeOperation(address, "status");
-        final ModelNode result = executeOperation(op);
+        final ModelNode result = serverManager.executeOperation(op);
 
-        assertEquals("OK", ServerOperations.readResultAsString(result));
-        deploymentManager.undeploy(UndeployDescription.of(DEPLOYMENT_NAME));
+        assertEquals("OK", result.asString());
     }
 
     @Test
-    public void testUndeploy() throws Exception {
+    @InjectMojo(goal = "undeploy", pom = "undeploy-webarchive-pom.xml")
+    public void testUndeploy(final UndeployMojo deployMojo) throws Exception {
 
         // Make sure the archive is deployed
         if (!deploymentManager.hasDeployment(DEPLOYMENT_NAME)) {
-            deploymentManager.deploy(getDeployment());
+            deploymentManager.deploy(TestEnvironment.getDeployment());
         }
-
-        final UndeployMojo deployMojo = lookupMojoAndVerify("undeploy", "undeploy-webarchive-pom.xml");
 
         deployMojo.execute();
 
         // Verify deployed
-        assertFalse("Deployment " + DEPLOYMENT_NAME + " was not undeployed", deploymentManager.hasDeployment(DEPLOYMENT_NAME));
+        assertFalse(deploymentManager.hasDeployment(DEPLOYMENT_NAME), "Deployment " + DEPLOYMENT_NAME + " was not undeployed");
     }
 }

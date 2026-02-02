@@ -9,8 +9,8 @@ import java.net.URL;
 import java.util.Collections;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.wildfly.channel.Channel;
 import org.wildfly.channel.ChannelManifestCoordinate;
 import org.wildfly.channel.ChannelMetadataCoordinate;
@@ -193,8 +193,8 @@ public class ChannelConfigurationTestCase {
             configuration.set(url);
             Channel channel = configuration.toChannel(Collections.emptyList());
 
-            Assert.assertNotNull(channel.getManifestCoordinate().getUrl());
-            Assert.assertEquals(url, channel.getManifestCoordinate().getUrl().toExternalForm());
+            Assertions.assertNotNull(channel.getManifestCoordinate().getUrl());
+            Assertions.assertEquals(url, channel.getManifestCoordinate().getUrl().toExternalForm());
         }
 
         {
@@ -205,8 +205,8 @@ public class ChannelConfigurationTestCase {
             configuration.set(url);
             Channel channel = configuration.toChannel(Collections.emptyList());
 
-            Assert.assertNotNull(channel.getManifestCoordinate().getUrl());
-            Assert.assertEquals(url, channel.getManifestCoordinate().getUrl().toExternalForm());
+            Assertions.assertNotNull(channel.getManifestCoordinate().getUrl());
+            Assertions.assertEquals(url, channel.getManifestCoordinate().getUrl().toExternalForm());
         }
     }
 }

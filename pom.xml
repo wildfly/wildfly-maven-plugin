@@ -46,8 +46,8 @@
         <connection>${wildfly.scm.connection}</connection>
         <developerConnection>${wildfly.scm.developer.connection}</developerConnection>
         <url>${wildfly.scm.url}</url>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
     <organization>
         <name>WildFly Community</name>
@@ -77,11 +77,11 @@
         <version.org.jboss.logging.jboss-logging>3.6.2.Final</version.org.jboss.logging.jboss-logging>
         <version.org.wildfly.checkstyle-config>1.0.8.Final</version.org.wildfly.checkstyle-config>
         <version.org.wildfly.common.wildfly-common>1.7.0.Final</version.org.wildfly.common.wildfly-common>
-        <version.org.wildfly.plugin.tools>2.0.0.Alpha2</version.org.wildfly.plugin.tools>
+        <version.org.wildfly.plugin.tools>2.0.0.Alpha3</version.org.wildfly.plugin.tools>
         <!-- This version property is also retrieved by plugin at runtime to resolve CLI artifact -->
         <version.org.wildfly.core>31.0.1.Final</version.org.wildfly.core>
         <version.org.wildfly.launcher>1.0.2.Final</version.org.wildfly.launcher>
-        <version.org.wildfly />
+        <version.org.wildfly/>
         <version.org.wildfly.channel>1.2.2.Final</version.org.wildfly.channel>
         <version.org.wildfly.prospero>1.3.1.Final</version.org.wildfly.prospero>
         <!-- maven dependencies -->
@@ -103,6 +103,7 @@
 
         <!-- other dependencies -->
         <version.com.bernardomg.maven.skins>2.4.1</version.com.bernardomg.maven.skins>
+        <version.org.junit.jupitor>6.0.2</version.org.junit.jupitor>
         <version.junit.junit>4.13.2</version.junit.junit>
 
         <version.central.publishing.maven.plugin>0.10.0</version.central.publishing.maven.plugin>
@@ -169,168 +170,15 @@
         <module>tests</module>
     </modules>
 
-    <!-- Required for provisioning WildFly -->
-    <repositories>
-        <repository>
-            <id>jboss-public-repository-group</id>
-            <name>JBoss Public Repository Group</name>
-            <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-        </repository>
-    </repositories>
-
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                    <configuration>
-                        <doclint>none</doclint>
-                        <!-- Aggregation settings -->
-                        <reportOutputDirectory>${project.build.directory}/site</reportOutputDirectory>
-                        <destDir>apidocs</destDir>
-
-                        <!-- Documentation metadata -->
-                        <doctitle>WildFly Maven Plugin ${project.version}</doctitle>
-                        <windowtitle>WildFly Maven Plugin ${project.version}</windowtitle>
-                        <header><![CDATA[<b>WildFly Maven Plugin</b><br/><font size="-1">${project.version}</font>]]></header>
-                        <bottom><![CDATA[Copyright &#169; {currentYear} <a href="https://www.wildfly.org">WildFly</a>. All rights reserved.]]></bottom>
-
-                        <!-- Additional options -->
-                        <show>protected</show>
-                        <notimestamp>true</notimestamp>
-                        <quiet>true</quiet>
-                        <encoding>UTF-8</encoding>
-                        <docencoding>UTF-8</docencoding>
-                        <charset>UTF-8</charset>
-
-                        <!-- Link to Java SE API docs -->
-                        <links>
-                            <link>https://docs.oracle.com/en/java/javase/17/docs/api/</link>
-                            <link>https://docs.wildfly.org/wildfly-plugin-tools/</link>
-                        </links>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.eclipse.sisu</groupId>
-                    <artifactId>sisu-maven-plugin</artifactId>
-                    <version>${version.org.eclipse.sisu}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-plugin-plugin</artifactId>
-                    <version>${version.org.apache.maven.maven-plugin-plugin}</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <configuration>
-                        <redirectTestOutputToFile>${maven.test.redirectTestOutputToFile}</redirectTestOutputToFile>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-        <plugins>
-            <!-- Enable auto-formatting of source files -->
-            <plugin>
-                <groupId>net.revelc.code.formatter</groupId>
-                <artifactId>formatter-maven-plugin</artifactId>
-                <version>${version.formatter.maven.plugin}</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.wildfly.tools</groupId>
-                        <artifactId>ide-config</artifactId>
-                        <version>1.0.5.Final</version>
-                    </dependency>
-                </dependencies>
-                <configuration>
-                    <!-- store outside of target to speed up formatting when mvn clean is used -->
-                    <cachedir>.cache</cachedir>
-                    <configFile>eclipse-code-formatter.xml</configFile>
-                    <configXmlFile>wildfly-xml.properties</configXmlFile>
-                    <lineEnding>LF</lineEnding>
-                    <includeResources>true</includeResources>
-                    <removeTrailingWhitespace>true</removeTrailingWhitespace>
-                    <skip>${skipFormatting}</skip>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>format</id>
-                        <goals>
-                            <goal>format</goal>
-                        </goals>
-                        <phase>process-sources</phase>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>net.revelc.code</groupId>
-                <artifactId>impsort-maven-plugin</artifactId>
-                <version>${version.impsort.maven.plugin}</version>
-                <configuration>
-                    <!-- store outside of target to speed up formatting when mvn clean is used -->
-                    <cachedir>.cache</cachedir>
-                    <groups>java.,javax.,jakarta.,org.,com.</groups>
-                    <staticGroups>*</staticGroups>
-                    <skip>${skipFormatting}</skip>
-                    <removeUnused>true</removeUnused>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>sort-imports</id>
-                        <goals>
-                            <goal>sort</goal>
-                        </goals>
-                        <phase>process-sources</phase>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <configuration>
-                    <configLocation>wildfly-checkstyle/checkstyle.xml</configLocation>
-                    <consoleOutput>true</consoleOutput>
-                    <excludes>**/HelpMojo.java</excludes>
-                    <failsOnError>true</failsOnError>
-                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                    <useFile />
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.wildfly.checkstyle</groupId>
-                        <artifactId>wildfly-checkstyle-config</artifactId>
-                        <version>${version.org.wildfly.checkstyle-config}</version>
-                    </dependency>
-                </dependencies>
-                <executions>
-                    <execution>
-                        <id>check-style</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>checkstyle</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-site-plugin</artifactId>
-                <!-- Currently required to override as the skin breaks in 3.21, see WFMP-299 -->
-                <version>3.21.0</version>
-                <dependencies>
-                    <dependency>
-                        <!-- Docs Maven Skin -->
-                        <groupId>com.bernardomg.maven.skins</groupId>
-                        <artifactId>docs-maven-skin</artifactId>
-                        <version>${version.com.bernardomg.maven.skins}</version>
-                    </dependency>
-                </dependencies>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${version.org.junit.jupitor}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>javax.inject</groupId>
                 <artifactId>javax.inject</artifactId>
@@ -608,6 +456,162 @@
         </dependencies>
     </dependencyManagement>
 
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <configuration>
+                        <doclint>none</doclint>
+                        <!-- Aggregation settings -->
+                        <reportOutputDirectory>${project.build.directory}/site</reportOutputDirectory>
+                        <destDir>apidocs</destDir>
+
+                        <!-- Documentation metadata -->
+                        <doctitle>WildFly Maven Plugin ${project.version}</doctitle>
+                        <windowtitle>WildFly Maven Plugin ${project.version}</windowtitle>
+                        <header><![CDATA[<b>WildFly Maven Plugin</b><br/><font size="-1">${project.version}</font>]]></header>
+                        <bottom><![CDATA[Copyright &#169; {currentYear} <a href="https://www.wildfly.org">WildFly</a>. All rights reserved.]]></bottom>
+
+                        <!-- Additional options -->
+                        <show>protected</show>
+                        <notimestamp>true</notimestamp>
+                        <quiet>true</quiet>
+                        <encoding>UTF-8</encoding>
+                        <docencoding>UTF-8</docencoding>
+                        <charset>UTF-8</charset>
+
+                        <!-- Link to Java SE API docs -->
+                        <links>
+                            <link>https://docs.oracle.com/en/java/javase/17/docs/api/</link>
+                            <link>https://docs.wildfly.org/wildfly-plugin-tools/</link>
+                        </links>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.eclipse.sisu</groupId>
+                    <artifactId>sisu-maven-plugin</artifactId>
+                    <version>${version.org.eclipse.sisu}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-plugin-plugin</artifactId>
+                    <version>${version.org.apache.maven.maven-plugin-plugin}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                        <redirectTestOutputToFile>${maven.test.redirectTestOutputToFile}</redirectTestOutputToFile>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <!-- Enable auto-formatting of source files -->
+            <plugin>
+                <groupId>net.revelc.code.formatter</groupId>
+                <artifactId>formatter-maven-plugin</artifactId>
+                <version>${version.formatter.maven.plugin}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.wildfly.tools</groupId>
+                        <artifactId>ide-config</artifactId>
+                        <version>1.0.5.Final</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <!-- store outside of target to speed up formatting when mvn clean is used -->
+                    <cachedir>.cache</cachedir>
+                    <configFile>eclipse-code-formatter.xml</configFile>
+                    <configXmlFile>wildfly-xml.properties</configXmlFile>
+                    <lineEnding>LF</lineEnding>
+                    <includeResources>true</includeResources>
+                    <removeTrailingWhitespace>true</removeTrailingWhitespace>
+                    <skip>${skipFormatting}</skip>
+                    <excludes>
+                        <!-- Exclude binary files from formatting -->
+                        <exclude>**/*.war</exclude>
+                        <exclude>**/*.jar</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>format</id>
+                        <goals>
+                            <goal>format</goal>
+                        </goals>
+                        <phase>process-sources</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>net.revelc.code</groupId>
+                <artifactId>impsort-maven-plugin</artifactId>
+                <version>${version.impsort.maven.plugin}</version>
+                <configuration>
+                    <!-- store outside of target to speed up formatting when mvn clean is used -->
+                    <cachedir>.cache</cachedir>
+                    <groups>java.,javax.,jakarta.,org.,com.</groups>
+                    <staticGroups>*</staticGroups>
+                    <skip>${skipFormatting}</skip>
+                    <removeUnused>true</removeUnused>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>sort-imports</id>
+                        <goals>
+                            <goal>sort</goal>
+                        </goals>
+                        <phase>process-sources</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <configuration>
+                    <configLocation>wildfly-checkstyle/checkstyle.xml</configLocation>
+                    <consoleOutput>true</consoleOutput>
+                    <excludes>**/HelpMojo.java</excludes>
+                    <failsOnError>true</failsOnError>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                    <useFile/>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.wildfly.checkstyle</groupId>
+                        <artifactId>wildfly-checkstyle-config</artifactId>
+                        <version>${version.org.wildfly.checkstyle-config}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>check-style</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>checkstyle</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-site-plugin</artifactId>
+                <!-- Currently required to override as the skin breaks in 3.21, see WFMP-299 -->
+                <version>3.21.0</version>
+                <dependencies>
+                    <dependency>
+                        <!-- Docs Maven Skin -->
+                        <groupId>com.bernardomg.maven.skins</groupId>
+                        <artifactId>docs-maven-skin</artifactId>
+                        <version>${version.com.bernardomg.maven.skins}</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <profiles>
         <profile>
             <id>format-check</id>
@@ -717,4 +721,13 @@
             </build>
         </profile>
     </profiles>
+
+    <!-- Required for provisioning WildFly -->
+    <repositories>
+        <repository>
+            <id>jboss-public-repository-group</id>
+            <name>JBoss Public Repository Group</name>
+            <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+        </repository>
+    </repositories>
 </project>

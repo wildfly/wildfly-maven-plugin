@@ -17,6 +17,7 @@
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
                     <offline>true</offline>
+                    <jboss-home>${jboss.home}</jboss-home>
                     <commands>
                         <command>embed-server</command>
                         <command>/system-property=org.wildfly.maven.plugin-offline-cmd:add(value=true)</command>

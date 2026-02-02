@@ -17,21 +17,17 @@
 
     <description>Tests the maven plugin goals with a bootable JAR</description>
 
-    <properties>
-        <wildfly.test.config.dir>
-            ${project.build.testOutputDirectory}${file.separator}test-project
-        </wildfly.test.config.dir>
-    </properties>
-
     <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>wildfly-maven-plugin</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>wildfly-maven-plugin-tests-shared</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -59,6 +55,11 @@
             <artifactId>maven-resolver-transport-wagon</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.maven.plugin-testing</groupId>
+            <artifactId>maven-plugin-testing-harness</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- Only required by tests -->
         <dependency>
             <groupId>org.apache.maven.wagon</groupId>
@@ -83,6 +84,11 @@
         <dependency> <!-- json-p ri -->
             <groupId>org.eclipse.parsson</groupId>
             <artifactId>parsson</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

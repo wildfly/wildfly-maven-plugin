@@ -16,6 +16,7 @@
                 <groupId>org.wildfly.plugins</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
+                    <jboss-home>${jboss.home}</jboss-home>
                     <fork>true</fork>
                     <failOnError>true</failOnError>
                     <commands>

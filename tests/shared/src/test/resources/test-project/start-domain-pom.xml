@@ -17,6 +17,7 @@
                 <groupId>org.wildfly.plugins</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
+                    <jboss-home>${jboss.home}</jboss-home>
                     <!-- Can't use the <server-type/> alias here as it doesn't get resolved in the test harness -->
                     <serverType>DOMAIN</serverType>
                     <stdout>System.out</stdout>

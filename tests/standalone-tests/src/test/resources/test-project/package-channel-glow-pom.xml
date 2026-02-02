@@ -19,8 +19,7 @@
                     <channels>
                         <channel>
                             <manifest>
-                                <!-- Use local file until keycloak version 25.x is used by Glow, will be WF 34.0.0.Final -->
-                                <url>WF_BASE_DIR_ABSOLUTE_URL/wildfly-32.0.0.Final-manifest.yaml</url>
+                                <url>${test.project.baseuri}/wildfly-39.0.0.Final-manifest.yaml</url>
                             </manifest>
                         </channel>
                     </channels>

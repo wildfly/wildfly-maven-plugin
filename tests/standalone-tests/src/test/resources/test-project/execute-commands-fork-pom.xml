@@ -17,10 +17,11 @@
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <configuration>
                     <fork>true</fork>
+                    <jboss-home>${jboss.home}</jboss-home>
                     <commands>
                         <command>/system-property=org.wildfly.maven.plugin-fork-cmd:add(value=true)</command>
                         <command>/system-property=fork-command:add(value="set")</command>
-                        <command>module add --name=org.wildfly.plugin.tests --dependencies=org.jboss.logging --resources=${project.build.directory}${file.separator}test.jar</command>
+                        <command>module add --name=org.wildfly.plugin.tests --dependencies=org.jboss.logging --resources=${test.project.basedir}${file.separator}target${file.separator}test.jar</command>
                     </commands>
                 </configuration>
 
