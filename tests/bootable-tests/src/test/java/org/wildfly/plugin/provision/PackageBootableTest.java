@@ -92,6 +92,9 @@ public class PackageBootableTest extends AbstractProjectMojoTest {
     @Test
     @InjectMojo(goal = "package", pom = "package-bootable-glow-pom.xml")
     public void testGlowPackage(final Mojo packageMojo) throws Exception {
+        // We need to delete the directory from previous runs without a "clean" executed. This will happen when
+        // there are defined javaXX.home properties are set.
+        deleteProvisioned("packaged-bootable-glow-server");
         final String[] layers = { "ee-core-profile-server", "microprofile-openapi" };
         packageMojo.execute();
         final String deploymentName = "test.war";
@@ -102,6 +105,9 @@ public class PackageBootableTest extends AbstractProjectMojoTest {
     @Test
     @InjectMojo(goal = "package", pom = "package-bootable-glow-cloud-pom.xml")
     public void testGlowCloudPackage(final Mojo packageMojo) throws Exception {
+        // We need to delete the directory from previous runs without a "clean" executed. This will happen when
+        // there are defined javaXX.home properties are set.
+        deleteProvisioned("packaged-bootable-cloud-glow-server");
         final String[] layers = { "ee-core-profile-server" };
         packageMojo.execute();
         final String deploymentName = "test.war";
@@ -269,5 +275,9 @@ public class PackageBootableTest extends AbstractProjectMojoTest {
                         .redirectOutput(out.toFile())
                         .shutdownOnClose(true))
                 .start(TestEnvironment.TIMEOUT, TimeUnit.SECONDS);
+    }
+
+    private static void deleteProvisioned(final String fileName) throws IOException {
+        TestSupport.deleteRecursively(Path.of(TestEnvironment.TEST_PROJECT_TARGET_PATH, fileName));
     }
 }

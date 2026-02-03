@@ -13,8 +13,6 @@ on:
       - 'tests/**'
       - '**/pom.xml'
   pull_request:
-    branches:
-      - '**'
     paths:
       - '.github/workflows/wildfly-build.yml'
       - 'core/**'
@@ -37,29 +35,28 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        java: ['17', '21', '25']
 
     steps:
       - uses: actions/checkout@v6
       - uses: wildfly-extras/wildfly-nightly-download@v1
         id: wildfly-nightly
-      - name: Set up JDK ${{ matrix.java }}
+      - name: Set up JDKs
         uses: actions/setup-java@v5
         with:
-          java-version: ${{ matrix.java }}
           distribution: 'temurin'
           cache: 'maven'
-      - name: Build with Maven Java ${{ matrix.java }}
-        run: mvn clean install '-Dorg.jboss.logmanager.nocolor=true' '-Dversion.org.wildfly=${{steps.wildfly-nightly.outputs.wildfly-version}}'
-      - name: Upload surefire reports
+          java-version: |
+            17
+            21
+            25
+      - name: Build with Maven Java ${{ matrix.os }}
+        run: mvn clean install '-Dorg.jboss.logmanager.nocolor=true' '-Dversion.org.wildfly=${{steps.wildfly-nightly.outputs.wildfly-version}}' '-Djava17.home=${{env.JAVA_HOME_17_X64}}' '-Djava21.home=${{env.JAVA_HOME_21_X64}}' '-Djava25.home=${{env.JAVA_HOME_25_X64}}'
+      - name: Upload test logs for failed run
         uses: actions/upload-artifact@v6
         if: failure()
         with:
-          name: surefire-reports-${{ matrix.os }}-${{ matrix.java }}
-          path: '**/surefire-reports/*'
-      - name: Upload server logs
-        uses: actions/upload-artifact@v6
-        if: failure()
-        with:
-          name: server-logs-${{ matrix.os }}-${{ matrix.java }}
-          path: '**/*.log'
+          name: failure-report-${{ matrix.os }}
+          path: |
+            '**/surefire-reports/'
+            '**/failsafe-reports/'
+            '**/*.log'
