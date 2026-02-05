@@ -117,7 +117,7 @@ public class Utils {
             String layersConfigurationFileName) throws Exception {
         return scanDeployment(discoverProvisioningInfo, layers, excludedLayers, featurePacks,
                 dryRun, log, deploymentContents, artifactResolver, outputFolder,
-                pm, galleonOptions, layersConfigurationFileName, layersConfigurationFileName);
+                pm, galleonOptions, layersConfigurationFileName, layersConfigurationFileName, false);
     }
 
     public static ScanResults scanDeployment(GlowConfig discoverProvisioningInfo,
@@ -132,7 +132,8 @@ public class Utils {
             GalleonBuilder pm,
             Map<String, String> galleonOptions,
             String layersConfigurationFileName,
-            String provisionedConfigFileName) throws Exception {
+            String provisionedConfigFileName,
+            boolean bootableJar) throws Exception {
         if (!layers.isEmpty()) {
             throw new MojoExecutionException("layers must be empty when enabling glow");
         }
@@ -163,7 +164,7 @@ public class Utils {
         ScanResults results;
         GlowMavenMessageWriter writer = new GlowMavenMessageWriter(log);
         try {
-            results = GlowSession.scan(artifactResolver, arguments, writer);
+            results = GlowSession.scan(artifactResolver, arguments, writer, bootableJar);
         } catch (Exception ex) {
             throw new MojoExecutionException(ex.getLocalizedMessage(), ex);
         }
