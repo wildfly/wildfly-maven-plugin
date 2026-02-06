@@ -30,7 +30,6 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest ]
-        java:
 
     steps:
       - uses: actions/checkout@v6
