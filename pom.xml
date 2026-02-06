@@ -141,6 +141,7 @@
 
         <!-- Other properties -->
         <maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
+        <test.java.home>${java.home}</test.java.home>
         <skipFormatting>false</skipFormatting>
         <!-- required by test -->
         <grpcVersion>0.1.12.Final</grpcVersion>
@@ -502,6 +503,7 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <configuration>
                         <redirectTestOutputToFile>${maven.test.redirectTestOutputToFile}</redirectTestOutputToFile>
+                        <jvm>${test.java.home}${file.separator}bin${file.separator}java</jvm>
                     </configuration>
                 </plugin>
             </plugins>
