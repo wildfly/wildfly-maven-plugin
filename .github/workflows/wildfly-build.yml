@@ -49,8 +49,12 @@ jobs:
             17
             21
             25
-      - name: Build with Maven Java ${{ matrix.os }}
-        run: mvn clean install '-Dorg.jboss.logmanager.nocolor=true' '-Dversion.org.wildfly=${{steps.wildfly-nightly.outputs.wildfly-version}}' '-Djava17.home=${{env.JAVA_HOME_17_X64}}' '-Djava21.home=${{env.JAVA_HOME_21_X64}}' '-Djava25.home=${{env.JAVA_HOME_25_X64}}'
+      - name: Build and Test on ${{ matrix.os }} - JDK 25
+        run: mvn clean install '-Dorg.jboss.logmanager.nocolor=true' '-Dversion.org.wildfly=${{steps.wildfly-nightly.outputs.wildfly-version}}'
+      - name: Test on ${{ matrix.os }} - JDK 21
+        run: mvn verify '-Dorg.jboss.logmanager.nocolor=true' '-Dversion.org.wildfly=${{steps.wildfly-nightly.outputs.wildfly-version}}' '-Djava21.home=${{env.JAVA_HOME_21_X64}}'
+      - name: on ${{ matrix.os }} - JDK 17
+        run: mvn verify '-Dorg.jboss.logmanager.nocolor=true' '-Dversion.org.wildfly=${{steps.wildfly-nightly.outputs.wildfly-version}}' '-Djava17.home=${{env.JAVA_HOME_17_X64}}'
       - name: Upload test logs for failed run
         uses: actions/upload-artifact@v6
         if: failure()
@@ -58,5 +62,4 @@ jobs:
           name: failure-report-${{ matrix.os }}
           path: |
             '**/surefire-reports/'
-            '**/failsafe-reports/'
             '**/*.log'
