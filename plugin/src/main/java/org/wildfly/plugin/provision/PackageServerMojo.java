@@ -403,7 +403,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
                     pm,
                     galleonOptions,
                     layersConfigurationFileName,
-                    getProvisionedConfigurationFileName(layersConfigurationFileName))) {
+                    getProvisionedConfigurationFileName(layersConfigurationFileName), bootableJar)) {
                 config = results.getProvisioningConfig();
                 return config;
             }
