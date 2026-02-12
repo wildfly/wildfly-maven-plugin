@@ -21,6 +21,8 @@ concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
   cancel-in-progress: true
 
+env:
+  MVN_CMD: './mvnw -V -B'
 
 jobs:
   nightly-build-test:
@@ -38,18 +40,25 @@ jobs:
         with:
           cache: 'maven'
           distribution: 'temurin'
+          # Please note the order here of having 25 last as that is the version we want to compile with
           java-version: |
             17
             21
+            26-ea
             25
-      - name: Build and Test on ${{ matrix.os }}
-        run: mvn clean install '-Dorg.jboss.logmanager.nocolor=true' '-Djava17.home=${{env.JAVA_HOME_17_X64}}' '-Djava21.home=${{env.JAVA_HOME_21_X64}}' '-Djava25.home=${{env.JAVA_HOME_25_X64}}'
+      - name: Build and Test on ${{ matrix.os }} - Java 25
+        run: ${{ env.MVN_CMD }} clean install
+      - name: Build and Test on ${{ matrix.os }} - Java 26-ea
+        run: ${{ env.MVN_CMD }} verify '-Dtest.java.home=${{env.JAVA_HOME_26_X64}}${{env.JAVA_HOME_26_ARM64}}' '-Dsurefire.reportsDirectory=target/surefire-reports-java26'
+      - name: Build and Test on ${{ matrix.os }} - Java 21
+        run: ${{ env.MVN_CMD }} verify '-Dtest.java.home=${{env.JAVA_HOME_21_X64}}${{env.JAVA_HOME_21_ARM64}}' '-Dsurefire.reportsDirectory=target/surefire-reports-java21'
+      - name: Build and Test on ${{ matrix.os }} - Java 17
+        run: ${{ env.MVN_CMD }} verify '-Dtest.java.home=${{env.JAVA_HOME_17_X64}}${{env.JAVA_HOME_17_ARM64}}' '-Dsurefire.reportsDirectory=target/surefire-reports-java17'
       - name: Upload test logs for failed run
         uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: failure-report-${{ matrix.os }}
           path: |
-            '**/surefire-reports/'
-            '**/failsafe-reports/'
-            '**/*.log'
+            **/surefire-reports*/**
+            **/*.log

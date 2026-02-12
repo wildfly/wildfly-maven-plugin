@@ -32,16 +32,16 @@ jobs:
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
-      - name: Set up JDK 21
+      - name: Set up JDK 25
         uses: actions/setup-java@v5
         with:
-          java-version: 21
+          java-version: 25
           cache: 'maven'
           distribution: 'temurin'
       - name: Generate JavaDoc
         run: |
           cd plugin
-          mvn -B -ntp clean -Pcentral-release site
+          ./mvnw -B -ntp clean -Pcentral-release site
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
