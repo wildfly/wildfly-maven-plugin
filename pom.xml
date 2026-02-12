@@ -13,7 +13,7 @@
     </parent>
     <groupId>org.wildfly.plugins</groupId>
     <artifactId>wildfly-maven-plugin-parent</artifactId>
-    <version>6.0.0.Beta1</version>
+    <version>6.0.0.Beta2-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>WildFly Maven Plugin - Parent</name>
 
@@ -46,7 +46,7 @@
         <connection>${wildfly.scm.connection}</connection>
         <developerConnection>${wildfly.scm.developer.connection}</developerConnection>
         <url>${wildfly.scm.url}</url>
-        <tag>v6.0.0.Beta1</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <organization>
