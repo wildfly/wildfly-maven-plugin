@@ -32,7 +32,7 @@
         <wildfly.channel.manifest.artifactId>wildfly-ee</wildfly.channel.manifest.artifactId>
 
         <!-- Skip deploying tests -->
-        <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
+        <central.skipPublishing>true</central.skipPublishing>
     </properties>
     <dependencyManagement>
         <dependencies>
