@@ -471,6 +471,7 @@ public class DevMojo extends AbstractServerStartMojo {
                             .addScripts(scripts)
                             .setStdout("none")
                             .setAutoReload(false)
+                            .addJvmOptions(Environment.getPostProvisioningCLIProperties(resolveJBossHome()))
                             .setTimeout(timeout);
                     if (context == null) {
                         builder.setOffline(false)

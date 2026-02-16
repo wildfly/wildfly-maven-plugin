@@ -160,4 +160,23 @@ public class Environment {
         }
         return result.toString();
     }
+
+    /**
+     * Provisioned installation can be incomplete (missing CLI files).
+     * WildFLy CLI allows to handle the missing files thanks to System properties.
+     *
+     * @param jbossHome The WildFly installation
+     * @return The system properties.
+     */
+    public static String[] getPostProvisioningCLIProperties(Path jbossHome) {
+        List<String> options = new ArrayList<>();
+        // WildFly CLI WARN if the file doesn't exist. In the case of provisioning,
+        // this file can be missing for good reasons (WildFly tools are not provisioned).
+        // We are setting this property for WildFly CLI to not warn about the missing file.
+        Path configFile = jbossHome.resolve("bin").resolve("jboss-cli.xml");
+        if (!Files.exists(configFile)) {
+            options.add("-Dorg.wildfly.cli.ignore.missing.config=true");
+        }
+        return options.toArray(String[]::new);
+    }
 }

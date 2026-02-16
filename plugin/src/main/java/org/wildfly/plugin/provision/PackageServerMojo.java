@@ -49,6 +49,7 @@ import org.wildfly.glow.ScanResults;
 import org.wildfly.plugin.cli.BaseCommandConfiguration;
 import org.wildfly.plugin.cli.CliSession;
 import org.wildfly.plugin.cli.OfflineCommandExecutor;
+import org.wildfly.plugin.common.Environment;
 import org.wildfly.plugin.common.PropertyNames;
 import org.wildfly.plugin.common.StandardOutput;
 import org.wildfly.plugin.common.Utils;
@@ -540,6 +541,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
                                 .setStdout(stdout)
                                 .addPropertiesFiles(resolveFiles(session.getPropertiesFiles()))
                                 .addJvmOptions(session.getJavaOpts())
+                                .addJvmOptions(Environment.getPostProvisioningCLIProperties(jbossHome))
                                 .setResolveExpression(session.getResolveExpression())
                                 .build();
                         commandExecutor.execute(cmdConfig, artifactResolver);
