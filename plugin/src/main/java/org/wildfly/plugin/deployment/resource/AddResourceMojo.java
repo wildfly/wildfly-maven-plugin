@@ -62,7 +62,7 @@ public class AddResourceMojo extends AbstractServerConnection {
 
     /**
      * Specifies whether force mode should be used or not.
-     * </p>
+     * <p>
      * If force mode is disabled, the add-resource goal will
      * cause a build failure if the resource is already present on the server.
      */

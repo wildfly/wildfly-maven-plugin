@@ -47,7 +47,7 @@ public class DeployArtifactMojo extends AbstractDeployment {
 
     /**
      * Specifies whether force mode should be used or not.
-     * </p>
+     * <p>
      * If force mode is disabled, the deploy goal will cause a build failure if the application being deployed already
      * exists.
      */
