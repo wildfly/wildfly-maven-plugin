@@ -45,10 +45,9 @@ jobs:
           java-version: 25
           cache: 'maven'
           distribution: 'temurin'
-      - name: Generate JavaDoc
+      - name: Generate Site and JavaDoc
         run: |
-          cd plugin
-          ../mvnw -B -ntp clean -Pcentral-release site
+          ./mvnw -B -ntp -pl plugin -am clean -Pcentral-release verify -DskipTests site
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
