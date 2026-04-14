@@ -13,7 +13,7 @@
     </parent>
     <groupId>org.wildfly.plugins</groupId>
     <artifactId>wildfly-maven-plugin-parent</artifactId>
-    <version>6.0.0.Beta3-SNAPSHOT</version>
+    <version>6.0.0.Beta3</version>
     <packaging>pom</packaging>
     <name>WildFly Maven Plugin - Parent</name>
 
@@ -46,7 +46,7 @@
         <connection>${wildfly.scm.connection}</connection>
         <developerConnection>${wildfly.scm.developer.connection}</developerConnection>
         <url>${wildfly.scm.url}</url>
-        <tag>HEAD</tag>
+        <tag>v6.0.0.Beta3</tag>
     </scm>
 
     <organization>
@@ -134,7 +134,7 @@
         <!-- Other properties -->
         <maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
         <test.java.home>${java.home}</test.java.home>
-        <test.report.dir/>
+        <test.report.dir />
         <surefire.reportsDirectory>${project.build.directory}/surefire-reports/${test.report.dir}</surefire.reportsDirectory>
         <skipFormatting>false</skipFormatting>
         <!-- required by test -->
