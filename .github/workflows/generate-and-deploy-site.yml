@@ -50,7 +50,7 @@ jobs:
           cd plugin
           ../mvnw -B -ntp clean -Pcentral-release site
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           # Upload the site
           path: 'plugin/target/site/'
