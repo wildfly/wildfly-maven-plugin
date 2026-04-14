@@ -9,6 +9,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
 import org.wildfly.glow.Arguments;
 import org.wildfly.glow.OutputFormat;
 import org.wildfly.glow.ScanArguments.Builder;
@@ -29,20 +31,28 @@ public class GlowConfig {
     private Set<String> layersForJndi = Set.of();
     private Set<String> excludedArchives = Set.of();
     private boolean failsOnError = true;
+    @Deprecated
     private boolean preview;
     private boolean verbose;
     private boolean ignoreDeployment;
+    private String serverVariant;
 
     public GlowConfig() {
     }
 
-    public Arguments toArguments(List<Path> lst, Path inProvisioning, String layersConfigurationFileName) {
+    public Arguments toArguments(Log log, List<Path> lst, Path inProvisioning, String layersConfigurationFileName)
+            throws Exception {
         final Set<String> profiles = profile != null ? Set.of(profile) : Set.of();
         List<Path> deployments = ignoreDeployment ? Collections.emptyList() : lst;
+        if (serverVariant != null && preview) {
+            throw new MojoExecutionException("Preview can't be set when a server variant has been set.");
+        }
+        if (preview) {
+            log.warn("preview option has been deprecated, use <server-variant>[server variant]</server-variant> option");
+        }
         Builder builder = Arguments.scanBuilder().setExecutionContext(context).setExecutionProfiles(profiles)
                 .setUserEnabledAddOns(addOns).setBinaries(deployments).setSuggest(suggest).setJndiLayers(getLayersForJndi())
                 .setVersion(version)
-                .setTechPreview(preview)
                 .setExcludeArchivesFromScan(excludedArchives)
                 .setVerbose(verbose)
                 .setSpaces(spaces)
@@ -52,6 +62,12 @@ public class GlowConfig {
         }
         if (layersConfigurationFileName != null) {
             builder.setConfigName(layersConfigurationFileName);
+        }
+        if (preview) {
+            builder.setTechPreview(preview);
+        }
+        if (serverVariant != null) {
+            builder.setServerVariant(serverVariant);
         }
         return builder.build();
     }

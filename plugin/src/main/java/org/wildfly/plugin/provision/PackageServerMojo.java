@@ -217,7 +217,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
      * <li>failsOnError: true|false. If errors are detected (missing datasource, missing messaging broker, ambiguous JNDI call,
      * provisioning is aborted. Default to {@code false}</li>
      * <li>layersForJndi: List of Galleon layers required by some JNDI calls located in your application.</li>
-     * <li>preview: {@code true} | {@code false}. Use preview feature-packs. Default to {@code false}.</li>
+     * <li>preview: {@code true} | {@code false}. Use preview feature-packs. Default to {@code false}. DEPRECATED, use
+     * {@code server-variant}</li>
      * <li>profile: {@code ha}. Default being non ha server configuration.</li>
      * <li>suggest: {@code true} | {@code false}. Display addOns that you can use to enhance discovered provisioning
      * configuration. Default to {@code false}.</li>
@@ -233,7 +234,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
      * <li>spaces: List of spaces to enable. A space brings extra galleon feature-packs to the provisioning (eg:
      * {@code incubating} to
      * include the feature-packs that are in the incubating state.</li>
-     *
+     * <li>server-variant: server variant. Default being the WildFly server. An example of server variant is `preview`.</li>
      * </ul>
      * </div>
      *

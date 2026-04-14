@@ -27,6 +27,7 @@ import org.apache.maven.artifact.handler.ArtifactHandler;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -122,6 +123,27 @@ public class PackageTest extends AbstractProjectMojoTest {
         packageMojo.execute();
         Path jbossHome = resolvePath("packaged-glow-no-deployment-server");
         TestEnvironment.checkStandaloneWildFlyHome(jbossHome, 0, layers, null, true);
+    }
+
+    @Test
+    @InjectMojo(goal = "package", pom = "package-preview-glow-pom.xml")
+    public void testGlowPreviewPackage(final Mojo packageMojo) throws Exception {
+        String[] layers = { "ee-core-profile-server", "microprofile-openapi" };
+        packageMojo.execute();
+        Path jbossHome = resolvePath("packaged-preview-glow-server");
+        TestEnvironment.checkStandaloneWildFlyHome(jbossHome, 1, layers, null, true);
+    }
+
+    @Test
+    @InjectMojo(goal = "package", pom = "package-unknown-variant-glow-pom.xml")
+    public void testGlowUnknownVariantPackage(final Mojo packageMojo) throws Exception {
+        try {
+            packageMojo.execute();
+            Assertions.fail("Execution should have failed");
+        } catch (MojoExecutionException ex) {
+            // XXX OK, expected.
+            assertTrue(ex.getLocalizedMessage().contains("Unknown variant foo. Variants are ["));
+        }
     }
 
     @Test

@@ -158,7 +158,7 @@ public class Utils {
                 p.storeProvisioningConfig(in, inProvisioningFile);
             }
         }
-        Arguments arguments = discoverProvisioningInfo.toArguments(deploymentContents, inProvisioningFile,
+        Arguments arguments = discoverProvisioningInfo.toArguments(log, deploymentContents, inProvisioningFile,
                 layersConfigurationFileName);
         log.info("Glow is scanning... ");
         ScanResults results;
