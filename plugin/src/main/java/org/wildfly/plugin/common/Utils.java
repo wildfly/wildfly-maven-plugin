@@ -188,7 +188,7 @@ public class Utils {
                     }
                 }
             }
-            log.warn("Some errors have been identified, check logs.");
+            log.warn("Some errors have been identified, check the log output above.");
         }
 
         return results;
