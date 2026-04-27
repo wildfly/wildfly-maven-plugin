@@ -5,6 +5,8 @@
 
 package org.wildfly.plugin.cli;
 
+import static org.wildfly.plugin.common.Environment.IGNORE_MISSING_CLI_CONFIG_PROPERTY;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -228,6 +230,7 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
                 .of(this::createClient, this::getClientConfiguration)
                 .addCommands(commands)
                 .addJvmOptions(javaOpts)
+                .addJvmOptions(IGNORE_MISSING_CLI_CONFIG_PROPERTY)
                 .addPropertiesFiles(propertiesFiles)
                 .addScripts(scripts)
                 .addSystemProperties(systemProperties)

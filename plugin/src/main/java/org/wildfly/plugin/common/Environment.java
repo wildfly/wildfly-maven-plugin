@@ -25,6 +25,7 @@ import org.wildfly.security.manager.WildFlySecurityManager;
  * @author <a href="mailto:jperkins@redhat.com">James R. Perkins</a>
  */
 public class Environment {
+    public static final String IGNORE_MISSING_CLI_CONFIG_PROPERTY = "-Dorg.wildfly.cli.ignore.missing.config=true";
     private static final String[] MODULAR_JVM_ARGUMENTS = {
             "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED",
             "--add-exports=jdk.unsupported/sun.reflect=ALL-UNNAMED",
@@ -175,7 +176,7 @@ public class Environment {
         // We are setting this property for WildFly CLI to not warn about the missing file.
         Path configFile = jbossHome.resolve("bin").resolve("jboss-cli.xml");
         if (!Files.exists(configFile)) {
-            options.add("-Dorg.wildfly.cli.ignore.missing.config=true");
+            options.add(IGNORE_MISSING_CLI_CONFIG_PROPERTY);
         }
         return options.toArray(String[]::new);
     }
