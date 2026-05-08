@@ -23,7 +23,6 @@ import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -74,9 +73,8 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
             throw new MojoExecutionException("No channel specified.");
         }
         this.log = log;
-        session = MavenRepositorySystemUtils.newSession();
+        session = new DefaultRepositorySystemSession(contextSession);
         this.repositories = repositories;
-        session.setLocalRepositoryManager(contextSession.getLocalRepositoryManager());
         session.setOffline(offline);
         for (ChannelConfiguration channelConfiguration : channels) {
             this.channels.add(channelConfiguration.toChannel(offline ? Collections.emptyList() : repositories));
