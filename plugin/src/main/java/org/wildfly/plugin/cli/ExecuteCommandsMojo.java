@@ -225,8 +225,9 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             return;
         }
         MavenRepositoriesEnricher.enrich(mavenSession, project, repositories);
-        MavenRepositoriesEnricher.injectSessionProxies(repoSystem, session, repositories);
-        mavenRepoManager = new MavenArtifactRepositoryManager(repoSystem, session, repositories);
+        final List<RemoteRepository> effectiveRepositories = MavenRepositoriesEnricher
+                .injectSessionProxies(repoSystem, session, repositories);
+        mavenRepoManager = new MavenArtifactRepositoryManager(repoSystem, session, effectiveRepositories);
         final CommandConfiguration.Builder cmdConfigBuilder = CommandConfiguration
                 .of(this::createClient, this::getClientConfiguration)
                 .addCommands(commands)

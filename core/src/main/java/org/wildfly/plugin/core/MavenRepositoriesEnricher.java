@@ -105,7 +105,8 @@ public class MavenRepositoriesEnricher {
     }
 
     /**
-     * Inject the session-level proxy/mirror/auth onto each repository.
+     * Returns the repository list to use for resolution, with the session-level
+     * proxy/mirror/auth injected onto every entry.
      *
      * Aether's HttpTransporter reads {@code repository.getProxy()} directly
      * and never consults {@code session.getProxySelector()}. The Maven CLI
@@ -116,18 +117,21 @@ public class MavenRepositoriesEnricher {
      * Call this helper after {@link #enrich} so downstream resolves honour
      * the settings.xml proxy regardless of the calling context.
      *
-     * @param repoSystem   the Aether repository system (may be null - call is a no-op)
-     * @param session      the Aether repository session (may be null - call is a no-op)
-     * @param repositories the repository list to enrich in place
+     * The input list is treated as read-only and never mutated. When injection
+     * cannot or need not be performed (null inputs, empty list), the input
+     * list itself is returned unchanged.
+     *
+     * @param repoSystem   the Aether repository system (may be {@code null} - input list is returned unchanged)
+     * @param session      the Aether repository session (may be {@code null} - input list is returned unchanged)
+     * @param repositories the repository list to enrich; never mutated, may be {@code null} or empty
+     * @return the enriched repository list when injection is possible; otherwise the original input list
      */
-    public static void injectSessionProxies(RepositorySystem repoSystem, RepositorySystemSession session,
-            List<RemoteRepository> repositories) {
+    public static List<RemoteRepository> injectSessionProxies(RepositorySystem repoSystem,
+            RepositorySystemSession session, List<RemoteRepository> repositories) {
         if (repoSystem == null || session == null || repositories == null || repositories.isEmpty()) {
-            return;
+            return repositories;
         }
-        final List<RemoteRepository> enriched = repoSystem.newResolutionRepositories(session, repositories);
-        repositories.clear();
-        repositories.addAll(enriched);
+        return repoSystem.newResolutionRepositories(session, repositories);
     }
 
     private static Set<String> getUrls(List<RemoteRepository> repositories) {
