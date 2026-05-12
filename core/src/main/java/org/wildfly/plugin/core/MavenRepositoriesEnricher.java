@@ -19,6 +19,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Proxy;
 import org.apache.maven.settings.Settings;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 
@@ -100,6 +102,32 @@ public class MavenRepositoriesEnricher {
                 repositories.add(builder.build());
             }
         }
+    }
+
+    /**
+     * Inject the session-level proxy/mirror/auth onto each repository.
+     *
+     * Aether's HttpTransporter reads {@code repository.getProxy()} directly
+     * and never consults {@code session.getProxySelector()}. The Maven CLI
+     * normally copies the session-level proxy onto each repository via
+     * {@link RepositorySystem#newResolutionRepositories} before invoking a
+     * Mojo. Embedded callers (plugin test harness, custom invokers) skip
+     * that step, so the proxy is dropped before Aether sees the repository.
+     * Call this helper after {@link #enrich} so downstream resolves honour
+     * the settings.xml proxy regardless of the calling context.
+     *
+     * @param repoSystem   the Aether repository system (may be null - call is a no-op)
+     * @param session      the Aether repository session (may be null - call is a no-op)
+     * @param repositories the repository list to enrich in place
+     */
+    public static void injectSessionProxies(RepositorySystem repoSystem, RepositorySystemSession session,
+            List<RemoteRepository> repositories) {
+        if (repoSystem == null || session == null || repositories == null || repositories.isEmpty()) {
+            return;
+        }
+        final List<RemoteRepository> enriched = repoSystem.newResolutionRepositories(session, repositories);
+        repositories.clear();
+        repositories.addAll(enriched);
     }
 
     private static Set<String> getUrls(List<RemoteRepository> repositories) {

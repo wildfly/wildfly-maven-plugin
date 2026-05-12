@@ -140,6 +140,7 @@ public abstract class AbstractStartMojo extends AbstractServerConnection {
         // Setting the mavenRepoManager is not thread-safe, however creating it more than once won't hurt anything
         if (initialized.compareAndSet(false, true)) {
             MavenRepositoriesEnricher.enrich(mavenSession, project, repositories);
+            MavenRepositoriesEnricher.injectSessionProxies(repoSystem, session, repositories);
             mavenRepoManager = createMavenRepoManager();
         }
     }

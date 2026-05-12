@@ -295,6 +295,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
 
     protected void enrichRepositories() throws MojoExecutionException {
         MavenRepositoriesEnricher.enrich(session, project, repositories);
+        MavenRepositoriesEnricher.injectSessionProxies(repoSystem, repoSession, repositories);
     }
 
     protected abstract String getGoal();
