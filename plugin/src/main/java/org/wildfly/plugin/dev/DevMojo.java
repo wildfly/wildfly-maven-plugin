@@ -535,7 +535,7 @@ public class DevMojo extends AbstractServerStartMojo {
 
     @Override
     protected CommandBuilder createCommandBuilder(final Path jbossHome) throws MojoExecutionException {
-        return createStandaloneCommandBuilder(jbossHome, serverConfig);
+        return createStandaloneCommandBuilder(jbossHome, serverConfig).setDebug();
     }
 
     /**
