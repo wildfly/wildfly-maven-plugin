@@ -47,7 +47,7 @@ jobs:
           distribution: 'temurin'
       - name: Generate Site and JavaDoc
         run: |
-          ./mvnw -B -ntp -pl plugin -am clean -Pcentral-release verify -DskipTests site
+          ./mvnw -B -ntp -pl plugin -am clean -Pcentral-release verify -DskipTests site -Dgpg.skip=true
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
