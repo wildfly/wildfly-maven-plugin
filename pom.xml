@@ -102,7 +102,7 @@
 
         <!-- other dependencies -->
         <version.com.bernardomg.maven.skins>2.4.1</version.com.bernardomg.maven.skins>
-        <version.org.junit.jupitor>6.0.3</version.org.junit.jupitor>
+        <version.org.junit.jupitor>6.1.0</version.org.junit.jupitor>
 
         <version.central.publishing.maven.plugin>0.10.0</version.central.publishing.maven.plugin>
         <version.formatter.maven.plugin>2.29.0</version.formatter.maven.plugin>
