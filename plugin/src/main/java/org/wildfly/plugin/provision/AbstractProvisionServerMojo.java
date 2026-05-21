@@ -87,7 +87,7 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
     /**
      * Arbitrary Galleon options used when provisioning the server. In case you
      * are building a large amount of server in the same maven session, it
-     * is strongly advised to set 'jboss-fork-embedded' option to 'true' in
+     * is strongly advised to set {@code jboss-fork-embedded} option to {@code true} in
      * order to fork Galleon provisioning and CLI scripts execution in dedicated
      * processes. For example:
      *
@@ -96,6 +96,9 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
      *     &lt;jboss-fork-embedded&gt;true&lt;/jboss-fork-embedded&gt;
      *   &lt;/galleon-options&gt;
      * </pre>
+     *
+     * All the options that can be configured in the {@code galleon-options} are listed in
+     * the <a href="https://docs.wildfly.org/galleon/#_built_in_and_product_specific_options">Galleon guide</a>.
      */
     @Parameter(required = false, alias = "galleon-options")
     Map<String, String> galleonOptions = Collections.emptyMap();
