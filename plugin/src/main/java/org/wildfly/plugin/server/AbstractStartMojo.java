@@ -72,7 +72,7 @@ public abstract class AbstractStartMojo extends AbstractServerConnection {
      * Starts the server with debugging enabled.
      */
     @Parameter(property = "wildfly.debug", defaultValue = "false")
-    protected boolean debug;
+    private boolean debug;
 
     /**
      * Sets the hostname to listen on for debugging. An {@code *} means all hosts.
@@ -304,5 +304,9 @@ public abstract class AbstractStartMojo extends AbstractServerConnection {
             }
         }
         return super.getManagementHostName();
+    }
+
+    protected boolean isDebugEnabled() {
+        return debug;
     }
 }
