@@ -229,6 +229,12 @@ public class DevMojo extends AbstractServerStartMojo {
     private CommandExecutor commandExecutor;
 
     /**
+     * Starts the server with debugging enabled.
+     */
+    @Parameter(property = "wildfly.debug", defaultValue = "true")
+    private boolean debug;
+
+    /**
      * The CLI commands to execute before the deployment is deployed.
      */
     @Parameter(property = PropertyNames.COMMANDS)
@@ -535,7 +541,7 @@ public class DevMojo extends AbstractServerStartMojo {
 
     @Override
     protected CommandBuilder createCommandBuilder(final Path jbossHome) throws MojoExecutionException {
-        return createStandaloneCommandBuilder(jbossHome, serverConfig).setDebug();
+        return createStandaloneCommandBuilder(jbossHome, serverConfig);
     }
 
     /**
@@ -676,6 +682,11 @@ public class DevMojo extends AbstractServerStartMojo {
     @Override
     protected boolean isAllowProvisioning() {
         return overwriteProvisionedServer || super.isAllowProvisioning();
+    }
+
+    @Override
+    protected boolean isDebugEnabled() {
+        return debug;
     }
 
     private ScanResults scanDeployment(GalleonBuilder pm) throws Exception {

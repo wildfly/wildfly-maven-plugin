@@ -141,7 +141,7 @@ public abstract class AbstractServerStartMojo extends AbstractStartMojo {
         if (Utils.isNotNullOrEmpty(javaOpts)) {
             commandBuilder.setJavaOptions(javaOpts);
         }
-        if (debug) {
+        if (isDebugEnabled()) {
             commandBuilder.addJavaOptions(String.format("-agentlib:jdwp=transport=dt_socket,server=y,suspend=%s,address=%s:%d",
                     debugSuspend ? "y" : "n", debugHost, debugPort));
         }
