@@ -58,6 +58,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.galleon.ProvisioningException;
 import org.jboss.galleon.api.GalleonBuilder;
@@ -524,14 +525,15 @@ public class DevMojo extends AbstractServerStartMojo {
     }
 
     @Override
-    protected MavenRepoManager createMavenRepoManager() throws MojoExecutionException {
+    protected MavenRepoManager createMavenRepoManager(final List<RemoteRepository> effectiveRepositories)
+            throws MojoExecutionException {
         if (channels == null || channels.isEmpty()) {
             return offlineProvisioning ? new MavenArtifactRepositoryManager(repoSystem, session)
-                    : new MavenArtifactRepositoryManager(repoSystem, session, repositories);
+                    : new MavenArtifactRepositoryManager(repoSystem, session, effectiveRepositories);
         } else {
             try {
                 return new ChannelMavenArtifactRepositoryManager(channels,
-                        repoSystem, session, repositories,
+                        repoSystem, session, effectiveRepositories,
                         getLog(), offlineProvisioning);
             } catch (MalformedURLException | UnresolvedMavenArtifactException ex) {
                 throw new MojoExecutionException(ex.getLocalizedMessage(), ex);

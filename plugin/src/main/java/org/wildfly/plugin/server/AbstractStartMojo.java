@@ -140,12 +140,15 @@ public abstract class AbstractStartMojo extends AbstractServerConnection {
         // Setting the mavenRepoManager is not thread-safe, however creating it more than once won't hurt anything
         if (initialized.compareAndSet(false, true)) {
             MavenRepositoriesEnricher.enrich(mavenSession, project, repositories);
-            mavenRepoManager = createMavenRepoManager();
+            final List<RemoteRepository> effectiveRepositories = MavenRepositoriesEnricher
+                    .injectSessionProxies(repoSystem, session, repositories);
+            mavenRepoManager = createMavenRepoManager(effectiveRepositories);
         }
     }
 
-    protected MavenRepoManager createMavenRepoManager() throws MojoExecutionException {
-        return new MavenArtifactRepositoryManager(repoSystem, session, repositories);
+    protected MavenRepoManager createMavenRepoManager(final List<RemoteRepository> effectiveRepositories)
+            throws MojoExecutionException {
+        return new MavenArtifactRepositoryManager(repoSystem, session, effectiveRepositories);
     }
 
     protected abstract Path getServerHome() throws MojoExecutionException, MojoFailureException;

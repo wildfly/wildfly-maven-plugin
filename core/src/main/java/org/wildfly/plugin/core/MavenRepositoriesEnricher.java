@@ -19,6 +19,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Proxy;
 import org.apache.maven.settings.Settings;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 
@@ -100,6 +102,36 @@ public class MavenRepositoriesEnricher {
                 repositories.add(builder.build());
             }
         }
+    }
+
+    /**
+     * Returns the repository list to use for resolution, with the session-level
+     * proxy/mirror/auth injected onto every entry.
+     *
+     * Aether's HttpTransporter reads {@code repository.getProxy()} directly
+     * and never consults {@code session.getProxySelector()}. The Maven CLI
+     * normally copies the session-level proxy onto each repository via
+     * {@link RepositorySystem#newResolutionRepositories} before invoking a
+     * Mojo. Embedded callers (plugin test harness, custom invokers) skip
+     * that step, so the proxy is dropped before Aether sees the repository.
+     * Call this helper after {@link #enrich} so downstream resolves honour
+     * the settings.xml proxy regardless of the calling context.
+     *
+     * The input list is treated as read-only and never mutated. When injection
+     * cannot or need not be performed (null inputs, empty list), the input
+     * list itself is returned unchanged.
+     *
+     * @param repoSystem   the Aether repository system (may be {@code null} - input list is returned unchanged)
+     * @param session      the Aether repository session (may be {@code null} - input list is returned unchanged)
+     * @param repositories the repository list to enrich; never mutated, may be {@code null} or empty
+     * @return the enriched repository list when injection is possible; otherwise the original input list
+     */
+    public static List<RemoteRepository> injectSessionProxies(RepositorySystem repoSystem,
+            RepositorySystemSession session, List<RemoteRepository> repositories) {
+        if (repoSystem == null || session == null || repositories == null || repositories.isEmpty()) {
+            return repositories;
+        }
+        return repoSystem.newResolutionRepositories(session, repositories);
     }
 
     private static Set<String> getUrls(List<RemoteRepository> repositories) {
