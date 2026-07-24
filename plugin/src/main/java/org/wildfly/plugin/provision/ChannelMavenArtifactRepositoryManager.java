@@ -19,8 +19,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
@@ -30,8 +32,6 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.resolution.ArtifactRequest;
-import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
@@ -41,6 +41,7 @@ import org.jboss.galleon.universe.maven.MavenArtifact;
 import org.jboss.galleon.universe.maven.MavenUniverseException;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
 import org.jboss.galleon.util.ZipUtils;
+import org.wildfly.channel.ArtifactCoordinate;
 import org.wildfly.channel.ArtifactTransferException;
 import org.wildfly.channel.Channel;
 import org.wildfly.channel.ChannelManifest;
@@ -62,7 +63,6 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
     private final ChannelSession channelSession;
     private final List<Channel> channels = new ArrayList<>();
     private final Log log;
-    private final Path localCachePath;
     private final RepositorySystem system;
     private final DefaultRepositorySystemSession session;
     private final List<RemoteRepository> repositories;
@@ -100,7 +100,6 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
             factory = new VersionResolverFactory(system, session, mapper);
         }
         channelSession = new ChannelSession(this.channels, factory);
-        localCachePath = contextSession.getLocalRepositoryManager().getRepository().getBasedir().toPath();
         this.system = system;
     }
 
@@ -122,45 +121,83 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
      * and this override is unused.
      *
      * <p>
-     * Pre-fetch failures are non-fatal: any artifact not pre-fetched falls
-     * through to the per-artifact {@link #resolve(MavenArtifact)} path which keeps
-     * the existing channel/direct-resolve fallback semantics.
+     * The set of artifacts must be split in 2 groups, the ones that require resolution from the channel,
+     * the ones that can be resolved directly. The failure handling is different in the two groups.
      */
     @Override
     public void resolveAll(Collection<MavenArtifact> artifacts) throws MavenUniverseException {
         if (artifacts == null || artifacts.isEmpty()) {
             return;
         }
-        List<ArtifactRequest> requests = new ArrayList<>(artifacts.size());
-        for (MavenArtifact a : artifacts) {
-            if (a.getVersion() == null || a.getVersion().isEmpty()) {
-                continue;
-            }
-            DefaultArtifact ax = new DefaultArtifact(a.getGroupId(), a.getArtifactId(),
-                    a.getClassifier() == null ? "" : a.getClassifier(),
-                    a.getExtension() == null ? "jar" : a.getExtension(),
-                    a.getVersion());
-            ArtifactRequest req = new ArtifactRequest();
-            req.setArtifact(ax);
-            req.setRepositories(repositories);
-            requests.add(req);
+        // split the artifacts into requiring channels and not requiring channels
+        final List<MavenArtifact> artifactsRequiringChannels = artifacts.stream()
+                .filter(a -> requiresChannel(a))
+                .collect(Collectors.toList());
+        final List<MavenArtifact> artifactsNotRequiringChannels = artifacts.stream()
+                .filter(a -> !requiresChannel(a))
+                .collect(Collectors.toList());
+        // bulk resolve artifacts requiring channels - if any fail, throw exception
+        MavenArtifactMapper mapper = new MavenArtifactMapper(artifactsRequiringChannels);
+        List<org.wildfly.channel.MavenArtifact> channelArtifacts = channelSession
+                .resolveMavenArtifacts(mapper.toChannelArtifacts());
+        mapper.applyResolution(channelArtifacts);
+
+        // bulk resolve other artifacts, failure are expected and resolution occurs with the original version
+        final MavenArtifactMapper mapperNotRequiringChannels = new MavenArtifactMapper(artifactsNotRequiringChannels);
+        resolveArtifactsWithFallbackVersions(mapperNotRequiringChannels, mapperNotRequiringChannels.toChannelArtifacts());
+    }
+
+    private void resolveArtifactsWithFallbackVersions(MavenArtifactMapper mapperNotRequiringChannels,
+            List<ArtifactCoordinate> coordinates) throws MavenUniverseException {
+        List<org.wildfly.channel.MavenArtifact> channelArtifacts;
+        try {
+            channelArtifacts = channelSession.resolveMavenArtifacts(coordinates);
+            mapperNotRequiringChannels.applyResolution(channelArtifacts);
+        } catch (ArtifactTransferException e) {
+            throw new MavenUniverseException(e.getLocalizedMessage(), e);
+        } catch (NoStreamFoundException e) {
+            handleMissingStreams(mapperNotRequiringChannels, coordinates, e);
+        } catch (UnresolvedMavenArtifactException e) {
+            throw new MavenUniverseException(e.getLocalizedMessage(), e);
         }
-        if (!requests.isEmpty()) {
-            try {
-                system.resolveArtifacts(session, requests);
-            } catch (ArtifactResolutionException ex) {
-                // Partial failure is fine: the per-artifact resolve below retries the misses
-                // through the channel/direct-resolve fallback.
-                if (log.isDebugEnabled()) {
-                    log.debug("Bulk pre-fetch reported missing artifacts; falling back to per-artifact resolve. "
-                            + ex.getMessage());
+    }
+
+    /**
+     * The failed artifacts are resolved directly, the others are resolved in bulk.
+     *
+     * @param mapperNotRequiringChannels
+     * @param coordinates
+     * @param e
+     * @throws MavenUniverseException
+     */
+    private void handleMissingStreams(MavenArtifactMapper mapperNotRequiringChannels, List<ArtifactCoordinate> coordinates,
+            UnresolvedMavenArtifactException e) throws MavenUniverseException {
+        final Set<ArtifactCoordinate> unresolvedArtifacts = e.getUnresolvedArtifacts();
+        // resolve unresolvedArtifacts directly
+        for (ArtifactCoordinate a : unresolvedArtifacts) {
+            final List<MavenArtifact> missingArtifacts = mapperNotRequiringChannels.get(
+                    new ArtifactCoordinate(a.getGroupId(), a.getArtifactId(),
+                            a.getExtension(), a.getClassifier(), a.getVersion()));
+            for (MavenArtifact missingArtifact : missingArtifacts) {
+                if (missingArtifact.getVersion() == null) {
+                    throw new MavenUniverseException(e.getLocalizedMessage(), e);
                 }
+                final org.wildfly.channel.MavenArtifact mavenArtifact = channelSession.resolveDirectMavenArtifact(
+                        missingArtifact.getGroupId(), missingArtifact.getArtifactId(),
+                        missingArtifact.getExtension(), missingArtifact.getClassifier(), missingArtifact.getVersion());
+                missingArtifact.setPath(mavenArtifact.getFile().toPath());
             }
         }
-        // Fall back to the per-artifact path; cached artifacts are now local hits.
-        for (MavenArtifact a : artifacts) {
-            resolve(a);
+        // remove unresolvedArtifacts from the list of artifact to resolve
+        final List<ArtifactCoordinate> requests = new ArrayList<>();
+        for (ArtifactCoordinate a : coordinates) {
+            if (!unresolvedArtifacts.contains(
+                    new ArtifactCoordinate(a.getGroupId(), a.getArtifactId(), a.getExtension(), a.getClassifier(), ""))) {
+                requests.add(a);
+            }
         }
+        // try resolving the new list, handle missing artifacts (e.g. wrong versions)
+        resolveArtifactsWithFallbackVersions(mapperNotRequiringChannels, requests);
     }
 
     @Override
@@ -209,6 +246,19 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
             } else {
                 throw new MavenUniverseException(ex.getLocalizedMessage(), ex);
             }
+        }
+    }
+
+    private boolean requiresChannel(MavenArtifact artifact) {
+        // if the Galleon pack hasn't defined the version, it needs to come from channel
+        if (artifact.getVersion() == null || artifact.getVersion().isEmpty()) {
+            return true;
+        }
+        boolean requireChannel = Boolean.parseBoolean(artifact.getMetadata().get(REQUIRE_CHANNEL_FOR_ALL_ARTIFACT));
+        try {
+            return requireChannel || fpRequireChannel(artifact);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -342,5 +392,4 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
         }
         return rangeResult;
     }
-
 }
