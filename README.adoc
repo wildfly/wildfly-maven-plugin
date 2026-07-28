@@ -68,6 +68,11 @@ By default, the release version cannot contain `SNAPSHOT` and the development ve
 | No
 | Executes the release in as a dry-run. Nothing will be updated or pushed.
 
+| `--no-push`
+| No
+| Executes the release in, but doesn't actually push the changes to GitHub or publish the release on Maven Central.
+Any next steps should you want to continue the release will need to be manual.
+
 | `-v`, `--verbose`
 | No
 | Prints verbose output.
