@@ -250,14 +250,14 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
                     " of %s:%s", project.getGroupId(), project.getArtifactId()));
             return;
         }
-        enrichRepositories();
+        final List<RemoteRepository> effectiveRepositories = enrichRepositories();
         if (channels == null || channels.isEmpty()) {
             artifactResolver = offlineProvisioning ? new MavenArtifactRepositoryManager(repoSystem, repoSession)
-                    : new MavenArtifactRepositoryManager(repoSystem, repoSession, repositories);
+                    : new MavenArtifactRepositoryManager(repoSystem, repoSession, effectiveRepositories);
         } else {
             try {
                 artifactResolver = new ChannelMavenArtifactRepositoryManager(channels,
-                        repoSystem, repoSession, repositories,
+                        repoSystem, repoSession, effectiveRepositories,
                         getLog(), offlineProvisioning);
             } catch (MalformedURLException | UnresolvedMavenArtifactException ex) {
                 throw new MojoExecutionException(ex.getLocalizedMessage(), ex);
@@ -297,8 +297,9 @@ abstract class AbstractProvisionServerMojo extends AbstractMojo {
         }
     }
 
-    protected void enrichRepositories() throws MojoExecutionException {
+    protected List<RemoteRepository> enrichRepositories() throws MojoExecutionException {
         MavenRepositoriesEnricher.enrich(session, project, repositories);
+        return MavenRepositoriesEnricher.injectSessionProxies(repoSystem, repoSession, repositories);
     }
 
     protected abstract String getGoal();
