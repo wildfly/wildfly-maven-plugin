@@ -446,7 +446,15 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         }
     }
 
-    private Map<String, Path> getDeployments() throws MojoExecutionException {
+    /**
+     * Returns the additional deployments resolved from the project dependencies. The key is the file name of the
+     * deployment and the value is the path to the resolved artifact.
+     *
+     * @return the additional deployments or an empty map if no additional deployments are configured
+     *
+     * @throws MojoExecutionException if a dependency could not be resolved
+     */
+    protected Map<String, Path> getDeployments() throws MojoExecutionException {
         // Check if we've already processed the deployments
         if (deployments != null) {
             return deployments;

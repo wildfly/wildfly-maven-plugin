@@ -1,0 +1,42 @@
+<!--
+    ~ Copyright The WildFly Authors
+    ~ SPDX-License-Identifier: Apache-2.0
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>testing</groupId>
+    <artifactId>testing</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <dependencies>
+        <dependency>
+            <groupId>testing</groupId>
+            <artifactId>dummy</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/dummy.jar</systemPath>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <configuration>
+                    <!-- Written by the test from image-extra-deployments-provisioning.xml -->
+                    <provisioning-file>target/image-extra-deployments-provisioning.xml</provisioning-file>
+                    <provisioning-dir>image-extra-deployments-no-primary-server</provisioning-dir>
+                    <record-provisioning-state>true</record-provisioning-state>
+                    <included-dependencies>
+                        <included>testing:dummy</included>
+                    </included-dependencies>
+                    <group>wildfly-image-extra-deployments-no-primary-maven-plugin</group>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

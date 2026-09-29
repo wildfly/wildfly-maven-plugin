@@ -12,10 +12,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.inject.Inject;
 
@@ -42,16 +44,28 @@ import org.wildfly.plugin.core.Constants;
  * The {@code image} goal relies on a Docker binary to execute all image commands (build, login, push).
  *
  * <p>
+ * Additional deployments resolved from the project dependencies, see the {@code package} goal, are copied to the
+ * {@code standalone/deployments} directory of the image in their own layer after the server layer.
+ * </p>
+ *
+ * <p>
  * Note that if a WildFly Bootable JAR is packaged, it is ignored when building the image.
  * </p>
  *
  * @since 4.0
  */
-@Mojo(name = "image", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME, defaultPhase = LifecyclePhase.PACKAGE)
+// Note we need the ResolutionScope to be "test" in order for the MavenProject.getArtifacts() to return all dependencies
+@Mojo(name = "image", requiresDependencyResolution = ResolutionScope.TEST, defaultPhase = LifecyclePhase.PACKAGE)
 @SuppressWarnings({ "deprecated", "removal" })
 public class ApplicationImageMojo extends PackageServerMojo {
 
     public static final int DOCKER_CMD_CHECK_TIMEOUT = 3000;
+
+    /**
+     * The directory, relative to the build directory, the additional deployments are copied to. The build directory is
+     * the context of the image build.
+     */
+    private static final String IMAGE_DEPLOYMENTS_DIR = "image-deployments";
 
     /**
      * Provides a reference to the settings file.
@@ -256,6 +270,11 @@ public class ApplicationImageMojo extends PackageServerMojo {
         // This allows to create 2 different Docker layers (1 for the server and 1 for the deployments)
         this.skipDeployment = true;
 
+        if (!bootableJar) {
+            // Fail before the server is provisioned if the additional deployments cannot be copied
+            checkImageDeploymentsDir();
+        }
+
         super.execute();
 
         if (image == null) {
@@ -398,7 +417,8 @@ public class ApplicationImageMojo extends PackageServerMojo {
             jbossHome = targetDir.relativize(jbossHome);
         }
 
-        String targetName = getDeploymentTargetName();
+        final List<String> extraDeployments = copyExtraDeployments(targetDir);
+        final Path primaryDeployment = getDeploymentContent();
 
         // Create the Dockerfile content
         final StringBuilder dockerfileContent = new StringBuilder();
@@ -409,9 +429,20 @@ public class ApplicationImageMojo extends PackageServerMojo {
                             .append(value.replace("\"", "\\\"")).append("\"\n"));
         }
         dockerfileContent.append("COPY --chown=jboss:root ").append(jbossHome).append(" $JBOSS_HOME\n")
-                .append("RUN chmod -R ug+rwX $JBOSS_HOME\n")
-                .append("COPY --chown=jboss:root ").append(getDeploymentContent().getFileName())
-                .append(" $JBOSS_HOME/standalone/deployments/").append(targetName);
+                .append("RUN chmod -R ug+rwX $JBOSS_HOME");
+        // The additional deployments are copied in one layer before the primary deployment as they are expected to
+        // change less often. Only the files copied by this build are listed.
+        if (!extraDeployments.isEmpty()) {
+            dockerfileContent.append('\n').append("COPY --chown=jboss:root");
+            for (String name : extraDeployments) {
+                dockerfileContent.append(' ').append(IMAGE_DEPLOYMENTS_DIR).append('/').append(name);
+            }
+            dockerfileContent.append(" $JBOSS_HOME/standalone/deployments/");
+        }
+        if (primaryDeployment != null) {
+            dockerfileContent.append('\n').append("COPY --chown=jboss:root ").append(primaryDeployment.getFileName())
+                    .append(" $JBOSS_HOME/standalone/deployments/").append(getDeploymentTargetName());
+        }
 
         final List<String> serverArgs = new ArrayList<>();
         if (!layers.isEmpty() && !layersConfigurationFileName.equals(Constants.STANDALONE_XML)) {
@@ -425,6 +456,59 @@ public class ApplicationImageMojo extends PackageServerMojo {
         }
 
         Files.writeString(targetDir.resolve("Dockerfile"), dockerfileContent, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Copies the additional deployments into the build directory, which is the context of the image build. Existing
+     * files are not deleted, only files with the name of an additional deployment are replaced.
+     *
+     * @param targetDir the build directory
+     *
+     * @return the names of the copied deployments sorted by name
+     */
+    private List<String> copyExtraDeployments(final Path targetDir) throws IOException, MojoExecutionException {
+        final Path imageDeploymentsDir = targetDir.resolve(IMAGE_DEPLOYMENTS_DIR);
+        final List<String> names = new ArrayList<>();
+        // Sort the deployments to generate a reproducible Dockerfile
+        for (Map.Entry<String, Path> deployment : new TreeMap<>(getDeployments()).entrySet()) {
+            if (Files.notExists(deployment.getValue())) {
+                getLog().warn("The file " + deployment.getValue() + " doesn't exist, it will be not deployed.");
+                continue;
+            }
+            final Path target = imageDeploymentsDir.resolve(deployment.getKey());
+            Files.createDirectories(imageDeploymentsDir);
+            getLog().info("Copy deployment " + deployment.getValue() + " to " + target);
+            Files.copy(deployment.getValue(), target, StandardCopyOption.REPLACE_EXISTING);
+            names.add(deployment.getKey());
+        }
+        return names;
+    }
+
+    /**
+     * Checks the directory the additional deployments are copied to does not overlap with a configured directory.
+     *
+     * @throws MojoExecutionException if the directories overlap
+     */
+    private void checkImageDeploymentsDir() throws MojoExecutionException {
+        if (getDeployments().isEmpty()) {
+            return;
+        }
+        final Path targetDir = Paths.get(project.getBuild().getDirectory());
+        final Path imageDeploymentsDir = targetDir.resolve(IMAGE_DEPLOYMENTS_DIR).toAbsolutePath().normalize();
+        final List<Path> configuredDirs = new ArrayList<>();
+        configuredDirs.add(targetDir.resolve(provisioningDir));
+        for (String dir : extraServerContentDirs) {
+            configuredDirs.add(resolvePath(project, Paths.get(dir)));
+        }
+        for (Path dir : configuredDirs) {
+            final Path configuredDir = dir.toAbsolutePath().normalize();
+            if (configuredDir.startsWith(imageDeploymentsDir) || imageDeploymentsDir.startsWith(configuredDir)) {
+                throw new MojoExecutionException(String.format(
+                        "The directory %s is used to copy the additional deployments for the image and must not overlap "
+                                + "with the configured directory %s.",
+                        imageDeploymentsDir, configuredDir));
+            }
+        }
     }
 
     private void generateBootableJarDockerfile(String runtimeImage, Path targetDir, String bootableJar)
