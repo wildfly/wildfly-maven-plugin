@@ -80,7 +80,7 @@ public class UndeployMojo extends AbstractServerConnection {
     /**
      * Indicates whether undeploy should ignore the undeploy operation if the deployment does not exist.
      */
-    @Parameter(defaultValue = "true", property = PropertyNames.IGNORE_MISSING_DEPLOYMENT)
+    @Parameter(alias = "ignore-missing-deployment", defaultValue = "true", property = PropertyNames.IGNORE_MISSING_DEPLOYMENT)
     private boolean ignoreMissingDeployment;
 
     /**

@@ -18,7 +18,7 @@ abstract class AbstractAppDeployment extends AbstractDeployment {
     /**
      * The target directory the application to be deployed is located.
      */
-    @Parameter(defaultValue = "${project.build.directory}/", property = PropertyNames.DEPLOYMENT_TARGET_DIR)
+    @Parameter(alias = "target-dir", defaultValue = "${project.build.directory}/", property = PropertyNames.DEPLOYMENT_TARGET_DIR)
     private File targetDir;
 
     /**

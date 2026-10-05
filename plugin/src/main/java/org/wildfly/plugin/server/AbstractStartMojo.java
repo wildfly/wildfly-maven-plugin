@@ -77,19 +77,19 @@ public abstract class AbstractStartMojo extends AbstractServerConnection {
     /**
      * Sets the hostname to listen on for debugging. An {@code *} means all hosts.
      */
-    @Parameter(property = "wildfly.debug.host", defaultValue = "*")
+    @Parameter(alias = "debug-host", property = "wildfly.debug.host", defaultValue = "*")
     protected String debugHost;
 
     /**
      * Sets the port the debugger should listen on.
      */
-    @Parameter(property = "wildfly.debug.port", defaultValue = "8787")
+    @Parameter(alias = "debug-port", property = "wildfly.debug.port", defaultValue = "8787")
     protected int debugPort;
 
     /**
      * Indicates whether the server should suspend itself until a debugger is attached.
      */
-    @Parameter(property = "wildfly.debug.suspend", defaultValue = "false")
+    @Parameter(alias = "debug-suspend", property = "wildfly.debug.suspend", defaultValue = "false")
     protected boolean debugSuspend;
 
     /**

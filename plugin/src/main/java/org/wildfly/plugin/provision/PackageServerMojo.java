@@ -199,7 +199,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     /**
      * Skip deploying the deployments after the server is provisioned ({@code false} by default).
      */
-    @Parameter(defaultValue = "false", property = PropertyNames.SKIP_PACKAGE_DEPLOYMENT)
+    @Parameter(alias = "skip-deployment", defaultValue = "false", property = PropertyNames.SKIP_PACKAGE_DEPLOYMENT)
     protected boolean skipDeployment;
 
     /**

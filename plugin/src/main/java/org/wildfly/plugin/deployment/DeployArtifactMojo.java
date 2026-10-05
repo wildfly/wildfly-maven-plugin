@@ -30,13 +30,13 @@ public class DeployArtifactMojo extends AbstractDeployment {
     /**
      * The artifact to deploys groupId
      */
-    @Parameter
+    @Parameter(alias = "group-id")
     private String groupId;
 
     /**
      * The artifact to deploys artifactId
      */
-    @Parameter
+    @Parameter(alias = "artifact-id")
     private String artifactId;
 
     /**
