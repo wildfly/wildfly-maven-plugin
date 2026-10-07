@@ -10,6 +10,9 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+export GPG_TTY=$(tty)
+echo TTY: $GPG_TTY
+
 # Formatting functions
 
 fail() {
