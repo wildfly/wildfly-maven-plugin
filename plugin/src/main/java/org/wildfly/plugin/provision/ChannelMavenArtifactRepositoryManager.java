@@ -14,7 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,28 +77,30 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
         this.log = log;
         session = new DefaultRepositorySystemSession(contextSession);
         this.repositories = repositories;
-        session.setOffline(offline);
+        // Do not override an offline Maven session (e.g. mvn -o) when offline provisioning is not requested
+        session.setOffline(offline || contextSession.isOffline());
+        // The remote repositories must be passed even in offline mode as artifacts in the local repository are tracked
+        // with the id of the remote repository they were downloaded from and are only considered available if a
+        // repository with the same id is part of the request. The offline session prevents any network access.
+        // The channels recorded in the provisioned server do not include the repositories in offline mode.
+        List<Channel> resolutionChannels = new ArrayList<>();
         for (ChannelConfiguration channelConfiguration : channels) {
-            this.channels.add(channelConfiguration.toChannel(offline ? Collections.emptyList() : repositories));
+            resolutionChannels.add(channelConfiguration.toChannel(repositories));
+            this.channels.add(channelConfiguration.toChannel(offline ? List.of() : repositories));
         }
-        VersionResolverFactory factory;
-        if (offline) {
-            factory = new VersionResolverFactory(system, session);
-        } else {
-            Map<String, RemoteRepository> mapping = new HashMap<>();
-            for (RemoteRepository r : repositories) {
-                mapping.put(r.getId(), r);
+        Map<String, RemoteRepository> mapping = new HashMap<>();
+        for (RemoteRepository remoteRepository : repositories) {
+            mapping.put(remoteRepository.getId(), remoteRepository);
+        }
+        Function<Repository, RemoteRepository> mapper = repository -> {
+            RemoteRepository remoteRepository = mapping.get(repository.getId());
+            if (remoteRepository == null) {
+                remoteRepository = DEFAULT_REPOSITORY_MAPPER.apply(repository);
             }
-            Function<Repository, RemoteRepository> mapper = r -> {
-                RemoteRepository rep = mapping.get(r.getId());
-                if (rep == null) {
-                    rep = DEFAULT_REPOSITORY_MAPPER.apply(r);
-                }
-                return rep;
-            };
-            factory = new VersionResolverFactory(system, session, mapper);
-        }
-        channelSession = new ChannelSession(this.channels, factory);
+            return remoteRepository;
+        };
+        VersionResolverFactory factory = new VersionResolverFactory(system, session, mapper);
+        channelSession = new ChannelSession(resolutionChannels, factory);
         this.system = system;
     }
 
