@@ -93,7 +93,7 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     /**
      * The properties files to use when executing CLI scripts or commands.
      */
-    @Parameter
+    @Parameter(alias = "properties-files")
     private List<File> propertiesFiles = new ArrayList<>();
 
     /**
