@@ -526,7 +526,7 @@ public class DevMojo extends AbstractServerStartMojo {
     @Override
     protected MavenRepoManager createMavenRepoManager() throws MojoExecutionException {
         if (channels == null || channels.isEmpty()) {
-            return offlineProvisioning ? new MavenArtifactRepositoryManager(repoSystem, session)
+            return offlineProvisioning ? MavenArtifactRepositoryManager.offline(repoSystem, session, repositories)
                     : new MavenArtifactRepositoryManager(repoSystem, session, repositories);
         } else {
             try {
