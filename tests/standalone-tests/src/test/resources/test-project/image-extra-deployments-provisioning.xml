@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    ~ Copyright The WildFly Authors
+    ~ SPDX-License-Identifier: Apache-2.0
+-->
+<!--
+    Galleon configuration for an immutable image: the deployment scanner is disabled and the additional deployment,
+    which the image goal copies to standalone/deployments, is registered as an unmanaged deployment.
+    The feature-pack location is replaced by the test.
+-->
+<installation xmlns="urn:jboss:galleon:provisioning:3.0">
+    <feature-pack location="${wildfly.test.universe.location}">
+        <default-configs inherit="false" />
+        <packages inherit="false" />
+    </feature-pack>
+    <config model="standalone" name="standalone.xml">
+        <layers>
+            <include name="jaxrs-server" />
+        </layers>
+        <feature spec="subsystem.deployment-scanner.scanner">
+            <param name="scanner" value="default" />
+            <param name="scan-enabled" value="false" />
+        </feature>
+        <feature spec="deployment">
+            <param name="deployment" value="dummy.jar" />
+            <param name="content" value="[{path=deployments/dummy.jar,relative-to=jboss.server.base.dir,archive=true}]" />
+            <param name="enabled" value="true" />
+        </feature>
+    </config>
+    <options>
+        <option name="optional-packages" value="passive+" />
+        <!-- Fork the process to avoid a two controller-client's from being on the class path -->
+        <option name="jboss-fork-embedded" value="true" />
+    </options>
+</installation>

@@ -164,3 +164,41 @@ for supported versions. The below example uses the Java 21 version of the image 
 ...
 </project>
 ```
+#[[##]]# Additional deployments
+
+Additional deployments resolved from the project dependencies with the `<included-dependencies/>`,
+`<excluded-dependencies/>`, `<included-dependency-scope/>` and `<excluded-dependency-scope/>` configuration properties,
+see the [package goal example](./package-example.html), are added to the application image as well. As with the
+`package` goal they are copied to the `standalone/deployments` directory of the server. The `image` goal copies them in
+their own image layer after the server layer.
+
+By default, the deployment scanner deploys the content of the `standalone/deployments` directory when the server
+starts. The scanner writes marker files into this directory and therefore requires a writable file system. For an
+immutable image, you can disable the deployment scanner and register the deployments as unmanaged deployments in the
+Galleon configuration used to provision the server, for example with a `provisioning-file`:
+
+```xml
+<installation xmlns="urn:jboss:galleon:provisioning:3.0">
+    <feature-pack location="wildfly@maven(org.jboss.universe:community-universe)">
+        <default-configs inherit="false"/>
+        <packages inherit="false"/>
+    </feature-pack>
+    <config model="standalone" name="standalone.xml">
+        <layers>
+            <include name="jaxrs-server"/>
+        </layers>
+        <feature spec="subsystem.deployment-scanner.scanner">
+            <param name="scanner" value="default"/>
+            <param name="scan-enabled" value="false"/>
+        </feature>
+        <feature spec="deployment">
+            <param name="deployment" value="my-app.war"/>
+            <param name="content" value="[{path=deployments/my-app-1.0.0.war,relative-to=jboss.server.base.dir,archive=true}]"/>
+            <param name="enabled" value="true"/>
+        </feature>
+    </config>
+</installation>
+```
+
+The `path` refers to the file name of the resolved artifact, `my-app-1.0.0.war` in this example. The name of the
+deployment, `my-app.war`, is also used as the runtime name and determines the context root.
