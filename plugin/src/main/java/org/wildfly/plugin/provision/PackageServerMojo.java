@@ -471,7 +471,8 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
                 .map(PackageServerMojo::createKey)
                 .collect(Collectors.toSet());
         // Create a filter to only allow artifacts which are included as dependencies
-        final ArtifactFilter dependencyFilter = artifact -> dependenciesIds.contains(createKey(artifact));
+        final ArtifactFilter dependencyFilter = artifact -> dependenciesIds.contains(createKey(artifact, artifact.getVersion()))
+                || dependenciesIds.contains(createKey(artifact, artifact.getBaseVersion()));
         filters.add(dependencyFilter);
         if (!includedDependencies.isEmpty()) {
             filters.add(new PatternIncludesArtifactFilter(includedDependencies));
@@ -752,7 +753,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         return key.toString();
     }
 
-    private static String createKey(final Artifact artifact) {
+    private static String createKey(final Artifact artifact, final String version) {
         final StringBuilder key = new StringBuilder()
                 .append(artifact.getGroupId())
                 .append(':')
@@ -764,7 +765,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
                     .append(artifact.getClassifier());
         }
         key.append(':')
-                .append(artifact.getVersion());
+                .append(version);
         return key.toString();
     }
 
