@@ -135,7 +135,10 @@ public class ExtraDeploymentsImageTest extends AbstractProjectMojoTest {
                     "COPY --chown=jboss:root image-deployments/dummy.jar $JBOSS_HOME/standalone/deployments/"),
                     dockerfileLines.subList(1, dockerfileLines.size()));
 
-            final String tmpfsOptions = ":rw,uid=185,gid=0,mode=0770";
+            String tmpfsOptions = ":rw,uid=185,gid=0,mode=0770";
+            if ("podman".equals(binary)) {
+                tmpfsOptions = "rw,mode=0770,U";
+            }
             execute(binary, "run", "-d", "--name", containerName, "--read-only",
                     "--tmpfs", "/tmp:rw,mode=1777",
                     "--tmpfs", IMAGE_JBOSS_HOME + "/standalone/data" + tmpfsOptions,
