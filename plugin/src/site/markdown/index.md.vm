@@ -65,6 +65,15 @@ Of course, patches are welcome, too. Contributors can check out the project from
 The WildFly Maven plugin uses WildFly Glow to generate provisioning configuration. For more information on WildFly Glow
 you see the [documentation](https://docs.wildfly.org/wildfly-glow/).
 
+#[[##]]# SBOM generation
+
+Starting with WildFly 42.0.0.Final, the SBOM file ``sbom.cdx.json.gz`` (a gzip-compressed CycloneDX JSON file) 
+is generated during server provisioning ([${pluginPrefix}:provision](./provision-mojo.html) and [${pluginPrefix}:package](./package-mojo.html) goals).
+For a server installation, the file is located at the root directory. For a Bootable JAR, 
+it is located at ``META-INF/sbom/sbom.cdx.json.gz`` inside the jar. 
+The WildFly Galleon plugins [documentation](http://docs.wildfly.org/galleon-plugins/#_galleon_plugins) 
+describes the file format and the usage of the ``jboss-cyclonedx[-*]`` Galleon options.
+
 #[[##]]# Examples
 
   To provide you with better understanding of some usages of the ${project.name}, you can take a look into the

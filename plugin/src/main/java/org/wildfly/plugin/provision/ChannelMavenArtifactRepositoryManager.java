@@ -99,7 +99,7 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
             }
             return remoteRepository;
         };
-        VersionResolverFactory factory = new VersionResolverFactory(system, session, mapper);
+        VersionResolverFactory factory = new VersionResolverFactory(system, session, null, mapper);
         channelSession = new ChannelSession(resolutionChannels, factory);
         this.system = system;
     }
