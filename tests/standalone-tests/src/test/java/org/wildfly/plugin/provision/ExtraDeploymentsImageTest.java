@@ -137,7 +137,7 @@ public class ExtraDeploymentsImageTest extends AbstractProjectMojoTest {
 
             String tmpfsOptions = ":rw,uid=185,gid=0,mode=0770";
             if ("podman".equals(binary)) {
-                tmpfsOptions = "rw,mode=0770,U";
+                tmpfsOptions = ":rw,mode=0770,U";
             }
             execute(binary, "run", "-d", "--name", containerName, "--read-only",
                     "--tmpfs", "/tmp:rw,mode=1777",
