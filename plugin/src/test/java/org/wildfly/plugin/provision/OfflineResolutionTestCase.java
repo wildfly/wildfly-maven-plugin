@@ -10,12 +10,11 @@ import java.nio.file.Path;
 import java.util.List;
 
 import org.apache.maven.plugin.logging.SystemStreamLog;
-import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
-import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.apache.maven.repository.supplier.RepositorySystemSupplier;
+import org.apache.maven.repository.supplier.SessionBuilderSupplier;
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.impl.DefaultServiceLocator;
-import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -64,20 +63,14 @@ public class OfflineResolutionTestCase {
     private Path localRepository;
 
     private RepositorySystem system;
-    private DefaultRepositorySystemSession session;
+    private RepositorySystemSession session;
     private List<RemoteRepository> repositories;
 
     @BeforeEach
     public void setUp() throws Exception {
-        final DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
-        // Maven Resolver 1.x only enforces the availability of artifacts in the local repository when a remote
-        // repository filter is active, while Maven Resolver 2 always enforces it. Use a filter accepting everything
-        // to get the same behavior as Maven Resolver 2.
-        locator.setServices(RemoteRepositoryFilterManager.class, s -> ACCEPT_ALL);
-        system = locator.getService(RepositorySystem.class);
-        session = MavenRepositorySystemUtils.newSession();
-        session.setLocalRepositoryManager(system.newLocalRepositoryManager(session,
-                new LocalRepository(localRepository.toFile())));
+        RepositorySystemSupplier supplier = new RepositorySystemSupplier();
+        system = supplier.get();
+        session = newSession(system);
         // The repository is never accessed, all artifacts are already present in the local repository
         repositories = List.of(new RemoteRepository.Builder(REPOSITORY_ID, "default", "https://localhost.invalid/").build());
 
@@ -90,6 +83,14 @@ public class OfflineResolutionTestCase {
                 """.formatted(GROUP_ID));
         install("channel-artifact", "1.0.0", null, "jar", "channel-artifact");
         install("direct-artifact", "2.0.0", null, "jar", "direct-artifact");
+    }
+
+    private RepositorySystemSession newSession(RepositorySystem system) {
+        SessionBuilderSupplier supplier = new SessionBuilderSupplier(system);
+        LocalRepository localRepo = new LocalRepository(localRepository.toFile());
+        return supplier.get()
+                .withLocalRepositories(localRepo)
+                .build();
     }
 
     @Test
