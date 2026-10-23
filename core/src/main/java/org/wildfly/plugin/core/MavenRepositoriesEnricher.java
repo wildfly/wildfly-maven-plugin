@@ -4,9 +4,7 @@
  */
 package org.wildfly.plugin.core;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -14,16 +12,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.maven.execution.MavenSession;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.settings.Proxy;
-import org.apache.maven.settings.Settings;
+import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 
 /**
- * Add required repositories if not present.
+ * Adds required repositories and prepares the repository list for resolution using the session settings.
  *
  * @author jdenise
  */
@@ -64,48 +60,42 @@ public class MavenRepositoriesEnricher {
                 new RepositoryPolicy(false, RepositoryPolicy.UPDATE_POLICY_NEVER, RepositoryPolicy.CHECKSUM_POLICY_FAIL)));
     }
 
-    public static void enrich(MavenSession session, MavenProject project, List<RemoteRepository> repositories)
-            throws MojoExecutionException {
-        Set<String> configuredUrls = getUrls(repositories);
-        Settings settings = session.getSettings();
-        Proxy proxy = settings.getActiveProxy();
-        MavenProxySelector proxySelector = null;
-        if (proxy != null) {
-            MavenProxySelector.Builder selectorBuilder = new MavenProxySelector.Builder(proxy.getHost(), proxy.getPort(),
-                    proxy.getProtocol());
-            selectorBuilder.setPassword(proxy.getPassword());
-            selectorBuilder.setUserName(proxy.getUsername());
-            if (proxy.getNonProxyHosts() != null) {
-                String[] hosts = proxy.getNonProxyHosts().split("\\|");
-                selectorBuilder.addNonProxyHosts(Arrays.asList(hosts));
-            }
-            proxySelector = selectorBuilder.build();
-        }
+    /**
+     * Adds the required repositories and applies session mirrors, proxies and authentication.
+     * Existing mirror decisions are preserved.
+     *
+     * @param repoSystem   the repository system
+     * @param session      the repository session
+     * @param repositories the configured repositories; never modified
+     * @return the repositories to use for resolution
+     */
+    public static List<RemoteRepository> enrich(RepositorySystem repoSystem, RepositorySystemSession session,
+            List<RemoteRepository> repositories) {
+        List<RemoteRepository> result = new ArrayList<>(repositories);
+        Set<String> configuredUrls = getUrlsIncludingMirroredRepositories(repositories);
         for (Entry<String, RequiredRepository> entry : REQUIRED_REPOSITORIES.entrySet()) {
             if (!configuredUrls.contains(entry.getKey())) {
                 RequiredRepository repo = entry.getValue();
-                RemoteRepository.Builder builder = new RemoteRepository.Builder(repo.id, repo.type, repo.url);
-                builder.setReleasePolicy(repo.releasePolicy);
-                builder.setSnapshotPolicy(repo.snapshotPolicy);
-                if (proxySelector != null) {
-                    try {
-                        org.eclipse.aether.repository.Proxy aetherProxy = proxySelector.getProxy(new URL(repo.url).getHost());
-                        if (aetherProxy != null) {
-                            builder.setProxy(aetherProxy);
-                        }
-                    } catch (MalformedURLException ex) {
-                        throw new MojoExecutionException("Invalid repo url " + repo.url, ex);
-                    }
-                }
-                repositories.add(builder.build());
+                result.add(new RemoteRepository.Builder(repo.id, repo.type, repo.url)
+                        .setReleasePolicy(repo.releasePolicy)
+                        .setSnapshotPolicy(repo.snapshotPolicy)
+                        .build());
             }
         }
+        // newResolutionRepositories applies session settings to repository prototypes. Maven may already have
+        // selected mirrors, so select a mirror only for raw repositories to avoid redirecting a prepared mirror.
+        DefaultRepositorySystemSession resolutionSession = new DefaultRepositorySystemSession(session);
+        resolutionSession.setMirrorSelector(repository -> repository.getMirroredRepositories().isEmpty()
+                ? session.getMirrorSelector().getMirror(repository)
+                : null);
+        return repoSystem.newResolutionRepositories(resolutionSession, result);
     }
 
-    private static Set<String> getUrls(List<RemoteRepository> repositories) {
+    private static Set<String> getUrlsIncludingMirroredRepositories(List<RemoteRepository> repositories) {
         Set<String> set = new HashSet<>();
         for (RemoteRepository repo : repositories) {
             set.add(repo.getUrl());
+            set.addAll(getUrlsIncludingMirroredRepositories(repo.getMirroredRepositories()));
         }
         return set;
     }
