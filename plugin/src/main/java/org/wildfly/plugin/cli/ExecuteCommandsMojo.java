@@ -21,13 +21,11 @@ import java.util.concurrent.TimeoutException;
 
 import javax.inject.Inject;
 
-import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -191,12 +189,6 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
     @Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true, required = true)
     private List<RemoteRepository> repositories;
 
-    @Parameter(defaultValue = "${project}", readonly = true, required = true)
-    MavenProject project;
-
-    @Parameter(defaultValue = "${session}", readonly = true, required = true)
-    MavenSession mavenSession;
-
     @Parameter(defaultValue = "${project.build.directory}", readonly = true, required = true)
     private File buildDir;
 
@@ -224,8 +216,9 @@ public class ExecuteCommandsMojo extends AbstractServerConnection {
             getLog().debug("Skipping commands execution");
             return;
         }
-        MavenRepositoriesEnricher.enrich(mavenSession, project, repositories);
-        mavenRepoManager = new MavenArtifactRepositoryManager(repoSystem, session, repositories);
+        final List<RemoteRepository> effectiveRepositories = MavenRepositoriesEnricher
+                .enrich(repoSystem, session, repositories);
+        mavenRepoManager = new MavenArtifactRepositoryManager(repoSystem, session, effectiveRepositories);
         final CommandConfiguration.Builder cmdConfigBuilder = CommandConfiguration
                 .of(this::createClient, this::getClientConfiguration)
                 .addCommands(commands)
