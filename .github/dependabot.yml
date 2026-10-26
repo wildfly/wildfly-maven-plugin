@@ -22,6 +22,9 @@ updates:
     ignore:
       - dependency-name: 'javax.inject:javax.inject'
         update-types: ['version-update:semver-major']
+      # plexus-xml 4.x is intended for Maven 4.x, stay on 3.x for Maven 3.x
+      - dependency-name: 'org.codehaus.plexus:plexus-xml'
+        update-types: ['version-update:semver-major']
     rebase-strategy: disabled
     open-pull-requests-limit: 10
     registries:
