@@ -22,7 +22,7 @@
 
     <prerequisites>
         <!-- The minimum required Maven version -->
-        <maven>3.6.3</maven>
+        <maven>3.9.0</maven>
     </prerequisites>
 
     <!-- The url and scm need to be defined here as the site plugin appends the maven module name -->
