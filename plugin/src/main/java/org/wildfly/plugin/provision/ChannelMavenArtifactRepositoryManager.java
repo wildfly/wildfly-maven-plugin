@@ -36,6 +36,7 @@ import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.jboss.galleon.api.MavenStreamResolver;
 import org.jboss.galleon.api.Provisioning;
+import org.jboss.galleon.maven.plugin.util.MavenArtifactRepositoryManager;
 import org.jboss.galleon.universe.maven.MavenArtifact;
 import org.jboss.galleon.universe.maven.MavenUniverseException;
 import org.jboss.galleon.universe.maven.repo.MavenRepoManager;
@@ -63,7 +64,7 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
     private final List<Channel> channels = new ArrayList<>();
     private final Log log;
     private final RepositorySystem system;
-    private final DefaultRepositorySystemSession session;
+    private final RepositorySystemSession session;
     private final List<RemoteRepository> repositories;
 
     public ChannelMavenArtifactRepositoryManager(List<ChannelConfiguration> channels,
@@ -75,10 +76,13 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
             throw new MojoExecutionException("No channel specified.");
         }
         this.log = log;
-        session = new DefaultRepositorySystemSession(contextSession);
-        this.repositories = repositories;
         // Do not override an offline Maven session (e.g. mvn -o) when offline provisioning is not requested
-        session.setOffline(offline || contextSession.isOffline());
+        if (offline || contextSession.isOffline()) {
+            session = MavenArtifactRepositoryManager.buildOfflineSession(system, contextSession);
+        } else {
+            session = new DefaultRepositorySystemSession(contextSession);
+        }
+        this.repositories = repositories;
         // The remote repositories must be passed even in offline mode as artifacts in the local repository are tracked
         // with the id of the remote repository they were downloaded from and are only considered available if a
         // repository with the same id is part of the request. The offline session prevents any network access.
