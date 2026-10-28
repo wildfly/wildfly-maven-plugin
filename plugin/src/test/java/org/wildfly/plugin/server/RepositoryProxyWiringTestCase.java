@@ -81,6 +81,13 @@ public class RepositoryProxyWiringTestCase {
                             throw e.getCause();
                         }
                     }
+                    if (method.getName().equals("newLocalRepositoryManager")) {
+                        try {
+                            return method.invoke(delegate, arguments);
+                        } catch (InvocationTargetException e) {
+                            throw e.getCause();
+                        }
+                    }
                     throw new UnsupportedOperationException(method.getName());
                 });
     }
