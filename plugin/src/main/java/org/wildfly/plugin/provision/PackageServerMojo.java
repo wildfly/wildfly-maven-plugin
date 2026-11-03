@@ -420,6 +420,24 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     }
 
     @Override
+    protected boolean shouldSkipProvisioning(Path wildflyDir) throws MojoExecutionException {
+        if (!overwriteProvisionedServer && Files.exists(wildflyDir)) {
+            Path targetPath = Paths.get(project.getBuild().getDirectory());
+            Path targetJarFile = targetPath.toAbsolutePath().resolve(bootableJarName);
+            if (bootableJar && !Files.exists(targetJarFile)) {
+                getLog().warn("A server already exists in " + wildflyDir +
+                        ", but bootable JAR doesn't exist. Reprovisioning server to create bootable JAR.");
+                return false;
+            } else {
+                getLog().info(String.format("A server already exists in " + wildflyDir + ", skipping " + getGoal() +
+                        " of %s:%s", project.getGroupId(), project.getArtifactId()));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (skip) {
             getLog().debug(String.format("Skipping " + getGoal() + " of %s:%s", project.getGroupId(), project.getArtifactId()));
