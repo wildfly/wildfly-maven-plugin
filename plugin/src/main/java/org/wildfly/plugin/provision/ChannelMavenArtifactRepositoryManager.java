@@ -90,7 +90,7 @@ public class ChannelMavenArtifactRepositoryManager implements MavenRepoManager, 
         List<Channel> resolutionChannels = new ArrayList<>();
         for (ChannelConfiguration channelConfiguration : channels) {
             resolutionChannels.add(channelConfiguration.toChannel(repositories));
-            this.channels.add(channelConfiguration.toChannel(offline ? List.of() : repositories));
+            this.channels.add(channelConfiguration.toChannel(repositories));
         }
         Map<String, RemoteRepository> mapping = new HashMap<>();
         for (RemoteRepository remoteRepository : repositories) {

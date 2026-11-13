@@ -99,11 +99,11 @@ public class OfflineResolutionTestCase {
         Assertions.assertEquals("1.0.0", artifact.getVersion());
         assertResolved(artifact, "channel-artifact");
 
-        // The repositories are only used for resolution and are not recorded in the provisioned server
+        // The repositories are recorded in the provisioned server
         repositoryManager.done(home);
         final String recordedChannels = Files.readString(home.resolve(".installation").resolve("installer-channels.yaml"));
         Assertions.assertTrue(recordedChannels.contains("test-manifest"), recordedChannels);
-        Assertions.assertFalse(recordedChannels.contains(REPOSITORY_ID), recordedChannels);
+        Assertions.assertTrue(recordedChannels.contains(REPOSITORY_ID), recordedChannels);
     }
 
     @Test
