@@ -6,6 +6,7 @@ package org.wildfly.plugin.provision;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,6 +62,71 @@ public class PackageServerMojoDependenciesTestCase {
     public void testDifferentClassifierIsExcluded() throws Exception {
         Assertions.assertTrue(deployments(List.of(dependency("1.0-SNAPSHOT", "other")),
                 artifact("1.0-20261009.180000-1", "web")).isEmpty());
+    }
+
+    @Test
+    public void testIncludedClassifierIsIncluded() throws Exception {
+        var artifacts = new HashSet();
+        var classifiedArtifact = artifact("1.0-20261009.180000-1", "other");
+        var defaultArtifact = new DefaultArtifact(classifiedArtifact.getGroupId(), classifiedArtifact.getArtifactId(),
+                classifiedArtifact.getVersion(), Artifact.SCOPE_COMPILE, "war", null, classifiedArtifact.getArtifactHandler());
+        defaultArtifact.setFile(classifiedArtifact.getFile());
+
+        final Set<String> includededClassifiers = new HashSet();
+
+        final PackageServerMojo mojo = new PackageServerMojo();
+        mojo.project = new MavenProject();
+
+        mojo.project.setArtifacts(artifacts);
+        final Field includesField = PackageServerMojo.class.getDeclaredField("includedClassifiers");
+        final Field deploymentsField = PackageServerMojo.class.getDeclaredField("deployments");
+        includesField.setAccessible(true);
+        deploymentsField.setAccessible(true);
+
+        // Tests
+        mojo.project.getArtifacts().add(defaultArtifact);
+        includesField.set(mojo, includededClassifiers);
+
+        var deployments = mojo.getDeployments();
+        Assertions.assertTrue(deployments.isEmpty());
+
+        includededClassifiers.clear();
+        includededClassifiers.add(null);
+        deploymentsField.set(mojo, null);
+        deployments = mojo.getDeployments();
+        Assertions.assertFalse(deployments.isEmpty());
+
+        includededClassifiers.clear();
+        includededClassifiers.add("none");
+        deploymentsField.set(mojo, null);
+        deployments = mojo.getDeployments();
+        Assertions.assertTrue(deployments.isEmpty());
+
+        includededClassifiers.clear();
+        includededClassifiers.add("other");
+        deploymentsField.set(mojo, null);
+        deployments = mojo.getDeployments();
+        Assertions.assertTrue(deployments.isEmpty());
+
+        mojo.project.getArtifacts().add(classifiedArtifact);
+
+        includededClassifiers.clear();
+        includededClassifiers.add(null);
+        deployments = mojo.getDeployments();
+        Assertions.assertTrue(deployments.isEmpty());
+
+        includededClassifiers.clear();
+        includededClassifiers.add("none");
+        deploymentsField.set(mojo, null);
+        deployments = mojo.getDeployments();
+        Assertions.assertTrue(deployments.isEmpty());
+
+        includededClassifiers.clear();
+        includededClassifiers.add("other");
+        deploymentsField.set(mojo, null);
+        deployments = mojo.getDeployments();
+        Assertions.assertFalse(deployments.isEmpty());
+
     }
 
     private Dependency dependency(final String version, final String classifier) {

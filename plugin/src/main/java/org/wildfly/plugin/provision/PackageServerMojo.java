@@ -17,11 +17,13 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -363,6 +365,23 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
     @Parameter(property = "wildfly.stability")
     private String stability;
 
+    /**
+     * (Assemblies and other jar/war executions)
+     * Resolves and deploys the list of classified artifacts which are already attached to the project.
+     * To also include the default project artifact use an empty/null value or "," in property.
+     *
+     * <pre>
+     * &lt;includedClassifiers&gt;
+     *     &lt;includedClassifier/&gt; &lt;!-- the default project artifact --&gt;
+     *     &lt;includedClassifier&gt;other&lt;/includedClassifier&gt;
+     * &lt;/includedClassifiers>
+     * </pre>
+     *
+     * @since 6.1.2.Final
+     */
+    @Parameter(alias = "included-classifiers", property = "wildfly.included.classifiers")
+    private Set<String> includedClassifiers = new HashSet<>(); // Immutable Set.of does not support null elements
+
     @Inject
     private OfflineCommandExecutor commandExecutor;
 
@@ -385,7 +404,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         }
         try {
             List<Path> allDeployments = new ArrayList<>();
-            Path primaryDeployment = getDeploymentContent();
+            Path primaryDeployment = includedClassifiers.isEmpty() ? getDeploymentContent() : null;
             if (primaryDeployment != null) {
                 allDeployments.add(primaryDeployment);
             }
@@ -479,7 +498,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         }
         // If no filters are defined, we do not want to include any additional deployments.
         if (includedDependencies.isEmpty() && excludedDependencies.isEmpty() && includedDependencyScope == null
-                && excludedDependencyScope == null) {
+                && excludedDependencyScope == null && includedClassifiers.isEmpty()) {
             return Map.of();
         }
         final List<ArtifactFilter> filters = new ArrayList<>();
@@ -506,9 +525,21 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
         }
         final ArtifactFilter filter = new AndArtifactFilter(filters);
         final Set<Artifact> projectArtifacts = project.getArtifacts();
+
+        final ArtifactFilter classifierFilter = artifact -> (artifact.getClassifier() == null
+                && includedClassifiers.contains(null)
+                || (artifact.getClassifier() != null && includedClassifiers.contains(artifact.getClassifier())));
+
+        if (includedClassifiers != null && !includedClassifiers.isEmpty()) {
+            projectArtifacts.addAll(this.project.getAttachedArtifacts());
+            projectArtifacts.add(project.getArtifact());
+        }
+
         final Set<Artifact> deployments = projectArtifacts.stream()
-                .filter(filter::include)
+                .filter(Objects::nonNull)
+                .filter(artifact -> filter.include(artifact) || classifierFilter.include(artifact))
                 .collect(Collectors.toSet());
+
         final Map<String, Path> deploymentPaths = new LinkedHashMap<>();
         for (var artifact : deployments) {
             final File f = artifact.getFile();
@@ -539,7 +570,7 @@ public class PackageServerMojo extends AbstractProvisionServerMojo {
 
         if (!skipDeployment) {
             Path primaryDeployment = getDeploymentContent();
-            if (primaryDeployment != null) {
+            if (primaryDeployment != null && includedClassifiers.isEmpty()) {
                 deploy(primaryDeployment, getDeploymentTargetName());
             }
             // Handle extra deployments
